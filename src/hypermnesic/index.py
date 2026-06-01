@@ -174,6 +174,23 @@ class Index:
         return [r[0] for r in self.conn.execute(
             "SELECT chunk_id FROM chunks WHERE path=? ORDER BY chunk_id", (path,)).fetchall()]
 
+    def remove_path(self, path: str) -> None:
+        """Drop all index rows for a path (chunks/FTS/vec + doc lane)."""
+        c = self.conn
+        for cid in [r[0] for r in c.execute(
+                "SELECT chunk_id FROM chunks WHERE path=?", (path,)).fetchall()]:
+            c.execute("DELETE FROM chunks WHERE chunk_id=?", (cid,))
+            c.execute("DELETE FROM fts_chunks WHERE rowid=?", (cid,))
+            c.execute("DELETE FROM vec_chunks WHERE chunk_id=?", (cid,))
+        row = c.execute("SELECT doc_id FROM docs WHERE path=?", (path,)).fetchone()
+        if row:
+            c.execute("DELETE FROM vec_docs WHERE doc_id=?", (row[0],))
+            c.execute("DELETE FROM docs WHERE path=?", (path,))
+        c.commit()
+
+    def all_paths(self) -> set[str]:
+        return {r[0] for r in self.conn.execute("SELECT DISTINCT path FROM chunks").fetchall()}
+
     # --- checkpoint ------------------------------------------------------
     def set_checkpoint(self, sha: str | None) -> None:
         self.conn.execute(
@@ -238,6 +255,99 @@ class Index:
 
     def close(self) -> None:
         self.conn.close()
+
+
+def _is_md(path: str) -> bool:
+    parts = Path(path).parts
+    return path.endswith(".md") and not any(p in ingest._SKIP_DIRS for p in parts)
+
+
+def _changed_md_since(repo: Path, old: str, new: str) -> list[tuple[str, str]]:
+    out = subprocess.run(
+        ["git", "-C", str(repo), "diff", "--name-status", f"{old}..{new}"],
+        capture_output=True, text=True, check=True).stdout
+    changes: list[tuple[str, str]] = []
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if parts[0].startswith("R") and len(parts) >= 3:   # rename = delete old + add new
+            changes += [("D", parts[1]), ("A", parts[2])]
+        elif len(parts) >= 2:
+            changes.append((parts[0][0], parts[1]))
+    return [(s, p) for s, p in changes if _is_md(p)]
+
+
+def _md_files_at(repo: Path, sha: str) -> list[str]:
+    out = subprocess.run(["git", "-C", str(repo), "ls-tree", "-r", "--name-only", sha],
+                         capture_output=True, text=True, check=True).stdout
+    return [p for p in out.splitlines() if _is_md(p)]
+
+
+def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
+    """Delta-replay the index to HEAD from its SHA checkpoint (R10).
+
+    Replays only files changed since the checkpoint (a full ls-tree if the
+    checkpoint is missing/unknown), reading **committed** content (`git show
+    HEAD:path`) so it is a pure projection of the committed tree — independent of
+    a dirty working tree. Deletes vanished paths. Lexical+graph are replayed
+    synchronously; dense embeddings are an async follow-up (pass ``embedder`` to
+    also refresh vectors for changed files). Advances the checkpoint to HEAD.
+    """
+    repo = Path(repo)
+    head = _git_head(repo)
+    if not head:
+        return {"status": "no-git", "replayed": 0}
+    cp = idx.get_checkpoint()
+    if cp == head:
+        return {"status": "current", "replayed": 0, "to": head}
+    have_cp = bool(cp) and subprocess.run(
+        ["git", "-C", str(repo), "cat-file", "-t", cp or ""],
+        capture_output=True, text=True).stdout.strip() == "commit"
+    changes = (_changed_md_since(repo, cp, head) if have_cp
+               else [("A", p) for p in _md_files_at(repo, head)])
+    for status, path in changes:
+        if status == "D":
+            idx.remove_path(path)
+            continue
+        content = subprocess.run(["git", "-C", str(repo), "show", f"{head}:{path}"],
+                                 capture_output=True, text=True).stdout
+        chunks = ingest.chunks_for_text(path, content)
+        idx.upsert_lexical(path, chunks)
+        if embedder is not None and chunks:
+            vectors = embedder.embed([c.text for c in chunks])
+            cids = idx.chunks_for_path(path)
+            for cid, vec in zip(cids, vectors, strict=False):
+                idx.conn.execute("INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) "
+                                 "VALUES (?, ?)", (cid, sqlite_vec.serialize_float32(vec)))
+            idx.conn.commit()
+    idx.set_checkpoint(head)
+    return {"status": "replayed", "replayed": len(changes), "from": cp, "to": head,
+            "full": not have_cp}
+
+
+def apply_working_tree_overlay(idx: Index, repo: Path) -> list[str]:
+    """Authoring-host overlay (R16): index uncommitted/untracked markdown so
+    in-progress notes are findable before commit. Does NOT advance the checkpoint
+    — a replica indexing the same committed SHA never sees these edits.
+    """
+    repo = Path(repo)
+    out = subprocess.run(["git", "-C", str(repo), "status", "--porcelain"],
+                         capture_output=True, text=True, check=True).stdout
+    paths = set()
+    for line in out.splitlines():
+        p = line[3:]
+        if "->" in p:                       # rename: take the new path
+            p = p.split("->")[-1].strip()
+        p = p.strip().strip('"')
+        if _is_md(p):
+            paths.add(p)
+    for p in sorted(paths):
+        fp = repo / p
+        if fp.exists():
+            idx.upsert_lexical(p, ingest.chunks_for_text(
+                p, fp.read_text(encoding="utf-8", errors="replace")))
+        else:
+            idx.remove_path(p)
+    return sorted(paths)
 
 
 def build_index(repo: Path, embedder, *, rebuild: bool = True,
