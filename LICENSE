@@ -1,0 +1,11 @@
+Copyright (c) 2026 Leonard Sellem. All rights reserved.
+
+This repository is PRIVATE and proprietary. It is not yet licensed for public
+use, distribution, or modification. The product's open-source license terms are
+an explicit pre-public-release decision (see the Phase-0 plan, Open Questions);
+until that decision is made and a public release happens, no permission is
+granted to copy, distribute, or create derivative works.
+
+Note: this notice governs hypermnesic's *own* source. Third-party dependencies
+retain their own (permissive) licenses, verified copyleft-free by
+scripts/license_scan.py (the U1 license gate).
