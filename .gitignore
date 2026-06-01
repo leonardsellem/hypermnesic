@@ -21,6 +21,7 @@ build/
 harness/queries.frozen.jsonl
 harness/gbrain_baseline.frozen.jsonl
 harness/results/
+harness/review*.md
 
 # Local index / scratch artifacts
 *.db
