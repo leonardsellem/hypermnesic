@@ -54,6 +54,22 @@ def _cmd_embed(args) -> int:
     return 0
 
 
+def _cmd_reindex(args) -> int:
+    """Broad reindex; --isolated builds in a worktree and swaps atomically (U14)."""
+    from hypermnesic import embed, index
+
+    embed.smoke_embed_or_die()
+    embedder = embed.OpenAIEmbedder()
+    state_dir = Path(args.state_dir) if args.state_dir else None
+    if args.isolated:
+        res = index.reindex_isolated(Path(args.repo), embedder, state_dir=state_dir)
+    else:
+        index.build_index(Path(args.repo), embedder, state_dir=state_dir).close()
+        res = {"status": "rebuilt-inplace"}
+    _print_json(res) if args.json else print(res["status"])
+    return 0
+
+
 def _cmd_init(args) -> int:
     """Zero-infra drop-in: index a repo in place (in-repo .hypermnesic/ state)."""
     from hypermnesic import embed, index
@@ -100,6 +116,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_embed.add_argument("--index-db", default=None, help="index db (default: <repo>/.hypermnesic)")
     p_embed.add_argument("--json", action="store_true")
     p_embed.set_defaults(func=_cmd_embed)
+
+    p_reindex = sub.add_parser("reindex", help="rebuild the index (--isolated = worktree + swap)")
+    p_reindex.add_argument("repo")
+    p_reindex.add_argument("--state-dir", default=None)
+    p_reindex.add_argument("--isolated", action="store_true",
+                           help="build in an isolated worktree, swap atomically (non-blocking)")
+    p_reindex.add_argument("--json", action="store_true")
+    p_reindex.set_defaults(func=_cmd_reindex)
 
     p_init = sub.add_parser("init", help="zero-infra drop-in: index a repo in place")
     p_init.add_argument("repo", help="path to the repo to index")

@@ -12,8 +12,10 @@ brute-force ``ORDER BY vec_distance_*`` (KTD3, ~200× slower at scale).
 from __future__ import annotations
 
 import os
+import shutil
 import sqlite3
 import subprocess
+import tempfile
 from pathlib import Path
 
 import sqlite_vec
@@ -408,6 +410,56 @@ def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128) -> dict:
         return {"chunks_embedded": n_chunks, "docs_embedded": n_docs}
     finally:
         lock.release()
+
+
+def reindex_isolated(repo: Path, embedder, *, state_dir: Path | None = None) -> dict:
+    """Broad reindex without blocking narrow writers (U14, KTD9/U12).
+
+    Builds a fresh index from a clean ``git worktree`` at HEAD — the long phase
+    runs lock-free against its OWN state dir, so concurrent ``commit_note`` writers
+    (which hold the *live* lock) are not blocked. Then takes the live lock only for
+    a millisecond ``os.replace`` swap. Falls back to an in-place locked rebuild when
+    git/worktree is unavailable. The build db lives beside the live db (same
+    filesystem) so the swap is atomic.
+    """
+    config.assert_embedder_agrees(embedder)
+    repo = Path(repo)
+    live_state = Path(state_dir) if state_dir else state_dir_for(repo)
+    live_state.mkdir(mode=0o700, parents=True, exist_ok=True)
+    live_db = live_state / "index.db"
+    head = _git_head(repo)
+
+    wt = None
+    if head:
+        wt = Path(tempfile.mkdtemp(prefix="hypermnesic-reindex-"))
+        rc = subprocess.run(
+            ["git", "-C", str(repo), "worktree", "add", "--detach", "--force", str(wt), head],
+            capture_output=True, text=True)
+        if rc.returncode != 0:
+            shutil.rmtree(wt, ignore_errors=True)
+            wt = None
+    if wt is None:  # no git / worktree unsupported → in-place locked rebuild
+        build_index(repo, embedder, state_dir=live_state).close()
+        return {"status": "fallback-inplace", "to": head}
+
+    build_state = live_state / ".reindex-build"
+    try:
+        shutil.rmtree(build_state, ignore_errors=True)
+        # build_index locks build_state/index.lock — NOT the live lock — so the
+        # long build phase never blocks live writers.
+        build_index(wt, embedder, state_dir=build_state).close()
+        new_db = build_state / "index.db"
+        lock = serialize.FileLock(live_state / "index.lock").acquire()  # brief swap lock
+        try:
+            os.replace(new_db, live_db)   # atomic (same filesystem)
+        finally:
+            lock.release()
+        return {"status": "reindexed", "to": head}
+    finally:
+        subprocess.run(["git", "-C", str(repo), "worktree", "remove", "--force", str(wt)],
+                       capture_output=True, text=True)
+        shutil.rmtree(wt, ignore_errors=True)
+        shutil.rmtree(build_state, ignore_errors=True)
 
 
 def apply_working_tree_overlay(idx: Index, repo: Path) -> list[str]:
