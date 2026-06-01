@@ -15,6 +15,7 @@ only sync layer". Recorded in implementation-notes.md.
 
 from __future__ import annotations
 
+import difflib
 import subprocess
 from dataclasses import dataclass
 from io import StringIO
@@ -31,6 +32,13 @@ class CommitResult:
     new_sha: str | None
     diff: str
     noop: bool = False
+    dry_run: bool = False
+
+
+def _preview_diff(rel: str, old: str, new: str) -> str:
+    return "".join(difflib.unified_diff(
+        old.splitlines(keepends=True), new.splitlines(keepends=True),
+        f"a/{rel}", f"b/{rel}"))
 
 
 def _git(repo, *args) -> subprocess.CompletedProcess:
@@ -49,9 +57,19 @@ def _render_new(set_fields: dict, body: str) -> str:
 
 def commit_note(repo, rel_path: str, *, body: str | None = None,
                 set_fields: dict | None = None, summary: str | None = None,
-                idx=None, log=None, allowlist: list[str] | None = None) -> CommitResult:
+                idx=None, log=None, allowlist: list[str] | None = None,
+                dry_run: bool = False) -> CommitResult:
     repo = Path(repo)
     rel = serialize.check(repo, rel_path, allowlist=allowlist)  # guard FIRST (R17)
+    if dry_run:
+        fpath = repo / rel
+        existed = fpath.exists()
+        original = fpath.read_text(encoding="utf-8") if existed else ""
+        new_text = (fg.gated_edit(original, body=body, set_fields=set_fields) if existed
+                    else _render_new(set_fields or {}, body or ""))  # gate may abort
+        return CommitResult(rel, created=not existed, new_sha=None,
+                            diff=_preview_diff(rel, original, new_text),
+                            noop=(new_text == original), dry_run=True)
     lock = serialize.index_write_lock(repo).acquire()           # single-writer (KTD9/R13)
     try:
         return _commit_locked(repo, rel, body, set_fields, summary, idx, log)
@@ -98,13 +116,24 @@ def _commit_locked(repo, rel, body, set_fields, summary, idx, log) -> CommitResu
 
 def rename_note(repo, old_path: str, new_path: str, *, body: str | None = None,
                 set_fields: dict | None = None, summary: str | None = None,
-                idx=None, log=None, allowlist: list[str] | None = None) -> CommitResult:
+                idx=None, log=None, allowlist: list[str] | None = None,
+                dry_run: bool = False) -> CommitResult:
     """U10 — rename/move as one atomic surface: git mv + index re-key, with no
     re-materialization of the old slug and no tombstone. Optional content edit in
     the same move goes through the diff-or-die gate first (abort = no git op)."""
     repo = Path(repo)
     new_rel = serialize.check(repo, new_path, allowlist=allowlist)   # guard both ends
     old_rel = serialize.check(repo, old_path, allowlist=allowlist)
+    if dry_run:
+        old_fp = repo / old_rel
+        if not old_fp.exists():
+            raise FileNotFoundError(old_rel)
+        original = old_fp.read_text(encoding="utf-8")
+        new_text = (fg.gated_edit(original, body=body, set_fields=set_fields)
+                    if (body is not None or set_fields) else original)   # gate may abort
+        diff = f"rename: {old_rel} -> {new_rel}\n" + (
+            _preview_diff(new_rel, original, new_text) if new_text != original else "")
+        return CommitResult(new_rel, created=False, new_sha=None, diff=diff, dry_run=True)
     lock = serialize.index_write_lock(repo).acquire()               # single-writer (KTD9/R13)
     try:
         return _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log)

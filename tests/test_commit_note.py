@@ -96,6 +96,36 @@ def test_crash_recovery_reconciler_backfills(make_corpus, fake_embedder, tmp_pat
     idx.close()
 
 
+def test_dry_run_has_no_side_effects(make_corpus, fake_embedder, tmp_path):
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    head = _git(repo, "rev-parse", "HEAD")
+    n_log = len(log.entries())
+    n_paths = len(idx.all_paths())
+    r = cn.commit_note(repo, "notes/preview.md", body="# P\n\nPREVIEWWORD body.\n",
+                       summary="preview", idx=idx, log=log, dry_run=True)
+    assert r.dry_run is True and "PREVIEWWORD" in r.diff and r.new_sha is None
+    assert not (repo / "notes/preview.md").exists()         # no file written
+    assert _git(repo, "rev-parse", "HEAD") == head          # no commit
+    assert len(log.entries()) == n_log                      # no log entry
+    assert len(idx.all_paths()) == n_paths                  # index untouched
+    idx.close()
+
+
+def test_dry_run_gate_still_aborts(make_corpus, fake_embedder, tmp_path):
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path, files={"doc.md": _DOC_NONCANON})
+    with pytest.raises(fg.FrontmatterDriftError):
+        cn.commit_note(repo, "doc.md", set_fields={"created": "2026-05-03"},
+                       idx=idx, log=log, dry_run=True)
+    idx.close()
+
+
+def test_dry_run_guard_still_refuses_protected(make_corpus, fake_embedder, tmp_path):
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    with pytest.raises(serialize.WriteGuardError):
+        cn.commit_note(repo, "CLAUDE.md", body="# x\n", dry_run=True)
+    idx.close()
+
+
 def test_frontmatter_edit_preserves_scalar_date(make_corpus, fake_embedder, tmp_path):
     repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path,
                             files={"n.md": _DOC_FM})

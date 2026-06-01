@@ -76,6 +76,20 @@ def test_rename_preserves_embeddings(make_corpus, fake_embedder, tmp_path):
     idx.close()
 
 
+def test_rename_dry_run_previews_without_moving(make_corpus, fake_embedder, tmp_path):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    head = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                          capture_output=True, text=True).stdout.strip()
+    r = cn.rename_note(repo, "a.md", "b.md", idx=idx, log=_log(tmp_path), dry_run=True)
+    assert r.dry_run is True and "a.md" in r.diff and "b.md" in r.diff
+    assert (repo / "a.md").exists() and not (repo / "b.md").exists()   # no move
+    assert subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                          capture_output=True, text=True).stdout.strip() == head
+    assert "a.md" in idx.all_paths() and "b.md" not in idx.all_paths()
+    idx.close()
+
+
 def _head(repo):
     return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
                           capture_output=True, text=True).stdout.strip()
