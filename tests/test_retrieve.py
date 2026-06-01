@@ -114,6 +114,25 @@ def test_expansion_graceful_on_expander_failure(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_doc_lane_lifts_doc_by_surface(make_corpus, fake_embedder):
+    # A doc whose SURFACE (title) matches the query but whose body chunks don't
+    # should be lifted by the doc lane. (Deterministic embedder: query == the
+    # doc's surface → doc-lane returns it at distance 0.)
+    from hypermnesic import index as index_mod
+    from hypermnesic import ingest
+    note = "# zeta unique surface marker\n\nbody discusses unrelated omega omega.\n"
+    repo = make_corpus({"target.md": note, "other.md": "# Other\n\nomega omega omega.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    surface = ingest.doc_surface(note, "target.md")
+    res = retrieve.search(idx, surface, embedder=fake_embedder, k=5)
+    target = [h for h in res.hits if h.path == "target.md"]
+    assert target and "doc" in target[0].channels   # surfaced via the doc lane
+    # turning the doc lane off must not credit the doc lane
+    res_off = retrieve.search(idx, surface, embedder=fake_embedder, k=5, use_doc_lane=False)
+    assert all("doc" not in h.channels for h in res_off.hits)
+    idx.close()
+
+
 def test_rerank_changes_order_not_membership(make_corpus, fake_embedder):
     idx = _idx(make_corpus, fake_embedder)
     base = retrieve.search(idx, "homelab français Hetzner recipe", embedder=fake_embedder, k=3)

@@ -52,7 +52,8 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
            rerank: Callable[[str, list[Hit]], list[Hit]] | None = None,
            collapse_duplicates: bool = True,
            expand: int = 0,
-           expander: Callable[[str, int], list[str]] | None = None) -> SearchResult:
+           expander: Callable[[str, int], list[str]] | None = None,
+           use_doc_lane: bool = True) -> SearchResult:
     """Hybrid search over ``idx``. Returns up to ``k`` fused hits.
 
     ``rerank`` (optional) reorders the fused top-``candidate_k`` *without changing
@@ -92,7 +93,8 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
 
     # dense channel (graceful degradation on embedding failure), fused across variants
     dense_used = False
-    for qi in queries:
+    orig_qvec = None
+    for n, qi in enumerate(queries):
         try:
             qvec = embedder.embed([qi])[0] if embedder is not None else None
         except embed_mod.EmbeddingError:
@@ -100,9 +102,21 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
         if qvec is None:
             continue
         dense_used = True
+        if n == 0:
+            orig_qvec = qvec
         for rank, (cid, _dist) in enumerate(idx.dense_search(qvec, k=candidate_k)):
             fused[cid] = fused.get(cid, 0.0) + _rrf(rank)
             channels.setdefault(cid, set()).add("dense")
+
+    # doc-level lane (UA): a doc-surface match lifts that doc via its representative
+    # chunk — aligns "about this doc" NL queries with the right doc (MRR).
+    if (use_doc_lane and orig_qvec is not None
+            and getattr(idx, "has_doc_lane", lambda: False)()):
+        for rank, (path, _dist) in enumerate(idx.doc_dense_search(orig_qvec, k=candidate_k)):
+            cids = idx.chunks_for_path(path)
+            if cids:
+                fused[cids[0]] = fused.get(cids[0], 0.0) + _rrf(rank)
+                channels.setdefault(cids[0], set()).add("doc")
 
     ranked = sorted(fused.items(), key=lambda kv: kv[1], reverse=True)
     hits: list[Hit] = []

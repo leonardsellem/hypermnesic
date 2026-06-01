@@ -61,7 +61,37 @@ doc in top-10, hypermnesic did not).
   addressable ranking-precision gap, not a fundamental retrieval limitation.
 - No tuning was done to chase a PASS.
 
-## Gate-of-record: LLM-judged labels (pooled, system-blind)
+## UA doc-level lane — closes the aggregate MRR gap (validated)
+
+Adding a **doc-level embedding lane** (one embedding per doc from a
+title+headings+lead "surface" — a deterministic proxy for gbrain's
+`compiled_truth`) was measured in isolation (same frozen baseline + LLM-judged
+labels; only the doc lane added to the existing chunk index):
+
+| | recall@10 | MRR | Δrecall vs gbrain | Δmrr vs gbrain |
+|---|---|---|---|---|
+| chunk-only | 0.871 | 0.704 | +0.052 | **−0.065** |
+| **+ doc lane (UA)** | **0.910** | **0.802** | **+0.092** | **+0.033** |
+
+The aggregate MRR deficit **flipped to a surplus** — hypermnesic now
+meets-or-beats gbrain on **both** aggregate metrics (recall +0.092, MRR +0.033,
+both outside the band). The representation diagnosis is confirmed.
+
+**Residual (still FAIL under the strict literal bar):**
+- **French MRR** still trails: hyp 0.712 vs gbrain 0.786 (−0.074) — English MRR
+  carries the aggregate. French *recall* is far ahead (0.927 vs 0.797).
+- **Catastrophic-French-miss count = 4.** Note the AE6 clause was designed for a
+  *single* known-item French floor; under **pooled multi-relevant** labels it is
+  conservative — it fires whenever gbrain's top-10 holds any relevant doc hyp's
+  top-10 lacks, even though hyp's aggregate French recall is *higher*. This is a
+  clause-calibration question for the operator, not (on the recall evidence) a
+  catastrophic French gap.
+
+**Next lever (UB):** weight the doc lane (esp. for French/ranking) to lift French
+MRR and pull the gbrain-found French docs into hyp's top-10. Not grid-searched to
+pass.
+
+## Gate-of-record: LLM-judged labels (pooled, system-blind), chunk-only baseline
 
 The labels were re-derived by an **LLM-as-judge** (`judge_labels.py`, via `codex
 exec` / ChatGPT — no API key): for each query the candidates from BOTH systems
