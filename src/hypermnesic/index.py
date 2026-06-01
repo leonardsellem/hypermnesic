@@ -18,7 +18,7 @@ from pathlib import Path
 
 import sqlite_vec
 
-from hypermnesic import config, ingest
+from hypermnesic import config, ingest, serialize
 
 STATE_DIRNAME = ".hypermnesic"
 _BATCH = 128
@@ -316,6 +316,14 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
         capture_output=True, text=True).stdout.strip() == "commit"
     changes = (_changed_md_since(repo, cp, head) if have_cp
                else [("A", p) for p in _md_files_at(repo, head)])
+    lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()  # single indexer
+    try:
+        return _replay(idx, repo, head, cp, changes, embedder, have_cp)
+    finally:
+        lock.release()
+
+
+def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
     for status, path in changes:
         if status == "D":
             idx.remove_path(path)
@@ -381,11 +389,19 @@ def build_index(repo: Path, embedder, *, rebuild: bool = True,
     state.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chmod(state, 0o700)
     db_path = state / "index.db"
-    if rebuild and db_path.exists():
-        db_path.unlink()
     if not external:
         ensure_ignored(repo)
 
+    lock = serialize.FileLock(state / "index.lock").acquire()  # single indexer (KTD9)
+    try:
+        if rebuild and db_path.exists():   # destroy the old index only once locked
+            db_path.unlink()
+        return _build_locked(repo, embedder, db_path)
+    finally:
+        lock.release()
+
+
+def _build_locked(repo, embedder, db_path) -> Index:
     idx = Index(db_path)
     os.chmod(db_path, 0o600)
     idx.create_schema()
