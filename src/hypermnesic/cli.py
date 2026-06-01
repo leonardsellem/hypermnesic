@@ -54,6 +54,20 @@ def _cmd_embed(args) -> int:
     return 0
 
 
+def _cmd_commit_note(args) -> int:
+    """Preview what a commit_note write would do (dry-run; read-only)."""
+    from hypermnesic import commit_note as cn
+
+    body = Path(args.body_file).read_text(encoding="utf-8") if args.body_file else args.body
+    r = cn.commit_note(Path(args.repo), args.path, body=body, summary=args.summary,
+                       dry_run=True)
+    if args.json:
+        _print_json({"path": r.path, "created": r.created, "noop": r.noop, "diff": r.diff})
+    else:
+        print(r.diff or "(no change)")
+    return 0
+
+
 def _cmd_reindex(args) -> int:
     """Broad reindex; --isolated builds in a worktree and swaps atomically (U14)."""
     from hypermnesic import embed, index
@@ -116,6 +130,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_embed.add_argument("--index-db", default=None, help="index db (default: <repo>/.hypermnesic)")
     p_embed.add_argument("--json", action="store_true")
     p_embed.set_defaults(func=_cmd_embed)
+
+    p_cn = sub.add_parser("commit-note", help="preview a commit_note write (dry-run, read-only)")
+    p_cn.add_argument("repo")
+    p_cn.add_argument("path", help="repo-relative note path")
+    p_cn.add_argument("--body", default=None)
+    p_cn.add_argument("--body-file", default=None)
+    p_cn.add_argument("--summary", default=None)
+    p_cn.add_argument("--json", action="store_true")
+    p_cn.set_defaults(func=_cmd_commit_note)
 
     p_reindex = sub.add_parser("reindex", help="rebuild the index (--isolated = worktree + swap)")
     p_reindex.add_argument("repo")
