@@ -146,4 +146,31 @@ reranker toggle** for the baseline.
   per-query results are **corpus-derived private data → gitignored, never
   committed**. The repo ships generic tooling + `queries.example.jsonl`
   (synthetic). All test fixtures use fictional names/slugs. The earlier commit
-  that contained real corpus data was removed from history (see below).
+  with real corpus data was purged (old repo deleted + recreated from clean
+  history; old SHA 404s).
+
+## Pre-U7 threat model (gate artifact)
+
+- `docs/threat-model-commit-note.md`: the mandatory Phase-1 gate artifact. 10
+  attack vectors (protected-path escalation, ingested-content prompt injection,
+  frontmatter churn, actor spoofing, log leak, path traversal, gitignore side
+  effects, concurrent-writer corruption, credential exposure, crash recovery)
+  mapped to U8/U11/U12, with accepted risks + a Phase-1 entry checklist. Needs
+  operator sign-off before U7.
+
+## Faithful parity (NL queries vs gbrain HYBRID, un-reranked) — supersedes earlier
+
+- **Two corrections to the methodology:** (1) queries are now **natural-language
+  questions**, not verbatim titles (titles over-rewarded exact lexical match);
+  (2) the baseline is **`gbrain query`** (real hybrid: vector+keyword+expansion),
+  not `gbrain search` (FTS keyword-only — flatters gbrain on titles, collapses on
+  NL). `query` *does* rerank, so the baseline was captured inside a bracketed
+  reranker toggle (false→capture→restore+verify `true`).
+- **Result (provisional, near-parity):** hyp recall@10 0.875 vs gbrain 0.844
+  (French 0.833 vs 0.778 — hyp ahead on recall incl. French); MRR 0.559 vs 0.611
+  (French 0.466 vs 0.562 — gbrain ahead on ranking precision). 1 French
+  catastrophic miss in a dense near-duplicate cluster. Verdict **`fail`** on the
+  MRR band, but the systems are essentially **at parity** — recall parity is
+  achieved; the gap is ranking precision, plausibly gbrain's multi-query
+  expansion vs hyp's plain RRF. Addressable via fusion/expansion, not a rebuild.
+  Full sanitized verdict: `harness/PARITY_VERDICT.md`.
