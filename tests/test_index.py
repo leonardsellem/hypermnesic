@@ -1,0 +1,197 @@
+"""U2 — read-only index core: embed + sqlite-vec + FTS5 + SHA checkpoint.
+
+Covers the plan's U2 test scenarios. Index mechanics use the offline
+``FakeEmbedder``; the live OpenAI path is exercised by the smoke embed only.
+"""
+
+from __future__ import annotations
+
+import re
+import sqlite3
+
+import pytest
+
+from hypermnesic import config, embed, index
+
+NOTE_A = """---
+title: Hetzner migration
+created: 2026-05-01
+---
+# Hetzner migration
+
+We moved the homelab from OVH to Hetzner. See [[homelab/network]] for topology.
+The Tailscale interface binds the MCP server.
+"""
+
+NOTE_B = """---
+title: Parité du rappel en français
+created: 2026-05-02
+---
+# Parité du rappel en français
+
+La recherche dense doit égaler gbrain sur le français. L'embedding est
+text-embedding-3-large à 1536 dimensions.
+"""
+
+
+# --- dim / startup invariants (KTD2) -------------------------------------
+
+def test_embed_dim_is_1536():
+    assert config.EMBED_DIM == 1536
+    assert config.EMBED_MODEL == "text-embedding-3-large"
+
+
+def test_model_dim_mismatch_fails_fast(fake_embedder):
+    class Wrong:
+        model = "text-embedding-3-large"
+        dim = 512
+    with pytest.raises(config.ConfigError):
+        config.assert_embedder_agrees(Wrong())
+    config.assert_embedder_agrees(fake_embedder)  # 1536 → ok
+
+
+def test_vec_table_declared_1536(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A})
+    idx = index.build_index(repo, fake_embedder)
+    sql = idx.conn.execute(
+        "SELECT sql FROM sqlite_master WHERE name='vec_chunks'"
+    ).fetchone()[0]
+    assert "float[1536]" in sql
+    idx.close()
+
+
+# --- KNN query shape (KTD3) ----------------------------------------------
+
+def test_knn_query_shape_uses_match_and_k():
+    assert "MATCH" in index.Index.KNN_SQL
+    assert re.search(r"\bk\s*=\s*\?", index.Index.KNN_SQL)
+    assert "vec_distance" not in index.Index.KNN_SQL  # never brute-force ORDER BY
+
+
+# --- happy path: dense + lexical ------------------------------------------
+
+def test_index_produces_dense_and_lexical_entries(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A, "b.md": NOTE_B})
+    idx = index.build_index(repo, fake_embedder)
+    # dense: a chunk is its own nearest neighbour under the deterministic embedder
+    chunks = idx.all_chunks()
+    assert chunks, "expected indexed chunks"
+    target = chunks[0]
+    qvec = fake_embedder.embed([target["text"]])[0]
+    dense = idx.dense_search(qvec, k=3)
+    assert dense[0][0] == target["chunk_id"]
+    # lexical: a proper noun returns the right page
+    lex = idx.lexical_search("Hetzner", k=5)
+    assert any(idx.get_chunk(cid)["path"].endswith("a.md") for cid, _ in lex)
+    idx.close()
+
+
+# --- rebuild reproducibility (Covers AE4) ---------------------------------
+
+def test_rebuild_from_same_commit_is_identical(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A, "b.md": NOTE_B})
+    idx1 = index.build_index(repo, fake_embedder)
+    qvec = fake_embedder.embed(["recherche dense français"])[0]
+    before = [cid for cid, _ in idx1.dense_search(qvec, k=5)]
+    sha1 = idx1.get_checkpoint()
+    idx1.close()
+    idx2 = index.build_index(repo, fake_embedder, rebuild=True)
+    after = [cid for cid, _ in idx2.dense_search(qvec, k=5)]
+    assert idx2.get_checkpoint() == sha1
+    assert before == after
+    idx2.close()
+
+
+def test_checkpoint_records_head_sha(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A})
+    idx = index.build_index(repo, fake_embedder)
+    cp = idx.get_checkpoint()
+    assert cp and re.fullmatch(r"[0-9a-f]{40}", cp)
+    idx.close()
+
+
+# --- .gitignore byte-stability (KTD8) -------------------------------------
+
+def test_gitignore_byte_identical_after_index(make_corpus, fake_embedder):
+    gi = "node_modules/\n*.log\n"
+    repo = make_corpus({"a.md": NOTE_A}, gitignore=gi)
+    before = (repo / ".gitignore").read_bytes()
+    index.build_index(repo, fake_embedder).close()
+    after = (repo / ".gitignore").read_bytes()
+    assert before == after
+    # the engine ignores its state dir via .git/info/exclude, not .gitignore
+    exclude = (repo / ".git" / "info" / "exclude").read_text()
+    assert ".hypermnesic/" in exclude
+
+
+# --- credential discipline -------------------------------------------------
+
+def test_smoke_embed_fails_loud_on_missing_key(monkeypatch, tmp_path):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(config, "_DOTENV_PATHS", [tmp_path / "nope.env"])
+    with pytest.raises(embed.EmbeddingError) as ei:
+        embed.smoke_embed_or_die()
+    assert "OPENAI_API_KEY" in str(ei.value)
+
+
+def test_openai_key_never_in_index_or_output(make_corpus, fake_embedder, monkeypatch):
+    sentinel = "sk-SENTINEL-must-not-leak-0123456789"
+    monkeypatch.setenv("OPENAI_API_KEY", sentinel)
+    repo = make_corpus({"a.md": NOTE_A, "b.md": NOTE_B})
+    idx = index.build_index(repo, fake_embedder)
+    stats = idx.stats()
+    idx.close()
+    raw = (index.state_dir_for(repo) / "index.db").read_bytes()
+    assert sentinel.encode() not in raw
+    assert sentinel not in repr(stats)
+
+
+def test_index_file_permissions_are_0600(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A})
+    idx = index.build_index(repo, fake_embedder)
+    idx.close()
+    db = index.state_dir_for(repo) / "index.db"
+    assert oct((db.stat().st_mode) & 0o777) == oct(0o600)
+
+
+# --- edge cases (no crash) -------------------------------------------------
+
+def test_empty_repo_does_not_crash(make_corpus, fake_embedder):
+    repo = make_corpus({"readme.txt": "not markdown"})
+    idx = index.build_index(repo, fake_embedder)
+    assert idx.all_chunks() == []
+    assert idx.lexical_search("anything", k=5) == []
+    idx.close()
+
+
+def test_frontmatter_only_file_does_not_crash(make_corpus, fake_embedder):
+    repo = make_corpus({"empty.md": "---\ntitle: x\ncreated: 2026-05-01\n---\n"})
+    idx = index.build_index(repo, fake_embedder)
+    idx.close()  # must not raise
+
+
+def test_non_utf8_bytes_do_not_crash(make_corpus, fake_embedder, tmp_path):
+    repo = make_corpus({"a.md": NOTE_A})
+    (repo / "bad.md").write_bytes(b"# T\n\xff\xfe not utf-8 \x80\x81 body\n")
+    idx = index.build_index(repo, fake_embedder)
+    idx.close()  # must not raise
+
+
+def test_oversized_block_is_split_under_limit(make_corpus, fake_embedder):
+    # a single 60k-char paragraph (no blank lines) must split into bounded
+    # chunks — the input[118] 8192-token overflow on the first full index.
+    from hypermnesic import ingest
+    giant = "# Big\n\n" + ("token " * 12000)  # ~72k chars, one block
+    repo = make_corpus({"big.md": giant})
+    chunks = list(ingest.iter_chunks(repo))
+    assert len(chunks) > 1
+    assert all(len(c.text) <= ingest.MAX_CHARS for c in chunks)
+    index.build_index(repo, fake_embedder).close()  # must not raise
+
+
+def test_sqlite_vec_loads():
+    conn = sqlite3.connect(":memory:")
+    index._load_vec(conn)
+    v = conn.execute("SELECT vec_version()").fetchone()[0]
+    assert isinstance(v, str)
+    conn.close()
