@@ -52,6 +52,14 @@ def commit_note(repo, rel_path: str, *, body: str | None = None,
                 idx=None, log=None, allowlist: list[str] | None = None) -> CommitResult:
     repo = Path(repo)
     rel = serialize.check(repo, rel_path, allowlist=allowlist)  # guard FIRST (R17)
+    lock = serialize.index_write_lock(repo).acquire()           # single-writer (KTD9/R13)
+    try:
+        return _commit_locked(repo, rel, body, set_fields, summary, idx, log)
+    finally:
+        lock.release()
+
+
+def _commit_locked(repo, rel, body, set_fields, summary, idx, log) -> CommitResult:
     fpath = repo / rel
     existed = fpath.exists()
 
@@ -97,6 +105,14 @@ def rename_note(repo, old_path: str, new_path: str, *, body: str | None = None,
     repo = Path(repo)
     new_rel = serialize.check(repo, new_path, allowlist=allowlist)   # guard both ends
     old_rel = serialize.check(repo, old_path, allowlist=allowlist)
+    lock = serialize.index_write_lock(repo).acquire()               # single-writer (KTD9/R13)
+    try:
+        return _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log)
+    finally:
+        lock.release()
+
+
+def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log) -> CommitResult:
     old_fp = repo / old_rel
     if not old_fp.exists():
         raise FileNotFoundError(old_rel)

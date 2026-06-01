@@ -221,3 +221,19 @@ Threat model signed off 2026-06-01; U5 gate PASS. Built in dependency order:
   checkpoint catch-up + working-tree overlay), U10 (rename/move one-surface),
   U12 serialization. No live gbrain-brain write / cron repoint without explicit
   per-action go-ahead (sign-off proviso).
+
+## Phase 1 COMPLETE (U7–U12) — write kernel (temp-repo dev only)
+
+- **U9** index = pure git-tree projection: `catch_up` delta-replays from the SHA
+  checkpoint (committed-tree read), `apply_working_tree_overlay` for the dirty
+  authoring host (no checkpoint advance). `remove_path`/`all_paths` added.
+- **U10** rename one-surface: `rename_note` = git mv + `index.rekey_path` (UPDATE
+  path in place — preserves embeddings, no tombstone, no resurrection).
+- **U12** serialization: `serialize.FileLock` (flock), `index_write_lock`
+  (single-indexer KTD9), `path_lock` (narrow), `preflight` (dirty-tree +
+  head-drift). Wired into build_index/catch_up/commit_note/rename_note so all
+  index writers are single-writer-safe. **Follow-up:** broad-reindex worktree
+  isolation (the lock already gives correctness; worktree isolation would let a
+  broad reindex run without blocking narrow writers).
+- All Phase-1 units TDD'd against TEMP repos. No live gbrain-brain write / cron
+  repoint performed (sign-off proviso) — awaits explicit per-action go-ahead.
