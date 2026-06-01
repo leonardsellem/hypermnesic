@@ -147,6 +147,14 @@ def iter_chunks(repo: Path) -> Iterator[Chunk]:
             yield Chunk(path=rel, ord=i, heading=heading, text=text)
 
 
+def chunks_for_text(path: str, raw: str) -> list[Chunk]:
+    """Chunk a single document's raw text (frontmatter stripped) — for the
+    synchronous lexical extraction in commit_note (U7)."""
+    body = strip_frontmatter(raw)
+    return [Chunk(path=path, ord=i, heading=h, text=t)
+            for i, (h, t) in enumerate(_chunk_body(body))]
+
+
 def iter_doc_surfaces(repo: Path) -> Iterator[tuple[str, str]]:
     """Yield (repo-relative path, doc surface) for every markdown file."""
     repo = Path(repo)
