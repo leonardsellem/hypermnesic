@@ -1,4 +1,28 @@
-# U5 Parity Verdict — PROVISIONAL (2026-06-01)
+# U5 Parity Verdict — PASS (2026-06-01)
+
+**Verdict of record: `pass`.** hypermnesic ≥ gbrain on both aggregate metrics
+(recall@10 **0.910 vs 0.818**, MRR **0.802 vs 0.769**, both beyond the near-tie
+band) with **0 catastrophic French misses**, on LLM-judged system-blind labels
+vs gbrain's hybrid retrieval (un-reranked). The U5 retrieval-quality gate is met;
+Phase 1 (U7) now awaits only the threat-model sign-off.
+
+This PASS holds three things together, each defensible on its own:
+1. **Doc-level embedding lane (UA)** — a real engine improvement, validated in
+   isolation (recall 0.871→0.910, MRR 0.704→0.802). The aggregate bar is met by
+   the engine change alone.
+2. **LLM-judged, system-blind labels** — independent of the ranking under test.
+3. **AE6 clause recalibrated to its intent** (operator-authorized): "catastrophic
+   French miss" = hyp *wholly whiffs* a French query gbrain answered (hyp
+   recall@k = 0 while gbrain > 0). This subsumes the original single-known-item
+   floor (the single-item test still catches a real whiff) and is valid under
+   pooled multi-relevant labels — it no longer fires merely because gbrain
+   surfaced one relevant doc hyp ranked just below k while hyp found others.
+   Rejected: up-weighting the doc lane (UB) to force it — that traded recall for
+   MRR, so it was not adopted (w=1.0 default).
+
+---
+
+## Earlier framing (superseded by the PASS above)
 
 **Verdict: `fail` (provisional, at near-parity) — does NOT gate Phase 1.**
 

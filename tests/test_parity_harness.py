@@ -33,8 +33,8 @@ def test_aggregate_metrics_and_pass(make_corpus, fake_embedder):
 
 
 def test_catastrophic_french_miss_fails(make_corpus, fake_embedder):
-    # Covers AE6: a known-relevant FR doc is top-10 for gbrain but outside
-    # hypermnesic's top-10 → FAIL.
+    # Covers AE6 (single known-item): hyp wholly misses the one relevant FR doc
+    # that gbrain found → hyp recall 0, gbrain recall >0 → catastrophic → FAIL.
     idx = _idx(make_corpus, fake_embedder)
     queries = [{"id": "q1", "lang": "fr", "query": "unique_alpha", "relevant": ["docb.md"]}]
     baseline = {"q1": ["docb.md", "doca.md"]}
@@ -42,6 +42,21 @@ def test_catastrophic_french_miss_fails(make_corpus, fake_embedder):
     assert r["catastrophic_french_miss"]
     assert r["verdict"] == "fail"
     assert r["passes_phase1_gate"] is False
+    idx.close()
+
+
+def test_catastrophic_not_fired_when_hyp_recalls_some(make_corpus, fake_embedder):
+    # Recalibrated AE6 for pooled multi-relevant labels: hyp finds A relevant doc
+    # (recall>0) but not the specific one gbrain also had → NOT catastrophic
+    # (only a per-doc ranking difference, not a whiffed query).
+    idx = _idx(make_corpus, fake_embedder)
+    # relevant = {doca (hyp finds via lexical), docb (gbrain has, hyp misses at k=1)}
+    queries = [{"id": "q1", "lang": "fr", "query": "unique_alpha",
+                "relevant": ["doca.md", "docb.md"]}]
+    baseline = {"q1": ["docb.md", "doca.md"]}
+    r = ph.run_parity(idx, fake_embedder, queries, baseline, k=1)
+    # hyp top-1 = doca (relevant) → hyp recall>0 → not catastrophic
+    assert r["catastrophic_french_miss"] == []
     idx.close()
 
 
