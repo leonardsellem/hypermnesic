@@ -145,6 +145,31 @@ class Index:
             (sqlite_vec.serialize_float32(query_vec), k),
         ).fetchall()
 
+    def upsert_lexical(self, path: str, chunks: list[ingest.Chunk]) -> list[int]:
+        """Replace a path's chunks with fresh lexical+graph content (NO embeddings).
+
+        commit_note (U7) calls this synchronously so a written page is findable
+        lexically immediately; dense vectors catch up in a later async embed pass
+        (AE5). Removes the path's stale chunk/FTS/vec rows first.
+        """
+        c = self.conn
+        old = [r[0] for r in c.execute(
+            "SELECT chunk_id FROM chunks WHERE path=?", (path,)).fetchall()]
+        for cid in old:
+            c.execute("DELETE FROM chunks WHERE chunk_id=?", (cid,))
+            c.execute("DELETE FROM fts_chunks WHERE rowid=?", (cid,))
+            c.execute("DELETE FROM vec_chunks WHERE chunk_id=?", (cid,))
+        new_ids = []
+        for ch in chunks:
+            cur = c.execute(
+                "INSERT INTO chunks (path, ord, heading, text) VALUES (?, ?, ?, ?)",
+                (ch.path, ch.ord, ch.heading, ch.text))
+            cid = cur.lastrowid
+            c.execute("INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, ch.text))
+            new_ids.append(cid)
+        c.commit()
+        return new_ids
+
     def chunks_for_path(self, path: str) -> list[int]:
         return [r[0] for r in self.conn.execute(
             "SELECT chunk_id FROM chunks WHERE path=? ORDER BY chunk_id", (path,)).fetchall()]
