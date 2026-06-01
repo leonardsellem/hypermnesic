@@ -51,7 +51,8 @@ def test_append_only_history_preserved(tmp_path):
 
 def _commit(repo, msg):
     subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
-    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", msg], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", msg],
+                   check=True, capture_output=True)
     return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
                           capture_output=True, text=True).stdout.strip()
 
