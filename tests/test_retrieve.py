@@ -1,0 +1,71 @@
+"""U3 — hybrid retrieval (RRF fusion), optional rerank, graceful degradation."""
+
+from __future__ import annotations
+
+from hypermnesic import embed as embed_mod
+from hypermnesic import index, retrieve
+
+NOTE_FR = """# Parité du rappel en français
+
+La recherche dense doit égaler gbrain sur le rappel français. L'embedding
+utilise text-embedding-3-large à 1536 dimensions.
+"""
+NOTE_EN = """# Hetzner homelab migration
+
+We migrated the homelab from OVH to Hetzner and bound the MCP server to the
+Tailscale interface address.
+"""
+NOTE_OTHER = "# Cooking\n\nA recipe for pancakes with flour and eggs.\n"
+
+
+def _idx(make_corpus, fake_embedder):
+    repo = make_corpus({"fr.md": NOTE_FR, "en.md": NOTE_EN, "other.md": NOTE_OTHER})
+    return index.build_index(repo, fake_embedder)
+
+
+def test_english_proper_noun_query(make_corpus, fake_embedder):
+    idx = _idx(make_corpus, fake_embedder)
+    res = retrieve.search(idx, "Hetzner", embedder=fake_embedder, k=3)
+    assert res.hits
+    assert res.hits[0].path == "en.md"
+    assert res.dense_used is True
+    idx.close()
+
+
+def test_french_query(make_corpus, fake_embedder):
+    idx = _idx(make_corpus, fake_embedder)
+    res = retrieve.search(idx, "rappel français parité", embedder=fake_embedder, k=3)
+    assert any(h.path == "fr.md" for h in res.hits)
+    idx.close()
+
+
+def test_graceful_degradation_when_embedding_down(make_corpus, fake_embedder):
+    idx = _idx(make_corpus, fake_embedder)
+
+    class DownEmbedder:
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            raise embed_mod.EmbeddingError("API down")
+
+    res = retrieve.search(idx, "Hetzner", embedder=DownEmbedder(), k=3)
+    assert res.dense_used is False
+    assert res.degraded is True          # harness must VOID, not FAIL
+    assert res.lexical_used is True
+    assert any(h.path == "en.md" for h in res.hits)  # lexical still answers
+    idx.close()
+
+
+def test_rerank_changes_order_not_membership(make_corpus, fake_embedder):
+    idx = _idx(make_corpus, fake_embedder)
+    base = retrieve.search(idx, "homelab français Hetzner recipe", embedder=fake_embedder, k=3)
+    assert len(base.hits) >= 2
+
+    def reverse_rerank(query, hits):
+        return list(reversed(hits))
+
+    rer = retrieve.search(idx, "homelab français Hetzner recipe", embedder=fake_embedder,
+                          k=3, rerank=reverse_rerank)
+    assert {h.chunk_id for h in base.hits} == {h.chunk_id for h in rer.hits}  # membership
+    assert [h.chunk_id for h in base.hits] != [h.chunk_id for h in rer.hits]  # order
+    idx.close()
