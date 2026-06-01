@@ -237,3 +237,18 @@ Threat model signed off 2026-06-01; U5 gate PASS. Built in dependency order:
   broad reindex run without blocking narrow writers).
 - All Phase-1 units TDD'd against TEMP repos. No live gbrain-brain write / cron
   repoint performed (sign-off proviso) — awaits explicit per-action go-ahead.
+
+## Phase-0/1 follow-ups COMPLETE (U13–U16) — plan 003
+
+- **U13 async embed-stale** (`index.embed_stale`, `hypermnesic embed`): fills only
+  missing vec_chunks + backfills the doc lane for commit_note pages; idempotent;
+  closes the AE5 dense lag.
+- **U14 worktree-isolated reindex** (`index.reindex_isolated`, `reindex --isolated`):
+  build lock-free in a worktree, atomic `os.replace` swap under a ms lock; narrow
+  writers never block; non-git fallback to in-place rebuild.
+- **U15 dry-run** (`commit_note`/`rename_note` `dry_run=True`): guard + gate run,
+  zero side effects; preview-only `commit-note` CLI.
+- **U16 dogfood preview** (`harness/dogfood_commit_note.py`): structured read-only
+  "safe to cut over?" report; never writes (safe against the live vault).
+- **Still deferred + gated:** the LIVE cron cutover (actual writes to gbrain-brain)
+  — needs per-action go-ahead after reviewing a U16 report. Then Phase 2.
