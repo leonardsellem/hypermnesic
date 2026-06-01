@@ -187,3 +187,13 @@ reranker toggle** for the baseline.
   0.677 vs 0.786). Robust across 3 labelings: recall parity-or-better, consistent
   ~0.05–0.07 MRR deficit. Confirms the MRR gap is index-side (compiled-truth
   representation), a Phase-2 item — not a labeling artifact or a query-side fix.
+
+## U5 GATE: PASS (gate of record)
+
+UA doc-level embedding lane + LLM-judged system-blind labels + AE6 clause
+recalibrated to intent (operator-authorized): hyp ≥ gbrain on recall@10
+(0.910 vs 0.818) AND MRR (0.802 vs 0.769), 0 catastrophic French misses →
+**U5 retrieval-quality gate PASSES**. Phase 1 (U7) now gated only on the
+pre-U7 threat-model sign-off (`docs/threat-model-commit-note.md`).
+UB doc-lane up-weighting measured + rejected (traded recall for MRR; w=1.0
+default). Full record: `harness/PARITY_VERDICT.md`.

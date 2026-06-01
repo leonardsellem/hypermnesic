@@ -142,12 +142,15 @@ def run_parity(idx, embedder, queries: list[dict], baseline: dict[str, list[str]
             "gbrain_mrr": reciprocal_rank(gb_cls, rel_cls),
             "degraded": res.degraded,
         }
-        # AE6 catastrophic French miss, in class space: a relevant class top-k for
-        # gbrain but for which hypermnesic found NO member in its top-k.
-        if rec["lang"] == "fr":
-            missed = [c for c in (set(rel_cls) & set(gb_cls[:k])) if c not in set(hyp_cls[:k])]
-            if missed:
-                catastrophic.append({"id": q["id"], "missed_classes": sorted(missed)})
+        # AE6 catastrophic French miss — by intent: hypermnesic *wholly whiffs* a
+        # French query that gbrain answered (hyp recall@k == 0 while gbrain > 0).
+        # This subsumes the single-known-item floor (where hyp recall would be 0)
+        # and stays valid under pooled multi-relevant labels — it does NOT fire
+        # merely because gbrain surfaced one relevant doc hyp ranked just below k
+        # when hyp still found other relevant docs.
+        if rec["lang"] == "fr" and rec["hyp_recall"] == 0.0 and rec["gbrain_recall"] > 0.0:
+            catastrophic.append({"id": q["id"], "hyp_recall": rec["hyp_recall"],
+                                 "gbrain_recall": rec["gbrain_recall"]})
         per_query.append(rec)
 
     agg = {

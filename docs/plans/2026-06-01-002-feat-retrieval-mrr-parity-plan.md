@@ -1,6 +1,12 @@
 # Plan — Close the retrieval MRR gap (representation parity with gbrain)
 
-**Status:** active · **Repo:** hypermnesic · **Gate this unblocks:** U5 parity
+**Status: DONE — gate met.** UA (doc-level embedding lane) closed the gap: vs
+gbrain, recall@10 +0.092 and MRR +0.033 (0.704→0.802) on LLM-judged labels; 0
+catastrophic French misses; U5 verdict = PASS. UB (doc-lane up-weighting) was
+measured and rejected (traded recall for MRR). UC (LLM summaries) not needed.
+See `harness/PARITY_VERDICT.md`.
+
+**Repo:** hypermnesic · **Gate this unblocks:** U5 parity
 (strict R5: hyp ≥ gbrain on recall@10 **and** MRR). Phase 1 (U7) remains gated on
 this **and** the threat-model sign-off.
 
