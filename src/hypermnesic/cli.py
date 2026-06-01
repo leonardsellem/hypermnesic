@@ -37,6 +37,15 @@ def _cmd_index(args) -> int:
     return 0
 
 
+def _cmd_serve(args) -> int:
+    from hypermnesic import mcp_server
+
+    srv = mcp_server.build_server(Path(args.index_db), host=args.host,
+                                  port=args.port, path=args.path)
+    srv.run(transport="streamable-http")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hypermnesic", description="hypermnesic CLI")
     parser.add_argument("--version", action="version", version=f"hypermnesic {__version__}")
@@ -50,6 +59,13 @@ def build_parser() -> argparse.ArgumentParser:
                          help="do not delete an existing index first")
     p_index.add_argument("--json", action="store_true")
     p_index.set_defaults(func=_cmd_index)
+
+    p_serve = sub.add_parser("serve", help="run the read-only tailnet MCP server")
+    p_serve.add_argument("--index-db", required=True, help="path to the index .db")
+    p_serve.add_argument("--host", required=True, help="Tailscale interface IP (not 0.0.0.0)")
+    p_serve.add_argument("--port", type=int, default=8848)
+    p_serve.add_argument("--path", default="/mcp")
+    p_serve.set_defaults(func=_cmd_serve)
     return parser
 
 
