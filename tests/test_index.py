@@ -203,6 +203,50 @@ def test_oversized_block_is_split_under_limit(make_corpus, fake_embedder):
     index.build_index(repo, fake_embedder).close()  # must not raise
 
 
+def test_doc_surface_is_title_headings_lead():
+    from hypermnesic import ingest
+    raw = ("---\ntitle: Hetzner Migration\n---\n"
+           "# Heading One\n\nThe lead paragraph about the migration.\n\n"
+           "## Subsection\n\nmore body.\n")
+    s = ingest.doc_surface(raw, "x.md")
+    assert "Hetzner Migration" in s and "Subsection" in s
+    assert "lead paragraph" in s
+    assert "title:" not in s  # frontmatter excluded
+
+
+def test_doc_lane_table_and_one_row_per_doc(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A, "b.md": NOTE_B})
+    idx = index.build_index(repo, fake_embedder)
+    sql = idx.conn.execute(
+        "SELECT sql FROM sqlite_master WHERE name='vec_docs'").fetchone()[0]
+    assert "float[1536]" in sql
+    n_docs = idx.conn.execute("SELECT COUNT(*) FROM docs").fetchone()[0]
+    assert n_docs == 2
+    n_vecs = idx.conn.execute("SELECT COUNT(*) FROM vec_docs").fetchone()[0]
+    assert n_vecs == 2
+    idx.close()
+
+
+def test_doc_dense_search_returns_paths(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A, "b.md": NOTE_B})
+    idx = index.build_index(repo, fake_embedder)
+    # query the doc surface of b → b is its own nearest neighbour at the doc lane
+    from hypermnesic import ingest
+    surface = ingest.doc_surface(NOTE_B, "b.md")
+    qvec = fake_embedder.embed([surface])[0]
+    docs = idx.doc_dense_search(qvec, k=2)
+    assert docs[0][0] == "b.md"
+    idx.close()
+
+
+def test_chunks_for_path(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": NOTE_A})
+    idx = index.build_index(repo, fake_embedder)
+    cids = idx.chunks_for_path("a.md")
+    assert cids and all(idx.get_chunk(c)["path"] == "a.md" for c in cids)
+    idx.close()
+
+
 def test_sqlite_vec_loads():
     conn = sqlite3.connect(":memory:")
     index._load_vec(conn)

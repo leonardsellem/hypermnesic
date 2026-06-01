@@ -108,6 +108,35 @@ def _chunk_body(body: str) -> Iterator[tuple[str, str]]:
             yield heading, text
 
 
+_FM_TITLE = re.compile(r"^title:\s*(.+?)\s*$", re.MULTILINE)
+
+
+def doc_surface(raw: str, path: str = "") -> str:
+    """A doc-level 'what is this about' surface for the doc embedding lane.
+
+    Title (frontmatter `title:` or first H1, falling back to the slug) + all
+    section headings + the lead paragraph, bounded to MAX_CHARS. This aligns with
+    "about this document" NL queries better than any single mid-body chunk —
+    a deterministic proxy for gbrain's compiled-summary representation.
+    """
+    title = ""
+    fm = _FM_TITLE.search(raw[:600])
+    if fm:
+        title = fm.group(1).strip().strip('"').strip("'")
+    body = strip_frontmatter(raw)
+    headings = [m.group(1).strip() for m in re.finditer(r"^\s{0,3}#{1,6}\s+(.*)$", body, re.M)]
+    if not title:
+        title = headings[0] if headings else Path(path).stem.replace("-", " ")
+    lead = ""
+    for block in re.split(r"\n\s*\n", body):
+        block = block.strip()
+        if block and not _HEADING_RE.match(block.splitlines()[0]):
+            lead = block
+            break
+    surface = f"{title}\n\n" + "\n".join(headings) + "\n\n" + lead
+    return surface.strip()[:MAX_CHARS]
+
+
 def iter_chunks(repo: Path) -> Iterator[Chunk]:
     repo = Path(repo)
     for fp in _iter_markdown_files(repo):
@@ -116,3 +145,14 @@ def iter_chunks(repo: Path) -> Iterator[Chunk]:
         rel = fp.relative_to(repo).as_posix()
         for i, (heading, text) in enumerate(_chunk_body(body)):
             yield Chunk(path=rel, ord=i, heading=heading, text=text)
+
+
+def iter_doc_surfaces(repo: Path) -> Iterator[tuple[str, str]]:
+    """Yield (repo-relative path, doc surface) for every markdown file."""
+    repo = Path(repo)
+    for fp in _iter_markdown_files(repo):
+        raw = fp.read_text(encoding="utf-8", errors="replace")
+        rel = fp.relative_to(repo).as_posix()
+        surface = doc_surface(raw, rel)
+        if surface:
+            yield rel, surface

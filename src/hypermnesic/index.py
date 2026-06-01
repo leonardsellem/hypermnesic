@@ -88,6 +88,15 @@ class Index:
             "CREATE VIRTUAL TABLE IF NOT EXISTS fts_chunks USING fts5("
             "text, tokenize='unicode61 remove_diacritics 2')"
         )
+        # doc-level lane: one embedding per document (title+headings+lead surface)
+        c.execute(
+            "CREATE TABLE IF NOT EXISTS docs ("
+            "doc_id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT UNIQUE NOT NULL)"
+        )
+        c.execute(
+            f"CREATE VIRTUAL TABLE IF NOT EXISTS vec_docs USING vec0("
+            f"doc_id INTEGER PRIMARY KEY, embedding float[{config.EMBED_DIM}])"
+        )
         c.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
         c.commit()
 
@@ -109,6 +118,36 @@ class Index:
                 "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, ch.text)
             )
         c.commit()
+
+    def add_docs(self, docs: list[tuple[str, str]], vectors: list[list[float]]) -> None:
+        """docs: [(path, surface)] with parallel doc-surface embeddings."""
+        assert len(docs) == len(vectors)
+        c = self.conn
+        for (path, _surface), vec in zip(docs, vectors, strict=True):
+            cur = c.execute("INSERT OR IGNORE INTO docs (path) VALUES (?)", (path,))
+            doc_id = cur.lastrowid
+            if not doc_id:  # path already present
+                doc_id = c.execute("SELECT doc_id FROM docs WHERE path=?", (path,)).fetchone()[0]
+            c.execute("INSERT OR REPLACE INTO vec_docs (doc_id, embedding) VALUES (?, ?)",
+                      (doc_id, sqlite_vec.serialize_float32(vec)))
+        c.commit()
+
+    def has_doc_lane(self) -> bool:
+        row = self.conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE name='vec_docs'").fetchone()
+        return row is not None and self.conn.execute(
+            "SELECT COUNT(*) FROM vec_docs").fetchone()[0] > 0
+
+    def doc_dense_search(self, query_vec: list[float], k: int = 10):
+        return self.conn.execute(
+            "SELECT d.path, v.distance FROM vec_docs v JOIN docs d ON d.doc_id = v.doc_id "
+            "WHERE v.embedding MATCH ? AND k = ? ORDER BY v.distance",
+            (sqlite_vec.serialize_float32(query_vec), k),
+        ).fetchall()
+
+    def chunks_for_path(self, path: str) -> list[int]:
+        return [r[0] for r in self.conn.execute(
+            "SELECT chunk_id FROM chunks WHERE path=? ORDER BY chunk_id", (path,)).fetchall()]
 
     # --- checkpoint ------------------------------------------------------
     def set_checkpoint(self, sha: str | None) -> None:
@@ -218,6 +257,22 @@ def build_index(repo: Path, embedder, *, rebuild: bool = True,
         if len(batch) >= _BATCH:
             _flush()
     _flush()
+
+    # doc-level lane: one embedding per document (UA — representation parity)
+    doc_batch: list[tuple[str, str]] = []
+
+    def _flush_docs():
+        if not doc_batch:
+            return
+        vectors = embedder.embed([s for _, s in doc_batch])
+        idx.add_docs(doc_batch, vectors)
+        doc_batch.clear()
+
+    for path, surface in ingest.iter_doc_surfaces(repo):
+        doc_batch.append((path, surface))
+        if len(doc_batch) >= _BATCH:
+            _flush_docs()
+    _flush_docs()
 
     idx.set_checkpoint(_git_head(repo))
     return idx
