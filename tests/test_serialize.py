@@ -17,6 +17,7 @@ from hypermnesic import serialize
     ".github/workflows/ci.yml",             # foreign repo's CI
     ".obsidian/workspace.json",
     "scripts/evil.py",
+    "skills/my-skill/SKILL.md",             # vault-local agent skills are governance
     "bin/run",
     ".gitignore",
     "views/projects.yml",

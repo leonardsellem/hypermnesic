@@ -252,3 +252,20 @@ Threat model signed off 2026-06-01; U5 gate PASS. Built in dependency order:
   "safe to cut over?" report; never writes (safe against the live vault).
 - **Still deferred + gated:** the LIVE cron cutover (actual writes to gbrain-brain)
   — needs per-action go-ahead after reviewing a U16 report. Then Phase 2.
+
+## Real-vault gate+guard audit (read-only; harness/gate_audit.py)
+
+Ran against gbrain-brain (3,111 md, read-only — corpus untouched):
+
+- **Gate abort rate: 11.1%** (298/2,698 editable docs). A no-op field-set would
+  churn an untouched key on ~1 in 9 docs — concentrated on **list/sequence fields**
+  whose original indent differs from the gate's configured style (`snapshot_tags`
+  on Readwise `.raw/` snapshots; `aliases`/`tags`/`evidence_sources` on company
+  pages). The gate ABORTS (safe — no silent churn), but this is real edit friction.
+  **Follow-up (pre-heavy-live-use): tune the gate's ruamel list-style preservation**
+  (per-doc indent detection, or preserve flow/block style) to cut the abort rate.
+  2 docs have unparseable YAML (would error on any edit) — operator hygiene.
+- **Guard: 0 true false-positives** — ordinary notes (people/companies/projects/
+  concepts/memory) are writable; CLAUDE.md→AGENTS.md symlink correctly refused.
+  **Gap found + fixed:** `skills/` (vault-local agent skills, governance) was
+  writable — added `skills` to the protected-dir denylist.

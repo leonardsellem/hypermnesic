@@ -26,7 +26,7 @@ _INSTRUCTION_FILES = {"claude.md", "agents.md", "gemini.md", ".cursorrules",
                       "copilot-instructions.md"}
 # Directory components that are off-limits anywhere in the path.
 _PROTECTED_DIRS = {".git", ".github", ".obsidian", ".claude", ".codex", "views",
-                   "scripts", "bin", "hooks", ".hypermnesic"}
+                   "scripts", "bin", "hooks", "skills", ".hypermnesic"}
 _NEVER_FILES = {".gitignore", ".gitattributes", ".gitmodules"}
 
 
