@@ -53,7 +53,8 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
            collapse_duplicates: bool = True,
            expand: int = 0,
            expander: Callable[[str, int], list[str]] | None = None,
-           use_doc_lane: bool = True) -> SearchResult:
+           use_doc_lane: bool = True,
+           weights: tuple[float, float, float] = (1.0, 1.0, 1.0)) -> SearchResult:
     """Hybrid search over ``idx``. Returns up to ``k`` fused hits.
 
     ``rerank`` (optional) reorders the fused top-``candidate_k`` *without changing
@@ -77,9 +78,10 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
     channels: dict[int, set[str]] = {}
 
     # lexical channel (original query only)
+    w_lex, w_dense, w_doc = weights
     lexical_used = True
     for rank, (cid, _bm25) in enumerate(idx.lexical_search(query, k=candidate_k)):
-        fused[cid] = fused.get(cid, 0.0) + _rrf(rank)
+        fused[cid] = fused.get(cid, 0.0) + w_lex * _rrf(rank)
         channels.setdefault(cid, set()).add("lexical")
 
     # build the dense query set: original + expansion variants (graceful)
@@ -105,7 +107,7 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
         if n == 0:
             orig_qvec = qvec
         for rank, (cid, _dist) in enumerate(idx.dense_search(qvec, k=candidate_k)):
-            fused[cid] = fused.get(cid, 0.0) + _rrf(rank)
+            fused[cid] = fused.get(cid, 0.0) + w_dense * _rrf(rank)
             channels.setdefault(cid, set()).add("dense")
 
     # doc-level lane (UA): a doc-surface match lifts that doc via its representative
@@ -115,7 +117,7 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
         for rank, (path, _dist) in enumerate(idx.doc_dense_search(orig_qvec, k=candidate_k)):
             cids = idx.chunks_for_path(path)
             if cids:
-                fused[cids[0]] = fused.get(cids[0], 0.0) + _rrf(rank)
+                fused[cids[0]] = fused.get(cids[0], 0.0) + w_doc * _rrf(rank)
                 channels.setdefault(cids[0], set()).add("doc")
 
     ranked = sorted(fused.items(), key=lambda kv: kv[1], reverse=True)

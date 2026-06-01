@@ -110,7 +110,8 @@ def _mean(xs: list[float]) -> float:
 def run_parity(idx, embedder, queries: list[dict], baseline: dict[str, list[str]],
                *, k: int = DEFAULT_K, band: float = DEFAULT_BAND,
                canon: dict[str, str] | None = None,
-               expand: int = 0, expander=None) -> dict:
+               expand: int = 0, expander=None,
+               weights: tuple[float, float, float] = (1.0, 1.0, 1.0)) -> dict:
     """All metrics are computed in equivalence-CLASS space (see rank_to_classes).
 
     A query's answer is a class; finding any member counts. recall@k is therefore
@@ -127,7 +128,7 @@ def run_parity(idx, embedder, queries: list[dict], baseline: dict[str, list[str]
 
     for q in queries:
         res = retrieve.search(idx, q["query"], embedder=embedder, k=max(k, 50),
-                              expand=expand, expander=expander)
+                              expand=expand, expander=expander, weights=weights)
         if res.degraded:
             any_degraded = True
         hyp_cls = rank_to_classes(doc_ranking(res.hits, 50), canon, k)
@@ -198,6 +199,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--band", type=float, default=DEFAULT_BAND)
     p.add_argument("--expand", type=int, default=0,
                    help="multi-query expansion variants per query (0 = off)")
+    p.add_argument("--doc-weight", type=float, default=1.0,
+                   help="RRF weight for the doc-level lane (UB fusion tuning)")
     p.add_argument("--json", action="store_true")
     args = p.parse_args(argv)
 
@@ -216,7 +219,8 @@ def main(argv: list[str] | None = None) -> int:
     embedder = embed.OpenAIEmbedder()
     result = run_parity(idx, embedder, load_queries(args.queries),
                         load_baseline(args.baseline), k=args.k, band=args.band,
-                        canon=canon, expand=args.expand, expander=expander)
+                        canon=canon, expand=args.expand, expander=expander,
+                        weights=(1.0, 1.0, args.doc_weight))
     idx.close()
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
