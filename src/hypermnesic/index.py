@@ -191,6 +191,18 @@ class Index:
     def all_paths(self) -> set[str]:
         return {r[0] for r in self.conn.execute("SELECT DISTINCT path FROM chunks").fetchall()}
 
+    def rekey_path(self, old: str, new: str) -> None:
+        """Re-key a moved doc old→new in place (U10). Preserves chunk_ids and
+        their embeddings (a move is the same content at a new path — no re-embed,
+        no tombstone). Clears any existing rows at ``new`` first."""
+        if old == new:
+            return
+        self.remove_path(new)  # avoid a UNIQUE(docs.path) collision
+        c = self.conn
+        c.execute("UPDATE chunks SET path=? WHERE path=?", (new, old))
+        c.execute("UPDATE docs SET path=? WHERE path=?", (new, old))
+        c.commit()
+
     # --- checkpoint ------------------------------------------------------
     def set_checkpoint(self, sha: str | None) -> None:
         self.conn.execute(
