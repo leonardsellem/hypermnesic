@@ -53,7 +53,7 @@ def test_exactly_two_read_tools_no_write_tool(built_index, fake_embedder):
 
 
 def test_search_tool_returns_hits(built_index, fake_embedder):
-    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
+    assert mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     backend = mcp_server._Backend(built_index, embedder=fake_embedder)
     from hypermnesic import retrieve
     res = retrieve.search(backend.idx, "Hetzner", embedder=fake_embedder, k=5)

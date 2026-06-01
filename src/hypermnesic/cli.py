@@ -37,6 +37,24 @@ def _cmd_index(args) -> int:
     return 0
 
 
+def _cmd_init(args) -> int:
+    """Zero-infra drop-in: index a repo in place (in-repo .hypermnesic/ state)."""
+    from hypermnesic import embed, index
+
+    embed.smoke_embed_or_die()
+    embedder = embed.OpenAIEmbedder()
+    idx = index.build_index(Path(args.repo), embedder, rebuild=not args.no_rebuild)
+    stats = idx.stats()
+    idx.close()
+    if args.json:
+        _print_json(stats)
+    else:
+        print(f"initialized hypermnesic for {args.repo}: "
+              f"{stats['chunks']} chunks / {stats['docs']} docs "
+              f"(state in {index.state_dir_for(Path(args.repo))})")
+    return 0
+
+
 def _cmd_serve(args) -> int:
     from hypermnesic import mcp_server
 
@@ -59,6 +77,12 @@ def build_parser() -> argparse.ArgumentParser:
                          help="do not delete an existing index first")
     p_index.add_argument("--json", action="store_true")
     p_index.set_defaults(func=_cmd_index)
+
+    p_init = sub.add_parser("init", help="zero-infra drop-in: index a repo in place")
+    p_init.add_argument("repo", help="path to the repo to index")
+    p_init.add_argument("--no-rebuild", action="store_true")
+    p_init.add_argument("--json", action="store_true")
+    p_init.set_defaults(func=_cmd_init)
 
     p_serve = sub.add_parser("serve", help="run the read-only tailnet MCP server")
     p_serve.add_argument("--index-db", required=True, help="path to the index .db")

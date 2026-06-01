@@ -87,6 +87,25 @@ Full resolved tree: 46 packages, **0 AGPL/GPL/SSPL**, 0 LGPL (G2 PASS).
   `build_context`), both `readOnlyHint=True`; **no write tool exists** (structural
   read-only). Dense degrades gracefully; lexical+graph always answer.
 
+## U5 — parity harness (code + offline tests done; live verdict blocked)
+
+- `harness/parity_harness.py`: recall@10 + MRR, both sides scored vs
+  human-judged labels (KTD6); verdict pass/fail/no_decision/void; near-tie band;
+  catastrophic-French-miss (AE6); voids on any lexical-only-degraded query.
+  One command, `--json`. 6 offline fixture tests pass (AE6, aggregate, near-tie,
+  determinism, void, metric helpers).
+- **The live verdict (G6) is blocked on operator-owned inputs** — see below.
+
+## U6 — zero-infra portability probe (done, live G7 PASS)
+
+- `harness/portability_probe.py` + `hypermnesic init`. Grades builds/answers/
+  zero-setup/tracked-unchanged; requires both a coding and a markdown target.
+- **Live G7:** markdown target (vault slice, 140 chunks) and coding target
+  (fresh clone of hypermnesic, 14 chunks — only 2 `.md`, code/binary skipped, no
+  crash) both PASS. Independent check: both targets' tracked files UNCHANGED,
+  `git status` empty; only the `.hypermnesic/` state dir added, ignored via
+  `.git/info/exclude` (never `.gitignore`). 6 offline fixture tests pass.
+
 ## U5 — parity harness prerequisites (operator-owned, not yet present)
 
 The plan marks these "owner: operator — must exist before U5 runs":
