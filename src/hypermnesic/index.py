@@ -191,6 +191,20 @@ class Index:
     def all_paths(self) -> set[str]:
         return {r[0] for r in self.conn.execute("SELECT DISTINCT path FROM chunks").fetchall()}
 
+    def stale_chunk_ids(self) -> list[int]:
+        """Chunks with no dense vector yet (the AE5 lexical-ahead-of-dense gap)."""
+        return [r[0] for r in self.conn.execute(
+            "SELECT chunk_id FROM chunks WHERE chunk_id NOT IN "
+            "(SELECT chunk_id FROM vec_chunks) ORDER BY chunk_id").fetchall()]
+
+    def paths_missing_doc_vector(self) -> list[str]:
+        """Indexed paths whose doc-lane vector is missing (no docs row, or a docs
+        row with no vec_docs) — e.g. pages written by commit_note's lexical upsert."""
+        return [r[0] for r in self.conn.execute(
+            "SELECT DISTINCT c.path FROM chunks c LEFT JOIN docs d ON d.path = c.path "
+            "WHERE d.doc_id IS NULL OR d.doc_id NOT IN (SELECT doc_id FROM vec_docs) "
+            "ORDER BY c.path").fetchall()]
+
     def rekey_path(self, old: str, new: str) -> None:
         """Re-key a moved doc old→new in place (U10). Preserves chunk_ids and
         their embeddings (a move is the same content at a new path — no re-embed,
@@ -342,6 +356,58 @@ def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
     idx.set_checkpoint(head)
     return {"status": "replayed", "replayed": len(changes), "from": cp, "to": head,
             "full": not have_cp}
+
+
+def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128) -> dict:
+    """Async embed pass (U13): fill the dense vectors that lag lexical (AE5).
+
+    Embeds only chunks/docs that have no vector yet — idempotent, resumable. Chunk
+    text comes from the index; doc surfaces are recomputed from the committed file
+    via ``ingest.doc_surface`` (so commit_note-written pages get a doc lane too).
+    Holds the single-indexer lock (it mutates vectors)."""
+    config.assert_embedder_agrees(embedder)
+    repo = Path(repo)
+    lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()
+    try:
+        stale = idx.stale_chunk_ids()
+        n_chunks = 0
+        for i in range(0, len(stale), batch):
+            ids = stale[i:i + batch]
+            rows = idx.conn.execute(
+                f"SELECT chunk_id, text FROM chunks WHERE chunk_id IN "
+                f"({','.join('?' * len(ids))})", ids).fetchall()
+            vecs = embedder.embed([r[1] for r in rows])
+            for (cid, _text), vec in zip(rows, vecs, strict=True):
+                idx.conn.execute(
+                    "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
+                    (cid, sqlite_vec.serialize_float32(vec)))
+            idx.conn.commit()
+            n_chunks += len(rows)
+
+        doc_batch: list[tuple[str, str]] = []
+        n_docs = 0
+
+        def _flush_docs():
+            nonlocal n_docs
+            if not doc_batch:
+                return
+            idx.add_docs(doc_batch, embedder.embed([s for _, s in doc_batch]))
+            n_docs += len(doc_batch)
+            doc_batch.clear()
+
+        for path in idx.paths_missing_doc_vector():
+            fp = repo / path
+            if not fp.is_file():
+                continue
+            surface = ingest.doc_surface(fp.read_text(encoding="utf-8", errors="replace"), path)
+            if surface:
+                doc_batch.append((path, surface))
+                if len(doc_batch) >= batch:
+                    _flush_docs()
+        _flush_docs()
+        return {"chunks_embedded": n_chunks, "docs_embedded": n_docs}
+    finally:
+        lock.release()
 
 
 def apply_working_tree_overlay(idx: Index, repo: Path) -> list[str]:
