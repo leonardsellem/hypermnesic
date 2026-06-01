@@ -8,7 +8,9 @@ import gate_audit
 def test_gate_compat_buckets_clean_abort_and_no_fm(make_corpus):
     repo = make_corpus({
         "clean.md": "---\ntitle: Clean\nstatus: active\ncreated: 2026-05-02\n---\n# C\n\nbody.\n",
-        "reflow.md": "---\ntitle: R\nstatus:    active\n---\n# R\n\nbody.\n",  # extra spaces
+        # first scalar key carries a comment → no-op set falls to ruamel → reflows the
+        # offset-0 list → abort (the surgical path can't take a commented key)
+        "reflow.md": "---\ntitle: R  # keep\ntags:\n- a\n- b\n---\n# R\n\nbody.\n",
         "plain.md": "# No frontmatter\n\njust body.\n",
     })
     rep = gate_audit.gate_compat(repo)

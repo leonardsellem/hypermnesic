@@ -35,8 +35,8 @@ def test_protected_input_reported_refused(make_corpus):
 
 def test_drift_input_reported_gate_abort(make_corpus):
     repo = make_corpus({"doc.md": "---\nstatus:    active\ncreated: 2026-05-02\n---\nbody\n"})
-    rep = dogfood.preview_inputs(
-        repo, [{"path": "doc.md", "set_fields": {"created": "2026-05-03"}}])
+    rep = dogfood.preview_inputs(  # adding a key forces the ruamel path → status reflows → abort
+        repo, [{"path": "doc.md", "set_fields": {"newkey": "x"}}])
     assert rep["inputs"][0]["verdict"] == "gate-abort" and "diff" in rep["inputs"][0]
     assert rep["safe_to_cut_over"] is False
 
