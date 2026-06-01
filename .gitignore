@@ -15,6 +15,13 @@ venv/
 dist/
 build/
 
+# Corpus-derived evaluation data — NEVER committed. These are generated locally
+# by the harness tools over a private corpus and may contain real names, paths,
+# and queries. The repo ships only the generic tooling + a synthetic example.
+harness/queries.frozen.jsonl
+harness/gbrain_baseline.frozen.jsonl
+harness/results/
+
 # Local index / scratch artifacts
 *.db
 *.sqlite

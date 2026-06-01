@@ -106,19 +106,44 @@ Full resolved tree: 46 packages, **0 AGPL/GPL/SSPL**, 0 LGPL (G2 PASS).
   `git status` empty; only the `.hypermnesic/` state dir added, ignored via
   `.git/info/exclude` (never `.gitignore`). 6 offline fixture tests pass.
 
-## U5 — parity harness prerequisites (operator-owned, not yet present)
+## U5 — parity verdict: PROVISIONAL `fail` (operator decisions applied)
 
-The plan marks these "owner: operator — must exist before U5 runs":
+Operator chose **agent best-effort (provisional) query set** + **authorize the
+reranker toggle** for the baseline.
 
-1. **Frozen query set** `harness/queries.frozen.jsonl` — ~25–40 real queries
-   (≥15 French) with **human-judged** known-relevant docs (gbrain-independent
-   labels, KTD6). Label production over a 3,100-page corpus is real operator
-   work, not a harness side effect.
-2. **Frozen gbrain baseline** — gbrain's ranked results per query captured once
-   at the **un-reranked** level (KTD5), versioned beside the query set.
-   Capturing it requires bracketing the shared homelab service's *global*
-   `search.reranker.enabled` setting (set → capture → restore).
+- **Query set** `harness/queries.frozen.jsonl`: 32 known-item queries (18 FR /
+  14 EN), built deterministically by `build_query_set.py` (sha256 seed; excludes
+  `sources/` ID-title noise; per-dir diversity cap). Labels are AGENT-proposed →
+  verdict is provisional, not the Phase-1 gate (KTD6).
+- **gbrain baseline** `harness/gbrain_baseline.frozen.jsonl`: top-10 docs/query
+  from homelab `gbrain search` (`capture_gbrain_baseline.py`), slugs resolved to
+  actual case-correct paths.
+- **Reranker toggle finding (KTD5):** `gbrain search` output is **byte-identical
+  with `search.reranker.enabled` true vs false** — `search` does not apply the
+  ZeroEntropy reranker (the `query`/RAG path does). So the baseline is
+  un-reranked **without** a lasting shared-service change. The global setting was
+  toggled false→true→**restored to `true` and verified** (net-zero; transient
+  maintenance, not mirrored to gbrain-brain since this goal keeps the corpus
+  read-only and the net state is unchanged).
+- **Verdict (class-space, current):** PROVISIONAL **`fail`**, 0 catastrophic
+  French misses. hypermnesic wins recall@10 (all 0.906 vs 0.781; French 0.889 vs
+  0.667) and **French MRR** (0.416 vs 0.311); trails on **aggregate MRR** (0.459
+  vs 0.521) — driven by English *title-derived* known-item queries where exact
+  lexical match ranks #1. No tuning to chase a PASS. Full analysis +
+  operator follow-ups in `harness/PARITY_VERDICT.md`.
 
-**Awaiting operator decision** on how to source both (provide vs authorize
-agent best-effort vs authorize the bracketed reranker toggle on the shared
-service).
+## U5/U6 follow-up — dedup, class-space scoring, privacy
+
+- **#1 retrieval near-duplicate collapse** (`retrieve.search`, default on):
+  drops hits whose chunk text is byte-identical to a higher-ranked hit. A real
+  UX win (corpora mirror docs at two paths) + fixes the earlier q07 artifact.
+- **#2 equivalence-class scoring** (`corpus_equivalence.py`): content mirrors +
+  same-event `meetings/`↔`sources/` (date+slug, hex-suffix stripped; date kept so
+  recurring-title meetings don't merge). Labels expand to the class; the harness
+  scores both sides in class space. Earlier single-label/raw-path run had 2
+  "catastrophic French misses" that were duplicate-copy artifacts → now 0.
+- **Privacy (repo will go public):** the frozen query set, gbrain baseline, and
+  per-query results are **corpus-derived private data → gitignored, never
+  committed**. The repo ships generic tooling + `queries.example.jsonl`
+  (synthetic). All test fixtures use fictional names/slugs. The earlier commit
+  that contained real corpus data was removed from history (see below).

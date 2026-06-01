@@ -56,6 +56,29 @@ def test_graceful_degradation_when_embedding_down(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_collapses_exact_content_duplicates(make_corpus, fake_embedder):
+    # Mirror-flooding: the same content at two paths must not consume two result
+    # slots — collapse to the highest-ranked representative so distinct docs
+    # surface. (Synthetic fixture; no real corpus content.)
+    mirror_body = "# Widget brief\n\nalpha widget assembly brief content here.\n"
+    repo = make_corpus({
+        "docs/briefs/x.md": mirror_body,
+        "projects/teamspace/docs/briefs/x.md": mirror_body,   # exact mirror of the above
+        "docs/distinct.md": "# Widget distinct\n\nalpha widget a distinct document.\n",
+    })
+    idx = index.build_index(repo, fake_embedder)
+    res = retrieve.search(idx, "alpha widget", embedder=fake_embedder, k=10)
+    paths = [h.path for h in res.hits]
+    mirror_hits = [p for p in paths if p.endswith("briefs/x.md")]
+    assert len(mirror_hits) == 1, f"mirror not collapsed: {paths}"
+    # collapse is opt-out
+    res_raw = retrieve.search(idx, "alpha widget", embedder=fake_embedder, k=10,
+                              collapse_duplicates=False)
+    raw_mirror = [p for p in (h.path for h in res_raw.hits) if p.endswith("briefs/x.md")]
+    assert len(raw_mirror) == 2
+    idx.close()
+
+
 def test_rerank_changes_order_not_membership(make_corpus, fake_embedder):
     idx = _idx(make_corpus, fake_embedder)
     base = retrieve.search(idx, "homelab français Hetzner recipe", embedder=fake_embedder, k=3)

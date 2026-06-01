@@ -66,6 +66,27 @@ def doc_ranking(hits, k: int) -> list[str]:
     return out
 
 
+def rank_to_classes(paths: list[str], canon: dict[str, str] | None, k: int) -> list[str]:
+    """Map a ranked path list to ordered unique equivalence-class ids, top-k.
+
+    All metrics are computed in class space (not raw paths): a corpus mirrors the
+    same doc at multiple paths and stores meeting/source copies of one event, so
+    a query's "answer" is a *class*, and finding any member counts. This makes
+    the comparison symmetric and kills the duplicate-copy artifacts (q07/q13/q15)
+    by construction. With ``canon=None`` a class id is just the path.
+    """
+    seen, out = set(), []
+    for p in paths:
+        cid = (canon or {}).get(p, p)
+        if cid in seen:
+            continue
+        seen.add(cid)
+        out.append(cid)
+        if len(out) >= k:
+            break
+    return out
+
+
 def recall_at_k(ranked: list[str], relevant: list[str], k: int) -> float:
     if not relevant:
         return 0.0
@@ -87,32 +108,43 @@ def _mean(xs: list[float]) -> float:
 
 # --- core ----------------------------------------------------------------
 def run_parity(idx, embedder, queries: list[dict], baseline: dict[str, list[str]],
-               *, k: int = DEFAULT_K, band: float = DEFAULT_BAND) -> dict:
+               *, k: int = DEFAULT_K, band: float = DEFAULT_BAND,
+               canon: dict[str, str] | None = None) -> dict:
+    """All metrics are computed in equivalence-CLASS space (see rank_to_classes).
+
+    A query's answer is a class; finding any member counts. recall@k is therefore
+    a class hit-rate, MRR uses the first class member, and the catastrophic-miss
+    check compares classes — so a content mirror or meeting/source copy found by
+    one side but not the exact path the other ranked is NOT a spurious miss.
+    """
     per_query = []
     any_degraded = False
     catastrophic = []
+
+    def canon_of(p):
+        return (canon or {}).get(p, p)
 
     for q in queries:
         res = retrieve.search(idx, q["query"], embedder=embedder, k=max(k, 50))
         if res.degraded:
             any_degraded = True
-        hyp = doc_ranking(res.hits, k)
-        relevant = q.get("relevant", [])
-        gb = baseline.get(q["id"], [])
+        hyp_cls = rank_to_classes(doc_ranking(res.hits, 50), canon, k)
+        gb_cls = rank_to_classes(baseline.get(q["id"], []), canon, k)
+        rel_cls = sorted({canon_of(p) for p in q.get("relevant", [])})
         rec = {
-            "id": q["id"], "lang": q.get("lang", "en"), "query": q["query"],
-            "hyp_top": hyp,
-            "hyp_recall": recall_at_k(hyp, relevant, k),
-            "hyp_mrr": reciprocal_rank(hyp, relevant),
-            "gbrain_recall": recall_at_k(gb, relevant, k),
-            "gbrain_mrr": reciprocal_rank(gb, relevant),
+            "id": q["id"], "lang": q.get("lang", "en"),
+            "hyp_recall": recall_at_k(hyp_cls, rel_cls, k),
+            "hyp_mrr": reciprocal_rank(hyp_cls, rel_cls),
+            "gbrain_recall": recall_at_k(gb_cls, rel_cls, k),
+            "gbrain_mrr": reciprocal_rank(gb_cls, rel_cls),
             "degraded": res.degraded,
         }
-        # AE6 catastrophic French miss: known-relevant ∧ in gbrain top-10 ∧ not in hyp top-10
+        # AE6 catastrophic French miss, in class space: a relevant class top-k for
+        # gbrain but for which hypermnesic found NO member in its top-k.
         if rec["lang"] == "fr":
-            missed = [d for d in (set(relevant) & set(gb[:k])) if d not in set(hyp[:k])]
+            missed = [c for c in (set(rel_cls) & set(gb_cls[:k])) if c not in set(hyp_cls[:k])]
             if missed:
-                catastrophic.append({"id": q["id"], "missed": sorted(missed)})
+                catastrophic.append({"id": q["id"], "missed_classes": sorted(missed)})
         per_query.append(rec)
 
     agg = {
@@ -157,6 +189,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--index-db", required=True)
     p.add_argument("--queries", required=True, help="harness/queries.frozen.jsonl")
     p.add_argument("--baseline", required=True, help="frozen gbrain baseline jsonl")
+    p.add_argument("--corpus", default=None,
+                   help="corpus path; enables equivalence-class scoring (content mirrors + "
+                        "same-event meeting/source) for both sides")
     p.add_argument("--k", type=int, default=DEFAULT_K)
     p.add_argument("--band", type=float, default=DEFAULT_BAND)
     p.add_argument("--json", action="store_true")
@@ -164,10 +199,16 @@ def main(argv: list[str] | None = None) -> int:
 
     from hypermnesic import embed, index
     embed.smoke_embed_or_die()  # ensure embed-quiescence is achievable, fail loud otherwise
+    canon = None
+    if args.corpus:
+        import corpus_equivalence
+        classes = corpus_equivalence.equivalence_classes(Path(args.corpus))
+        canon = {p: members[0] for p, members in classes.items()}  # canonical = first member
     idx = index.Index(Path(args.index_db))
     embedder = embed.OpenAIEmbedder()
     result = run_parity(idx, embedder, load_queries(args.queries),
-                        load_baseline(args.baseline), k=args.k, band=args.band)
+                        load_baseline(args.baseline), k=args.k, band=args.band,
+                        canon=canon)
     idx.close()
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))

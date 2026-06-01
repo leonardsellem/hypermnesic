@@ -13,6 +13,7 @@ silently degraded to lexical-only (G6).
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
@@ -48,11 +49,18 @@ def _rrf(rank: int) -> float:
 
 
 def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50,
-           rerank: Callable[[str, list[Hit]], list[Hit]] | None = None) -> SearchResult:
+           rerank: Callable[[str, list[Hit]], list[Hit]] | None = None,
+           collapse_duplicates: bool = True) -> SearchResult:
     """Hybrid search over ``idx``. Returns up to ``k`` fused hits.
 
     ``rerank`` (optional) reorders the fused top-``candidate_k`` *without changing
     membership* at fixed k.
+
+    ``collapse_duplicates`` (default on): drop hits whose chunk text is byte-
+    identical to a higher-ranked hit. Corpora routinely mirror the same document
+    at two paths (e.g. ``docs/x`` and ``projects/.../docs/x``); without this they
+    flood the result list and crowd out distinct docs (the q07 parity artifact)
+    — and a user gets a half-duplicate list. Keeps the highest-ranked copy.
     """
     fused: dict[int, float] = {}
     channels: dict[int, set[str]] = {}
@@ -78,8 +86,14 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
 
     ranked = sorted(fused.items(), key=lambda kv: kv[1], reverse=True)
     hits: list[Hit] = []
+    seen_text: set[str] = set()
     for cid, score in ranked[:candidate_k]:
         ch = idx.get_chunk(cid)
+        if collapse_duplicates:
+            th = hashlib.sha256(ch["text"].encode("utf-8")).hexdigest()
+            if th in seen_text:
+                continue
+            seen_text.add(th)
         hits.append(Hit(chunk_id=cid, path=ch["path"], heading=ch["heading"],
                         text=ch["text"], score=score, channels=channels[cid]))
 
