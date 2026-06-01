@@ -57,11 +57,12 @@ def test_guard_detects_unrequested_key_change():
 
 
 def test_end_to_end_abort_on_reflow():
-    # An untouched key whose serialization would reflow (extra spaces normalized)
-    # while editing a different field → abort with the offending diff.
+    # Adding a key forces the ruamel path; an untouched key whose serialization
+    # reflows (extra spaces normalized) → abort with the offending diff. (Scalar
+    # SETs now take the surgical path and would NOT reflow — see U17 tests below.)
     doc = "---\nstatus:    active\ncreated: 2026-05-02\n---\nbody\n"
     with pytest.raises(fg.FrontmatterDriftError) as ei:
-        fg.gated_edit(doc, set_fields={"created": "2026-05-03"})
+        fg.gated_edit(doc, set_fields={"newkey": "x"})   # add → ruamel → status reflows
     assert ei.value.diff and "status" in ei.value.diff
 
 
@@ -71,6 +72,50 @@ def test_no_frontmatter_body_edit():
     assert new == "# Title\n\nnew body.\n"
     with pytest.raises(ValueError):
         fg.gated_edit(doc, set_fields={"x": 1})   # no frontmatter to edit
+
+
+# --- U17 surgical scalar-set (cut the list-reflow abort rate) ---
+
+# tags list at offset 0 (`- homelab`) — differs from the gate's offset=2 style,
+# so the ruamel path would reflow it and ABORT when setting an unrelated field.
+_DOC_NONSTD_LIST = ("---\nstatus: active\ntags:\n- homelab\n- infra\n"
+                    "created: 2026-05-02\n---\n# T\n\nbody.\n")
+
+
+def test_surgical_scalar_set_preserves_nonstandard_list():
+    new = fg.gated_edit(_DOC_NONSTD_LIST, set_fields={"status": "done"})
+    fm, _ = fg.split_frontmatter(new)
+    assert "status: done" in fm
+    assert "tags:\n- homelab\n- infra" in fm          # block list byte-identical (no reflow)
+    assert "created: 2026-05-02" in fm
+
+
+def test_add_new_key_falls_back_to_ruamel():
+    doc = "---\ntitle: T\nstatus: active\n---\nbody\n"
+    new = fg.gated_edit(doc, set_fields={"updated": "2026-06-01"})   # 'updated' absent → add
+    fm, _ = fg.split_frontmatter(new)
+    assert "updated:" in fm and "title: T" in fm and "status: active" in fm
+
+
+def test_delete_field_uses_ruamel():
+    doc = "---\ntitle: T\nstatus: active\ntemp: x\n---\nbody\n"
+    new = fg.gated_edit(doc, delete_fields=["temp"])
+    fm, _ = fg.split_frontmatter(new)
+    assert "temp:" not in fm and "title: T" in fm and "status: active" in fm
+
+
+def test_key_with_comment_falls_back_and_preserves_it():
+    doc = "---\nstatus: active  # current\ntitle: T\n---\nbody\n"
+    new = fg.gated_edit(doc, set_fields={"status": "done"})
+    fm, _ = fg.split_frontmatter(new)
+    assert "status: done" in fm and "# current" in fm    # ruamel RT preserves the comment
+
+
+def test_surgical_value_with_special_chars_is_quoted():
+    new = fg.gated_edit(_DOC_NONSTD_LIST, set_fields={"status": "done: really"})
+    fm, _ = fg.split_frontmatter(new)
+    assert "tags:\n- homelab\n- infra" in fm              # untouched
+    assert "'done: really'" in fm or '"done: really"' in fm   # value safely quoted
 
 
 def test_abort_error_carries_diff():

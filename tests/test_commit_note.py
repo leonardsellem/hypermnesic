@@ -68,7 +68,7 @@ def test_gate_abort_prevents_all_effects(make_corpus, fake_embedder, tmp_path):
     head = _git(repo, "rev-parse", "HEAD")
     n = len(log.entries())
     with pytest.raises(fg.FrontmatterDriftError):
-        cn.commit_note(repo, "doc.md", set_fields={"created": "2026-05-03"}, idx=idx, log=log)
+        cn.commit_note(repo, "doc.md", set_fields={"newkey": "x"}, idx=idx, log=log)
     assert (repo / "doc.md").read_text() == before          # file untouched
     assert _git(repo, "rev-parse", "HEAD") == head          # no commit
     assert len(log.entries()) == n                          # no log entry
@@ -114,7 +114,7 @@ def test_dry_run_has_no_side_effects(make_corpus, fake_embedder, tmp_path):
 def test_dry_run_gate_still_aborts(make_corpus, fake_embedder, tmp_path):
     repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path, files={"doc.md": _DOC_NONCANON})
     with pytest.raises(fg.FrontmatterDriftError):
-        cn.commit_note(repo, "doc.md", set_fields={"created": "2026-05-03"},
+        cn.commit_note(repo, "doc.md", set_fields={"newkey": "x"},
                        idx=idx, log=log, dry_run=True)
     idx.close()
 

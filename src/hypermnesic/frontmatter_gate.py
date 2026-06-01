@@ -78,6 +78,48 @@ def assert_only_changed(orig_fm: str, new_fm: str, allowed) -> None:
         raise FrontmatterDriftError(extra, diff)
 
 
+def _serialize_scalar(key: str, value) -> str | None:
+    """YAML-serialize ``value`` as the token in ``key: <token>``, or None if it
+    serializes to more than one line (block scalar / list) — i.e. not a scalar
+    suitable for an in-place line edit."""
+    buf = StringIO()
+    _yaml().dump({key: value}, buf)
+    lines = buf.getvalue().splitlines()
+    if len(lines) != 1:
+        return None
+    m = re.match(rf"^{re.escape(key)}:\s?(.*)$", lines[0])
+    return m.group(1) if m else None
+
+
+def _surgical_set(fm_inner: str, set_fields: dict) -> str | None:
+    """Replace each field's value on its own top-level line, leaving every other
+    byte of the frontmatter identical (so untouched list/block fields cannot
+    reflow). Returns the rewritten frontmatter, or None if ANY field is not
+    surgically replaceable (absent, block/multi-line value, or a trailing comment)
+    — signalling the caller to fall back to the ruamel round-trip path."""
+    lines = fm_inner.splitlines(keepends=True)
+    out = lines[:]
+    for key, val in set_fields.items():
+        token = _serialize_scalar(key, val)
+        if token is None:
+            return None
+        keyre = re.compile(rf"^{re.escape(key)}:(.*)$")  # top-level only (col 0)
+        idx = None
+        for i, line in enumerate(lines):
+            m = keyre.match(line.rstrip("\n"))
+            if m:
+                after = m.group(1)
+                if after.strip() == "" or "#" in after:  # block value or comment → not surgical
+                    return None
+                idx = i
+                break
+        if idx is None:  # key absent (an add) → ruamel handles structure
+            return None
+        nl = "\n" if lines[idx].endswith("\n") else ""
+        out[idx] = f"{key}: {token}{nl}"
+    return "".join(out)
+
+
 def _yaml() -> YAML:
     y = YAML()  # round-trip mode
     y.preserve_quotes = True
@@ -105,19 +147,24 @@ def gated_edit(original: str, *, body: str | None = None,
         return new_body
 
     requested = set(set_fields or {}) | set(delete_fields or [])
+    new_fm = fm_inner
     if requested:
-        yaml = _yaml()
-        data = yaml.load(fm_inner)
-        for k, v in (set_fields or {}).items():
-            data[k] = v
-        for k in (delete_fields or []):
-            if k in data:
-                del data[k]
-        buf = StringIO()
-        yaml.dump(data, buf)
-        new_fm = buf.getvalue()
-    else:
-        new_fm = fm_inner
+        # Prefer a surgical line edit for pure scalar sets — it leaves untouched
+        # keys byte-identical, so block lists can't reflow (the 11% abort cause).
+        surgical = _surgical_set(fm_inner, set_fields) if (set_fields and not delete_fields) else None
+        if surgical is not None:
+            new_fm = surgical
+        else:  # structural edit (add/delete/list/block value) → ruamel round-trip
+            yaml = _yaml()
+            data = yaml.load(fm_inner)
+            for k, v in (set_fields or {}).items():
+                data[k] = v
+            for k in (delete_fields or []):
+                if k in data:
+                    del data[k]
+            buf = StringIO()
+            yaml.dump(data, buf)
+            new_fm = buf.getvalue()
 
-    assert_only_changed(fm_inner, new_fm, allowed=requested)  # diff-or-die
+    assert_only_changed(fm_inner, new_fm, allowed=requested)  # diff-or-die (unchanged safety net)
     return "---\n" + new_fm + "---\n" + new_body

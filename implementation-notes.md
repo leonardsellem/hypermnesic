@@ -269,3 +269,15 @@ Ran against gbrain-brain (3,111 md, read-only — corpus untouched):
   concepts/memory) are writable; CLAUDE.md→AGENTS.md symlink correctly refused.
   **Gap found + fixed:** `skills/` (vault-local agent skills, governance) was
   writable — added `skills` to the protected-dir denylist.
+
+## U17 gate surgical scalar-set — abort rate 11.1% -> 0.0% (plan 004)
+
+The diff-or-die gate now does a **surgical line edit** for scalar field-sets
+(`_surgical_set` in frontmatter_gate): replace only the target key's inline value
+on its own line, leaving every other byte identical — so untouched block lists
+can't reflow. Falls back to the ruamel round-trip only for structural edits
+(add/delete/list/block value, or a commented/multi-line key); `assert_only_changed`
+still guards the result (diff-or-die unchanged). Re-running the read-only vault
+audit: **abort rate 11.1% -> 0.0%** across 2,698 editable docs (2 unparseable-YAML
+docs remain = operator hygiene). The write kernel is now practically usable for
+field edits on the real vault. Live cutover still gated on per-action go-ahead.
