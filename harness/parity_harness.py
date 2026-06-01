@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""U5 — French/English retrieval-parity harness (the Phase-0 quality gate).
+
+Scores hypermnesic against a **frozen gbrain baseline** on a frozen query set and
+emits the R5 verdict: ``pass`` / ``fail`` / ``no_decision`` / ``void``.
+
+Design (per the plan):
+- Metrics: recall@10 and MRR, both sides scored against **human-judged**,
+  gbrain-independent relevance labels (KTD6) — so "≥ gbrain" is not tautological.
+- Both sides un-reranked (equalize DOWN, KTD5); the gbrain side is a frozen
+  fixture captured once, not the live shared service per run.
+- Pass bar: hypermnesic ≥ gbrain on aggregate recall@10 **and** MRR (outside a
+  near-tie band) **and** no catastrophic French miss (a known-relevant doc that
+  is top-10 for the gbrain baseline but outside hypermnesic's top-10 — AE6).
+- A near-tie aggregate delta → ``no_decision``; **no_decision counts as
+  not-passing** for the Phase-1 gate.
+- Run only at **embed-quiescence**; if any query degraded to lexical-only
+  (embedding unavailable) the whole run is **voided**, not scored FAIL.
+
+One command, ``--json`` (``ensure_ascii=False``).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+from hypermnesic import retrieve
+
+DEFAULT_K = 10
+DEFAULT_BAND = 0.02  # near-tie / no-decision half-width on the aggregate delta
+
+
+# --- io ------------------------------------------------------------------
+def load_queries(path: Path) -> list[dict]:
+    out = []
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            out.append(json.loads(line))
+    return out
+
+
+def load_baseline(path: Path) -> dict[str, list[str]]:
+    base = {}
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            row = json.loads(line)
+            base[row["id"]] = row["top10"]
+    return base
+
+
+# --- metrics -------------------------------------------------------------
+def doc_ranking(hits, k: int) -> list[str]:
+    """Ordered unique doc paths from chunk hits, truncated to k docs."""
+    seen, out = set(), []
+    for h in hits:
+        if h.path not in seen:
+            seen.add(h.path)
+            out.append(h.path)
+        if len(out) >= k:
+            break
+    return out
+
+
+def recall_at_k(ranked: list[str], relevant: list[str], k: int) -> float:
+    if not relevant:
+        return 0.0
+    topk = set(ranked[:k])
+    return len(topk & set(relevant)) / len(relevant)
+
+
+def reciprocal_rank(ranked: list[str], relevant: list[str]) -> float:
+    rel = set(relevant)
+    for i, p in enumerate(ranked, start=1):
+        if p in rel:
+            return 1.0 / i
+    return 0.0
+
+
+def _mean(xs: list[float]) -> float:
+    return sum(xs) / len(xs) if xs else 0.0
+
+
+# --- core ----------------------------------------------------------------
+def run_parity(idx, embedder, queries: list[dict], baseline: dict[str, list[str]],
+               *, k: int = DEFAULT_K, band: float = DEFAULT_BAND) -> dict:
+    per_query = []
+    any_degraded = False
+    catastrophic = []
+
+    for q in queries:
+        res = retrieve.search(idx, q["query"], embedder=embedder, k=max(k, 50))
+        if res.degraded:
+            any_degraded = True
+        hyp = doc_ranking(res.hits, k)
+        relevant = q.get("relevant", [])
+        gb = baseline.get(q["id"], [])
+        rec = {
+            "id": q["id"], "lang": q.get("lang", "en"), "query": q["query"],
+            "hyp_top": hyp,
+            "hyp_recall": recall_at_k(hyp, relevant, k),
+            "hyp_mrr": reciprocal_rank(hyp, relevant),
+            "gbrain_recall": recall_at_k(gb, relevant, k),
+            "gbrain_mrr": reciprocal_rank(gb, relevant),
+            "degraded": res.degraded,
+        }
+        # AE6 catastrophic French miss: known-relevant ∧ in gbrain top-10 ∧ not in hyp top-10
+        if rec["lang"] == "fr":
+            missed = [d for d in (set(relevant) & set(gb[:k])) if d not in set(hyp[:k])]
+            if missed:
+                catastrophic.append({"id": q["id"], "missed": sorted(missed)})
+        per_query.append(rec)
+
+    agg = {
+        "hyp_recall": _mean([r["hyp_recall"] for r in per_query]),
+        "hyp_mrr": _mean([r["hyp_mrr"] for r in per_query]),
+        "gbrain_recall": _mean([r["gbrain_recall"] for r in per_query]),
+        "gbrain_mrr": _mean([r["gbrain_mrr"] for r in per_query]),
+    }
+    d_recall = agg["hyp_recall"] - agg["gbrain_recall"]
+    d_mrr = agg["hyp_mrr"] - agg["gbrain_mrr"]
+
+    verdict = _verdict(d_recall, d_mrr, band, bool(catastrophic), any_degraded)
+    return {
+        "k": k, "band": band, "n_queries": len(queries),
+        "n_french": sum(1 for q in queries if q.get("lang") == "fr"),
+        "aggregate": agg,
+        "delta_recall": d_recall, "delta_mrr": d_mrr,
+        "catastrophic_french_miss": catastrophic,
+        "any_query_degraded_lexical_only": any_degraded,
+        "verdict": verdict,
+        "passes_phase1_gate": verdict == "pass",
+        "per_query": per_query,
+    }
+
+
+def _verdict(d_recall: float, d_mrr: float, band: float,
+             catastrophic: bool, degraded: bool) -> str:
+    if degraded:
+        return "void"  # embedding unavailable on ≥1 query — not a real FAIL
+    if catastrophic:
+        return "fail"
+    if d_recall <= -band or d_mrr <= -band:
+        return "fail"            # clearly below gbrain on a metric
+    if d_recall >= band and d_mrr >= band:
+        return "pass"            # clearly ≥ gbrain on both
+    return "no_decision"          # within the near-tie band → not-passing
+
+
+# --- cli -----------------------------------------------------------------
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description="hypermnesic French/English parity harness")
+    p.add_argument("--index-db", required=True)
+    p.add_argument("--queries", required=True, help="harness/queries.frozen.jsonl")
+    p.add_argument("--baseline", required=True, help="frozen gbrain baseline jsonl")
+    p.add_argument("--k", type=int, default=DEFAULT_K)
+    p.add_argument("--band", type=float, default=DEFAULT_BAND)
+    p.add_argument("--json", action="store_true")
+    args = p.parse_args(argv)
+
+    from hypermnesic import embed, index
+    embed.smoke_embed_or_die()  # ensure embed-quiescence is achievable, fail loud otherwise
+    idx = index.Index(Path(args.index_db))
+    embedder = embed.OpenAIEmbedder()
+    result = run_parity(idx, embedder, load_queries(args.queries),
+                        load_baseline(args.baseline), k=args.k, band=args.band)
+    idx.close()
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(f"verdict={result['verdict']}  Δrecall@{args.k}={result['delta_recall']:+.4f}  "
+              f"Δmrr={result['delta_mrr']:+.4f}  "
+              f"catastrophic_fr={len(result['catastrophic_french_miss'])}  "
+              f"degraded={result['any_query_degraded_lexical_only']}")
+    return 0 if result["verdict"] == "pass" else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
