@@ -86,3 +86,41 @@ def commit_note(repo, rel_path: str, *, body: str | None = None,
 
     diff = _git(repo, "show", "--format=", "--patch", new_sha).stdout
     return CommitResult(rel, not existed, new_sha, diff)
+
+
+def rename_note(repo, old_path: str, new_path: str, *, body: str | None = None,
+                set_fields: dict | None = None, summary: str | None = None,
+                idx=None, log=None, allowlist: list[str] | None = None) -> CommitResult:
+    """U10 — rename/move as one atomic surface: git mv + index re-key, with no
+    re-materialization of the old slug and no tombstone. Optional content edit in
+    the same move goes through the diff-or-die gate first (abort = no git op)."""
+    repo = Path(repo)
+    new_rel = serialize.check(repo, new_path, allowlist=allowlist)   # guard both ends
+    old_rel = serialize.check(repo, old_path, allowlist=allowlist)
+    old_fp = repo / old_rel
+    if not old_fp.exists():
+        raise FileNotFoundError(old_rel)
+
+    original = old_fp.read_text(encoding="utf-8")
+    new_text = original
+    if body is not None or set_fields:
+        new_text = fg.gated_edit(original, body=body, set_fields=set_fields)  # may abort first
+
+    old_sha = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
+    _git(repo, "mv", old_rel, new_rel)
+    new_fp = repo / new_rel
+    if new_text != original:
+        new_fp.write_text(new_text, encoding="utf-8")
+    _git(repo, "add", "--", new_rel)
+    _git(repo, "commit", "-q", "-m", summary or f"rename: {old_rel} -> {new_rel}")
+    new_sha = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
+
+    if idx is not None:
+        idx.rekey_path(old_rel, new_rel)                 # follow the moved blob
+        if new_text != original:
+            idx.upsert_lexical(new_rel, ingest.chunks_for_text(new_rel, new_text))
+    if log is not None:
+        log.append(verb="rename", path=new_rel, old_sha=old_sha, new_sha=new_sha,
+                   summary=summary or f"{old_rel} -> {new_rel}")
+    diff = _git(repo, "show", "--format=", "--patch", new_sha).stdout
+    return CommitResult(new_rel, False, new_sha, diff)
