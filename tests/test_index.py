@@ -177,6 +177,20 @@ def test_non_utf8_bytes_do_not_crash(make_corpus, fake_embedder, tmp_path):
     idx.close()  # must not raise
 
 
+def test_lexical_phrase_match_exact_terms(make_corpus, fake_embedder):
+    # Lexical is precise phrase matching (exact/proper-noun queries); free-form
+    # NL recall is the dense channel's job (measured: OR-of-terms floods + hurts).
+    repo = make_corpus({
+        "doc.md": "# Topic\n\nThe widget assembly throughput improved after retooling.\n",
+        "other.md": "# Other\n\nUnrelated cooking recipe content.\n",
+    })
+    idx = index.build_index(repo, fake_embedder)
+    rows = idx.lexical_search("widget assembly throughput", k=5)
+    paths = {idx.get_chunk(cid)["path"] for cid, _ in rows}
+    assert "doc.md" in paths
+    idx.close()
+
+
 def test_oversized_block_is_split_under_limit(make_corpus, fake_embedder):
     # a single 60k-char paragraph (no blank lines) must split into bounded
     # chunks — the input[118] 8192-token overflow on the first full index.

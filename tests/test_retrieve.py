@@ -79,6 +79,41 @@ def test_collapses_exact_content_duplicates(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_expansion_fuses_variant_results(make_corpus, fake_embedder):
+    # Multi-query expansion: a variant query surfaces docs the original misses.
+    # (With the deterministic embedder, a variant equal to a doc's text retrieves
+    # that doc at distance 0 — exercises the fan-out + RRF fusion mechanics.)
+    repo = make_corpus({
+        "a.md": "# A\n\nalpha alpha alpha topic one.\n",
+        "b.md": "# B\n\nbeta beta beta topic two.\n",
+    })
+    idx = index.build_index(repo, fake_embedder)
+    calls = []
+
+    def expander(query, n):
+        calls.append((query, n))
+        return ["beta beta beta topic two."]  # variant == b.md chunk text
+
+    res = retrieve.search(idx, "alpha", embedder=fake_embedder, k=5,
+                          expand=1, expander=expander)
+    assert calls and calls[0][1] == 1
+    assert any(h.path == "b.md" for h in res.hits)  # surfaced via the variant
+    idx.close()
+
+
+def test_expansion_graceful_on_expander_failure(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha alpha alpha.\n"})
+    idx = index.build_index(repo, fake_embedder)
+
+    def bad_expander(query, n):
+        raise RuntimeError("LLM unavailable")
+
+    res = retrieve.search(idx, "alpha", embedder=fake_embedder, k=5,
+                          expand=2, expander=bad_expander)
+    assert res.hits and res.dense_used is True  # no crash; behaves as expand=0
+    idx.close()
+
+
 def test_rerank_changes_order_not_membership(make_corpus, fake_embedder):
     idx = _idx(make_corpus, fake_embedder)
     base = retrieve.search(idx, "homelab français Hetzner recipe", embedder=fake_embedder, k=3)

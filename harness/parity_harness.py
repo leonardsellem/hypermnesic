@@ -109,7 +109,8 @@ def _mean(xs: list[float]) -> float:
 # --- core ----------------------------------------------------------------
 def run_parity(idx, embedder, queries: list[dict], baseline: dict[str, list[str]],
                *, k: int = DEFAULT_K, band: float = DEFAULT_BAND,
-               canon: dict[str, str] | None = None) -> dict:
+               canon: dict[str, str] | None = None,
+               expand: int = 0, expander=None) -> dict:
     """All metrics are computed in equivalence-CLASS space (see rank_to_classes).
 
     A query's answer is a class; finding any member counts. recall@k is therefore
@@ -125,7 +126,8 @@ def run_parity(idx, embedder, queries: list[dict], baseline: dict[str, list[str]
         return (canon or {}).get(p, p)
 
     for q in queries:
-        res = retrieve.search(idx, q["query"], embedder=embedder, k=max(k, 50))
+        res = retrieve.search(idx, q["query"], embedder=embedder, k=max(k, 50),
+                              expand=expand, expander=expander)
         if res.degraded:
             any_degraded = True
         hyp_cls = rank_to_classes(doc_ranking(res.hits, 50), canon, k)
@@ -194,6 +196,8 @@ def main(argv: list[str] | None = None) -> int:
                         "same-event meeting/source) for both sides")
     p.add_argument("--k", type=int, default=DEFAULT_K)
     p.add_argument("--band", type=float, default=DEFAULT_BAND)
+    p.add_argument("--expand", type=int, default=0,
+                   help="multi-query expansion variants per query (0 = off)")
     p.add_argument("--json", action="store_true")
     args = p.parse_args(argv)
 
@@ -204,11 +208,15 @@ def main(argv: list[str] | None = None) -> int:
         import corpus_equivalence
         classes = corpus_equivalence.equivalence_classes(Path(args.corpus))
         canon = {p: members[0] for p, members in classes.items()}  # canonical = first member
+    expander = None
+    if args.expand:
+        from hypermnesic import expand as expand_mod
+        expander = expand_mod.OpenAIExpander()
     idx = index.Index(Path(args.index_db))
     embedder = embed.OpenAIEmbedder()
     result = run_parity(idx, embedder, load_queries(args.queries),
                         load_baseline(args.baseline), k=args.k, band=args.band,
-                        canon=canon)
+                        canon=canon, expand=args.expand, expander=expander)
     idx.close()
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
