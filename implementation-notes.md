@@ -197,3 +197,27 @@ recalibrated to intent (operator-authorized): hyp ≥ gbrain on recall@10
 pre-U7 threat-model sign-off (`docs/threat-model-commit-note.md`).
 UB doc-lane up-weighting measured + rejected (traded recall for MRR; w=1.0
 default). Full record: `harness/PARITY_VERDICT.md`.
+
+## Phase 1 — write kernel (in progress; dev against temp repos only)
+
+Threat model signed off 2026-06-01; U5 gate PASS. Built in dependency order:
+
+- **U8 frontmatter gate** (`frontmatter_gate.py`): diff-or-die. ruamel RT (indent
+  matched to vault 2-space style) + a guard that aborts on any unrequested key
+  change. Scalar dates/`_`-props/order preserved; non-canonical docs abort (safe).
+- **U11 audit log** (`audit_log.py`): append-only JSONL, summaries-only
+  (truncated), server-set actor (Tailscale node id / sentinel; caller ignored),
+  reconciler back-fills unlogged commits.
+- **U7 commit_note** (`commit_note.py`): guard → gate → write → git stage+commit →
+  `idx.upsert_lexical` (embeddings async, AE5) → audit append → return diff.
+  Idempotent on content; gate abort = no partial effect.
+  **Deviation:** commits per note (durable unit = a real commit, recoverable via
+  reconciler + U9 checkpoint), vs the plan's "git stage" wording. git is the only
+  sync layer, so a commit per write is the natural git-native unit.
+- **U12 guard** (`serialize.py`): rule-based protected-path denylist + within-repo
+  + allowlist. Multi-writer **serialization (worktree/path-scoped locks) is the
+  remaining half of U12** — follow-up.
+- **Remaining Phase-1 units:** U9 (index = pure projection of git tree + SHA
+  checkpoint catch-up + working-tree overlay), U10 (rename/move one-surface),
+  U12 serialization. No live gbrain-brain write / cron repoint without explicit
+  per-action go-ahead (sign-off proviso).
