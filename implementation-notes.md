@@ -174,3 +174,16 @@ reranker toggle** for the baseline.
   achieved; the gap is ranking precision, plausibly gbrain's multi-query
   expansion vs hyp's plain RRF. Addressable via fusion/expansion, not a rebuild.
   Full sanitized verdict: `harness/PARITY_VERDICT.md`.
+
+## LLM-as-judge label automation (Codex / ChatGPT Pro)
+
+- `judge_labels.py`: pooled, **system-blind** LLM-as-judge labeling (candidates
+  from both systems, rank/source stripped, shuffled, judged on content). Default
+  judge = `CodexJudge` (`codex exec --json`, ChatGPT login — **no OpenAI API key**
+  for judging; embeddings for pooling are the pinned index model). `label_review.py`
+  remains for manual checkbox review.
+- **Gate-of-record (LLM-judged):** provisional FAIL at near-parity — hyp recall@10
+  0.871 vs 0.818 (wins, incl. French), MRR 0.704 vs 0.769 (gbrain wins, French MRR
+  0.677 vs 0.786). Robust across 3 labelings: recall parity-or-better, consistent
+  ~0.05–0.07 MRR deficit. Confirms the MRR gap is index-side (compiled-truth
+  representation), a Phase-2 item — not a labeling artifact or a query-side fix.
