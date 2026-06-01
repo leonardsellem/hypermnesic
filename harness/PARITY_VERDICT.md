@@ -61,6 +61,28 @@ doc in top-10, hypermnesic did not).
   addressable ranking-precision gap, not a fundamental retrieval limitation.
 - No tuning was done to chase a PASS.
 
+## Ranking-precision experiments (the MRR gap)
+
+Two query-side levers were tried to close the small aggregate-MRR gap; both were
+measured against the faithful baseline and **neither closed it** (no tuning to
+chase a PASS):
+
+| Variant | recall@10 | MRR | Note |
+|---|---|---|---|
+| baseline (dense + phrase-lexical) | **0.875** | 0.559 | the faithful result above |
+| lexical OR-of-terms | 0.812 | 0.483 | **worse** — floods candidates with weak common-term matches; reverted |
+| + multi-query expansion (×3) | 0.844 | 0.563 | **neutral** (+0.004 MRR, −0.031 recall); kept as an optional, off-by-default feature |
+
+**Diagnosis — the residual MRR edge is index-side, not query-side.** gbrain
+embeds a *compiled/summarized* per-page representation (its results carry
+`chunk_source: compiled_truth`) and uses tuned hybrid fusion; hypermnesic embeds
+raw markdown chunks. Query-side tricks (expansion, lexical widening) don't move a
+representation gap. Closing it is a chunking/representation change (Phase-2
+territory: a compiled-summary embedding lane and/or fusion-weight tuning), not a
+quick query tweak — so it is **not** pursued now. Multi-query expansion is
+retained as an opt-in capability (`--expand N`, default off; matches gbrain's
+expansion and may help other corpora/query styles).
+
 ## Required before this can gate Phase 1 (operator)
 
 1. **Human-review the labels** (KTD6) — agent-proposed known-item labels need

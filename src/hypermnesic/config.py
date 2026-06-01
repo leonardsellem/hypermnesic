@@ -18,6 +18,10 @@ from pathlib import Path
 EMBED_MODEL = "text-embedding-3-large"
 EMBED_DIM = 1536
 
+# Optional multi-query expansion (retrieval ranking aid). A small chat model;
+# expansion is opt-in and degrades gracefully if the model is unavailable.
+EXPANSION_MODEL = "gpt-4o-mini"
+
 # .env candidates, searched in order. Monkeypatched in tests.
 _DOTENV_PATHS = [Path.cwd() / ".env"]
 

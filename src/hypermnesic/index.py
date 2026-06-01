@@ -131,6 +131,11 @@ class Index:
         ).fetchall()
 
     def lexical_search(self, query_text: str, k: int = 10):
+        # Phrase-match the query tokens. This is precise for exact/proper-noun
+        # queries and gracefully no-ops on free-form NL questions (the dense
+        # channel carries those). Measured: OR-of-terms floods the candidate set
+        # with weak common-term matches and degrades fused ranking, so we keep
+        # the precise phrase form and let dense own semantic recall.
         q = query_text.replace('"', " ").strip()
         if not q:
             return []

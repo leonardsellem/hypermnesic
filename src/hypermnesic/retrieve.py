@@ -50,7 +50,9 @@ def _rrf(rank: int) -> float:
 
 def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50,
            rerank: Callable[[str, list[Hit]], list[Hit]] | None = None,
-           collapse_duplicates: bool = True) -> SearchResult:
+           collapse_duplicates: bool = True,
+           expand: int = 0,
+           expander: Callable[[str, int], list[str]] | None = None) -> SearchResult:
     """Hybrid search over ``idx``. Returns up to ``k`` fused hits.
 
     ``rerank`` (optional) reorders the fused top-``candidate_k`` *without changing
@@ -61,28 +63,46 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
     at two paths (e.g. ``docs/x`` and ``projects/.../docs/x``); without this they
     flood the result list and crowd out distinct docs (the q07 parity artifact)
     — and a user gets a half-duplicate list. Keeps the highest-ranked copy.
+
+    ``expand`` / ``expander`` (optional multi-query expansion): generate up to
+    ``expand`` alternative phrasings of the query and fuse the **dense** results
+    of every variant via RRF. A doc that the target answers from several angles
+    accumulates rank-fusion mass, which lifts ranking precision (the MRR gap vs
+    gbrain, which runs its own multi-query expansion). Graceful: an expander
+    failure falls back to no expansion. Lexical runs on the original query only
+    (phrase-matching paraphrases is noisy).
     """
     fused: dict[int, float] = {}
     channels: dict[int, set[str]] = {}
 
-    # lexical channel
+    # lexical channel (original query only)
     lexical_used = True
     for rank, (cid, _bm25) in enumerate(idx.lexical_search(query, k=candidate_k)):
         fused[cid] = fused.get(cid, 0.0) + _rrf(rank)
         channels.setdefault(cid, set()).add("lexical")
 
-    # dense channel (graceful degradation on embedding failure)
-    dense_used = False
-    if embedder is not None:
+    # build the dense query set: original + expansion variants (graceful)
+    queries = [query]
+    if expand and expander is not None:
         try:
-            qvec = embedder.embed([query])[0]
-            dense_used = True
+            variants = expander(query, expand)
+        except Exception:  # any expander failure → no expansion, never crash
+            variants = []
+        queries += [v for v in (variants or []) if v and v.strip()]
+
+    # dense channel (graceful degradation on embedding failure), fused across variants
+    dense_used = False
+    for qi in queries:
+        try:
+            qvec = embedder.embed([qi])[0] if embedder is not None else None
         except embed_mod.EmbeddingError:
             qvec = None
-        if qvec is not None:
-            for rank, (cid, _dist) in enumerate(idx.dense_search(qvec, k=candidate_k)):
-                fused[cid] = fused.get(cid, 0.0) + _rrf(rank)
-                channels.setdefault(cid, set()).add("dense")
+        if qvec is None:
+            continue
+        dense_used = True
+        for rank, (cid, _dist) in enumerate(idx.dense_search(qvec, k=candidate_k)):
+            fused[cid] = fused.get(cid, 0.0) + _rrf(rank)
+            channels.setdefault(cid, set()).add("dense")
 
     ranked = sorted(fused.items(), key=lambda kv: kv[1], reverse=True)
     hits: list[Hit] = []
