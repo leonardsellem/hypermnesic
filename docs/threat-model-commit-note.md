@@ -147,3 +147,15 @@ and crash-recovery do not conflict.
 This artifact must be **reviewed and signed off by the operator** before U7
 begins. Pair it with the cleared U5 parity gate; together they are the Phase-1
 entry condition.
+
+### Sign-off
+
+- **2026-06-01 — operator (Leonard Sellem): reviewed and APPROVED.** U5 parity
+  gate is PASS (`harness/PARITY_VERDICT.md`); both Phase-1 entry conditions met.
+  Phase 1 (U7–U12) is authorized to begin.
+- **Development-safety proviso (agent):** U7–U12 are built and tested against
+  **temporary fixture git repos only**. No write touches the live `gbrain-brain`
+  canonical checkout, and no ingest cron is repointed onto `commit_note`, without
+  an explicit per-action go-ahead. The protected-path guard (V1/U12) and
+  within-repo path check (V6) land before any write path is exercised on a real
+  repo.
