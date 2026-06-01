@@ -61,6 +61,40 @@ doc in top-10, hypermnesic did not).
   addressable ranking-precision gap, not a fundamental retrieval limitation.
 - No tuning was done to chase a PASS.
 
+## Gate-of-record: LLM-judged labels (pooled, system-blind)
+
+The labels were re-derived by an **LLM-as-judge** (`judge_labels.py`, via `codex
+exec` / ChatGPT — no API key): for each query the candidates from BOTH systems
+are pooled, stripped of rank/source, shuffled, and judged on content alone — so
+labels stay independent of the ranking under test. 31/32 queries judged (median
+3 relevant docs each).
+
+| Metric | hypermnesic | gbrain (hybrid, un-reranked) | Δ |
+|---|---|---|---|
+| recall@10 (all) | **0.871** | 0.818 | +0.052 |
+| MRR (all) | 0.704 | **0.769** | −0.065 |
+| recall@10 (French) | **0.825** | 0.797 | +0.028 |
+| MRR (French) | 0.677 | **0.786** | −0.109 |
+| recall@10 (English) | **0.929** | 0.845 | +0.084 |
+
+Verdict: **provisional `fail`** on the MRR band (hyp wins recall everywhere,
+gbrain wins ranking precision, esp. French). (The catastrophic-French-miss count
+rises under multi-relevant pooled labels — the AE6 single-French-floor clause is
+conservative here since hyp's *aggregate* French recall is actually higher; not
+tuned to change this.)
+
+### The result is robust across three independent labelings
+
+| Labels | Δrecall@10 | Δmrr | takeaway |
+|---|---|---|---|
+| agent, title-derived queries | (confounded by `gbrain search`) | — | superseded |
+| agent, NL queries (vs gbrain hybrid) | **+0.031** | −0.052 | recall↑, mrr↓ |
+| LLM-judged, NL queries (vs gbrain hybrid) | **+0.052** | −0.065 | recall↑, mrr↓ |
+
+hypermnesic is **at-or-above parity on recall (incl. French) and consistently
+~0.05–0.07 behind on MRR**. The MRR deficit is stable and real — not a labeling
+artifact — which corroborates the index-side diagnosis below.
+
 ## Ranking-precision experiments (the MRR gap)
 
 Two query-side levers were tried to close the small aggregate-MRR gap; both were
