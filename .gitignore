@@ -1,0 +1,23 @@
+# hypermnesic engine state (disposable, rebuildable index) — never tracked.
+.hypermnesic/
+
+# Secrets — the OpenAI key lives in .env (env/secrets only; never committed).
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Local index / scratch artifacts
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.ruff_cache/
