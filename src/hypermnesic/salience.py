@@ -150,11 +150,16 @@ def build_digest_note(items: list[SalienceScore], *, now: str | None = None) -> 
     return generated.render(fm, body)
 
 
-def digest_proposal(repo, idx, graph, audit_log, *, top_n: int = 10, log=None,
-                    gh_create=None, now: str | None = None):
+def digest_proposal(repo, idx, graph, audit_log, *, embedder=None, top_n: int = 10,
+                    log=None, gh_create=None, now: str | None = None):
     """Emit the spaced-review digest as a review-gated U18 proposal (never silent,
-    never a source-note mutation)."""
-    items = dormant_salient(score_notes(idx, graph, audit_log), top_n=top_n)
+    never a source-note mutation).
+
+    Pass ``embedder`` so ``score_notes`` forces full convergence (U30/FR-R39) before
+    reading ``note_vectors()`` — otherwise the digest's centrality is computed on a
+    half-embedded corpus after a write. ``repo`` is already in hand."""
+    items = dormant_salient(
+        score_notes(idx, graph, audit_log, embedder=embedder, repo=repo), top_n=top_n)
     note = build_digest_note(items, now=now)
     return propose_mod.propose(
         repo, [propose_mod.Change(path=DIGEST_REL, body=note)],

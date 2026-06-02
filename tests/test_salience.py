@@ -148,3 +148,16 @@ def test_salience_report_is_iterable_and_carries_coverage(make_corpus, fake_embe
     assert len(report) == len(list(report)) == len(report.scores)
     assert report[0] is report.scores[0]                      # indexable like the list it wraps
     idx.close()
+
+
+def test_digest_proposal_forces_full_coverage(make_corpus, fake_embedder, tmp_path):
+    # Review #2: digest_proposal must thread embedder/repo into score_notes so the
+    # spaced-review digest's centrality is computed over a fully-embedded corpus.
+    repo, idx, g, log = _env(make_corpus, fake_embedder, tmp_path)
+    cn.commit_note(repo, "notes/fresh.md", body="# Fresh\n\nfresh unembedded note.\n",
+                   idx=idx, log=log)
+    assert idx.stale_chunk_ids()                              # lexical-ahead gap exists
+    salience.digest_proposal(repo, idx, g, log, embedder=fake_embedder, top_n=5,
+                             gh_create=None, now="2026-06-02T00:00:00+00:00")
+    assert not idx.stale_chunk_ids()                          # digest forced a full embed first
+    idx.close()

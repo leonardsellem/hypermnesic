@@ -313,7 +313,10 @@ def _is_md(path: str) -> bool:
 
 def _changed_md_since(repo: Path, old: str, new: str) -> list[tuple[str, str]]:
     out = subprocess.run(
-        ["git", "-C", str(repo), "diff", "--name-status", f"{old}..{new}"],
+        # core.quotepath=false: emit non-ASCII paths raw (café.md, 日記.md) instead of
+        # octal-escaped+quoted, so _is_md matches them and they are not silently dropped.
+        ["git", "-C", str(repo), "-c", "core.quotepath=false",
+         "diff", "--name-status", f"{old}..{new}"],
         capture_output=True, text=True, check=True).stdout
     changes: list[tuple[str, str]] = []
     for line in out.splitlines():
@@ -326,7 +329,8 @@ def _changed_md_since(repo: Path, old: str, new: str) -> list[tuple[str, str]]:
 
 
 def _md_files_at(repo: Path, sha: str) -> list[str]:
-    out = subprocess.run(["git", "-C", str(repo), "ls-tree", "-r", "--name-only", sha],
+    out = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
+                          "ls-tree", "-r", "--name-only", sha],
                          capture_output=True, text=True, check=True).stdout
     return [p for p in out.splitlines() if _is_md(p)]
 
@@ -390,9 +394,13 @@ def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
         if status == "D":
             idx.remove_path(path)
             continue
-        content = subprocess.run(["git", "-C", str(repo), "show", f"{head}:{path}"],
-                                 capture_output=True, text=True).stdout
-        chunks = ingest.chunks_for_text(path, content)
+        shown = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
+                                "show", f"{head}:{path}"], capture_output=True, text=True)
+        if shown.returncode != 0:
+            # transient git failure (object missing, pruned, corrupt) — leave the path's
+            # existing index rows intact rather than blanking them with empty content.
+            continue
+        chunks = ingest.chunks_for_text(path, shown.stdout)
         idx.upsert_lexical(path, chunks)
         if embedder is not None and chunks:
             vectors = embedder.embed([c.text for c in chunks])
@@ -559,7 +567,8 @@ def apply_working_tree_overlay(idx: Index, repo: Path) -> list[str]:
     — a replica indexing the same committed SHA never sees these edits.
     """
     repo = Path(repo)
-    out = subprocess.run(["git", "-C", str(repo), "status", "--porcelain"],
+    out = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
+                          "status", "--porcelain"],
                          capture_output=True, text=True, check=True).stdout
     paths = set()
     for line in out.splitlines():

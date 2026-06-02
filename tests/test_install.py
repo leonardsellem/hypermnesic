@@ -9,13 +9,14 @@ idempotence. Live provisioning (``systemctl enable`` / ``docker compose up`` /
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 from hypermnesic import config, index, install
 
 _KEY = "sk-INSTALL-SENTINEL-must-not-leak"
-TAILNET_IP = "100.103.0.55"
+TAILNET_IP = "100.64.0.1"   # CGNAT/Tailscale documentation range — not a real node
 
 
 def _with_key(monkeypatch):
@@ -162,3 +163,48 @@ def test_cli_install_engine_role_without_key_returns_1(make_corpus, monkeypatch,
     rc = cli.main(["install", str(repo), "--role", "master", "--bind", TAILNET_IP])
     assert rc == 1                                              # fail loud, clean non-zero exit
     assert "install failed" in capsys.readouterr().err
+
+
+# --- review fixes -----------------------------------------------------------
+
+def test_engine_role_on_non_git_repo_fails_loud_no_artifacts(make_corpus, monkeypatch):
+    # Review #4: a non-git repo must fail BEFORE any artifact is written (no half-provision)
+    # and as InstallError (not a raw FileNotFoundError from install_hooks).
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"}, git=False)
+    with pytest.raises(install.InstallError):
+        install.install("master", repo=repo, bind=TAILNET_IP)
+    assert not (repo / ".hypermnesic" / "hypermnesic.service").exists()
+    assert not (repo / ".hypermnesic" / "config.json").exists()
+
+
+def test_cli_install_non_git_returns_1_not_traceback(make_corpus, monkeypatch, tmp_path, capsys):
+    from hypermnesic import cli
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"}, git=False)
+    rc = cli.main(["install", str(repo), "--role", "master", "--bind", TAILNET_IP])
+    assert rc == 1 and "install failed" in capsys.readouterr().err
+
+
+def test_client_resets_malformed_mcpservers(monkeypatch, tmp_path):
+    # Review #7: an existing config whose mcpServers is a non-dict must not raise TypeError.
+    cfg = tmp_path / "c.json"
+    cfg.write_text(json.dumps({"mcpServers": ["oops"]}))
+    url = "http://m/mcp"
+    install.install("client", master_url=url, mcp_config_path=str(cfg))
+    data = json.loads(cfg.read_text())
+    assert data["mcpServers"]["hypermnesic"]["url"] == url     # reset to a dict, no crash
+
+
+def test_strip_managed_preserves_content_when_end_marker_missing():
+    # Review #9: a managed block with no END marker (truncated/corrupt) must not delete
+    # the operator's trailing content.
+    text = f"#!/bin/sh\necho keep-me\n{install._MANAGED_BEGIN}\nmanaged line\n"
+    out = install._strip_managed(text)
+    assert "keep-me" in out and "managed line" in out
+
+
+def test_managed_block_shell_quotes_repo_path():
+    # Review #6: a repo path with shell metacharacters is shlex-quoted in the hook command.
+    block = install._managed_block(Path("/tmp/has space/repo"))
+    assert "converge '/tmp/has space/repo'" in block
