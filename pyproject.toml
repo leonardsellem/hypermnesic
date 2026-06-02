@@ -1,7 +1,7 @@
 [project]
 name = "hypermnesic"
 version = "0.0.3"
-description = "A markdown-native, git-as-source-of-truth memory layer: a disposable, rebuildable retrieval index over any repository, exposed read-only over a tailnet-only MCP server."
+description = "A markdown-native, git-as-source-of-truth memory layer: a disposable, rebuildable retrieval index over any repository, served over a tailnet-only MCP server (read tools always; a gated, git-first commit_note write tool on a write-enabled master)."
 requires-python = ">=3.11"
 license = { text = "Proprietary" }
 authors = [{ name = "Leonard Sellem" }]
@@ -28,6 +28,14 @@ sidecar = [
     "markitdown>=0.0.1",   # MIT — DOCX/PPTX and fast/simple PDF/XLSX
     "pypdf>=4.0",          # BSD — permissive scanned-vs-native + page probe (NOT PyMuPDF)
     "pdfplumber>=0.11",    # MIT — permissive table-density heuristic
+]
+
+# LongMemEval benchmark harness (Phase 2 reader). Permissive only (KTD1) — the
+# license gate MUST stay clean with this installed: tiktoken is MIT. Not part of
+# the engine or `dev`; CI's offline smoke does not need it (the reader's token
+# counter is injectable for tests).
+bench = [
+    "tiktoken>=0.7",       # MIT — o200k_base token counting for the GPT-4.1/4o reader
 ]
 
 [project.scripts]

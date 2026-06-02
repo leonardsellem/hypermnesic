@@ -1,248 +1,299 @@
 /**
- * U25 — hypermnesic companion: retrieval-while-writing (H2). [R6/H2/KD2]
+ * hypermnesic companion — a strictly read-only recall surface over the tailnet
+ * hypermnesic MCP. (Phase 2.5 Plan 2.)
  *
- * A thin DESKTOP plugin that, on a debounce, sends the current note's text to the
- * existing tailnet `search` / `build_context` MCP and renders a "related notes /
- * you may be reinventing [[X]]" sidebar.
+ * READ-ONLY BY CONSTRUCTION: all engine access goes through src/core.ts's
+ * callTool(), which refuses any tool outside READ_ONLY_TOOLS. The plugin performs
+ * NO vault writes — no modify/create/delete/append/trash calls, no adapter writes.
+ * Writes belong to agents via the engine's gated commit_note tool, never here.
  *
- * STRICTLY READ-ONLY (KD2/R10): this plugin issues ONLY the two read tools
- * (`search`, `build_context`) over the MCP and performs NO vault writes — no
- * `vault.modify/create/delete/append/trash`, no `adapter.write`. Any write the
- * owner chooses to make flows through the U18 git proposal path, never from here.
- * It also retains no note text between calls (the buffer is local to each call).
+ * The shared retrieval core (U36) fans one ranked result (U37) out to the calm
+ * surfaces (U38), thinking-mode + selection-recall (U39), and the interrogable
+ * reinvention nudge (U40). One interaction-state machine + the trust layer,
+ * accessibility, settings, and Obsidian compliance are U41.
  */
 import {
+  Editor,
   ItemView,
+  MarkdownFileInfo,
   MarkdownView,
+  Notice,
   Plugin,
-  PluginSettingTab,
-  Setting,
+  TFile,
   WorkspaceLeaf,
   debounce,
-  requestUrl,
 } from "obsidian";
+import { DEFAULT_SETTINGS, HypermnesicSettings } from "./src/types";
+import { HypermnesicSettingTab } from "./src/settings";
+import { RetrievalCore, extractCursorWindow } from "./src/core";
+import { RecallStateMachine, StateSnapshot } from "./src/state";
+import { RenderDeps, renderResultList } from "./src/surfaces/render";
+import { StatusBarSurface } from "./src/surfaces/statusbar";
+import { hypermnesicGutter } from "./src/surfaces/gutter";
+import { runThinking } from "./src/thinking";
+import { NudgeStore, renderNudge } from "./src/nudge";
 
-const VIEW_TYPE = "hypermnesic-related";
+export const SIDEBAR_VIEW_TYPE = "hypermnesic-recall";
 
-interface HypermnesicSettings {
-  mcpUrl: string; // tailnet MCP endpoint, e.g. http://100.x.y.z:8848/mcp
-  debounceMs: number;
-  resultCount: number;
-  reinventThreshold: number; // similarity above which to warn "reinventing [[X]]"
+interface PluginData {
+  settings: HypermnesicSettings;
+  mutedNotes: string[];
 }
 
-const DEFAULT_SETTINGS: HypermnesicSettings = {
-  mcpUrl: "http://100.64.0.55:8848/mcp",
-  debounceMs: 1200,
-  resultCount: 8,
-  reinventThreshold: 0.85,
-};
-
-interface Hit {
-  path: string;
-  heading: string;
-  score: number;
-  snippet: string;
-}
-
-/** Minimal JSON-RPC call to a FastMCP streamable-http tool. READ tools only. */
-async function callTool(url: string, tool: string, args: Record<string, unknown>): Promise<any> {
-  // Allowlist of callable tools — a hard guarantee this client is read-only.
-  const READ_ONLY_TOOLS = new Set(["search", "build_context"]);
-  if (!READ_ONLY_TOOLS.has(tool)) {
-    throw new Error(`hypermnesic companion is read-only; refusing tool '${tool}'`);
-  }
-  const body = {
-    jsonrpc: "2.0",
-    id: 1,
-    method: "tools/call",
-    params: { name: tool, arguments: args },
-  };
-  const res = await requestUrl({
-    url,
-    method: "POST",
-    contentType: "application/json",
-    headers: { Accept: "application/json, text/event-stream" },
-    body: JSON.stringify(body),
-  });
-  return res.json;
-}
-
-class RelatedView extends ItemView {
-  plugin: HypermnesicPlugin;
-
-  constructor(leaf: WorkspaceLeaf, plugin: HypermnesicPlugin) {
+/** The opt-in sidebar. It renders the core's last snapshot through the shared
+ *  renderer; it issues no query of its own (KTD1). */
+class RecallSidebarView extends ItemView {
+  constructor(
+    leaf: WorkspaceLeaf,
+    private plugin: HypermnesicPlugin,
+  ) {
     super(leaf);
-    this.plugin = plugin;
   }
 
   getViewType(): string {
-    return VIEW_TYPE;
+    return SIDEBAR_VIEW_TYPE;
   }
   getDisplayText(): string {
-    return "hypermnesic — related";
+    return "hypermnesic — recall";
   }
   getIcon(): string {
     return "links-coming-in";
   }
 
   async onOpen(): Promise<void> {
-    this.render([], null, "idle");
+    this.draw();
   }
 
-  /** Render related notes + an optional "reinventing" warning. Pure DOM, no writes. */
-  render(hits: Hit[], warning: string | null, state: "idle" | "loading" | "error" | "ok"): void {
-    const root = this.containerEl.children[1];
-    root.empty();
-    root.createEl("h4", { text: "Related notes" });
-
-    if (state === "loading") {
-      root.createEl("div", { text: "thinking…", cls: "hypermnesic-status" });
-      return;
-    }
-    if (state === "error") {
-      root.createEl("div", {
-        text: "offline — could not reach the tailnet index",
-        cls: "hypermnesic-status",
-      });
-      return;
-    }
-    if (warning) {
-      const w = root.createEl("div", { cls: "hypermnesic-warning" });
-      w.createEl("strong", { text: "⚠ You may be reinventing: " });
-      w.createSpan({ text: warning });
-    }
-    if (hits.length === 0) {
-      root.createEl("div", { text: "nothing related yet", cls: "hypermnesic-status" });
-      return;
-    }
-    const list = root.createEl("ul", { cls: "hypermnesic-related-list" });
-    for (const h of hits) {
-      const li = list.createEl("li");
-      const a = li.createEl("a", { text: h.path, cls: "internal-link" });
-      a.addEventListener("click", (evt) => {
-        evt.preventDefault();
-        // read-only navigation: open the existing note, never create one
-        this.app.workspace.openLinkText(h.path, "", false);
-      });
-      if (h.heading) li.createSpan({ text: ` — ${h.heading}` });
-    }
+  draw(): void {
+    const root = this.containerEl.children[1] as HTMLElement;
+    renderResultList(root, this.plugin.snapshot, this.plugin.renderDeps);
   }
 }
 
 export default class HypermnesicPlugin extends Plugin {
   settings: HypermnesicSettings = DEFAULT_SETTINGS;
+  private mutedNotes = new Set<string>();
+
+  core!: RetrievalCore;
+  renderDeps!: RenderDeps;
+  private machine = new RecallStateMachine();
+  snapshot: StateSnapshot = this.machine.snapshot;
+
+  private statusBar: StatusBarSurface | null = null;
 
   async onload(): Promise<void> {
-    await this.loadSettings();
-    this.registerView(VIEW_TYPE, (leaf) => new RelatedView(leaf, this));
-    this.addRibbonIcon("links-coming-in", "hypermnesic related notes", () => this.activateView());
-    this.addCommand({
-      id: "open-hypermnesic-related",
-      name: "Open related-notes panel",
-      callback: () => this.activateView(),
+    await this.loadPersisted();
+
+    this.core = new RetrievalCore({
+      getUrl: () => this.settings.mcpUrl,
+      getSettings: () => this.settings,
+      mtimeFallback: (path) => this.localMtimeSeconds(path),
+      now: () => Date.now() / 1000,
     });
+    void this.core.probe();
+
+    this.renderDeps = this.buildRenderDeps();
+
+    this.registerView(SIDEBAR_VIEW_TYPE, (leaf) => new RecallSidebarView(leaf, this));
+
+    if (this.settings.showStatusBar) this.createStatusBar();
+
+    // Optional CM6 inline marker — registered via the supported extension path
+    // (auto-cleaned on unload). Pulls from the core; never queries or mutates.
+    this.registerEditorExtension(
+      hypermnesicGutter({
+        enabled: () => this.settings.showGutter,
+        count: () => this.snapshot.result?.hits.length ?? 0,
+      }),
+    );
+
+    this.addCommand({
+      id: "open-recall-sidebar",
+      name: "Open recall sidebar",
+      callback: () => void this.activateSidebar(),
+    });
+    this.addCommand({
+      id: "recall-related-now",
+      name: "Recall related notes now",
+      callback: () => void this.triggerRecall(),
+    });
+    this.addCommand({
+      id: "think-about-note",
+      name: "Think about this note or selection",
+      callback: () => void this.thinkAbout(),
+    });
+    this.addCommand({
+      id: "recall-about-selection",
+      name: "Recall about selection",
+      editorCallback: (editor, ctx) => void this.recallSelection(editor, ctx),
+    });
+
     this.addSettingTab(new HypermnesicSettingTab(this.app, this));
 
-    const onChange = debounce(
-      () => void this.refresh(),
-      this.settings.debounceMs,
-      true,
-    );
-    this.registerEvent(this.app.workspace.on("editor-change", () => onChange()));
+    // OAuth seam (DEP-R18): future MCP OAuth attaches here via
+    // registerObsidianProtocolHandler + PKCE. Intentionally NOT implemented now —
+    // the tailnet membership is the boundary, and no credential is read or logged.
+
+    // Pause trigger: resetTimer debounce fires only after typing stops for
+    // pauseMs — never per-keystroke; findings hold during sustained typing.
+    const onPause = debounce(() => void this.triggerRecall(), this.settings.pauseMs, true);
+    this.registerEvent(this.app.workspace.on("editor-change", () => onPause()));
+
+    if (this.settings.openSidebarOnLoad) {
+      this.app.workspace.onLayoutReady(() => void this.activateSidebar());
+    }
   }
 
   onunload(): void {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+    // Intentionally no leaf detaching on unload: Obsidian tears down registered
+    // views itself and preserves leaf placement across plugin updates. (Detaching
+    // leaves here was the prior guideline violation this redesign removed.)
   }
 
-  async activateView(): Promise<void> {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+  // ───────────────────────────── pipeline + surfaces ────────────────────────
+
+  /** The core trigger: extract the cursor window and run one query. */
+  async triggerRecall(): Promise<void> {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) return;
+    const windowText = extractCursorWindow(view.editor);
+    const activePath = view.file?.path ?? "";
+
+    this.applySnapshot(this.machine.loading());
+    try {
+      const result = await this.core.run(windowText, activePath);
+      this.applySnapshot(this.machine.success(result));
+    } catch {
+      this.applySnapshot(this.machine.failure("offline"));
+    }
+  }
+
+  /** Selection-as-query recall (FR-R16): send the highlighted text to search. */
+  async recallSelection(editor: Editor, ctx: MarkdownView | MarkdownFileInfo): Promise<void> {
+    const selection = editor.getSelection().trim();
+    if (!selection) {
+      new Notice("hypermnesic: select some text to recall about");
+      return;
+    }
+    await this.activateSidebar();
+    this.applySnapshot(this.machine.loading());
+    try {
+      const result = await this.core.run(selection, ctx.file?.path ?? "");
+      this.applySnapshot(this.machine.success(result));
+    } catch {
+      this.applySnapshot(this.machine.failure("offline"));
+    }
+  }
+
+  /** Thinking-mode (FR-R10/11): selection, else cursor window, else note title. */
+  async thinkAbout(): Promise<void> {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) {
+      new Notice("hypermnesic: open a note to think about");
+      return;
+    }
+    const selection = view.editor.getSelection().trim();
+    const topic = selection || extractCursorWindow(view.editor) || view.file?.basename || "";
+    await runThinking(this.app, this.settings.mcpUrl, topic, this.core.capabilities.hasThink);
+  }
+
+  /** Fan the one snapshot out to every surface (KTD1). */
+  private applySnapshot(snapshot: StateSnapshot): void {
+    this.snapshot = snapshot;
+    this.statusBar?.update(snapshot);
+    for (const leaf of this.app.workspace.getLeavesOfType(SIDEBAR_VIEW_TYPE)) {
+      const view = leaf.view;
+      if (view instanceof RecallSidebarView) view.draw();
+    }
+  }
+
+  private buildRenderDeps(): RenderDeps {
+    return {
+      app: this.app,
+      openNote: (path) => this.app.workspace.openLinkText(path, "", false),
+      renderNudge: (host, snapshot) => {
+        if (!snapshot.result) return;
+        renderNudge(host, snapshot.result, {
+          app: this.app,
+          getUrl: () => this.settings.mcpUrl,
+          store: this.nudgeStore(),
+          threshold: () => this.settings.reinventThreshold,
+          activePath: () => this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path ?? "",
+          openNote: (path) => this.app.workspace.openLinkText(path, "", false),
+        });
+      },
+    };
+  }
+
+  private createStatusBar(): void {
+    const el = this.addStatusBarItem();
+    this.statusBar = new StatusBarSurface(el, this.renderDeps, this.snapshot);
+    // Remove the body-appended popover on unload (auto-cleanup).
+    this.register(() => this.statusBar?.dispose());
+  }
+
+  /** Settings-tab hook: re-probe capabilities after a URL change. */
+  onSettingsChanged(): void {
+    void this.core.probe();
+  }
+
+  // ───────────────────────────── nudge mute (plugin-local) ──────────────────
+
+  private nudgeStore(): NudgeStore {
+    return {
+      isMuted: (notePath) => this.mutedNotes.has(notePath),
+      mute: async (notePath) => {
+        this.mutedNotes.add(notePath);
+        await this.persist();
+      },
+      unmute: async (notePath) => {
+        this.mutedNotes.delete(notePath);
+        await this.persist();
+      },
+    };
+  }
+
+  // ───────────────────────────── helpers + persistence ──────────────────────
+
+  /** Local mtime (epoch seconds) for a vault path, or null. A read-only stat —
+   *  the forgetting-curve fallback when the engine recency is absent. */
+  localMtimeSeconds(path: string): number | null {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    return file instanceof TFile ? file.stat.mtime / 1000 : null;
+  }
+
+  /** Reveal the recall sidebar, reusing an existing leaf if one is open. */
+  async activateSidebar(): Promise<void> {
+    const existing = this.app.workspace.getLeavesOfType(SIDEBAR_VIEW_TYPE);
+    if (existing.length > 0) {
+      this.app.workspace.revealLeaf(existing[0]);
+      return;
+    }
     const leaf = this.app.workspace.getRightLeaf(false);
     if (leaf) {
-      await leaf.setViewState({ type: VIEW_TYPE, active: true });
+      await leaf.setViewState({ type: SIDEBAR_VIEW_TYPE, active: true });
       this.app.workspace.revealLeaf(leaf);
     }
   }
 
-  /** Read the active note, query the read-only MCP, render. No text is retained. */
-  async refresh(): Promise<void> {
-    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
-    if (!view || leaves.length === 0) return;
-    const panel = leaves[0].view as RelatedView;
-
-    let text = view.editor.getValue().slice(0, 4000); // bounded query; local to this call
-    const activePath = view.file?.path ?? "";
-    if (!text.trim()) {
-      panel.render([], null, "ok");
-      text = "";
-      return;
-    }
-
-    panel.render([], null, "loading");
-    try {
-      const resp = await callTool(this.settings.mcpUrl, "search", {
-        query: text,
-        k: this.settings.resultCount,
-      });
-      const payload = parseToolResult(resp);
-      const hits: Hit[] = (payload?.hits ?? [])
-        .filter((h: Hit) => h.path !== activePath)
-        .slice(0, this.settings.resultCount);
-      const top = hits[0];
-      const warning =
-        top && top.score >= this.settings.reinventThreshold ? `[[${top.path}]]` : null;
-      panel.render(hits, warning, "ok");
-    } catch (e) {
-      panel.render([], null, "error");
-    } finally {
-      text = ""; // retain no note text between calls
-    }
+  async loadPersisted(): Promise<void> {
+    const raw = (await this.loadData()) as Partial<PluginData> | Partial<HypermnesicSettings> | null;
+    // Back-compat: older builds stored the settings object at the top level.
+    const hasWrapper = !!raw && typeof raw === "object" && "settings" in raw;
+    const stored = hasWrapper
+      ? (raw as PluginData).settings
+      : (raw as Partial<HypermnesicSettings> | null);
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, stored ?? {});
+    const muted = hasWrapper ? ((raw as PluginData).mutedNotes ?? []) : [];
+    this.mutedNotes = new Set(muted);
   }
 
-  async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  private async persist(): Promise<void> {
+    const data: PluginData = { settings: this.settings, mutedNotes: Array.from(this.mutedNotes) };
+    await this.saveData(data);
   }
+
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
-  }
-}
-
-/** FastMCP returns tool output as a content array of JSON text parts. */
-function parseToolResult(resp: any): any {
-  try {
-    const content = resp?.result?.content ?? [];
-    const textPart = content.find((c: any) => c.type === "text");
-    return textPart ? JSON.parse(textPart.text) : null;
-  } catch {
-    return null;
-  }
-}
-
-class HypermnesicSettingTab extends PluginSettingTab {
-  plugin: HypermnesicPlugin;
-  constructor(app: any, plugin: HypermnesicPlugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    new Setting(containerEl)
-      .setName("Tailnet MCP URL")
-      .setDesc("The read-only hypermnesic MCP endpoint (a Tailscale address).")
-      .addText((t) =>
-        t.setValue(this.plugin.settings.mcpUrl).onChange(async (v) => {
-          this.plugin.settings.mcpUrl = v;
-          await this.plugin.saveSettings();
-        }),
-      );
-    new Setting(containerEl).setName("Debounce (ms)").addText((t) =>
-      t.setValue(String(this.plugin.settings.debounceMs)).onChange(async (v) => {
-        this.plugin.settings.debounceMs = Number(v) || DEFAULT_SETTINGS.debounceMs;
-        await this.plugin.saveSettings();
-      }),
-    );
+    await this.persist();
   }
 }
