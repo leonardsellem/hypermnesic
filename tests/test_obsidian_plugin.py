@@ -123,6 +123,24 @@ def test_default_mcp_url_is_empty_and_guarded():
         assert "100.103.0.55" not in src, f"hardcoded IP reappeared in {name}"
 
 
+def test_plugin_follows_ui_guidelines():
+    # Obsidian plugin guidelines: build DOM with createEl (never *HTML injection),
+    # and ship no production console logging. Dotted matches so a prose mention of
+    # "innerHTML" in a comment is not a false positive — only real `.innerHTML`
+    # property access / call forms are forbidden.
+    forbidden = [
+        ".innerHTML",
+        ".outerHTML",
+        ".insertAdjacentHTML(",
+        "console.log(",
+        "console.debug(",
+    ]
+    offenders: list[str] = []
+    for name, src in _all_sources().items():
+        offenders += [f"{name}:{w}" for w in forbidden if w in src]
+    assert offenders == [], f"plugin must follow UI guidelines, found: {offenders}"
+
+
 def test_manifest_is_desktop_only_and_well_formed():
     manifest = json.loads(_MANIFEST.read_text(encoding="utf-8"))
     assert manifest["id"] == "hypermnesic-companion"
