@@ -3,12 +3,38 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import subprocess
 
 import pytest
 
-from hypermnesic import index, mcp_server
+from hypermnesic import config, index, mcp_server
+from hypermnesic import embed as embed_mod
 
 TAILNET_IP = "100.103.0.55"
+
+
+def _commit(repo, rel, body, msg="add"):
+    (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / rel).write_text(body, encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", msg],
+                   check=True, capture_output=True)
+
+
+def _call(srv, name, args):
+    """Invoke an MCP tool closure and return its parsed dict payload."""
+    out = asyncio.run(srv.call_tool(name, args))
+    if isinstance(out, tuple):          # (content_blocks, structured_result)
+        return out[1]
+    return json.loads(out[0].text)
+
+
+class _DownEmbedder:
+    dim = config.EMBED_DIM
+
+    def embed(self, texts):
+        raise embed_mod.EmbeddingError("API down")
 
 NOTE = """# Hetzner
 
@@ -68,3 +94,53 @@ def test_build_context_tool(built_index, fake_embedder):
     ctx = graph.build_context(backend.graph, "hetzner.md", depth=1)
     assert "net.md" in ctx
     backend.idx.close()
+
+
+# --- U28: reads converge before serving ------------------------------------
+
+def test_search_tool_converges_to_head_then_debounces(make_corpus, fake_embedder):
+    # FR-R41: the first read catches the index up to HEAD; a second immediate read
+    # is debounced (no re-converge), so a just-committed file is not yet reflected.
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+
+    _commit(repo, "first.md", "# First\n\nFIRSTMARKER content.\n", "add first")
+    out1 = _call(srv, "search", {"query": "FIRSTMARKER"})
+    assert any(h["path"] == "first.md" for h in out1["hits"])      # converged before serving
+
+    _commit(repo, "second.md", "# Second\n\nSECONDMARKER content.\n", "add second")
+    out2 = _call(srv, "search", {"query": "SECONDMARKER"})
+    assert not any(h["path"] == "second.md" for h in out2["hits"])  # debounced (no re-converge)
+
+
+def test_each_read_tool_converges(make_corpus, fake_embedder, monkeypatch):
+    from hypermnesic import converge as converge_mod
+    repo = make_corpus({"hetzner.md": NOTE, "net.md": NOTE2})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+
+    calls: list[str] = []
+    real = converge_mod.converge
+
+    def spy(*a, **k):
+        calls.append("converge")
+        return real(*a, **k)
+
+    monkeypatch.setattr(converge_mod, "converge", spy)
+    _call(srv, "search", {"query": "Hetzner"})
+    _call(srv, "build_context", {"path": "hetzner.md"})
+    _call(srv, "think", {"topic": "Hetzner"})
+    assert len(calls) == 3              # convergence ran on each read tool path
+
+
+def test_reads_degrade_to_lexical_when_embedder_down(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nDOWNMARKER alpha homelab.\n"})
+    index.build_index(repo, fake_embedder).close()         # built with a real (fake) embedder
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=_DownEmbedder(), repo=repo)
+    out = _call(srv, "search", {"query": "DOWNMARKER"})
+    assert out["degraded_lexical_only"] is True            # dense channel absent, flagged
+    assert any(h["path"] == "a.md" for h in out["hits"])   # lexical still answers; no error
