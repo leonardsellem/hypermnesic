@@ -273,9 +273,11 @@ export class ThinkingView extends ItemView {
     const list = sec.createEl("ul", { cls: "hypermnesic-prose-list" });
     for (const item of items) {
       const li = list.createEl("li");
-      void MarkdownRenderer.render(this.deps.rowDeps.app, item, li, this.sourcePath, this).then(() =>
-        this.guardProseLinks(li),
-      );
+      // Guard the rendered links even if render rejects, so a partial render can
+      // never leave an un-neutralized create-on-click link (R28 hardening).
+      void MarkdownRenderer.render(this.deps.rowDeps.app, item, li, this.sourcePath, this)
+        .then(() => this.guardProseLinks(li))
+        .catch(() => this.guardProseLinks(li));
     }
   }
 

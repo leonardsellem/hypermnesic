@@ -1,7 +1,7 @@
 ---
 title: "feat: First-class Obsidian UI for the hypermnesic companion"
 type: feat
-status: active
+status: completed
 date: 2026-06-02
 origin: docs/brainstorms/2026-06-02-obsidian-companion-first-class-ui-requirements.md
 ---

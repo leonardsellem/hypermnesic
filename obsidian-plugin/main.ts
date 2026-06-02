@@ -277,8 +277,10 @@ export default class HypermnesicPlugin extends Plugin {
     const file = ref.file;
     if (!file) return;
 
-    // Native link-drag: set the vault-correct link text; the editor handles the
-    // drop. Dropping outside an editor is a harmless no-op (no partial state).
+    // Drag-to-insert: carry the vault-correct link text (user's link-format, via
+    // generateMarkdownLink) as text/plain — universally honored, so a drop into
+    // any editor reliably inserts the link and a drop elsewhere is a harmless
+    // no-op (never a silent partial state). Copy-as-link is the guaranteed path.
     row.setAttribute("draggable", "true");
     row.addEventListener("dragstart", (evt: DragEvent) => {
       evt.dataTransfer?.setData("text/plain", localLinkText(this.app, file, sourcePath));
