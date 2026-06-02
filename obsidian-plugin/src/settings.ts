@@ -13,6 +13,8 @@ import { HypermnesicSettings } from "./types";
 export interface SettingsHostPlugin extends Plugin {
   settings: HypermnesicSettings;
   saveSettings(): Promise<void>;
+  /** Re-probe capabilities / refresh surfaces after a settings change. */
+  onSettingsChanged?(): void;
 }
 
 export class HypermnesicSettingTab extends PluginSettingTab {
@@ -40,6 +42,7 @@ export class HypermnesicSettingTab extends PluginSettingTab {
           .onChange(async (v) => {
             this.plugin.settings.mcpUrl = v.trim();
             await this.plugin.saveSettings();
+            this.plugin.onSettingsChanged?.();
           }),
       );
   }
