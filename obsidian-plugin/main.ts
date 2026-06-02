@@ -33,7 +33,7 @@ import { RenderDeps, renderResultList } from "./src/surfaces/render";
 import { ResolvedReference, localLinkText } from "./src/surfaces/reference";
 import { StatusBarSurface } from "./src/surfaces/statusbar";
 import { hypermnesicGutter } from "./src/surfaces/gutter";
-import { runThinking } from "./src/thinking";
+import { THINKING_VIEW_TYPE, ThinkingDeps, ThinkingView } from "./src/thinking";
 import { NudgeStore, renderNudge } from "./src/nudge";
 
 export const SIDEBAR_VIEW_TYPE = "hypermnesic-recall";
@@ -102,6 +102,7 @@ export default class HypermnesicPlugin extends Plugin {
     this.renderDeps = this.buildRenderDeps();
 
     this.registerView(SIDEBAR_VIEW_TYPE, (leaf) => new RecallSidebarView(leaf, this));
+    this.registerView(THINKING_VIEW_TYPE, (leaf) => new ThinkingView(leaf, this.buildThinkingDeps()));
 
     // Register as a Page-preview emitter so reference rows get native hover
     // previews integrated with the core plugin + the user's modifier preference.
@@ -199,7 +200,8 @@ export default class HypermnesicPlugin extends Plugin {
     }
   }
 
-  /** Thinking-mode (FR-R10/11): selection, else cursor window, else note title. */
+  /** Thinking-mode (FR-R10/11): selection, else cursor window, else note title.
+   *  Opens the dockable thinking panel and renders in place. */
   async thinkAbout(): Promise<void> {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view) {
@@ -208,7 +210,36 @@ export default class HypermnesicPlugin extends Plugin {
     }
     const selection = view.editor.getSelection().trim();
     const topic = selection || extractCursorWindow(view.editor) || view.file?.basename || "";
-    await runThinking(this.app, this.settings.mcpUrl, topic, this.core.capabilities.hasThink);
+    if (!topic.trim()) {
+      new Notice("hypermnesic: nothing to think about (empty selection/note)");
+      return;
+    }
+    await this.runThinkingInPanel(topic, view.file?.path ?? "");
+  }
+
+  private buildThinkingDeps(): ThinkingDeps {
+    return {
+      getUrl: () => this.settings.mcpUrl,
+      hasThink: () => this.core.capabilities.hasThink,
+      rowDeps: this.renderDeps,
+    };
+  }
+
+  /** Reveal the dockable thinking panel, reusing an open leaf if present (R8). */
+  async activateThinkingPanel(): Promise<ThinkingView | null> {
+    let leaf: WorkspaceLeaf | null = this.app.workspace.getLeavesOfType(THINKING_VIEW_TYPE)[0] ?? null;
+    if (!leaf) {
+      leaf = this.app.workspace.getRightLeaf(false);
+      if (!leaf) return null;
+      await leaf.setViewState({ type: THINKING_VIEW_TYPE, active: true });
+    }
+    this.app.workspace.revealLeaf(leaf);
+    return leaf.view instanceof ThinkingView ? leaf.view : null;
+  }
+
+  private async runThinkingInPanel(topic: string, sourcePath: string): Promise<void> {
+    const view = await this.activateThinkingPanel();
+    await view?.setTopic(topic, sourcePath);
   }
 
   /** Fan the one snapshot out to every surface (KTD1). */
@@ -235,7 +266,8 @@ export default class HypermnesicPlugin extends Plugin {
   /** Run thinking-mode for a specific resolved reference (the "think about this
    *  note" menu action). Read-only — opens the thinking surface, never writes. */
   private thinkAboutReference(ref: ResolvedReference): void {
-    void runThinking(this.app, this.settings.mcpUrl, ref.display.title, this.core.capabilities.hasThink);
+    const sourcePath = ref.file?.path ?? this.app.workspace.getActiveFile()?.path ?? "";
+    void this.runThinkingInPanel(ref.display.title, sourcePath);
   }
 
   /** Right-click menu + drag/copy insertion for a resolvable row. Read-only:

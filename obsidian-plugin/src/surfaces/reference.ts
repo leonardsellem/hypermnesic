@@ -80,6 +80,18 @@ export function localLinkText(app: App, file: TFile, sourcePath: string): string
 }
 
 /**
+ * Whether a markdown link target (a `[[wikilink]]`'s text, typically a basename
+ * or short link) resolves to any existing note. Used to guard MarkdownRenderer
+ * prose links against create-on-click (R28) — unlike resolveReference, this does
+ * NOT require full-path equality, because prose wikilinks legitimately use
+ * Obsidian's basename/shortest-link resolution; the create-on-click risk is only
+ * when the target resolves to nothing.
+ */
+export function linkResolvesLocally(app: App, linktext: string, sourcePath: string): boolean {
+  return app.metadataCache.getFirstLinkpathDest(linktext, sourcePath) != null;
+}
+
+/**
  * Render ONE reference into `host`. Returns the row's primary focusable element
  * so the surface can manage roving-tabindex focus. Local references become
  * native links with Page-preview hover; non-local references become honest muted
