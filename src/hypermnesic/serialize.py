@@ -18,7 +18,9 @@ from __future__ import annotations
 import fcntl
 import hashlib
 import os
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path, PurePosixPath
 
 # Agent-instruction files (privilege escalation if writable) — matched anywhere.
@@ -139,6 +141,67 @@ def path_lock(repo, rel_path: str) -> FileLock:
     """A narrow, path-scoped lock — distinct paths proceed concurrently."""
     h = hashlib.sha256(rel_path.encode("utf-8")).hexdigest()[:16]
     return FileLock(_state_dir(repo) / "locks" / f"{h}.lock")
+
+
+class BranchExistsError(Exception):
+    """Raised when a proposal branch already exists (caller decides idempotency)."""
+
+
+def branch_commit_transaction(repo, branch: str, base: str,
+                              file_contents: dict[str, str], message: str) -> str:
+    """Land ``file_contents`` as ONE atomic commit on a fresh ``branch`` cut from
+    ``base`` — inside an isolated git worktree, never touching the owner's live
+    HEAD (the branch they read in Obsidian). [U18]
+
+    This is the net-new branch+worktree commit machinery the kernel lacked:
+    ``commit_note`` commits a single path to HEAD; this stages a *set* of paths on
+    a side branch. Mirrors ``index.reindex_isolated``'s worktree posture (build in
+    isolation, never block / touch the live tree). Callers gate each file's content
+    *before* calling, so a gate abort never reaches here and no branch is created.
+    On any failure the branch is rolled back so no partial/orphan branch is left.
+
+    Returns the new commit sha. Raises ``BranchExistsError`` if ``branch`` exists.
+    """
+    repo = Path(repo)
+    if branch in _local_branches(repo):
+        raise BranchExistsError(branch)
+    rc = subprocess.run(["git", "-C", str(repo), "branch", branch, base],
+                        capture_output=True, text=True)
+    if rc.returncode != 0:
+        raise BranchExistsError(f"could not create branch {branch}: {rc.stderr.strip()}")
+
+    wt = Path(tempfile.mkdtemp(prefix="hypermnesic-propose-"))
+    try:
+        subprocess.run(["git", "-C", str(repo), "worktree", "add", "--force", str(wt), branch],
+                       check=True, capture_output=True, text=True)
+        for rel, text in file_contents.items():
+            fp = wt / rel
+            fp.parent.mkdir(parents=True, exist_ok=True)
+            fp.write_text(text, encoding="utf-8")
+            subprocess.run(["git", "-C", str(wt), "add", "--", rel],
+                           check=True, capture_output=True, text=True)
+        subprocess.run(["git", "-C", str(wt), "commit", "-q", "-m", message],
+                       check=True, capture_output=True, text=True)
+        return subprocess.run(["git", "-C", str(wt), "rev-parse", "HEAD"],
+                              capture_output=True, text=True).stdout.strip()
+    except Exception:
+        # roll back: drop the worktree and the half-built branch — no orphan ref.
+        subprocess.run(["git", "-C", str(repo), "worktree", "remove", "--force", str(wt)],
+                       capture_output=True, text=True)
+        subprocess.run(["git", "-C", str(repo), "branch", "-D", branch],
+                       capture_output=True, text=True)
+        raise
+    finally:
+        subprocess.run(["git", "-C", str(repo), "worktree", "remove", "--force", str(wt)],
+                       capture_output=True, text=True)
+        shutil.rmtree(wt, ignore_errors=True)
+
+
+def _local_branches(repo) -> set[str]:
+    out = subprocess.run(
+        ["git", "-C", str(repo), "for-each-ref", "--format=%(refname:short)", "refs/heads"],
+        capture_output=True, text=True).stdout
+    return set(out.split())
 
 
 def preflight(repo, *, expected_head: str | None = None, require_clean: bool = False) -> str:
