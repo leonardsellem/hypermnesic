@@ -178,3 +178,41 @@ def test_converge_never_calls_reindex_isolated(make_corpus, fake_embedder, monke
     res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0)
     assert res.status == "converged" and res.replayed == 1   # caught up without a full reindex
     idx.close()
+
+
+# --- review fixes: pre-existing data-loss paths convergence now exercises -----
+
+def test_converge_indexes_non_ascii_paths(make_corpus, fake_embedder):
+    # git quotepath: a committed note with accented/CJK characters must be delta-replayed,
+    # not silently dropped because git octal-escaped+quoted its path.
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "notes/café.md", "# Café\n\nACCENTMARKER éà content.\n", "add café")
+    res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0)
+    assert res.replayed == 1
+    assert "notes/café.md" in idx.all_paths()
+    assert any(idx.get_chunk(c)["path"] == "notes/café.md"
+               for c, _ in idx.lexical_search("ACCENTMARKER", k=10))
+    idx.close()
+
+
+def test_replay_preserves_path_when_git_show_fails(make_corpus, fake_embedder, monkeypatch):
+    # A transient `git show` failure must NOT blank an indexed page (empty stdout →
+    # upsert_lexical([]) would delete its chunks). The path keeps its existing rows.
+    import types
+    repo = make_corpus({"keep.md": "# Keep\n\nKEEPMARKER original.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "keep.md", "# Keep\n\nKEEPMARKER updated.\n", "update keep")
+    orig = ix.subprocess.run
+
+    def fake_run(cmd, *a, **k):
+        if isinstance(cmd, (list, tuple)) and "show" in cmd:   # only the content fetch fails
+            return types.SimpleNamespace(returncode=128, stdout="", stderr="simulated failure")
+        return orig(cmd, *a, **k)
+
+    monkeypatch.setattr(ix.subprocess, "run", fake_run)
+    converge.converge(repo, idx, fake_embedder, debounce_seconds=0)
+    assert "keep.md" in idx.all_paths()                       # not blanked by the failed show
+    assert any(idx.get_chunk(c)["path"] == "keep.md"
+               for c, _ in idx.lexical_search("KEEPMARKER", k=5))
+    idx.close()
