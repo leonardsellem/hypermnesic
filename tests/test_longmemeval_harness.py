@@ -552,3 +552,124 @@ def test_smoke_run_voids_on_degraded_embedder(tmp_path):
     result = diag.run_diagnostic(instances, tmp_path / "work", _DownEmbedder(), headline=False)
     assert result["void"] is True
     assert result["verdict"] == "void"
+
+
+# ---------------------------------------------------------------------------
+# U7 — reader (GPT-4.1 + GPT-4o columns) [Phase 2 code]
+# ---------------------------------------------------------------------------
+
+from longmemeval import reader as rdr  # noqa: E402
+
+
+class _FakeCompletions:
+    def __init__(self, reply, capture):
+        self._reply, self._capture = reply, capture
+
+    def create(self, *, model, messages, **kw):
+        self._capture["model"] = model
+        self._capture["messages"] = messages
+        self._capture["kwargs"] = kw
+        msg = type("M", (), {"content": self._reply})
+        return type("R", (), {"choices": [type("C", (), {"message": msg})]})
+
+
+class _FakeChatClient:
+    """Mimics the OpenAI client shape: client.chat.completions.create(...)."""
+
+    def __init__(self, reply="Rex", capture=None):
+        self.capture = {} if capture is None else capture
+        self.chat = type("Chat", (), {"completions": _FakeCompletions(reply, self.capture)})
+
+
+def _units():
+    # deliberately OUT of date order, to prove the reader re-sorts ascending
+    return [
+        rdr.RetrievedUnit(unit_id="s_late", date="2023-05-25", text="**user:** later chat"),
+        rdr.RetrievedUnit(unit_id="s_early", date="2023-05-01", text="**user:** earlier chat"),
+        rdr.RetrievedUnit(unit_id="s_mid", date="2023-05-10", text="**user:** middle chat"),
+    ]
+
+
+def test_reader_assembles_date_sorted_context_with_current_date():
+    cap = {}
+    reader = rdr.Reader("gpt-4.1-mini", client=_FakeChatClient("Rex", cap),
+                        token_counter=lambda s: len(s.split()))
+    ans = reader.answer("What is my dog's name?", "2023-06-01", _units())
+    assert ans.answer == "Rex"
+    user_msg = next(m["content"] for m in cap["messages"] if m["role"] == "user")
+    # context is date-ascending: earlier appears before middle appears before later
+    early, mid, late = (user_msg.index(s) for s in ("earlier chat", "middle chat", "later chat"))
+    assert early < mid < late
+    assert "2023-06-01" in user_msg            # Current Date threaded through
+    assert cap["kwargs"].get("temperature") == 0  # deterministic reader
+    assert cap["model"] == "gpt-4.1-mini"
+
+
+def test_reader_context_carries_no_has_answer_marker():
+    # has_answer is stripped from the materialized body, so it never reaches the
+    # reader (the model cannot cheat by seeing which turn is the evidence).
+    cap = {}
+    reader = rdr.Reader("gpt-4o-2024-08-06", client=_FakeChatClient("ans", cap),
+                        token_counter=lambda s: len(s.split()))
+    reader.answer("q?", "2023-06-01", _units())
+    blob = json.dumps(cap["messages"])
+    assert "has_answer" not in blob
+
+
+def test_reader_columns_carry_their_own_model_label_and_headline_flag():
+    # Covers AE3: each reader column is tagged with its model; the dev/mini reader
+    # is non-headline, the two published columns are headline.
+    def counter(s):
+        return len(s.split())
+
+    lead = rdr.Reader("gpt-4.1-2025-04-14", client=_FakeChatClient(), token_counter=counter)
+    anchor = rdr.Reader("gpt-4o-2024-08-06", client=_FakeChatClient(), token_counter=counter)
+    dev = rdr.Reader("gpt-4.1-mini", client=_FakeChatClient(), token_counter=counter)
+    assert lead.headline is True and anchor.headline is True
+    assert dev.headline is False
+    a = lead.answer("q?", "2023-06-01", _units())
+    assert a.reader_model == "gpt-4.1-2025-04-14" and a.headline is True
+
+
+def test_reader_keeps_context_within_budget_untruncated():
+    # Large model_max → the whole context fits, nothing dropped.
+    reader = rdr.Reader("gpt-4.1-2025-04-14", client=_FakeChatClient(),
+                        token_counter=lambda s: len(s.split()),
+                        model_max=1_000_000, gen_length=512)
+    ans = reader.answer("q?", "2023-06-01", _units())
+    assert ans.truncated is False
+    assert ans.units_used == 3
+
+
+def test_reader_truncates_over_budget_context_by_token_count():
+    # Tiny budget → oldest units dropped to fit; truncation is flagged. budget =
+    # model_max - gen_length - reserve, counted by the injected token counter.
+    reader = rdr.Reader("gpt-4o-2024-08-06", client=_FakeChatClient(),
+                        token_counter=lambda s: len(s.split()),
+                        model_max=40, gen_length=5)
+    ans = reader.answer("q?", "2023-06-01", _units())
+    assert ans.truncated is True
+    assert 0 < ans.units_used < 3  # some context dropped, but the reader still answers
+
+
+def test_reader_fails_gracefully_when_client_errors():
+    class _Boom:
+        def __init__(self):
+            self.chat = type("C", (), {"completions": self})
+
+        def create(self, **kw):
+            raise RuntimeError("api down")
+
+    reader = rdr.Reader("gpt-4.1-mini", client=_Boom(), token_counter=lambda s: len(s.split()))
+    ans = reader.answer("q?", "2023-06-01", _units())
+    assert ans.answer == ""        # graceful: empty answer, no crash
+    assert ans.error is not None
+
+
+def test_tiktoken_o200k_counter_when_bench_installed():
+    # Only runs where the `bench` extra is present (the real run + local dev); CI's
+    # `dev`-only env skips it. Locks the official o200k_base tokenization path.
+    pytest.importorskip("tiktoken")
+    count = rdr.tiktoken_token_counter("gpt-4o")
+    n = count("Hello, world! This is a tokenization test.")
+    assert isinstance(n, int) and n > 0
