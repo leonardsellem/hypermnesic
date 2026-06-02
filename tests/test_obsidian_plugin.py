@@ -19,6 +19,7 @@ from pathlib import Path
 _PLUGIN = Path(__file__).resolve().parents[1] / "obsidian-plugin"
 _MAIN = _PLUGIN / "main.ts"
 _CORE = _PLUGIN / "src" / "core.ts"
+_TYPES = _PLUGIN / "src" / "types.ts"
 _MANIFEST = _PLUGIN / "manifest.json"
 
 
@@ -69,6 +70,19 @@ def test_plugin_performs_no_vault_writes():
     for name, src in _all_sources().items():
         offenders += [f"{name}:{w}" for w in forbidden if w in src]
     assert offenders == [], f"plugin must not write the vault, found: {offenders}"
+
+
+def test_default_mcp_url_is_empty_and_guarded():
+    # DEP-R17: opt-in off-device send. The default URL is empty, and callTool
+    # refuses to reach the network with no endpoint — so a fresh install
+    # transmits nothing until the user configures it.
+    types = _TYPES.read_text(encoding="utf-8")
+    assert 'mcpUrl: ""' in types
+    core = _CORE.read_text(encoding="utf-8")
+    assert "!url.trim()" in core  # empty-URL guard before any requestUrl
+    # The removed hardcoded default never reappears anywhere in source.
+    for name, src in _all_sources().items():
+        assert "100.64.0.55" not in src, f"hardcoded IP reappeared in {name}"
 
 
 def test_manifest_is_desktop_only_and_well_formed():

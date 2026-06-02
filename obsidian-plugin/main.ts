@@ -8,9 +8,9 @@
  * Writes belong to agents via the engine's gated commit_note tool, never here.
  *
  * The shared retrieval core (U36) fans one ranked result (U37) out to the calm
- * surfaces (U38: status-bar popover, opt-in sidebar, optional CM6 marker),
- * thinking-mode + selection-recall (U39), and the interrogable reinvention nudge
- * (U40). The trust/state machine + settings + compliance land in U41.
+ * surfaces (U38), thinking-mode + selection-recall (U39), and the interrogable
+ * reinvention nudge (U40). One interaction-state machine + the trust layer,
+ * accessibility, settings, and Obsidian compliance are U41.
  */
 import {
   Editor,
@@ -25,8 +25,9 @@ import {
 } from "obsidian";
 import { DEFAULT_SETTINGS, HypermnesicSettings } from "./src/types";
 import { HypermnesicSettingTab } from "./src/settings";
-import { CoreResult, RetrievalCore, extractCursorWindow } from "./src/core";
-import { RecallState, RenderDeps, renderResultList } from "./src/surfaces/render";
+import { RetrievalCore, extractCursorWindow } from "./src/core";
+import { RecallStateMachine, StateSnapshot } from "./src/state";
+import { RenderDeps, renderResultList } from "./src/surfaces/render";
 import { StatusBarSurface } from "./src/surfaces/statusbar";
 import { hypermnesicGutter } from "./src/surfaces/gutter";
 import { runThinking } from "./src/thinking";
@@ -39,7 +40,7 @@ interface PluginData {
   mutedNotes: string[];
 }
 
-/** The opt-in sidebar. It renders the core's last result through the shared
+/** The opt-in sidebar. It renders the core's last snapshot through the shared
  *  renderer; it issues no query of its own (KTD1). */
 class RecallSidebarView extends ItemView {
   constructor(
@@ -65,7 +66,7 @@ class RecallSidebarView extends ItemView {
 
   draw(): void {
     const root = this.containerEl.children[1] as HTMLElement;
-    renderResultList(root, this.plugin.lastResult, this.plugin.lastState, this.plugin.renderDeps);
+    renderResultList(root, this.plugin.snapshot, this.plugin.renderDeps);
   }
 }
 
@@ -75,8 +76,8 @@ export default class HypermnesicPlugin extends Plugin {
 
   core!: RetrievalCore;
   renderDeps!: RenderDeps;
-  lastResult: CoreResult | null = null;
-  lastState: RecallState = "idle";
+  private machine = new RecallStateMachine();
+  snapshot: StateSnapshot = this.machine.snapshot;
 
   private statusBar: StatusBarSurface | null = null;
 
@@ -102,7 +103,7 @@ export default class HypermnesicPlugin extends Plugin {
     this.registerEditorExtension(
       hypermnesicGutter({
         enabled: () => this.settings.showGutter,
-        count: () => this.lastResult?.hits.length ?? 0,
+        count: () => this.snapshot.result?.hits.length ?? 0,
       }),
     );
 
@@ -124,15 +125,23 @@ export default class HypermnesicPlugin extends Plugin {
     this.addCommand({
       id: "recall-about-selection",
       name: "Recall about selection",
-      editorCallback: (editor, view) => void this.recallSelection(editor, view),
+      editorCallback: (editor, ctx) => void this.recallSelection(editor, ctx),
     });
 
     this.addSettingTab(new HypermnesicSettingTab(this.app, this));
+
+    // OAuth seam (DEP-R18): future MCP OAuth attaches here via
+    // registerObsidianProtocolHandler + PKCE. Intentionally NOT implemented now —
+    // the tailnet membership is the boundary, and no credential is read or logged.
 
     // Pause trigger: resetTimer debounce fires only after typing stops for
     // pauseMs — never per-keystroke; findings hold during sustained typing.
     const onPause = debounce(() => void this.triggerRecall(), this.settings.pauseMs, true);
     this.registerEvent(this.app.workspace.on("editor-change", () => onPause()));
+
+    if (this.settings.openSidebarOnLoad) {
+      this.app.workspace.onLayoutReady(() => void this.activateSidebar());
+    }
   }
 
   onunload(): void {
@@ -150,13 +159,12 @@ export default class HypermnesicPlugin extends Plugin {
     const windowText = extractCursorWindow(view.editor);
     const activePath = view.file?.path ?? "";
 
-    this.pushToSurfaces(this.lastResult, "loading");
+    this.applySnapshot(this.machine.loading());
     try {
       const result = await this.core.run(windowText, activePath);
-      this.lastResult = result;
-      this.pushToSurfaces(result, this.deriveState(result));
+      this.applySnapshot(this.machine.success(result));
     } catch {
-      this.pushToSurfaces(this.lastResult, "offline");
+      this.applySnapshot(this.machine.failure("offline"));
     }
   }
 
@@ -168,13 +176,12 @@ export default class HypermnesicPlugin extends Plugin {
       return;
     }
     await this.activateSidebar();
-    this.pushToSurfaces(this.lastResult, "loading");
+    this.applySnapshot(this.machine.loading());
     try {
       const result = await this.core.run(selection, ctx.file?.path ?? "");
-      this.lastResult = result;
-      this.pushToSurfaces(result, this.deriveState(result));
+      this.applySnapshot(this.machine.success(result));
     } catch {
-      this.pushToSurfaces(this.lastResult, "offline");
+      this.applySnapshot(this.machine.failure("offline"));
     }
   }
 
@@ -190,18 +197,10 @@ export default class HypermnesicPlugin extends Plugin {
     await runThinking(this.app, this.settings.mcpUrl, topic, this.core.capabilities.hasThink);
   }
 
-  private deriveState(result: CoreResult | null): RecallState {
-    if (!result) return "empty";
-    if (result.manualReindex) return "reindex";
-    if (result.degraded) return "degraded";
-    return result.hits.length > 0 ? "results" : "empty";
-  }
-
-  /** Fan the one result out to every surface (KTD1). */
-  private pushToSurfaces(result: CoreResult | null, state: RecallState): void {
-    this.lastResult = result;
-    this.lastState = state;
-    this.statusBar?.update(result, state);
+  /** Fan the one snapshot out to every surface (KTD1). */
+  private applySnapshot(snapshot: StateSnapshot): void {
+    this.snapshot = snapshot;
+    this.statusBar?.update(snapshot);
     for (const leaf of this.app.workspace.getLeavesOfType(SIDEBAR_VIEW_TYPE)) {
       const view = leaf.view;
       if (view instanceof RecallSidebarView) view.draw();
@@ -212,22 +211,23 @@ export default class HypermnesicPlugin extends Plugin {
     return {
       app: this.app,
       openNote: (path) => this.app.workspace.openLinkText(path, "", false),
-      renderNudge: (host, result) =>
-        renderNudge(host, result, {
+      renderNudge: (host, snapshot) => {
+        if (!snapshot.result) return;
+        renderNudge(host, snapshot.result, {
           app: this.app,
           getUrl: () => this.settings.mcpUrl,
           store: this.nudgeStore(),
           threshold: () => this.settings.reinventThreshold,
           activePath: () => this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path ?? "",
           openNote: (path) => this.app.workspace.openLinkText(path, "", false),
-        }),
+        });
+      },
     };
   }
 
   private createStatusBar(): void {
     const el = this.addStatusBarItem();
-    this.statusBar = new StatusBarSurface(el, this.renderDeps);
-    this.statusBar.update(this.lastResult, this.lastState);
+    this.statusBar = new StatusBarSurface(el, this.renderDeps, this.snapshot);
     // Remove the body-appended popover on unload (auto-cleanup).
     this.register(() => this.statusBar?.dispose());
   }
@@ -277,15 +277,15 @@ export default class HypermnesicPlugin extends Plugin {
   }
 
   async loadPersisted(): Promise<void> {
-    const raw = (await this.loadData()) as Partial<PluginData> | HypermnesicSettings | null;
+    const raw = (await this.loadData()) as Partial<PluginData> | Partial<HypermnesicSettings> | null;
     // Back-compat: older builds stored the settings object at the top level.
-    const stored =
-      raw && typeof raw === "object" && "settings" in raw
-        ? (raw as PluginData).settings
-        : (raw as Partial<HypermnesicSettings> | null);
+    const hasWrapper = !!raw && typeof raw === "object" && "settings" in raw;
+    const stored = hasWrapper
+      ? (raw as PluginData).settings
+      : (raw as Partial<HypermnesicSettings> | null);
     this.settings = Object.assign({}, DEFAULT_SETTINGS, stored ?? {});
-    const muted = raw && typeof raw === "object" && "mutedNotes" in raw ? (raw as PluginData).mutedNotes : [];
-    this.mutedNotes = new Set(muted ?? []);
+    const muted = hasWrapper ? ((raw as PluginData).mutedNotes ?? []) : [];
+    this.mutedNotes = new Set(muted);
   }
 
   private async persist(): Promise<void> {

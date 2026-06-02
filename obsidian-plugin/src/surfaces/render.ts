@@ -2,46 +2,21 @@
  * src/surfaces/render.ts — the shared result renderer (U38/KTD1).
  *
  * The status-bar popover and the opt-in sidebar both render through this one
- * function, so provenance, staleness, keyboard navigation, and aria-live are
- * implemented once and inherited. Pure DOM (createEl, never innerHTML);
- * navigation opens existing notes only — no writes.
+ * function, so the trust badge, provenance, staleness, keyboard navigation, and
+ * aria-live are implemented once and inherited. Pure DOM (createEl, never
+ * innerHTML); navigation opens existing notes only — no writes.
  */
 import { App } from "obsidian";
-import type { CoreResult } from "../core";
 import type { RankedHit } from "../ranking";
-
-/** The interaction states surfaces render. The full machine (idle→…→error with
- *  an as-of stamp) is owned by state.ts (U41); render handles the visible form. */
-export type RecallState =
-  | "idle"
-  | "loading"
-  | "results"
-  | "empty"
-  | "offline"
-  | "degraded"
-  | "stale"
-  | "reindex"
-  | "error";
+import { RecallState, StateSnapshot, renderTrustBadge } from "../state";
 
 export interface RenderDeps {
   app: App;
   /** Read-only navigation to an existing note. */
   openNote(path: string): void;
   /** Optional reinvention-nudge renderer (U40), prepended to the list. */
-  renderNudge?(host: HTMLElement, result: CoreResult): void;
+  renderNudge?(host: HTMLElement, snapshot: StateSnapshot): void;
 }
-
-const STATE_MESSAGE: Record<RecallState, string> = {
-  idle: "",
-  loading: "thinking…",
-  results: "",
-  empty: "nothing related yet",
-  offline: "offline — could not reach the tailnet index",
-  degraded: "lexical-only — the semantic channel is down",
-  stale: "stale — showing the last result",
-  reindex: "stale index — reindex on the master",
-  error: "something went wrong reaching the index",
-};
 
 /** States that still render the hit list (a banner is layered above it). */
 const SHOWS_LIST = new Set<RecallState>(["results", "degraded", "stale", "reindex"]);
@@ -62,25 +37,28 @@ function stalenessLabel(hit: RankedHit): { text: string; title: string } {
 
 export function renderResultList(
   container: HTMLElement,
-  result: CoreResult | null,
-  state: RecallState,
+  model: StateSnapshot,
   deps: RenderDeps,
 ): void {
   container.empty();
   container.setAttribute("role", "region");
   container.setAttribute("aria-label", "hypermnesic related notes");
 
+  // Persistent read-only / trust badge on every surface (FR-R19).
+  renderTrustBadge(container);
+
   const status = container.createEl("div", { cls: "hypermnesic-status" });
   status.setAttribute("aria-live", "polite");
-  if (STATE_MESSAGE[state]) status.setText(STATE_MESSAGE[state]);
+  if (model.banner) status.setText(model.banner);
 
-  if (!SHOWS_LIST.has(state)) return;
+  if (!SHOWS_LIST.has(model.state)) return;
+  const result = model.result;
   if (!result || result.hits.length === 0) {
     status.setText("nothing related yet");
     return;
   }
 
-  if (deps.renderNudge) deps.renderNudge(container, result);
+  if (deps.renderNudge) deps.renderNudge(container, model);
 
   const list = container.createEl("ul", { cls: "hypermnesic-related-list" });
   list.setAttribute("role", "list");

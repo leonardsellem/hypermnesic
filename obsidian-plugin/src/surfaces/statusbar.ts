@@ -4,21 +4,22 @@
  * A low-footprint status-bar item showing the related-count; clicking (or
  * Enter/Space) expands a popover that renders the shared result list. Desktop
  * only (the status bar is unsupported on mobile — consistent with isDesktopOnly).
- * Read-only: it renders the core's one result and issues no query of its own.
+ * Read-only: it renders the core's one snapshot and issues no query of its own.
  */
 import { setIcon } from "obsidian";
-import { RecallState, RenderDeps, renderResultList } from "./render";
-import type { CoreResult } from "../core";
+import { RenderDeps, renderResultList } from "./render";
+import { StateSnapshot } from "../state";
 
 export class StatusBarSurface {
   private popover: HTMLElement | null = null;
-  private result: CoreResult | null = null;
-  private state: RecallState = "idle";
+  private model: StateSnapshot;
 
   constructor(
     private el: HTMLElement, // from plugin.addStatusBarItem()
     private deps: RenderDeps,
+    initial: StateSnapshot,
   ) {
+    this.model = initial;
     this.el.addClass("hypermnesic-statusbar");
     this.el.setAttribute("role", "button");
     this.el.setAttribute("tabindex", "0");
@@ -34,25 +35,24 @@ export class StatusBarSurface {
     this.renderIndicator();
   }
 
-  update(result: CoreResult | null, state: RecallState): void {
-    this.result = result;
-    this.state = state;
+  update(model: StateSnapshot): void {
+    this.model = model;
     this.renderIndicator();
     if (this.popover) this.renderPopover();
   }
 
   private get count(): number {
-    return this.result?.hits.length ?? 0;
+    return this.model.result?.hits.length ?? 0;
   }
 
   private renderIndicator(): void {
     this.el.empty();
     const icon = this.el.createSpan({ cls: "hypermnesic-statusbar-icon" });
-    setIcon(icon, this.state === "loading" ? "loader" : "links-coming-in");
+    setIcon(icon, this.model.state === "loading" ? "loader" : "links-coming-in");
     const label =
-      this.state === "loading"
+      this.model.state === "loading"
         ? "…"
-        : this.state === "offline" || this.state === "error"
+        : this.model.state === "offline" || this.model.state === "error"
           ? "—"
           : String(this.count);
     this.el.createSpan({ text: ` ${label}`, cls: "hypermnesic-statusbar-count" });
@@ -98,7 +98,7 @@ export class StatusBarSurface {
   }
 
   private renderPopover(): void {
-    if (this.popover) renderResultList(this.popover, this.result, this.state, this.deps);
+    if (this.popover) renderResultList(this.popover, this.model, this.deps);
   }
 
   /** Remove the body-appended popover. Registered for auto-cleanup on unload. */
