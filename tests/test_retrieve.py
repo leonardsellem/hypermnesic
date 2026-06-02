@@ -197,3 +197,37 @@ def test_hit_recency_none_for_untracked_path(make_corpus, fake_embedder):
     by_path = {h.path: h.recency for h in res.hits}
     assert "ghost.md" in by_path and by_path["ghost.md"] is None          # no commit → None
     idx.close()
+
+
+def test_recency_uses_a_single_git_pass_not_one_per_hit(make_corpus, fake_embedder, monkeypatch):
+    # Perf guard (review #1): the path→time map is built in ONE git log, regardless of
+    # how many hits the search returns — not one `git log` subprocess per hit path.
+    repo = make_corpus({"a.md": "# A\n\nMARK alpha.\n", "b.md": "# B\n\nMARK beta.\n",
+                        "c.md": "# C\n\nMARK gamma.\n", "d.md": "# D\n\nMARK delta.\n"})
+    idx = index.build_index(repo, fake_embedder)
+    calls = {"log": 0}
+    orig = retrieve.subprocess.run
+
+    def counting(cmd, *a, **k):
+        if isinstance(cmd, (list, tuple)) and "log" in cmd:
+            calls["log"] += 1
+        return orig(cmd, *a, **k)
+
+    monkeypatch.setattr(retrieve.subprocess, "run", counting)
+    rfn = retrieve.git_commit_recency(repo)
+    res = retrieve.search(idx, "MARK", embedder=fake_embedder, k=10, recency_fn=rfn)
+    assert len(res.hits) >= 3
+    assert calls["log"] == 1                          # one batched pass, not one-per-hit
+    idx.close()
+
+
+def test_recency_resolves_non_ascii_path(make_corpus, fake_embedder):
+    # The batched parse uses core.quotepath=false so non-ASCII paths in the log output match.
+    repo = make_corpus({"a.md": "# A\n\nseed.\n"})
+    _commit_dated(repo, "notes/café.md", "# Café\n\nACCENTMARK body.\n", "2026-01-01T00:00:00")
+    idx = index.build_index(repo, fake_embedder)
+    rfn = retrieve.git_commit_recency(repo)
+    res = retrieve.search(idx, "ACCENTMARK", embedder=fake_embedder, k=10, recency_fn=rfn)
+    by_path = {h.path: h.recency for h in res.hits}
+    assert by_path.get("notes/café.md") is not None       # non-ASCII path resolved, not dropped
+    idx.close()
