@@ -312,3 +312,30 @@ def test_serve_no_auth_flags_unchanged(monkeypatch, tmp_path):
     rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1"])
     assert rc == 0
     assert captured.get("auth") is None and captured.get("token_verifier") is None
+
+
+# --- U12: AS enrollment writes the secret to a file, never stdout ------------
+
+def test_auth_add_client_writes_secret_to_file_not_stdout(tmp_path, capsys):
+    state = tmp_path / "as-state.json"
+    secret_out = tmp_path / "rs.env"
+    rc = cli.main(["auth-add-client", "--state", str(state), "--client-id", "hypermnesic-rs",
+                   "--rs", "--secret-out", str(secret_out),
+                   "--resource", "https://homelab.<tailnet-host>.ts.net/mcp"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    info = json.loads(out)
+    assert info["enrolled"] == "hypermnesic-rs" and info["is_rs"] is True
+    body = secret_out.read_text()
+    assert body.startswith("HYPERMNESIC_RS_CLIENT_SECRET=")
+    secret_value = body.split("=", 1)[1].strip()
+    assert secret_value and secret_value not in out          # the secret is never echoed (V9)
+    assert secret_value not in state.read_text()             # AS stores only a hash
+    import os
+    assert (os.stat(secret_out).st_mode & 0o777) == 0o600    # owner-only
+
+
+def test_serve_auth_refuses_wildcard_bind(tmp_path, capsys):
+    rc = cli.main(["serve-auth", "--host", "0.0.0.0", "--port", "8849",
+                   "--public-url", "https://h/as", "--state", str(tmp_path / "s.json")])
+    assert rc == 1 and "wildcard" in capsys.readouterr().err.lower()
