@@ -94,11 +94,11 @@ def test_serve_is_stateless_for_handshakeless_clients(built_index, fake_embedder
 
 
 def test_only_read_tools_no_write_tool(built_index, fake_embedder):
-    # U20 adds a third read tool (think); the invariant is "read-only, structural".
+    # U20 adds think; U1 adds resolve. The invariant is "read-only, structural".
     srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     tools = asyncio.run(srv.list_tools())
     names = {t.name for t in tools}
-    assert names == {"search", "build_context", "think"}
+    assert names == {"search", "build_context", "think", "resolve"}
     # read-only is structural: no write-ish tool exists
     assert not any(
         kw in n for t in tools for n in [t.name]
@@ -344,3 +344,40 @@ def test_write_tool_coordination_refusal_maps_to_refused(make_corpus, fake_embed
     assert out["committed"] is False and out["refused"]         # refusal, not silent success
     audit = repo / ".hypermnesic" / "audit.jsonl"
     assert not audit.exists() or audit.read_text().strip() == ""   # no audit on a non-landed write
+
+
+# --- U1: resolve entity-resolution read tool --------------------------------
+
+def test_resolve_tool_returns_path_and_slug(make_corpus, fake_embedder):
+    repo = make_corpus({"infrastructure/hetzner.md": "# Hetzner\n\nThe homelab box.\n",
+                        "net.md": "# net\n\ntopology.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "resolve", {"name": "Hetzner"})
+    assert out["resolved"] == "infrastructure/hetzner.md"
+    assert out["slug"] == "infrastructure/hetzner"             # caller wikilinks the slug
+    assert "manual_reindex_recommended" in out                 # convergence signal surfaced
+
+
+def test_resolve_tool_ambiguous_and_missing_are_null(make_corpus, fake_embedder):
+    repo = make_corpus({"notes/dup.md": "# D1\n\n", "archive/dup.md": "# D2\n\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    assert _call(srv, "resolve", {"name": "dup"})["resolved"] is None      # ambiguous → null
+    assert _call(srv, "resolve", {"name": "ghost"})["resolved"] is None    # missing → null
+
+
+def test_resolve_is_read_tool_and_converges(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    tools = {t.name: t for t in asyncio.run(srv.list_tools())}
+    assert "resolve" in tools and "resolve" in mcp_server.READ_TOOL_NAMES
+    assert tools["resolve"].annotations.readOnlyHint is True
+    # a freshly committed entity page is resolvable after convergence
+    _commit(repo, "infrastructure/box.md", "# Box\n\nBOXMARKER body.\n", "add box")
+    out = _call(srv, "resolve", {"name": "box"})
+    assert out["resolved"] == "infrastructure/box.md"          # converged before resolving

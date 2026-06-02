@@ -216,3 +216,22 @@ def test_replay_preserves_path_when_git_show_fails(make_corpus, fake_embedder, m
     assert any(idx.get_chunk(c)["path"] == "keep.md"
                for c, _ in idx.lexical_search("KEEPMARKER", k=5))
     idx.close()
+
+
+# --- U1: forced (debounce=0) convergence ignores a fresh stamp ----------------
+
+def test_force_converge_ignores_fresh_debounce_stamp(make_corpus, fake_embedder):
+    # The `retrieve --now` / `converge --now` path: debounce_seconds=0 forces a
+    # non-debounced pass even with a fresh stamp, so a self-write committed inside
+    # the window is caught — while the default (debounced) pass still skips it.
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    converge.converge(repo, idx, fake_embedder)                  # writes a fresh stamp
+    _commit_file(repo, "self.md", "# Self\n\nSELFMARK body.\n", "add self")
+    debounced = converge.converge(repo, idx, fake_embedder)      # default → debounced skip
+    assert debounced.status == "debounced"
+    assert "self.md" not in idx.all_paths()
+    forced = converge.converge(repo, idx, fake_embedder, debounce_seconds=0)
+    assert forced.status == "converged" and forced.replayed == 1
+    assert "self.md" in idx.all_paths()                          # forced pass caught the self-write
+    idx.close()

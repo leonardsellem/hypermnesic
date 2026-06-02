@@ -145,13 +145,17 @@ def _cmd_retrieve(args) -> int:
         embedder = embed.OpenAIEmbedder()
     except Exception:
         embedder = None
-    converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
+    # U1: --now forces a non-debounced converge (debounce_seconds=0) so a self-write
+    # committed within the 5 s window is caught in a single `retrieve --now`.
+    cr = converge_mod.converge(Path(args.repo), idx, embedder,
+                               debounce_seconds=(0 if args.now else None))
     res = retrieve.search(idx, args.query, embedder=embedder, k=args.k,
                           recency_fn=retrieve.git_commit_recency(Path(args.repo)))
     idx.close()
     out = {
         "query": args.query,
-        "degraded_lexical_only": res.degraded,
+        "degraded_lexical_only": res.degraded or cr.degraded,
+        "manual_reindex_recommended": cr.manual_reindex_recommended,   # U1: surface (was dropped)
         "hits": [
             {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
              "channels": sorted(h.channels), "snippet": h.text[:280], "recency": h.recency}
@@ -164,6 +168,38 @@ def _cmd_retrieve(args) -> int:
         print(f"# retrieve: {args.query}  (degraded={res.degraded})")
         for h in out["hits"]:
             print(f"  - {h['path']}: {h['heading']}  ({h['score']})")
+    return 0
+
+
+def _cmd_resolve(args) -> int:
+    """Entity resolution (read-only): name → existing page path, or null (U1).
+
+    gbrain's ``get`` role as a first-class verb. Converges first (``--now`` forces a
+    non-debounced pass so a fresh self-write resolves), builds the graph, then resolves
+    the name to a page. Ambiguous/missing → ``null`` (never a wrong guess). The caller
+    wikilinks ``slug`` (the ``.md``-stripped path)."""
+    from hypermnesic import converge as converge_mod
+    from hypermnesic import graph as graph_mod
+    from hypermnesic import index
+
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    idx = index.Index(db)
+    try:  # dense optional — same graceful degradation as `retrieve` / the server
+        from hypermnesic import embed
+        embedder = embed.OpenAIEmbedder()
+    except Exception:
+        embedder = None
+    converge_mod.converge(Path(args.repo), idx, embedder,
+                          debounce_seconds=(0 if args.now else None))
+    g = graph_mod.Graph.from_index(idx)
+    resolved = g.resolve(args.name)
+    idx.close()
+    slug = resolved[:-3] if resolved and resolved.endswith(".md") else resolved
+    out = {"name": args.name, "resolved": resolved, "slug": slug}
+    if args.json:
+        _print_json(out)
+    else:
+        print(resolved or "")          # empty line on null → scriptable
     return 0
 
 
@@ -202,8 +238,9 @@ def _cmd_converge(args) -> int:
         embedder = embed.OpenAIEmbedder()
     except Exception:
         embedder = None
-    res = converge_mod.converge(Path(args.repo), idx, embedder,
-                                authoring_host=args.authoring_host)
+    res = converge_mod.converge(Path(args.repo), idx, embedder,   # U1: --now forces a pass
+                                authoring_host=args.authoring_host,
+                                debounce_seconds=(0 if args.now else None))
     idx.close()
     if args.json:
         _print_json(res.as_dict())
@@ -331,8 +368,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_retrieve.add_argument("--index-db", default=None,
                             help="index db (default: <repo>/.hypermnesic)")
     p_retrieve.add_argument("--k", type=int, default=10)
+    p_retrieve.add_argument("--now", action="store_true",
+                            help="force a non-debounced converge (catch a self-write "
+                                 "committed within the debounce window)")
     p_retrieve.add_argument("--json", action="store_true")
     p_retrieve.set_defaults(func=_cmd_retrieve)
+
+    p_resolve = sub.add_parser("resolve",
+                               help="entity resolution (read-only): name → existing page, or null")
+    p_resolve.add_argument("repo", help="repo whose index to resolve against")
+    p_resolve.add_argument("name", help="the entity name to resolve to a page")
+    p_resolve.add_argument("--index-db", default=None,
+                           help="index db (default: <repo>/.hypermnesic)")
+    p_resolve.add_argument("--now", action="store_true",
+                           help="force a non-debounced converge before resolving")
+    p_resolve.add_argument("--json", action="store_true")
+    p_resolve.set_defaults(func=_cmd_resolve)
 
     p_capture = sub.add_parser("capture", help="frictionless capture: land raw text in sources/")
     p_capture.add_argument("repo", help="repo to capture into")
@@ -347,6 +398,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="index db (default: <repo>/.hypermnesic)")
     p_conv.add_argument("--authoring-host", action="store_true",
                         help="also refresh the uncommitted working-tree overlay")
+    p_conv.add_argument("--now", action="store_true",
+                        help="force a non-debounced converge (ignore a fresh stamp)")
     p_conv.add_argument("--json", action="store_true")
     p_conv.set_defaults(func=_cmd_converge)
 

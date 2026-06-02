@@ -179,6 +179,17 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 "manual_reindex_recommended": cr.manual_reindex_recommended}
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
+              description="Entity resolution: resolve a name to an existing page path "
+                          "(gbrain's `get` role), or null if ambiguous/missing. The caller "
+                          "strips `.md` (use `slug`) to form a wikilink target.")
+    def resolve(name: str) -> dict:
+        cr = backend.converge()
+        resolved = backend.graph.resolve(name)
+        slug = resolved[:-3] if resolved and resolved.endswith(".md") else resolved
+        return {"name": name, "resolved": resolved, "slug": slug,
+                "manual_reindex_recommended": cr.manual_reindex_recommended}
+
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Thinking-mode: related notes + Socratic prompts + tensions. "
                           "Never writes (wrote: false) — a help-me-think surface, not a write.")
     def think(topic: str, k: int = 8, depth: int = 1) -> dict:
@@ -221,5 +232,5 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     return mcp
 
 
-READ_TOOL_NAMES = {"search", "build_context", "think"}
+READ_TOOL_NAMES = {"search", "build_context", "think", "resolve"}
 WRITE_TOOL_NAMES = {"commit_note"}            # registered only when write_enabled (U31)
