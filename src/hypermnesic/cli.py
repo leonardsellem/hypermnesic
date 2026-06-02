@@ -104,17 +104,19 @@ def _cmd_init(args) -> int:
 
 def _cmd_think(args) -> int:
     """Thinking-mode (read-only): related notes + Socratic prompts, never writes."""
+    from hypermnesic import converge as converge_mod
     from hypermnesic import graph as graph_mod
     from hypermnesic import index, think
 
     db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
     idx = index.Index(db)
-    g = graph_mod.Graph.from_index(idx)
     try:  # dense channel is optional — degrade to lexical+graph if no key (same as the server)
         from hypermnesic import embed
         embedder = embed.OpenAIEmbedder()
     except Exception:
         embedder = None
+    converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
+    g = graph_mod.Graph.from_index(idx)                     # graph after convergence
     r = think.think(idx, args.topic, embedder=embedder, graph=g, k=args.k)
     idx.close()
     if args.json:
@@ -127,6 +129,40 @@ def _cmd_think(args) -> int:
             print(f"  ? {q}")
         if r.note:
             print(f"  ({r.note})")
+    return 0
+
+
+def _cmd_retrieve(args) -> int:
+    """Hybrid retrieve (read-only): converge first, then search — the CLI twin of
+    the MCP ``search`` tool (same hit shape). Degrades to lexical if no key."""
+    from hypermnesic import converge as converge_mod
+    from hypermnesic import index, retrieve
+
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    idx = index.Index(db)
+    try:  # dense channel optional — same graceful degradation as `think` / the server
+        from hypermnesic import embed
+        embedder = embed.OpenAIEmbedder()
+    except Exception:
+        embedder = None
+    converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
+    res = retrieve.search(idx, args.query, embedder=embedder, k=args.k)
+    idx.close()
+    out = {
+        "query": args.query,
+        "degraded_lexical_only": res.degraded,
+        "hits": [
+            {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
+             "channels": sorted(h.channels), "snippet": h.text[:280]}
+            for h in res.hits
+        ],
+    }
+    if args.json:
+        _print_json(out)
+    else:
+        print(f"# retrieve: {args.query}  (degraded={res.degraded})")
+        for h in out["hits"]:
+            print(f"  - {h['path']}: {h['heading']}  ({h['score']})")
     return 0
 
 
@@ -207,6 +243,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_think.add_argument("--k", type=int, default=8)
     p_think.add_argument("--json", action="store_true")
     p_think.set_defaults(func=_cmd_think)
+
+    p_retrieve = sub.add_parser("retrieve",
+                                help="hybrid retrieve (read-only): converge first, then search")
+    p_retrieve.add_argument("repo", help="repo whose index to search")
+    p_retrieve.add_argument("query", help="the search query")
+    p_retrieve.add_argument("--index-db", default=None,
+                            help="index db (default: <repo>/.hypermnesic)")
+    p_retrieve.add_argument("--k", type=int, default=10)
+    p_retrieve.add_argument("--json", action="store_true")
+    p_retrieve.set_defaults(func=_cmd_retrieve)
 
     p_capture = sub.add_parser("capture", help="frictionless capture: land raw text in sources/")
     p_capture.add_argument("repo", help="repo to capture into")
