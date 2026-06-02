@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 
 import pytest
 from longmemeval import manifest as mf
@@ -366,3 +367,116 @@ def test_sqlite_embedding_cache_round_trips(tmp_path, fake_embedder):
     reopened = adapter.SqliteEmbeddingCache(tmp_path / "cache.sqlite")
     assert reopened._count() >= 1
     reopened.close()
+
+
+# ---------------------------------------------------------------------------
+# U4 — retrieval diagnostic scorer (session + turn level)
+# ---------------------------------------------------------------------------
+
+from longmemeval import diagnostic as diag  # noqa: E402
+
+
+def _hr(gran, ranked, gold):
+    return adapter.HaystackResult("iid", gran, list(ranked), False, set(gold))
+
+
+def _ir(inst_dict, *, session_ranked, session_gold, turn_ranked, turn_gold):
+    inst = mat.parse_instance(inst_dict)
+    return adapter.InstanceRetrieval(
+        inst, _hr("session", session_ranked, session_gold),
+        _hr("turn", turn_ranked, turn_gold))
+
+
+def test_recall_all_requires_every_gold_in_topk():
+    assert diag.recall_all_at_k(["a", "b", "c"], {"a", "b"}, 5) == 1.0
+    assert diag.recall_all_at_k(["a", "x", "y"], {"a", "b"}, 5) == 0.0  # b missing
+    assert diag.recall_all_at_k(["a", "b"], {"a", "b"}, 1) == 0.0       # b outside top-1
+
+
+def test_recall_any_is_at_least_one_in_topk():
+    assert diag.recall_any_at_k(["a", "x"], {"a", "b"}, 5) == 1.0
+    assert diag.recall_any_at_k(["x", "y"], {"a", "b"}, 5) == 0.0
+
+
+def test_recall_all_and_any_diverge_on_partial_gold():
+    # Distinct metrics: only some gold present → recall_all 0, recall_any 1.
+    ranked, gold = ["a", "x", "y"], {"a", "b"}
+    assert diag.recall_all_at_k(ranked, gold, 5) == 0.0
+    assert diag.recall_any_at_k(ranked, gold, 5) == 1.0
+
+
+def test_ndcg_any_rewards_higher_rank_and_is_perfect_on_top():
+    assert diag.ndcg_any_at_k(["g", "x", "y"], {"g"}, 5) == 1.0
+    low = diag.ndcg_any_at_k(["x", "y", "g"], {"g"}, 5)
+    assert 0.0 < low < 1.0
+    assert diag.ndcg_any_at_k(["a", "b", "x"], {"a", "b"}, 5) == 1.0  # all gold on top
+
+
+def test_score_excludes_abstention_from_retrieval_aggregates():
+    # Edge: `_abs` instances are excluded from retrieval aggregates.
+    run = adapter.RetrievalRun(results=[
+        _ir(_instance(question_id="q1"),
+            session_ranked=["s_answer"], session_gold={"s_answer"},
+            turn_ranked=["s_answer_turn0"], turn_gold={"s_answer_turn0"}),
+        _ir(_instance(question_id="q2_abs"),
+            session_ranked=[], session_gold=set(),
+            turn_ranked=[], turn_gold=set()),
+    ])
+    out = diag.score_diagnostic(run)
+    assert out["void"] is False and out["verdict"] == "reported"
+    assert out["n_instances"] == 1
+    assert out["n_excluded_abstention"] == 1
+    assert out["session"]["recall_all@5"] == 1.0
+    assert out["session"]["recall_all@10"] == 1.0
+
+
+def test_void_run_reports_no_numbers():
+    # Covers AE2 at the scoring boundary: a void run yields no metrics.
+    run = adapter.RetrievalRun(results=[], void=True)
+    out = diag.score_diagnostic(run)
+    assert out["void"] is True
+    assert out["verdict"] == "void"
+    assert "session" not in out
+
+
+def test_turn_ranking_derives_session_recall():
+    # Edge: turn→session derivation. The session ranking misses the gold session,
+    # but the turn ranking holds the evidence round → derived session recall = 1.0.
+    run = adapter.RetrievalRun(results=[
+        _ir(_instance(),
+            session_ranked=["s_intro"], session_gold={"s_answer"},
+            turn_ranked=["s_answer_turn0", "s_intro_turn0"], turn_gold={"s_answer_turn0"}),
+    ])
+    out = diag.score_diagnostic(run)
+    assert out["session"]["recall_all@5"] == 0.0
+    assert out["turn_derived_session"]["recall_all@5"] == 1.0
+
+
+def test_date_sensitive_abilities_report_recall_any_and_gold_size():
+    # Edge: knowledge-update / temporal-reasoning report recall_any@k beside
+    # recall_all@k plus the gold-set-size distribution, so a low recall_all reads
+    # as date-blind ranking / metric strictness, not a genuine miss.
+    run = adapter.RetrievalRun(results=[
+        _ir(_instance(question_id="q1", question_type="knowledge-update"),
+            session_ranked=["s_answer", "s_intro"], session_gold={"s_answer", "s_filler"},
+            turn_ranked=["s_answer_turn0"], turn_gold={"s_answer_turn0"}),
+        _ir(_instance(question_id="q2", question_type="single-session-user"),
+            session_ranked=["s_answer"], session_gold={"s_answer"},
+            turn_ranked=["s_answer_turn0"], turn_gold={"s_answer_turn0"}),
+    ])
+    out = diag.score_diagnostic(run)
+    ku = out["per_ability"]["knowledge-update"]
+    assert ku["session"]["recall_all@5"] == 0.0           # s_filler missing → strict miss
+    assert ku["recall_any"]["session"]["recall_any@5"] == 1.0  # but s_answer was found
+    assert ku["gold_set_size"]["mean"] == 2
+    assert ku["date_sensitive"] is True
+    assert out["per_ability"]["single-session-user"]["date_sensitive"] is False
+
+
+def test_load_dataset_parses_instance_list(tmp_path):
+    ds = tmp_path / "ds.json"
+    ds.write_text(json.dumps([_instance(question_id="q1"), _instance(question_id="q2_abs")]),
+                  encoding="utf-8")
+    insts = mat.load_dataset(ds)
+    assert [i.question_id for i in insts] == ["q1", "q2_abs"]
+    assert insts[1].is_abstention is True

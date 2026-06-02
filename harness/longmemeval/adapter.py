@@ -49,6 +49,7 @@ class HaystackResult:
     granularity: str               # "session" | "turn"
     ranked_units: list[str]        # ranked unique unit ids (best-first)
     degraded: bool                 # dense channel unavailable → not scorable
+    gold_units: set[str] = field(default_factory=set)  # gold unit ids (empty for `_abs`)
 
 
 @dataclass
@@ -162,21 +163,22 @@ def retrieve_for_corpus(materialized: Materialized, question: str, embedder, *,
     scoring lexical-only.
     """
     weights = tuple(mf.RETRIEVAL_WEIGHTS) if weights is None else weights
+    gold = set(materialized.gold_units)
     try:
         idx = index.build_index(materialized.corpus_dir, embedder, state_dir=Path(state_dir))
     except embed_mod.EmbeddingError:
-        return HaystackResult(materialized.instance_id, materialized.granularity, [], True)
+        return HaystackResult(materialized.instance_id, materialized.granularity, [], True, gold)
     try:
         res = retrieve.search(idx, question, embedder=embedder, k=search_depth,
                               candidate_k=search_depth, use_doc_lane=use_doc_lane,
                               collapse_duplicates=collapse_duplicates, weights=weights)
     except embed_mod.EmbeddingError:
         idx.close()
-        return HaystackResult(materialized.instance_id, materialized.granularity, [], True)
+        return HaystackResult(materialized.instance_id, materialized.granularity, [], True, gold)
     idx.close()
     return HaystackResult(materialized.instance_id, materialized.granularity,
                           _ranked_units(res.hits, materialized.path_to_unit),
-                          res.degraded)
+                          res.degraded, gold)
 
 
 def retrieve_instances(instances: list[Instance], work_dir: Path, embedder, *,
