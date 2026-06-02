@@ -44,8 +44,9 @@ def test_plugin_files_exist():
 def test_plugin_calls_only_read_tools():
     core = _CORE.read_text(encoding="utf-8")
     # Every MCP call routes through this allowlist; the read tools mirror the
-    # server's READ_TOOL_NAMES. The write tool commit_note is never listed.
-    assert 'READ_ONLY_TOOLS = new Set(["search", "build_context"])' in core
+    # server's READ_TOOL_NAMES ({search, build_context, think}). The write tool
+    # commit_note is never listed (U39 added `think` in lockstep with this line).
+    assert 'READ_ONLY_TOOLS = new Set(["search", "build_context", "think"])' in core
     # The write tool is never referenced as a string literal (prose mentions in
     # the read-only rationale are fine; a quoted "commit_note" would be a usage).
     assert '"commit_note"' not in core

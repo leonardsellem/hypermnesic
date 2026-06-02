@@ -23,11 +23,12 @@ import type { RankedHit } from "./ranking";
 import { HypermnesicSettings } from "./types";
 
 /**
- * Hard allowlist of callable MCP tools — mirrors the server's READ_TOOL_NAMES.
- * The write tool commit_note is registered only on a write-enabled master and is
- * structurally unreachable from this client.
+ * Hard allowlist of callable MCP tools — mirrors the server's READ_TOOL_NAMES
+ * ({search, build_context, think}). The write tool commit_note is registered
+ * only on a write-enabled master and is structurally unreachable from this
+ * client.
  */
-export const READ_ONLY_TOOLS = new Set(["search", "build_context"]);
+export const READ_ONLY_TOOLS = new Set(["search", "build_context", "think"]);
 
 /** A single related-note hit (the engine's shipped `search` hit shape). */
 export interface Hit {
