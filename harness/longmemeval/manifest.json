@@ -8,7 +8,7 @@
     "total_tokens": 115000000
   },
   "dataset_release": "longmemeval-cleaned-2025-09",
-  "dataset_sha256": "",
+  "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
   "dataset_url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json",
   "dataset_variant": "_s",
   "embed_dim": 1536,
