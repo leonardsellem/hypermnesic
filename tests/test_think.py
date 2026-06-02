@@ -19,7 +19,7 @@ from hypermnesic import index as index_mod
 from hypermnesic import mcp_server
 from hypermnesic import think as think_mod
 
-TAILNET_IP = "100.64.0.55"
+TAILNET_IP = "100.64.0.1"   # CGNAT/Tailscale documentation range — not a real node
 
 _HETZNER = "# Hetzner\n\nHomelab on Hetzner, linked to [[net]]. Backups via restic.\n"
 _NET = "# net\n\nNetwork topology and tailnet, see [[Hetzner]].\n"
