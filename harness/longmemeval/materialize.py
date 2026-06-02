@@ -194,6 +194,13 @@ def materialize_turns(inst: Instance, dest_dir: Path) -> Materialized:
                         corpus_dir=dest_dir, path_to_unit=path_to_unit, gold_units=gold)
 
 
+def session_units(inst: Instance) -> dict[str, tuple[str, str]]:
+    """Map session id → (date, verbatim conversation text), for assembling the
+    reader's retrieved context (the QA reader needs each retrieved session's text
+    and date, not just its id)."""
+    return {s.session_id: (s.date, _render_turns(s.turns)) for s in inst.sessions}
+
+
 def materialize_instance(inst: Instance, base_dir: Path) -> tuple[Materialized, Materialized]:
     """Materialize both granularities under ``base_dir`` (``sessions/`` + ``turns/``).
 

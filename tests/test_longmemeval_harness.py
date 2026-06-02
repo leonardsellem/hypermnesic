@@ -753,3 +753,101 @@ def test_judge_fails_gracefully_when_client_errors():
                                           question_type="single-session-user",
                                           is_abstention=False)
     assert res.correct is False and res.error is not None
+
+
+# ---------------------------------------------------------------------------
+# U9 — end-to-end QA runner + scorer + verdict finalization [Phase 2 code]
+# ---------------------------------------------------------------------------
+
+from longmemeval import qa  # noqa: E402
+
+
+def _ans(qid, qtype, correct, *, model="gpt-4.1-2025-04-14", is_abs=False):
+    return qa.QAAnswer(instance_id=qid, question_type=qtype, is_abstention=is_abs,
+                       correct=correct, reader_model=model)
+
+
+def test_score_column_computes_overall_taskavg_abstention():
+    # Overall = micro over ALL; Task-averaged = macro over the question_type
+    # buckets EXCLUDING abstention; Abstention = accuracy over the _abs instances.
+    answers = [
+        _ans("a", "single-session-user", True),
+        _ans("b", "single-session-user", False),   # bucket A: 1/2 = 0.5
+        _ans("c", "multi-session", True),           # bucket B: 1/1 = 1.0
+        _ans("d_abs", "single-session-user", True, is_abs=True),   # abstention: 1/2
+        _ans("e_abs", "single-session-user", False, is_abs=True),  # abstention: 0.5
+    ]
+    s = qa.score_column(answers)
+    assert s["overall"] == 3 / 5                       # micro over all 5
+    assert s["task_averaged"] == (0.5 + 1.0) / 2       # macro over 2 non-abs buckets
+    assert s["abstention"] == 0.5                      # over the 2 _abs instances
+    assert s["n"] == 5 and s["n_abstention"] == 2
+    assert s["headline_metric"] == "task_averaged"
+
+
+def test_task_average_excludes_abstention_bucket():
+    # An all-correct abstention set must NOT lift the task-average (it is excluded
+    # from the buckets and reported separately).
+    answers = [
+        _ans("a", "temporal-reasoning", False),     # only non-abs bucket: 0.0
+        _ans("z_abs", "temporal-reasoning", True, is_abs=True),
+    ]
+    s = qa.score_column(answers)
+    assert s["task_averaged"] == 0.0
+    assert s["abstention"] == 1.0
+    assert "temporal-reasoning" in s["per_ability"]
+
+
+def test_run_qa_scores_both_reader_columns_under_shared_judge(tmp_path, fake_embedder):
+    # Both reader columns are scored and reported under the shared judge, each with
+    # its own model label.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    readers = [rdr.Reader("gpt-4.1-2025-04-14", client=_FakeChatClient("an answer"),
+                          token_counter=lambda s: len(s.split())),
+               rdr.Reader("gpt-4o-2024-08-06", client=_FakeChatClient("an answer"),
+                          token_counter=lambda s: len(s.split()))]
+    judge = jdg.Judge(client=_FakeChatClient("yes"))
+    out = qa.run_qa(instances, tmp_path / "work", fake_embedder, readers, judge, headline=False)
+    assert out["void"] is False
+    assert out["judge_model"] == "gpt-4o-2024-08-06"
+    assert set(out["columns"]) == {"gpt-4.1-2025-04-14", "gpt-4o-2024-08-06"}
+    for col in out["columns"].values():
+        assert "task_averaged" in col and "overall" in col and "abstention" in col
+
+
+def test_run_qa_voids_on_degraded_embedder(tmp_path):
+    # Covers AE2: a degraded run voids the headline rather than reporting a number.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    readers = [rdr.Reader("gpt-4.1-2025-04-14", client=_FakeChatClient("x"),
+                          token_counter=lambda s: len(s.split()))]
+    out = qa.run_qa(instances, tmp_path / "work", _DownEmbedder(),
+                    readers, jdg.Judge(client=_FakeChatClient("yes")), headline=False)
+    assert out["void"] is True
+    assert out["verdict"] == "void"
+    assert "columns" not in out
+
+
+def test_full_qa_pipeline_wires_materialize_to_verdict_offline(tmp_path, fake_embedder):
+    # Integration: materialize → index → retrieve → reader → judge → verdict, all
+    # offline. The reader answers "Biscuit" for the dog question; the fake judge
+    # says yes. Asserts the wiring produces a scored, non-void headline-eligible shape.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    cap = {}
+    readers = [rdr.Reader("gpt-4.1-2025-04-14", client=_FakeChatClient("Biscuit", cap),
+                          token_counter=lambda s: len(s.split()))]
+    judge = jdg.Judge(client=_FakeChatClient("yes"))
+    out = qa.run_qa(instances, tmp_path / "work", fake_embedder, readers, judge, headline=True)
+    assert out["void"] is False and out["headline"] is True
+    col = out["columns"]["gpt-4.1-2025-04-14"]
+    assert col["n"] == len(instances)
+    # the reader actually saw retrieved context (the JSON history reached the model)
+    assert any(m["role"] == "user" for m in cap["messages"])
+
+
+def test_qa_main_requires_explicit_paid_run_confirmation(capsys):
+    # The paid 500-Q run is a deliberate, gated step (Execution note): without the
+    # confirmation flag, main does NOT spend — it prints the gate + cost and exits.
+    rc = qa.main(["--dataset", "nonexistent.json", "--out", "out.json"])
+    assert rc != 0
+    printed = capsys.readouterr().out.lower()
+    assert "gated" in printed or "budget" in printed or "confirm" in printed
