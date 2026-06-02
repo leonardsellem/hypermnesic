@@ -201,3 +201,77 @@ def test_installed_hook_execution_invokes_convergence(make_corpus, fake_embedder
     idx = index.Index(index.state_dir_for(repo) / "index.db")
     assert "merged.md" in idx.all_paths()                      # the hook converged the index
     idx.close()
+
+
+# --- U1: resolve verb + --now convergence-freshness knob + manual-reindex -----
+
+def test_resolve_returns_path_and_slug_for_known_entity(make_corpus, fake_embedder,
+                                                        monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"infrastructure/hetzner.md": "# Hetzner\n\nThe homelab box.\n",
+                        "notes/dup.md": "# D1\n\n", "archive/dup.md": "# D2\n\n"})
+    index.build_index(repo, fake_embedder).close()
+    rc = cli.main(["resolve", str(repo), "Hetzner", "--json"])
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["resolved"] == "infrastructure/hetzner.md"
+    assert out["slug"] == "infrastructure/hetzner"             # caller wikilinks the slug
+
+
+def test_resolve_ambiguous_and_missing_are_null(make_corpus, fake_embedder,
+                                                monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"notes/dup.md": "# D1\n\n", "archive/dup.md": "# D2\n\n"})
+    index.build_index(repo, fake_embedder).close()
+    cli.main(["resolve", str(repo), "dup", "--json"])
+    assert json.loads(capsys.readouterr().out)["resolved"] is None       # ambiguous → null
+    cli.main(["resolve", str(repo), "no-such-entity", "--json"])
+    assert json.loads(capsys.readouterr().out)["resolved"] is None       # missing → null
+
+
+def test_retrieve_now_forces_fresh_self_write_within_debounce(make_corpus, fake_embedder,
+                                                             monkeypatch, tmp_path, capsys):
+    # Covers AE1: a single `retrieve --now` makes a just-committed self-write recall-able
+    # inside the 5 s debounce window; the default (debounced) path still skips it.
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    cli.main(["retrieve", str(repo), "alpha", "--json"])           # prime the debounce stamp
+    capsys.readouterr()
+    _commit(repo, "selfwrite.md", "# Self\n\nSELFWRITEMARKER body.\n", "add self")
+    cli.main(["retrieve", str(repo), "SELFWRITEMARKER", "--json"])  # default: debounced skip
+    debounced = json.loads(capsys.readouterr().out)
+    assert not any(h["path"] == "selfwrite.md" for h in debounced["hits"])      # not yet caught up
+    cli.main(["retrieve", str(repo), "SELFWRITEMARKER", "--now", "--json"])     # forced converge
+    forced = json.loads(capsys.readouterr().out)
+    assert any(h["path"] == "selfwrite.md" for h in forced["hits"])             # recall-able now
+
+
+def test_retrieve_json_surfaces_manual_reindex_on_oversized_delta(make_corpus, fake_embedder,
+                                                                 monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    monkeypatch.setattr(config, "CONVERGE_MAX_DELTA_FILES", 2)     # small cap → trip oversized
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    for i in range(3):                                             # 3 > 2 → oversized delta
+        _commit(repo, f"big{i}.md", f"# Big{i}\n\nbody {i}.\n", f"big {i}")
+    cli.main(["retrieve", str(repo), "alpha", "--now", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    assert out["manual_reindex_recommended"] is True              # CLI surfaces it (was dropped)
+
+
+def test_converge_now_forces_pass_within_debounce(make_corpus, fake_embedder,
+                                                  monkeypatch, tmp_path):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    cli.main(["converge", str(repo), "--json"])                # writes a fresh debounce stamp
+    _commit(repo, "warm2.md", "# W2\n\nWARM2MARKER.\n", "add warm2")
+    cli.main(["converge", str(repo), "--json"])                # default → debounced, no catch-up
+    idx = index.Index(index.state_dir_for(repo) / "index.db")
+    assert "warm2.md" not in idx.all_paths()
+    idx.close()
+    cli.main(["converge", str(repo), "--now", "--json"])       # --now → forced catch-up
+    idx = index.Index(index.state_dir_for(repo) / "index.db")
+    assert "warm2.md" in idx.all_paths()
+    idx.close()
