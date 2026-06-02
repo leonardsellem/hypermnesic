@@ -122,7 +122,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  token_verifier=None, auth=None, auth_server_provider=None,
                  write_scope: str = WRITE_SCOPE,
                  json_response: bool = True,
-                 stateless_http: bool = True) -> FastMCP:
+                 stateless_http: bool = True,
+                 public_hosts: list[str] | None = None) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
 
     Refuses ``0.0.0.0`` — the bind invariant is enforced at construction. Every
@@ -194,9 +195,28 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             "refusing a write-enabled serve with an empty --allowlist: it would permit "
             "no writes at all. Omit --allowlist for the default, or pass real prefixes (U1)."
         )
+    # Behind a TLS-terminating reverse proxy (Tailscale Funnel → loopback bind), the forwarded
+    # Host header is the PUBLIC hostname, not 127.0.0.1. FastMCP auto-enables DNS-rebinding
+    # protection on a loopback bind with a loopback-ONLY allowlist, so every proxied /mcp call
+    # 421s ("Invalid Host header"). When the caller declares its public host(s), trust them too —
+    # protection STAYS on (an arbitrary attacker Host is still rejected); we only widen the
+    # allowlist to the proxy's hostname. Direct-IP binds (the tailnet master) never hit this
+    # branch — FastMCP only auto-protects loopback — so they are unaffected.
+    transport_security = None
+    if public_hosts:
+        from mcp.server.transport_security import TransportSecuritySettings
+        allowed = ["127.0.0.1", "127.0.0.1:*", "localhost", "localhost:*", "[::1]", "[::1]:*"]
+        origins: list[str] = []
+        for h in public_hosts:
+            if h and h not in allowed:
+                allowed += [h, f"{h}:*"]
+                origins += [f"https://{h}", f"https://{h}:*"]
+        transport_security = TransportSecuritySettings(
+            enable_dns_rebinding_protection=True, allowed_hosts=allowed, allowed_origins=origins)
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
     mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
                   json_response=json_response, stateless_http=stateless_http,
+                  transport_security=transport_security,       # proxy-host trust (None = default)
                   token_verifier=token_verifier, auth=auth,   # U2 RS-only / no-auth …
                   auth_server_provider=auth_server_provider)  # … or the cloud AS+RS lane
 
@@ -402,9 +422,18 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
     # default the public lane to the tighter cloud review zone (not the full vault allowlist)
     cloud_allowlist = list(write_allowlist) if write_allowlist is not None else list(
         CLOUD_WRITE_ALLOWLIST)
+    # the cloud serve always runs behind the Funnel (loopback bind, public Host) — trust the
+    # public hostname(s) from the issuer + resource URLs so proxied /mcp calls don't 421.
+    from urllib.parse import urlparse
+    public_hosts: list[str] = []
+    for _u in (public_url, resource):
+        _nl = urlparse(str(_u)).netloc
+        if _nl and _nl not in public_hosts:
+            public_hosts.append(_nl)
     mcp = build_server(index_db, host=host, port=port, path=path, repo=repo, embedder=embedder,
                        write_enabled=True, write_allowlist=cloud_allowlist,
-                       audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth)
+                       audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth,
+                       public_hosts=public_hosts)
     _register_consent_route(mcp, provider)
     return mcp
 

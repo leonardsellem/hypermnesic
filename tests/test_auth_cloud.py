@@ -254,6 +254,31 @@ def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fak
     assert "/consent" in [r.path for r in srv._custom_starlette_routes]       # consent route added
 
 
+def test_cloud_server_trusts_public_host_behind_proxy(make_corpus, fake_embedder):
+    # Regression (live 421): behind the Funnel the forwarded Host is the PUBLIC hostname, not
+    # loopback. FastMCP auto-enables DNS-rebinding protection on a 127.0.0.1 bind with a
+    # loopback-only allowlist, so a proxied /mcp call returns 421 "Invalid Host header".
+    # build_cloud_server must trust the public host (from public_url/resource) so the mobile
+    # connector's calls pass — while protection stays ON (an arbitrary attacker Host is rejected).
+    from urllib.parse import urlparse
+
+    from mcp.server.transport_security import TransportSecurityMiddleware
+
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(
+        db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+        resource=RES, public_url=PUBLIC, approval_token="op-approval-token-24chars-or-more")
+    ts = srv.settings.transport_security
+    assert ts is not None and ts.enable_dns_rebinding_protection is True     # protection stays ON
+    mw = TransportSecurityMiddleware(ts)
+    assert mw._validate_host(urlparse(PUBLIC).netloc) is True       # Funnel Host passes
+    assert mw._validate_host("127.0.0.1:8850") is True              # loopback healthcheck ok
+    assert mw._validate_host("evil.attacker.example") is False      # rebinding still blocked
+
+
 def test_consent_render_escapes_client_fields_and_hides_unknown_pending():
     # Critical (XSS): the consent page must HTML-escape attacker-controlled DCR fields, and
     # must NOT reflect an unknown/arbitrary pending id at all (the reflected-XSS sink).
