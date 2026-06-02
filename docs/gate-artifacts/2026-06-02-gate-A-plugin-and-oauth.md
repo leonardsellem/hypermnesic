@@ -4,9 +4,34 @@
 **Date:** 2026-06-02 · **Plan:** `docs/plans/2026-06-02-009-feat-gbrain-decommission-plan.md`
 
 Phase A units U1–U5 + U12 are implemented, test-first, and committed on
-`claude/condescending-sutherland-4d9b29`. The agent-executable pytest gate passes and the
-OAuth2 enforcement loop is proven live over HTTP. The remaining PASS items are operational
-and partly cross-host (the Mac) — they need the operator. **Execution halts here.**
+`claude/condescending-sutherland-4d9b29` (merged to `main`, PR #15). The agent-executable
+pytest gate passes and the OAuth2 enforcement loop is proven live over HTTP. The remaining PASS
+items are operational and partly cross-host (the Mac) — they need the operator. **Execution
+halts here.**
+
+## ✅ Homelab deploy EXECUTED (2026-06-02, operator-approved)
+
+The homelab Gate-A rollout is **live** (option-2, companion-safe; mirrored to
+`gbrain-brain/projects/homelab/services/hypermnesic-as.md` + `LOG.md`):
+
+- **AS** `hypermnesic-as.service` — `100.103.0.55:8849`, `client_credentials` + RFC 8707 audience
+  + RFC 7662 introspection + DCR-locked. 4 identities enrolled (homelab-claude, homelab-codex,
+  Mac, RS); secrets in `~/.config/hypermnesic-as/*.env` (0600).
+- **Write master (auth-on)** `hypermnesic-master-auth.service` — `100.103.0.55:8851`, write-enabled,
+  introspects the AS. **Live-verified: unauth `commit_note` → 401, authed `search` → 200.**
+- **Companion preserved** — `:8848` flipped to **read-only auth-off** (`tools/list` =
+  `[search, build_context, think]`, `commit_note` retired, reads → 200). The Obsidian companion
+  keeps its URL; the auth-off **write** surface on the tailnet is gone (invariant honored).
+- **Agent token** — `hypermnesic-token.timer` mints `HYPERMNESIC_MCP_TOKEN` (45-min) to a 0600 file.
+- **write-master refuses auth-off** — re-proven **live** on the homelab.
+- **Reversible** — `hypermnesic.service.pre-phase2.bak` + stop the 3 new units.
+- **Provenance** — services worktree-pinned to the merged Phase-2 (clean reinstall-from-`main` is a
+  follow-up; uv wheel-cache needs a version bump). gbrain/honcho/vault untouched.
+
+**Open for Gate A (operator):** the **Mac 2nd-peer round-trip** (run `docs/handoff-macbook-prompt.md`
+with the `mac` identity's secret from `~/.config/hypermnesic-as/mac.env`) + the **plugin install**
+(homelab + Mac) + **final Gate-A approval**. Wrong-audience rejection (RFC 8707) is unit- +
+ephemeral-proven (the live `:8851` uses the same `StrictResourceTokenVerifier`).
 
 ---
 
