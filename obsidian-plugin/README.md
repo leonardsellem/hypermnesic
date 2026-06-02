@@ -10,8 +10,16 @@ checkable "you may be reinventing this" nudge — and it **never writes your vau
   cursor — findings hold while you keep typing and refresh when you pause.
 - A calm **status-bar** indicator that expands to a popover; an **opt-in
   sidebar**; an optional editor inline marker.
-- **Thinking-mode** — related notes, Socratic questions, and tensions, with a
-  visible `wrote: false` badge — and **selection-recall** (recall about the
+- **First-class references everywhere**: every related note is a native
+  `internal-link` with **Page-preview on hover** and a right-click menu (open /
+  open in new pane or split / think about this / copy as link), plus
+  drag-to-insert — all **read-only** (the plugin supplies link text; you perform
+  the drop/paste). A note that isn't in your vault renders as an honest muted row
+  with an engine-snippet peek — never a broken or note-creating link.
+- **Thinking-mode** is a **dockable panel** (like Backlinks/Outline): related
+  notes (navigable), Socratic questions, and tensions (rendered markdown with
+  live, resolution-guarded links), a "think deeper" affordance with a back trail,
+  and a visible `wrote: false` badge. Plus **selection-recall** (recall about the
   highlighted text).
 - An **interrogable reinvention nudge**: it expands to the matched snippet and a
   one-hop context peek so the claim is checkable, and it is mutable per note

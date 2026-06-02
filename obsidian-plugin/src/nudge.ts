@@ -4,12 +4,16 @@
  * When the top hit's similarity ≥ the threshold for the current block, show a
  * nudge that EXPANDS to the matched snippet + a one-hop build_context peek, so
  * the "you may be reinventing [[X]]" claim is checkable rather than an
- * unfalsifiable accusation. It is dismissable/mutable PER NOTE — muting is
- * plugin-local state (persisted via the store) and never edits the note. It
- * exposes no write / "open as proposal" affordance in v1.
+ * unfalsifiable accusation. The reinvention link and the context-peek list render
+ * through the shared reference-row primitive, so they get a resolved title (not
+ * the literal `[[path]]`), Page-preview hover, the context menu, and insertion —
+ * and a non-local target degrades to an honest muted row. The nudge is
+ * dismissable/mutable PER NOTE — muting is plugin-local state (persisted via the
+ * store) and never edits the note. It exposes no write affordance in v1.
  */
-import { App, Notice } from "obsidian";
+import { ButtonComponent, HoverParent, Notice } from "obsidian";
 import { ContextResponse, CoreResult, callTool, parseToolResult } from "./core";
+import { ReferenceRowDeps, renderReference, resolveReference } from "./surfaces/reference";
 
 /** Plugin-local mute state. Implemented by the plugin over persisted data;
  *  muting never touches the vault. */
@@ -20,12 +24,12 @@ export interface NudgeStore {
 }
 
 export interface NudgeDeps {
-  app: App;
   getUrl(): string;
   store: NudgeStore;
   threshold(): number;
   activePath(): string;
-  openNote(path: string): void;
+  /** Shared reference-row deps (resolution, navigation, hover, menu, insertion). */
+  rowDeps: ReferenceRowDeps;
 }
 
 /** Whether to show the nudge for the current block. */
@@ -39,21 +43,29 @@ export function shouldNudge(
   return !!top && top.score >= threshold;
 }
 
-export function renderNudge(host: HTMLElement, result: CoreResult, deps: NudgeDeps): void {
+export function renderNudge(
+  host: HTMLElement,
+  result: CoreResult,
+  deps: NudgeDeps,
+  hoverParent: HoverParent | null,
+): void {
   const activePath = deps.activePath();
   if (!shouldNudge(result, deps.threshold(), deps.store.isMuted(activePath))) return;
   const top = result.hits[0];
+  const sourcePath = result.sourcePath;
 
   const box = host.createEl("div", { cls: "hypermnesic-nudge" });
   box.setAttribute("role", "note");
 
   const header = box.createEl("div", { cls: "hypermnesic-nudge-header" });
   header.createEl("strong", { text: "You may be reinventing: " });
-  const link = header.createEl("a", { text: `[[${top.path}]]`, cls: "internal-link", href: "#" });
-  link.addEventListener("click", (evt) => {
-    evt.preventDefault();
-    deps.openNote(top.path);
-  });
+  const refHost = header.createSpan({ cls: "hypermnesic-nudge-ref" });
+  const resolved = resolveReference(
+    deps.rowDeps.app,
+    { path: top.path, heading: top.heading, snippet: top.snippet },
+    sourcePath,
+  );
+  renderReference(refHost, resolved, sourcePath, deps.rowDeps, hoverParent);
 
   // The matched snippet makes the claim inspectable.
   if (top.snippet) {
@@ -61,33 +73,37 @@ export function renderNudge(host: HTMLElement, result: CoreResult, deps: NudgeDe
   }
 
   const actions = box.createEl("div", { cls: "hypermnesic-nudge-actions" });
+  const peekOut = box.createEl("div", { cls: "hypermnesic-nudge-peek" });
 
   // "Check context" — a one-hop build_context peek (read-only).
-  const peekOut = box.createEl("div", { cls: "hypermnesic-nudge-peek" });
-  const peekBtn = actions.createEl("button", { text: "Check context" });
-  peekBtn.addEventListener("click", async () => {
+  new ButtonComponent(actions).setButtonText("Check context").onClick(async () => {
     peekOut.empty();
     peekOut.setText("loading…");
     try {
       const ctx = parseToolResult<ContextResponse>(
         await callTool(deps.getUrl(), "build_context", { path: top.path, depth: 1 }),
       );
-      renderPeek(peekOut, ctx, deps);
+      renderPeek(peekOut, ctx, deps, sourcePath, hoverParent);
     } catch {
       peekOut.setText("could not load context");
     }
   });
 
   // "Mute for this note" — plugin-local, persisted, never edits the note.
-  const muteBtn = actions.createEl("button", { text: "Mute for this note" });
-  muteBtn.addEventListener("click", async () => {
+  new ButtonComponent(actions).setButtonText("Mute for this note").onClick(async () => {
     await deps.store.mute(activePath);
     box.remove();
     new Notice("hypermnesic: nudge muted for this note");
   });
 }
 
-function renderPeek(host: HTMLElement, ctx: ContextResponse | null, deps: NudgeDeps): void {
+function renderPeek(
+  host: HTMLElement,
+  ctx: ContextResponse | null,
+  deps: NudgeDeps,
+  sourcePath: string,
+  hoverParent: HoverParent | null,
+): void {
   host.empty();
   const reachable = extractReachable(ctx?.context);
   if (reachable.length === 0) {
@@ -97,11 +113,8 @@ function renderPeek(host: HTMLElement, ctx: ContextResponse | null, deps: NudgeD
   const ul = host.createEl("ul", { cls: "hypermnesic-nudge-context" });
   for (const path of reachable.slice(0, 8)) {
     const li = ul.createEl("li");
-    const a = li.createEl("a", { text: path, cls: "internal-link", href: "#" });
-    a.addEventListener("click", (evt) => {
-      evt.preventDefault();
-      deps.openNote(path);
-    });
+    const resolved = resolveReference(deps.rowDeps.app, { path }, sourcePath);
+    renderReference(li, resolved, sourcePath, deps.rowDeps, hoverParent);
   }
 }
 

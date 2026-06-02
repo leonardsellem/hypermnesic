@@ -248,6 +248,10 @@ export interface CoreResult {
   asOf: number;
   blockKey: string;
   query: string;
+  /** The note these results were computed for — feeds per-hit resolution and the
+   *  native link generator (KTD10), and stays stable as the thinking panel
+   *  survives navigation. */
+  sourcePath: string;
 }
 
 export interface CoreDeps {
@@ -322,6 +326,7 @@ export class RetrievalCore {
       asOf: this.deps.now() * 1000,
       blockKey: this.cache.key(text),
       query: text,
+      sourcePath: activePath,
     };
   }
 }
