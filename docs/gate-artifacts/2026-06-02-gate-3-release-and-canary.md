@@ -57,3 +57,34 @@ The restore cron is **NOT** altered (it keeps running).
 - **HALT before release IF** the snapshot is judged insufficient (e.g. you want the full `pg_dump`/restic belt first).
 - **HALT at validation IF** the canary doesn't reach `origin/main`, sync doesn't ingest it, it's altered,
   or an unexpected orphan/divergence appears → run the rollback runbook; Phase 1 does not complete.
+
+---
+
+## GATE 3 (validation) — PASS ✅  (Phase 1 live, 2026-06-02 ~14:30 UTC)
+
+The single canary `commit_note` ran through the live master and validated end-to-end.
+
+| Check | Result |
+|---|---|
+| Committed | `801fcc69` — `created:true, noop:false` |
+| On `origin/main` (U11 push) | ✅ `origin/main == 801fcc69` (no local-ahead) |
+| **Path-scoped** (no foreign sweep) | ✅ commit contains *only* `sources/hypermnesic-canary-2026-06-02.md` |
+| Audited | ✅ 1 entry — `verb=create`, server-set actor `tailnet:homelab.taildabf2.ts.net` |
+| Ingested (live Supabase) | ✅ `gbrain sync 6e1c6718..801fcc69` imported it (slug row confirmed) |
+| **U12 `.gitignore` stable** | ✅ byte-identical across the sync (`GBRAIN_NO_GITIGNORE=1` held) |
+| Recall-able | ✅ gbrain (DB row) **and** hypermnesic dense MCP search (`recalled=True, degraded=False`) |
+| No new divergence | ✅ canary present on disk + origin/main + DB (not an orphan) |
+| **gbrain untouched** | ✅ restore / repo-hygiene / remote-sync all `enabled=True, paused_at=None` |
+| gbrain-pull | ✅ paused for the write (TTL-watchdog), resumed after |
+
+### Mid-flight finding (fixed before the write)
+The dogfood hit **live concurrent vault activity** and exposed that `commit_note` committed the
+**whole staged index** — on this busy shared checkout it could have swept a fleet committer's staged
+work into the canary commit. Fixed with **path-scoped** commit/diff (`git commit -- <rel>`),
+test-first, redeployed (`0.0.2 → 0.0.3`), and proven in production (the canary commit is path-scoped).
+Also reconciled: your `stateless_http` Obsidian fix was cherry-picked onto the Phase-A branch and
+co-deployed (uv wheel-cache required the version bump to rebuild).
+
+**Phase 1 complete:** hypermnesic is live as a coexisting, gated, audited, disk-first git committer;
+agents can author into the vault via `commit_note`; gbrain is verifiably unchanged. Migrating the
+DB-first writers + retiring the restore cron is Phase 2 (separate plan).
