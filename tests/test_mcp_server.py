@@ -79,6 +79,20 @@ def test_serve_returns_single_json_not_sse(built_index, fake_embedder):
     assert sse.settings.json_response is False
 
 
+def test_serve_is_stateless_for_handshakeless_clients(built_index, fake_embedder):
+    # The Obsidian companion (requestUrl) issues single-shot JSON-RPC POSTs with no
+    # initialize handshake and no Mcp-Session-Id. The SDK default is STATEFUL session
+    # mode, which 400s those calls ("Missing session ID"). We default stateless so a
+    # bare tools/call returns 200. This guard locks the contract: if a refactor drops
+    # stateless_http, FastMCP reverts to the stateful default and this test fails
+    # (the live transport proof is the bare-curl tools/call in the deploy VERIFY).
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
+    assert srv.settings.stateless_http is True
+    # opt-out remains available for a session-stateful client
+    stateful = mcp_server.build_server(built_index, host=TAILNET_IP, stateless_http=False)
+    assert stateful.settings.stateless_http is False
+
+
 def test_only_read_tools_no_write_tool(built_index, fake_embedder):
     # U20 adds a third read tool (think); the invariant is "read-only, structural".
     srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
