@@ -19,6 +19,24 @@ public/Funnel deferred" boundary, so the threat model is rewritten for public re
 This document is the **requirements + threat-model design for operator sign-off**, per the
 "design-first" decision (2026-06-02). No code ships until the Open Questions below are answered.
 
+## Operator sign-off (2026-06-02) — APPROVED, build it
+
+- **Exposure: PUBLIC, required.** A publicly-resolvable HTTPS endpoint (Tailscale **Funnel**, as
+  honcho uses — *not* tailnet-only `serve`), because ChatGPT/Claude reach connectors from their
+  public-internet servers. Coexists with, and is separate from, the gbrain plan's tailnet `serve`
+  lane.
+- **Consent: standard OAuth, no extra bespoke gate — the honcho model.** hypermnesic's `/authorize`
+  **authenticates the operator** (an approval-token / credential the operator holds, exactly as
+  honcho's approval token works) before issuing a code; no additional approval layer on top. This
+  is the baseline that keeps a public **write** endpoint from being open to anonymous visitors — it
+  is not an "extra gate."
+- **Capability:** read **+ write** from mobile (operator accepts the public-write surface; bounded by
+  commit_note's allowlist/protected-path/diff-or-die/audit + git revertability).
+- **AS topology:** **separate** public cloud AS (authorization_code + DCR + PKCE), independent of the
+  U12 tailnet `client_credentials` AS and of honcho.
+- **Cloud writes** land in a dedicated review zone (e.g. `captures/` or a `mobile/` prefix).
+- **Sequencing:** mobile now; the gbrain decommission stays parked at Gate A.
+
 ## Problem Frame
 
 The gbrain-decommission plan (008/009) made hypermnesic the memory layer over a **tailnet-only,
