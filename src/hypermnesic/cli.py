@@ -184,6 +184,50 @@ def _cmd_capture(args) -> int:
     return 0
 
 
+def _cmd_converge(args) -> int:
+    """Pre-warm: catch the index up to HEAD + a bounded dense fill (U27). The
+    post-merge hook's entrypoint; also a manual warm. Lazy read-time convergence
+    is the correctness guarantee — this never fails a pull (no index → clean no-op)."""
+    from hypermnesic import converge as converge_mod
+    from hypermnesic import index
+
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    if not db.exists():
+        out = {"status": "no-index"}
+        _print_json(out) if args.json else print("no index yet — run `hypermnesic init` first")
+        return 0
+    idx = index.Index(db)
+    try:  # dense optional — degrade to lexical catch-up if no key (same as the server)
+        from hypermnesic import embed
+        embedder = embed.OpenAIEmbedder()
+    except Exception:
+        embedder = None
+    res = converge_mod.converge(Path(args.repo), idx, embedder,
+                                authoring_host=args.authoring_host)
+    idx.close()
+    if args.json:
+        _print_json(res.as_dict())
+    else:
+        print(f"converged: {res.status} (replayed={res.replayed}, "
+              f"embedded={res.chunks_embedded}, degraded={res.degraded})")
+    return 0
+
+
+def _cmd_install_hooks(args) -> int:
+    """Opt-in: install (or uninstall) the post-merge convergence hook. Idempotent,
+    non-destructive (managed block), uninstall removes only the managed block."""
+    from hypermnesic import install
+
+    res = (install.uninstall_hooks(Path(args.repo)) if args.uninstall
+           else install.install_hooks(Path(args.repo)))
+    action = "uninstalled" if args.uninstall else "installed"
+    if args.json:
+        _print_json({"action": action, **res})
+    else:
+        print(f"{action} convergence hook(s): {res}")
+    return 0
+
+
 def _cmd_serve(args) -> int:
     from hypermnesic import mcp_server
 
@@ -260,6 +304,24 @@ def build_parser() -> argparse.ArgumentParser:
     p_capture.add_argument("text", help="the raw text to capture")
     p_capture.add_argument("--json", action="store_true")
     p_capture.set_defaults(func=_cmd_capture)
+
+    p_conv = sub.add_parser("converge",
+                            help="pre-warm: catch the index up to HEAD + bounded dense fill")
+    p_conv.add_argument("repo", help="repo whose index to converge")
+    p_conv.add_argument("--index-db", default=None,
+                        help="index db (default: <repo>/.hypermnesic)")
+    p_conv.add_argument("--authoring-host", action="store_true",
+                        help="also refresh the uncommitted working-tree overlay")
+    p_conv.add_argument("--json", action="store_true")
+    p_conv.set_defaults(func=_cmd_converge)
+
+    p_hooks = sub.add_parser("install-hooks",
+                             help="opt-in: install/uninstall the post-merge convergence hook")
+    p_hooks.add_argument("repo", help="repo to install the git hook into")
+    p_hooks.add_argument("--uninstall", action="store_true",
+                         help="remove only the managed block")
+    p_hooks.add_argument("--json", action="store_true")
+    p_hooks.set_defaults(func=_cmd_install_hooks)
 
     p_serve = sub.add_parser("serve", help="run the read-only tailnet MCP server")
     p_serve.add_argument("--index-db", required=True, help="path to the index .db")
