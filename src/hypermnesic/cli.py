@@ -232,8 +232,34 @@ def _cmd_serve(args) -> int:
     from hypermnesic import mcp_server
 
     srv = mcp_server.build_server(Path(args.index_db), host=args.host,
-                                  port=args.port, path=args.path)
+                                  port=args.port, path=args.path,
+                                  write_enabled=args.enable_write)
     srv.run(transport="streamable-http")
+    return 0
+
+
+def _cmd_install(args) -> int:
+    """Provision a host into a role (single|master|client) — render artifacts,
+    write role config, install the convergence hook. Live service start + index
+    build are returned as manual steps (host-specific; never run from a unit test)."""
+    from hypermnesic import install
+
+    try:
+        res = install.install(
+            args.role, repo=(Path(args.repo) if args.repo else None),
+            bind=args.bind, port=args.port, path=args.path, service=args.service,
+            master_url=args.master_url, mcp_config_path=args.mcp_config)
+    except install.InstallError as exc:
+        print(f"install failed: {exc}", file=sys.stderr)   # fail loud; nothing provisioned
+        return 1
+    if args.json:
+        _print_json(res)
+    else:
+        print(f"installed role={res['role']}")
+        for a in res.get("artifacts", []):
+            print(f"  wrote {a}")
+        for s in res.get("manual_steps", []):
+            print(f"  next: {s}")
     return 0
 
 
@@ -328,7 +354,26 @@ def build_parser() -> argparse.ArgumentParser:
     p_serve.add_argument("--host", required=True, help="Tailscale interface IP (not 0.0.0.0)")
     p_serve.add_argument("--port", type=int, default=8848)
     p_serve.add_argument("--path", default="/mcp")
+    p_serve.add_argument("--enable-write", action="store_true",
+                         help="register the git-first commit_note write tool (master role)")
     p_serve.set_defaults(func=_cmd_serve)
+
+    p_install = sub.add_parser("install",
+                               help="provision a host into a role (single|master|client)")
+    p_install.add_argument("repo", nargs="?", default=None,
+                           help="repo to provision (engine roles: single|master)")
+    p_install.add_argument("--role", required=True, choices=["single", "master", "client"])
+    p_install.add_argument("--bind", default=None, help="tailnet IP to bind (master)")
+    p_install.add_argument("--service", default="systemd", choices=["systemd", "docker"],
+                           help="always-on master service flavor")
+    p_install.add_argument("--master-url", default=None,
+                           help="master MCP endpoint the client points at")
+    p_install.add_argument("--mcp-config", default=None,
+                           help="MCP client config file to write/patch (client role)")
+    p_install.add_argument("--port", type=int, default=8848)
+    p_install.add_argument("--path", default="/mcp")
+    p_install.add_argument("--json", action="store_true")
+    p_install.set_defaults(func=_cmd_install)
     return parser
 
 
