@@ -673,3 +673,83 @@ def test_tiktoken_o200k_counter_when_bench_installed():
     count = rdr.tiktoken_token_counter("gpt-4o")
     n = count("Hello, world! This is a tokenization test.")
     assert isinstance(n, int) and n > 0
+
+
+# ---------------------------------------------------------------------------
+# U8 — LongMemEval autoeval judge [Phase 2 code]
+# ---------------------------------------------------------------------------
+
+from longmemeval import judge as jdg  # noqa: E402
+
+
+def test_judge_selects_the_correct_per_type_prompt():
+    # The 5 official per-question_type templates are selected by question_type + _abs.
+    q, a, r = "When did I move?", "in 2023", "in 2023"
+    assert "latest" in jdg.build_prompt(q, a, r, "knowledge-update", False).lower()
+    temporal = jdg.build_prompt(q, a, r, "temporal-reasoning", False).lower()
+    assert "toler" in temporal or "off by one" in temporal or "approximate" in temporal
+    pref = jdg.build_prompt(q, a, r, "single-session-preference", False).lower()
+    assert "preference" in pref or "rubric" in pref
+    default = jdg.build_prompt(q, a, r, "single-session-user", False).lower()
+    assert "correct answer" in default
+    # _abs overrides the question_type → the abstention template
+    abst = jdg.build_prompt(q, a, r, "single-session-user", True).lower()
+    assert "abstain" in abst or "cannot be answered" in abst or "not available" in abst
+
+
+def test_judge_abstention_prompt_and_grades_correct_refusal_as_correct():
+    # Covers AE1: abstention picks the abstention prompt and grades a correct
+    # refusal as correct (scored in the abstention ability, never folded).
+    cap = {}
+    judge = jdg.Judge(client=_FakeChatClient("yes", cap))
+    res = judge.grade(question="What is my employee badge number?",
+                      answer="The information is not available in the history.",
+                      response="I don't have that information.",
+                      question_type="single-session-user", is_abstention=True)
+    assert res.prompt_kind == "abstention"
+    assert res.correct is True
+    user = next(m["content"] for m in cap["messages"] if m["role"] == "user")
+    assert "abstain" in user.lower() or "cannot be answered" in user.lower()
+
+
+def test_judge_knowledge_update_prompt_instructs_latest_wins():
+    # Edge: the knowledge-update template tells the judge the most recent value is
+    # correct (so restating the old value as current would be graded incorrect).
+    prompt = jdg.build_prompt("What is my current bike?", "green gravel bike",
+                              "green gravel bike", "knowledge-update", False).lower()
+    assert "latest" in prompt or "most recent" in prompt
+
+
+def test_judge_label_parsing_is_case_insensitive_substring_yes():
+    # The official rule is exactly `'yes' in response.lower()` — replicated for
+    # comparability (so an official aggregator would accept the labels).
+    assert jdg.parse_label("Yes") is True
+    assert jdg.parse_label("  YES.\n") is True
+    assert jdg.parse_label("Correct — yes, it matches") is True
+    assert jdg.parse_label("no") is False
+    assert jdg.parse_label("Nope.") is False
+
+
+def test_judge_uses_canonical_model_and_decode_params():
+    cap = {}
+    judge = jdg.Judge(client=_FakeChatClient("yes", cap))
+    assert judge.model == "gpt-4o-2024-08-06"  # official aggregator hard-asserts this
+    judge.grade(question="q", answer="a", response="a",
+                question_type="single-session-user", is_abstention=False)
+    assert cap["model"] == "gpt-4o-2024-08-06"
+    assert cap["kwargs"].get("temperature") == 0
+    assert cap["kwargs"].get("max_tokens") == 10
+
+
+def test_judge_fails_gracefully_when_client_errors():
+    class _Boom:
+        def __init__(self):
+            self.chat = type("C", (), {"completions": self})
+
+        def create(self, **kw):
+            raise RuntimeError("api down")
+
+    res = jdg.Judge(client=_Boom()).grade(question="q", answer="a", response="a",
+                                          question_type="single-session-user",
+                                          is_abstention=False)
+    assert res.correct is False and res.error is not None
