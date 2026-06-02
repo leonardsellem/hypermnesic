@@ -482,6 +482,27 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
     return {"chunks_embedded": n_chunks, "docs_embedded": n_docs}
 
 
+def ensure_full_coverage(idx: Index, repo: Path, embedder) -> bool:
+    """Full (unbudgeted) embed so ``note_vectors()`` reflects every chunk before an
+    analytical read (U30/FR-R39 — salience centrality + connection similarity must
+    not silently compute on a half-embedded corpus).
+
+    Returns coverage completeness (FR-R40): ``True`` when no stale chunk remains;
+    ``False`` when the embedder is absent or fails mid-fill (e.g. API down) — the
+    analytical result is then partial, and the caller surfaces that. Best-effort
+    under lock contention: a busy lock leaves coverage partial rather than blocking.
+    """
+    if not idx.stale_chunk_ids():
+        return True                          # already complete — nothing to fill
+    if embedder is None or repo is None:
+        return False                         # cannot fill → partial
+    try:
+        embed_stale(idx, repo, embedder, budget=None)   # unbounded analytical pass
+    except Exception:
+        pass                                 # embedder down / lock busy → partial coverage
+    return not idx.stale_chunk_ids()
+
+
 def reindex_isolated(repo: Path, embedder, *, state_dir: Path | None = None) -> dict:
     """Broad reindex without blocking narrow writers (U14, KTD9/U12).
 

@@ -19,6 +19,7 @@ import math
 from itertools import combinations
 
 from hypermnesic import generated
+from hypermnesic import index as index_mod
 from hypermnesic import propose as propose_mod
 
 SUGGESTIONS_REL = "dashboards/connection-suggestions.md"
@@ -69,16 +70,24 @@ def build_suggestions_note(pairs: list[tuple[str, str, float]], *, now: str | No
     return generated.render(fm, body)
 
 
-def connection_proposals(repo, *, graph, idx=None, vectors=None,
+def connection_proposals(repo, *, graph, idx=None, vectors=None, embedder=None,
                          threshold: float = _DEFAULT_THRESHOLD,
                          near_dup: float = _DEFAULT_NEAR_DUP, cap: int = _DEFAULT_CAP,
                          log=None, gh_create=None, now: str | None = None):
     """Emit similar-but-unlinked connections as a bounded, batched U18 proposal.
 
     Returns the ``ProposalResult`` — or ``None`` when there is nothing to suggest
-    (no noise). Never writes an edge directly into a note."""
+    (no noise). Never writes an edge directly into a note.
+
+    U30/FR-R39: when vectors are derived from ``idx`` (not supplied directly), a
+    full unbudgeted embed runs first so a similar-but-unlinked pair is never missed
+    because one note's chunk was unembedded — ``note_vectors()`` sees every chunk."""
     if vectors is None:
-        vectors = idx.note_vectors() if idx is not None else {}
+        if idx is not None:
+            index_mod.ensure_full_coverage(idx, repo, embedder)   # full embed before reading
+            vectors = idx.note_vectors()
+        else:
+            vectors = {}
     pairs = candidate_pairs(vectors, graph, threshold=threshold, near_dup=near_dup, cap=cap)
     if not pairs:
         return None
