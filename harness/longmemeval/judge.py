@@ -142,17 +142,31 @@ class Judge:
             self._client = OpenAI(api_key=self._api_key or config.get_api_key())
         return self._client
 
-    def grade(self, *, question: str, answer: str, response: str,
-              question_type: str, is_abstention: bool) -> JudgeResult:
+    def request_body(self, *, question: str, answer: str, response: str,
+                     question_type: str, is_abstention: bool) -> tuple[dict, str]:
+        """The chat.completions request body + the selected prompt ``kind``, without
+        calling the API — shared by the sync call and the Batch API path."""
         kind = prompt_kind(question_type, is_abstention)
         prompt = build_prompt(question, answer, response, question_type, is_abstention)
+        body = {"model": self.model, "messages": [{"role": "user", "content": prompt}],
+                "temperature": self.temperature, "max_tokens": self.max_tokens}
+        return body, kind
+
+    def grade_from_content(self, content: str | None, *, kind: str,
+                           error: str | None = None) -> JudgeResult:
+        """Wrap a completion's content (or an error) into a ``JudgeResult`` — shared
+        by the sync call and the Batch API result parser."""
+        if error is not None:
+            return JudgeResult(False, self.model, kind, "", error)
+        return JudgeResult(parse_label(content or ""), self.model, kind, content or "")
+
+    def grade(self, *, question: str, answer: str, response: str,
+              question_type: str, is_abstention: bool) -> JudgeResult:
+        body, kind = self.request_body(question=question, answer=answer, response=response,
+                                       question_type=question_type, is_abstention=is_abstention)
         try:
-            resp = self._get_client().chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=self.temperature, max_tokens=self.max_tokens,
-            )
-            raw = (resp.choices[0].message.content or "")
+            resp = self._get_client().chat.completions.create(**body)
+            content = resp.choices[0].message.content
         except Exception as exc:  # graceful — a judge outage doesn't crash the run
-            return JudgeResult(False, self.model, kind, "", repr(exc))
-        return JudgeResult(parse_label(raw), self.model, kind, raw)
+            return self.grade_from_content(None, kind=kind, error=repr(exc))
+        return self.grade_from_content(content, kind=kind)
