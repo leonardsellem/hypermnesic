@@ -273,6 +273,27 @@ class Index:
         return [{"chunk_id": r[0], "path": r[1], "ord": r[2],
                  "heading": r[3], "text": r[4]} for r in rows]
 
+    def note_vectors(self) -> dict[str, list[float]]:
+        """Mean dense vector per path over its embedded chunks — read access to the
+        STORED vectors (U21 salience centrality + U22 pairwise similarity need this;
+        the kernel previously exposed only query-vector KNN). Paths whose chunks are
+        not yet embedded (the AE5 lexical-ahead gap) are simply absent. Deterministic
+        order so callers' rankings are reproducible."""
+        import json
+
+        rows = self.conn.execute(
+            "SELECT c.path, vec_to_json(v.embedding) FROM vec_chunks v "
+            "JOIN chunks c ON c.chunk_id = v.chunk_id ORDER BY c.path, v.chunk_id"
+        ).fetchall()
+        acc: dict[str, list[list[float]]] = {}
+        for path, vec_json in rows:
+            acc.setdefault(path, []).append(json.loads(vec_json))
+        out: dict[str, list[float]] = {}
+        for path, vecs in acc.items():
+            dim = len(vecs[0])
+            out[path] = [sum(v[i] for v in vecs) / len(vecs) for i in range(dim)]
+        return out
+
     def stats(self) -> dict:
         n = self.conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
         n_docs = self.conn.execute(
