@@ -1,7 +1,7 @@
 # Hypermnesic on LongMemEval V1 — Benchmark Verdict
 
-**Status: Phase 1 scaffold (retrieval diagnostic harness landed; numbers pending the
-F2 run). Phase 2 — end-to-end QA headline (GPT-4.1 + GPT-4o columns): pending.**
+**Status: Phase 1 retrieval diagnostic — RUN (2026-06-02, full `_s`; numbers below).
+Phase 2 — end-to-end QA headline (GPT-4.1 + GPT-4o columns): pending (gated).**
 
 This document is the public-facing verdict for Hypermnesic on **LongMemEval V1**,
 in the integrity style of [`PARITY_VERDICT.md`](PARITY_VERDICT.md): it records
@@ -113,33 +113,58 @@ official aggregator.
 
 ## Phase 1 — retrieval diagnostic (session + turn level)
 
-Embeddings-only; no reader/judge spend. Produced by the F2 run below over the full
-`_s` set; the smoke subset ([`smoke.example.jsonl`](longmemeval/smoke.example.jsonl))
-is **non-headline** and is never substituted here (AE4).
+Embeddings-only; no reader/judge spend. **Run 2026-06-02** over the **full `_s` set**
+(headline-eligible, no sampling, R17); embed-quiescent (not voided); production embed
+config (`text-embedding-3-large` @ 1536); frozen retrieval params (`k`=10, fusion
+weights `(1,1,1)`, doc lane on, near-dup collapse on) measured to a depth of 200 so
+@50 is reportable. The smoke subset
+([`smoke.example.jsonl`](longmemeval/smoke.example.jsonl)) is **non-headline** and is
+never substituted here (AE4).
 
 ### Aggregate (full `_s`, 470 retrieval-scored instances; 30 `_abs` excluded)
 
 | Granularity | recall_all@5 | recall_all@10 | ndcg_any@5 | ndcg_any@10 | recall_all@50 | ndcg_any@50 |
 |---|---|---|---|---|---|---|
-| Session | — | — | — | — | n/a | n/a |
-| Turn | — | — | — | — | — | — |
+| Session | 0.821 | **0.949** | 0.809 | 0.840 | n/a | n/a |
+| Turn | 0.313 | 0.515 | 0.351 | 0.424 | **0.915** | 0.510 |
+| Turn → session (derived) | 0.634 | 0.855 | — | — | n/a | n/a |
 
-*— (pending F2 run).*
+**Reading.** Session-level retrieval is strong — for **94.9%** of instances *every* gold
+session is in the top-10 (`recall_all@10`). Turn-level is the harder, finer granularity
+(getting *all* gold rounds in the top-10 is 51.5%, but by @50 it reaches 91.5%) — the
+evidence is reachable; ranking all of a multi-round gold set into a shallow cutoff is
+what's hard. The `turn → session` row maps the per-turn ranking back to sessions
+(`turn_to_session`): 0.855 @10, slightly below the direct session ranking, i.e. the
+finer corpus is a bit noisier for session recovery.
 
 ### Per-ability (full `_s`)
 
-| Ability (`question_type`) | n | session recall_all@10 | turn recall_all@10 | turn recall_all@50 | also reports |
+| Ability (`question_type`) | n | session recall_all@10 | turn recall_all@10 | turn recall_all@50 | session ndcg_any@10 |
 |---|---|---|---|---|---|
-| single-session-user | — | — | — | — | |
-| single-session-assistant | — | — | — | — | |
-| single-session-preference | — | — | — | — | |
-| multi-session | — | — | — | — | |
-| knowledge-update | — | — | — | — | `recall_any@k` + gold-set size (date-sensitive) |
-| temporal-reasoning | — | — | — | — | `recall_any@k` + gold-set size (date-sensitive) |
+| single-session-assistant | 56 | 1.000 | 0.911 | 1.000 | 0.915 |
+| single-session-user | 64 | 0.969 | 0.625 | 0.984 | 0.725 |
+| single-session-preference | 30 | 0.967 | 0.567 | 0.867 | 0.732 |
+| knowledge-update | 72 | 0.958 | 0.431 | 0.861 | 0.836 |
+| multi-session | 121 | 0.950 | 0.430 | 0.917 | 0.904 |
+| temporal-reasoning | 127 | 0.906 | 0.402 | 0.882 | 0.832 |
 
-*— (pending F2 run). The `turn_derived_session` block (session recall computed from
-the turn ranking) is also reported, to localize reachability when the session ranking
-misses.*
+### Date-sensitive abilities — `recall_any` beside `recall_all` (the honest localization)
+
+The engine does **no date-aware ranking**, so for knowledge-update ("latest wins") and
+temporal-reasoning ("which came first"), strict `recall_all` can understate memory
+quality when the gold set spans several sessions. Reporting `recall_any` (≥1 gold
+retrieved) beside the gold-set-size distribution localizes the gap:
+
+| Ability | session recall_all@10 | session **recall_any@10** | turn recall_any@10 | gold-set size (min/mean/max) |
+|---|---|---|---|---|
+| knowledge-update | 0.958 | **1.000** | 0.722 | 2 / 2.0 / 2 |
+| temporal-reasoning | 0.906 | **1.000** | 0.701 | 1 / 2.2 / 6 |
+
+**`recall_any@10` is 1.000 at the session level for both** — at least one gold session is
+*always* in the top-10. So the sub-unity `recall_all` (0.958, 0.906) is **not** a memory
+miss: it is the multi-gold ordering gap (temporal sets run up to 6 sessions) that a
+date-aware ranker would close. The diagnostic localizes the gap to retrieval *ordering*,
+not retrieval *coverage* or the reader — which is exactly the claim Phase 2 will lean on.
 
 ---
 
@@ -229,6 +254,15 @@ change is recorded here, in the open.
   Phase-1 pipeline (materialize → index → retrieve → score) was verified to run
   end-to-end on real instances offline (FakeEmbedder); the diagnostic + headline runs
   themselves remain pending an API key + budget.
+- **2026-06-02 — Phase 1 retrieval diagnostic run (full `_s`).** Ran F2 over all 500
+  instances (470 retrieval-scored, 30 `_abs` excluded) with the production embedder;
+  embed-quiescent (`verdict: reported`, not voided). Per-ability counts are
+  non-abstention, so they sum to 470 (the 30 abstention instances fall across the
+  buckets). The run was killed by unrelated concurrent box activity at 448/500 and
+  resumed for free from the content-hash embedding cache (no re-embed of the done
+  instances) — no tuning, no param change between the two segments. Numbers committed
+  are aggregate/per-ability only (R15); per-instance outputs + the embed cache stay
+  gitignored.
 
 ---
 
