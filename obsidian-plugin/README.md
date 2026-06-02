@@ -1,78 +1,14 @@
-# hypermnesic companion (Obsidian plugin)
+# Hypermnesic Companion — moved
 
-A strictly **read-only**, **desktop** Obsidian plugin: a calm recall surface over
-your tailnet **hypermnesic** index. As you write, it surfaces related notes and a
-checkable "you may be reinventing this" nudge — and it **never writes your vault**.
+The Obsidian companion plugin now lives in its own public repository:
 
-## What it does
+> **https://github.com/leonardsellem/hypermnesic-companion**
 
-- **Pause-triggered** recall (never per-keystroke) of the block around your
-  cursor — findings hold while you keep typing and refresh when you pause.
-- A calm **status-bar** indicator that expands to a popover; an **opt-in
-  sidebar**; an optional editor inline marker.
-- **First-class references everywhere**: every related note is a native
-  `internal-link` with **Page-preview on hover** and a right-click menu (open /
-  open in new pane or split / think about this / copy as link), plus
-  drag-to-insert — all **read-only** (the plugin supplies link text; you perform
-  the drop/paste). A note that isn't in your vault renders as an honest muted row
-  with an engine-snippet peek — never a broken or note-creating link.
-- **Thinking-mode** is a **dockable panel** (like Backlinks/Outline): related
-  notes (navigable), Socratic questions, and tensions (rendered markdown with
-  live, resolution-guarded links), a "think deeper" affordance with a back trail,
-  and a visible `wrote: false` badge. Plus **selection-recall** (recall about the
-  highlighted text).
-- An **interrogable reinvention nudge**: it expands to the matched snippet and a
-  one-hop context peek so the claim is checkable, and it is mutable per note
-  (view-only — muting is plugin-local and never edits the note).
-- **Forgetting-curve ranking**: genuinely stale-but-relevant notes surface above
-  ones you just touched.
+This monorepo no longer carries the plugin source or its read-only proof. The
+plugin builds, runs its tests — including the static **read-only invariant** scan
+(`test/read-only.test.ts`, ported from the former `tests/test_obsidian_plugin.py`
+here) — and ships from that repo under **GPL-3.0**.
 
-## Read-only by construction
-
-This plugin **never writes the vault**. Every engine call routes through a hard
-allowlist (`src/core.ts`) of the read tools — **`search` / `build_context` /
-`think`** — and it performs no vault modify/create/delete/append/trash and no
-adapter writes. The write tool (`commit_note`) is registered only on a
-write-enabled master and is structurally unreachable from here; any write you
-choose to make flows through an agent calling that gated tool, never this plugin.
-It also retains no note text between queries. The Python suite
-(`tests/test_obsidian_plugin.py`) statically verifies the allowlist and the
-no-write guarantee.
-
-## Network use & privacy (please read)
-
-This plugin talks to exactly **one remote service**: your **hypermnesic** MCP
-endpoint on your **tailnet** (a Tailscale address you configure). When recall
-fires, it **transmits** the text of the block around your cursor (or your current
-selection) to that endpoint to find related notes. Nothing else leaves your
-device — no analytics, no telemetry, no third party.
-
-It is strictly **opt-in**: the MCP URL is **empty by default**, so the plugin
-**transmits nothing off-device until you set the endpoint** in settings. A
-provisioned `--role=client` install pre-fills the URL; a manual install starts
-empty until you fill it in. The index itself lives on your own master over the
-tailnet; the companion only reads it.
-
-## Build & install (manual, desktop)
-
-```bash
-cd obsidian-plugin
-npm install
-npm run build          # esbuild main.ts (+ src/) -> main.js
-# copy manifest.json + main.js + styles.css into
-#   <vault>/.obsidian/plugins/hypermnesic-companion/
-```
-
-Then enable **hypermnesic companion** in Obsidian → Community plugins, open its
-settings, and set the **Tailnet MCP URL** to your hypermnesic `serve` endpoint (a
-Tailscale address). Until you do, nothing is sent off-device.
-
-## Known gaps (deferred)
-
-- **Mobile read-only recall** (a CodeMirror-6-free subset) — desktop-first this
-  phase; the status-bar surface is desktop-only, so the manifest is
-  `isDesktopOnly`.
-- **MCP OAuth in the plugin** — only the protocol-handler seam is left here; the
-  implementation lands with the engine OAuth work.
-- **Community-plugin submission** — would need a sample-scaffolding strip and a
-  submission pass (the network/account disclosure above is already done).
+The engine in this repo and the companion communicate only at arm's length over
+the read-only MCP wire protocol (`search` / `build_context` / `think`); neither
+is a derivative of the other.
