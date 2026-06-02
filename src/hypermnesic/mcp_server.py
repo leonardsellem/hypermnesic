@@ -55,6 +55,11 @@ _LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
 # dangerous classes regardless; this further bounds *where* an agent write may land.
 # Overridable per install (U34 role config); tune to the vault's writable zones.
 DEFAULT_WRITE_ALLOWLIST = ("notes/", "sources/", "dashboards/", "captures/")
+# The OAuth scope the write tool requires of its caller (U2/V14). Enforced PER-TOOL inside
+# commit_note, independent of the transport's global required_scopes — the SDK middleware
+# applies one scope list to ALL tools, so it cannot separate read clients from write clients
+# on a single endpoint. A read-scoped token that reaches commit_note is refused here.
+WRITE_SCOPE = "write"
 
 
 class _Backend:
@@ -114,7 +119,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  authoring_host: bool = False, write_enabled: bool = False,
                  write_allowlist: list[str] | None = None,
                  audit_actor_fn: Callable[[], str] | None = None,
-                 token_verifier=None, auth=None,
+                 token_verifier=None, auth=None, write_scope: str = WRITE_SCOPE,
                  json_response: bool = True,
                  stateless_http: bool = True) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
@@ -252,6 +257,18 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                               "The index follows as a projection — a reindex never loses it.")
         def commit_note(path: str, body: str | None = None,
                         set_fields: dict | None = None, summary: str | None = None) -> dict:
+            # V14 / security-review fix: when auth is on, the write tool self-enforces the
+            # write scope — independent of the transport's (misconfigurable, global)
+            # required_scopes. The HTTP auth middleware guarantees a principal for any
+            # authenticated request; a None principal is only the in-process bypass (no HTTP,
+            # no attacker). A token lacking the write scope is refused before any write.
+            if auth is not None:
+                from mcp.server.auth.middleware.auth_context import get_access_token
+                principal = get_access_token()
+                if principal is not None and write_scope not in (principal.scopes or []):
+                    return {"committed": False,
+                            "refused": f"insufficient_scope: '{write_scope}' scope required "
+                                       "for commit_note"}
             try:
                 r = commit_note_mod.commit_note(
                     backend.repo, path, body=body, set_fields=set_fields, summary=summary,

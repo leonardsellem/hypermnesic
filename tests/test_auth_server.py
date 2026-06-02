@@ -102,6 +102,18 @@ def test_revoke_then_introspect_inactive():
     assert a.introspect(tok["access_token"], "hypermnesic-rs", "rs-secret") == {"active": False}
 
 
+def test_revoke_requires_token_ownership():
+    # RFC 7009: only the client a token was issued to may revoke it — a different
+    # authenticated client cannot revoke (or even confirm) another identity's token.
+    a = _as()
+    a.add_client("other", "other-secret", scopes=["read"])
+    tok = a.issue_client_credentials("homelab-claude", "claude-secret", resource=RES, scope="write")
+    assert a.revoke(tok["access_token"], "other", "other-secret") is False        # not the owner
+    assert a.introspect(tok["access_token"], "hypermnesic-rs", "rs-secret")["active"] is True
+    assert a.revoke(tok["access_token"], "homelab-claude", "claude-secret") is True  # owner can
+    assert a.introspect(tok["access_token"], "hypermnesic-rs", "rs-secret") == {"active": False}
+
+
 # --- metadata (RFC 8414) ----------------------------------------------------
 
 def test_metadata_advertises_introspection_and_token_endpoints():

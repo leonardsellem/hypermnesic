@@ -172,11 +172,13 @@ def bounded_lookup(prompt: str) -> str:
     hits = _search_hits(query, token)
     if not hits:                                    # None (failure) or [] (no hits) → silent
         return ""
+    def _flat(s: str) -> str:                    # neutralize injected newlines (one line per hit)
+        return (s or "").replace("\n", " ").replace("\r", " ")
     lines = ["", "", "hypermnesic memory hits (use these; do not call gbrain):"]
     for h in hits[:5]:
-        path = h.get("path", "")
-        heading = h.get("heading", "")
-        snippet = (h.get("snippet") or "").strip().replace("\n", " ")[:200]
+        path = _flat(h.get("path", ""))
+        heading = _flat(h.get("heading", ""))
+        snippet = _flat(h.get("snippet", "")).strip()[:200]
         lines.append(f"- {path}: {heading} — {snippet}".rstrip(" —"))
     return "\n".join(lines)
 
