@@ -14,7 +14,7 @@ and partly cross-host (the Mac) — they need the operator. **Execution halts he
 
 | # | Criterion | Status | Evidence |
 |---|-----------|--------|----------|
-| 0 | `uv run pytest tests/` exit 0 | ✅ PASS | **437 passed, 1 skipped**; ruff clean. Named set test_cli/graph/mcp_server/converge/auth/install/plugin/plugin_hook all green (+ test_auth_server). |
+| 0 | `uv run pytest tests/` exit 0 | ✅ PASS | **441 passed, 1 skipped**; ruff clean. Named set test_cli/graph/mcp_server/converge/auth/install/plugin/plugin_hook all green (+ test_auth_server). |
 | 1 | Unauth `tools/call` to **commit_note** rejected | ✅ PASS (live) | Ephemeral HTTP proof: `commit_note` unauthenticated → **HTTP 401**. Unit: `test_mcp_server` auth suite. |
 | 2 | Wrong-audience token rejected (RFC 8707) | ✅ PASS (live) | Ephemeral proof: token minted for `…/other` → **HTTP 401** against the `…/mcp` RS. Unit: `test_auth::test_wrong_audience_rejected_rfc8707`. |
 | 3 | Write-master refuses to start auth-off | ✅ PASS (live) | `serve --enable-write --host 100.103.0.55` (no auth) → **exit 1**, clear message. Unit: `test_mcp_server::test_write_enabled_without_auth_refused`. |
@@ -72,6 +72,25 @@ Until this is chosen, the **live master must NOT be flipped to auth-on** — so 
 homelab rollout (AS unit, master flip, hostname repoint) waits for your call. (It also waits on
 a **branch merge**: a persistent AS/master unit should run the installed engine, not this
 feature-branch worktree.) The ephemeral proof above already demonstrates the enforcement works.
+
+## Security review (pre-deploy, 2026-06-02)
+
+The new OAuth surface (RS verifier, AS, the `write_enabled⇒auth` invariant, the hook) was
+**adversarially reviewed before any live deploy**, since it gates write access to the memory
+layer. Audience binding (RFC 8707), fail-closed paths, introspection-client auth, scope clamp,
+the loopback exemption, and secret/token non-leakage **held**. Three real issues were found and
+**fixed test-first** (commit `e55b75b`):
+- **HIGH (V14 realized):** a write-enabled master started without a write scope exposed
+  `commit_note` to any valid token (the SDK enforces scopes globally). Fixed: `commit_note`
+  **self-enforces the `write` scope** from the authenticated principal, independent of the
+  transport scope list.
+- **LOW:** RFC 7009 token-ownership not checked in `revoke()` → fixed (only the owner revokes).
+- **LOW:** the hook sanitized only `snippet` newlines → fixed (path/heading too).
+
+This **sharpens the companion finding above**: with per-tool write-scope enforcement, a single
+endpoint can require only a base scope (so read clients pass) while `commit_note` rejects
+non-`write` principals — so option 2 (a `read`-scoped companion token on the same auth-on
+endpoint) is now cleanly supported by the engine, if the companion is given OAuth.
 
 ## Rollback state
 
