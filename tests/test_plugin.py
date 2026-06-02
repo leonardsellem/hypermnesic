@@ -59,6 +59,22 @@ def test_claude_and_codex_manifests_parse_with_required_fields():
     assert cd["name"] == "hypermnesic" and "skills" in cd
 
 
+def test_claude_manifest_does_not_redeclare_autoloaded_hooks():
+    # Regression (reproduced live: `claude plugin list` → "✘ failed to load: Duplicate hooks
+    # file detected: ./hooks/hooks.json ..."). Claude Code AUTO-loads the standard
+    # hooks/hooks.json, so a manifest `hooks` key pointing at that same path is a duplicate that
+    # fails the WHOLE plugin load — SKILL + hooks both go dead (Gate-A criteria 7/9). The standard
+    # hook file must exist; the manifest must NOT re-reference it (manifest.hooks is for
+    # *additional* hook files only, per the loader's own error message).
+    cm = json.loads(_CLAUDE_MANIFEST.read_text(encoding="utf-8"))
+    assert (_PLUGIN_DIR / "hooks" / "hooks.json").exists()       # the auto-loaded file is present
+    ref = cm.get("hooks")
+    if ref is not None:                                          # absent (preferred) is fine
+        refs = [ref] if isinstance(ref, str) else list(ref)
+        assert not ({"./hooks/hooks.json", "hooks/hooks.json"} & set(refs)), (
+            "manifest.hooks must not re-declare the auto-loaded standard hooks/hooks.json")
+
+
 def test_skill_frontmatter_parses_and_names_only_real_tools():
     text = _SKILL.read_text(encoding="utf-8")
     fm = _parse_frontmatter(text)
@@ -104,5 +120,10 @@ def test_plugin_mcp_json_is_oauth2_aware_and_secret_free():
     assert entry["url"].startswith("https://homelab.<tailnet-host>.ts.net")  # the preserved hostname
     assert entry["auth"]["type"] == "oauth2"
     assert entry["auth"]["token_env"] == "HYPERMNESIC_MCP_TOKEN"         # pointer, not a value
+    # the issuer must be the hypermnesic AS, NOT honcho (U12: honcho can't be hypermnesic's AS —
+    # no introspection/JWKS, audience hardwired to .../honcho/mcp, so it cannot mint a .../mcp
+    # audience token the master would accept). Regression guard for the shipped honcho issuer.
+    assert "honcho" not in entry["auth"]["issuer"].lower()
+    assert entry["auth"]["resource"] == "https://homelab.<tailnet-host>.ts.net/mcp"  # canonical audience
     blob = json.dumps(mcp)
     assert "HYPERMNESIC_MCP_TOKEN=" not in blob and "Bearer " not in blob # no inlined secret
