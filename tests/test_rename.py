@@ -160,3 +160,23 @@ def test_rename_without_tombstone_fn_is_unchanged(make_corpus, fake_embedder, tm
     r = cn.rename_note(repo, "old.md", "new.md", idx=idx, log=_log(tmp_path))
     assert r.new_sha and "new.md" in idx.all_paths() and "old.md" not in idx.all_paths()
     idx.close()
+
+
+def test_rename_is_path_scoped_no_sweep_of_foreign_staged(make_corpus, fake_embedder, tmp_path):
+    # Coexistence: a fleet committer has work staged when rename_note runs. The rename
+    # commit must contain ONLY the moved pair (old + new), never the foreign staged file.
+    repo = make_corpus({"old.md": "# Old\n\nbody.\n", "keep.md": "# K\n\nk.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    (repo / "foreign.md").write_text("# foreign\n\nstaged elsewhere.\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "--", "foreign.md"],
+                   check=True, capture_output=True)
+    r = cn.rename_note(repo, "old.md", "new.md", idx=idx, log=_log(tmp_path))
+    committed = set(subprocess.run(
+        ["git", "-C", str(repo), "show", "--name-only", "--format=", r.new_sha],
+        capture_output=True, text=True).stdout.split())
+    assert "foreign.md" not in committed                        # the key invariant — no sweep
+    assert "new.md" in committed                                # the rename itself landed
+    staged = subprocess.run(["git", "-C", str(repo), "diff", "--cached", "--name-only"],
+                            capture_output=True, text=True).stdout
+    assert "foreign.md" in staged                               # foreign change still staged
+    idx.close()
