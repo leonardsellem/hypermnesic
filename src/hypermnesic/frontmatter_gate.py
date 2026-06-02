@@ -151,7 +151,8 @@ def gated_edit(original: str, *, body: str | None = None,
     if requested:
         # Prefer a surgical line edit for pure scalar sets — it leaves untouched
         # keys byte-identical, so block lists can't reflow (the 11% abort cause).
-        surgical = _surgical_set(fm_inner, set_fields) if (set_fields and not delete_fields) else None
+        surgical = (_surgical_set(fm_inner, set_fields)
+                    if (set_fields and not delete_fields) else None)
         if surgical is not None:
             new_fm = surgical
         else:  # structural edit (add/delete/list/block value) → ruamel round-trip
