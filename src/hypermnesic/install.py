@@ -14,6 +14,7 @@ it ends with ``|| true`` so a convergence hiccup never fails a ``git pull``.
 from __future__ import annotations
 
 import json
+import shlex
 import shutil
 import stat
 from pathlib import Path
@@ -48,11 +49,14 @@ def _hypermnesic_exe() -> str:
 
 def _managed_block(repo: Path) -> str:
     exe = _hypermnesic_exe()
+    # shlex.quote both fields so a repo path (or resolved exe path) containing shell
+    # metacharacters cannot break out of the hook command and run on every `git pull`.
+    cmd = f"{shlex.quote(exe)} converge {shlex.quote(str(repo))} >/dev/null 2>&1 || true"
     return "\n".join([
         _MANAGED_BEGIN,
         "# hypermnesic U33: pre-warm the index after a pull. Lazy read-time convergence",
         "# is the correctness guarantee (FR-R38); this only warms the cache.",
-        f'"{exe}" converge "{repo}" >/dev/null 2>&1 || true',
+        cmd,
         _MANAGED_END,
         "",
     ])
@@ -62,16 +66,23 @@ def _strip_managed(text: str) -> str:
     """Return ``text`` with the managed block (BEGIN..END inclusive) removed, leaving
     every other line — including any operator content before or after — intact."""
     out: list[str] = []
+    buf: list[str] = []
     skip = False
     for ln in text.splitlines():
         if ln.strip() == _MANAGED_BEGIN:
             skip = True
+            buf = []
             continue
         if skip:
             if ln.strip() == _MANAGED_END:
                 skip = False
+                buf = []
+            else:
+                buf.append(ln)
             continue
         out.append(ln)
+    if skip:                # BEGIN with no closing END (truncated/corrupt block) → keep content
+        out.extend(buf)
     return "\n".join(out)
 
 
@@ -107,9 +118,12 @@ def uninstall_hooks(repo) -> dict:
     removed: list[str] = []
     for name in HOOK_NAMES:
         hook = hooks_dir / name
-        if not hook.exists() or _MANAGED_BEGIN not in hook.read_text(encoding="utf-8"):
+        if not hook.exists():
             continue
-        stripped = _strip_managed(hook.read_text(encoding="utf-8")).rstrip("\n")
+        text = hook.read_text(encoding="utf-8")        # read once (no TOCTOU re-read)
+        if _MANAGED_BEGIN not in text:
+            continue
+        stripped = _strip_managed(text).rstrip("\n")
         if stripped.strip() in ("", "#!/bin/sh"):
             hook.unlink()                       # nothing left but a bare shebang → remove
         else:
@@ -198,6 +212,8 @@ def _install_client(master_url: str | None, mcp_config_path: str | None,
     if not isinstance(data, dict):
         data = {}
     servers = data.setdefault("mcpServers", {})
+    if not isinstance(servers, dict):           # malformed existing config → reset the map
+        servers = data["mcpServers"] = {}
     servers[server_name] = {"type": "streamable-http", "url": master_url}   # idempotent upsert
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -249,6 +265,10 @@ def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAUL
         raise InstallError(f"unknown --service {service!r}; choose systemd|docker")
 
     repo = Path(repo).resolve()
+    # Verify git BEFORE writing any artifact — install_hooks needs .git, and failing
+    # here keeps the "nothing half-provisioned on failure" contract (no orphan unit/config).
+    if not (repo / ".git").exists():
+        raise InstallError(f"role {role!r} needs a git repo, but no .git found at {repo}")
     state = repo / index_mod.STATE_DIRNAME
     state.mkdir(mode=0o700, parents=True, exist_ok=True)
 

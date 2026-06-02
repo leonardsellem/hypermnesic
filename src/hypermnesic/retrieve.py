@@ -42,21 +42,41 @@ class Hit:
 def git_commit_recency(repo) -> Callable[[str], float | None]:
     """Return a path → epoch-seconds resolver for the most recent commit touching
     a path (the write-recency source of truth, KTD7), or ``None`` when the path is
-    untracked / has no commit. Cached per path so a multi-hit result queries each
-    path at most once. Access-recency is out of scope (no read logging)."""
+    untracked / has no commit. Access-recency is out of scope (no read logging).
+
+    The path→time map is built lazily with a SINGLE ``git log`` pass on first lookup
+    (not one subprocess per hit — that added ~k git forks to every search). A
+    ``\\x1f`` (unit-separator) sentinel marks the timestamp line so a digit-only
+    filename can't be misread as a timestamp; ``core.quotepath=false`` keeps
+    non-ASCII paths raw so they match. Newest-first walk → first sighting wins."""
     repo = Path(repo)
-    cache: dict[str, float | None] = {}
+    cache: dict[str, float] = {}
+    built = False
+
+    def _build() -> None:
+        nonlocal built
+        built = True
+        try:
+            out = subprocess.run(
+                ["git", "-C", str(repo), "-c", "core.quotepath=false", "log",
+                 "--format=\x1f%ct", "--name-only", "--no-renames"],
+                capture_output=True, text=True, check=True).stdout
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            return
+        ts: float | None = None
+        for line in out.splitlines():
+            if line.startswith("\x1f"):
+                try:
+                    ts = float(line[1:])
+                except ValueError:
+                    ts = None
+            elif line and ts is not None and line not in cache:
+                cache[line] = ts          # first (newest) commit touching this path
 
     def _recency(path: str) -> float | None:
-        if path not in cache:
-            try:
-                out = subprocess.run(
-                    ["git", "-C", str(repo), "log", "-1", "--format=%ct", "--", path],
-                    capture_output=True, text=True, check=True).stdout.strip()
-                cache[path] = float(out) if out else None
-            except (FileNotFoundError, subprocess.CalledProcessError, ValueError):
-                cache[path] = None
-        return cache[path]
+        if not built:
+            _build()
+        return cache.get(path)
 
     return _recency
 
