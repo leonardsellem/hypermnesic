@@ -45,7 +45,8 @@ the Phase-1 → 2.5 plans live in-repo under `docs/plans/`.
 | ruff | 0.15.15 | MIT |
 | pip-licenses | 5.5.5 | MIT |
 
-Full resolved tree: 46 packages, **0 AGPL/GPL/SSPL**, 0 LGPL (G2 PASS).
+Full resolved tree at U1: 46 packages (base + dev only, before the Phase-2 `sidecar`
+extra), **0 AGPL/GPL/SSPL**, 0 LGPL (G2 PASS).
 
 ### Resolved blockers (U1)
 

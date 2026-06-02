@@ -27,15 +27,19 @@ The Python test suite includes a scripted read-only assertion
 
 ## Build & install (manual, desktop)
 
+The plugin is a single `main.ts` with no committed build tooling (no
+`package.json` yet). Bundle it to `main.js` with a one-off esbuild invocation:
+
 ```bash
 cd obsidian-plugin
-npm install
-npm run build          # esbuild main.ts -> main.js
+npx esbuild main.ts --bundle --format=cjs --target=es2018 --external:obsidian --outfile=main.js
 # copy manifest.json + main.js into <vault>/.obsidian/plugins/hypermnesic-companion/
 ```
 
-Then enable **hypermnesic companion** in Obsidian → Community plugins, and set the
-**Tailnet MCP URL** to your hypermnesic `serve` endpoint (a Tailscale address).
+Then enable **hypermnesic companion** in Obsidian → Community plugins. The plugin
+ships with **no default endpoint** — set the **Tailnet MCP URL** to your
+hypermnesic `serve` endpoint (a Tailscale address) before use. Until it's set, no
+note text leaves your device.
 
 ## Known gaps (deferred)
 

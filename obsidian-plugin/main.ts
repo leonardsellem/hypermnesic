@@ -32,7 +32,7 @@ interface HypermnesicSettings {
 }
 
 const DEFAULT_SETTINGS: HypermnesicSettings = {
-  mcpUrl: "http://100.103.0.55:8848/mcp",
+  mcpUrl: "", // opt-in: empty by default — no note text is sent off-device until the owner sets this
   debounceMs: 1200,
   resultCount: 8,
   reinventThreshold: 0.85,
@@ -91,11 +91,22 @@ class RelatedView extends ItemView {
   }
 
   /** Render related notes + an optional "reinventing" warning. Pure DOM, no writes. */
-  render(hits: Hit[], warning: string | null, state: "idle" | "loading" | "error" | "ok"): void {
+  render(
+    hits: Hit[],
+    warning: string | null,
+    state: "idle" | "loading" | "error" | "ok" | "unconfigured",
+  ): void {
     const root = this.containerEl.children[1];
     root.empty();
     root.createEl("h4", { text: "Related notes" });
 
+    if (state === "unconfigured") {
+      root.createEl("div", {
+        text: "set the Tailnet MCP URL in settings to enable retrieval",
+        cls: "hypermnesic-status",
+      });
+      return;
+    }
     if (state === "loading") {
       root.createEl("div", { text: "thinking…", cls: "hypermnesic-status" });
       return;
@@ -172,6 +183,12 @@ export default class HypermnesicPlugin extends Plugin {
     if (!view || leaves.length === 0) return;
     const panel = leaves[0].view as RelatedView;
 
+    // Opt-in endpoint: with no MCP URL set, never read or transmit note text off-device.
+    if (!this.settings.mcpUrl.trim()) {
+      panel.render([], null, "unconfigured");
+      return;
+    }
+
     let text = view.editor.getValue().slice(0, 4000); // bounded query; local to this call
     const activePath = view.file?.path ?? "";
     if (!text.trim()) {
@@ -231,12 +248,18 @@ class HypermnesicSettingTab extends PluginSettingTab {
     containerEl.empty();
     new Setting(containerEl)
       .setName("Tailnet MCP URL")
-      .setDesc("The read-only hypermnesic MCP endpoint (a Tailscale address).")
+      .setDesc(
+        "The read-only hypermnesic MCP endpoint (a Tailscale address). " +
+          "Empty by default — no note text is sent off-device until you set this.",
+      )
       .addText((t) =>
-        t.setValue(this.plugin.settings.mcpUrl).onChange(async (v) => {
-          this.plugin.settings.mcpUrl = v;
-          await this.plugin.saveSettings();
-        }),
+        t
+          .setPlaceholder("http://100.x.y.z:8848/mcp")
+          .setValue(this.plugin.settings.mcpUrl)
+          .onChange(async (v) => {
+            this.plugin.settings.mcpUrl = v;
+            await this.plugin.saveSettings();
+          }),
       );
     new Setting(containerEl).setName("Debounce (ms)").addText((t) =>
       t.setValue(String(this.plugin.settings.debounceMs)).onChange(async (v) => {
