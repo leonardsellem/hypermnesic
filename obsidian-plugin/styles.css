@@ -126,3 +126,59 @@
   color: var(--text-muted);
   font-size: var(--font-ui-small);
 }
+
+/* Reference rows (U2): the shared link / muted-non-local primitive. */
+.hypermnesic-ref-link {
+  cursor: pointer;
+}
+.hypermnesic-folder {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  margin-left: 6px;
+}
+.hypermnesic-ref-nonlocal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-faint);
+}
+.hypermnesic-ref-nonlocal:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-s);
+}
+.hypermnesic-ref-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-faint);
+}
+.hypermnesic-ref-icon .svg-icon {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
+.hypermnesic-not-in-vault {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+  font-style: italic;
+}
+.hypermnesic-peek {
+  margin: 2px 0 4px;
+}
+.hypermnesic-peek-toggle {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: none;
+}
+.hypermnesic-peek-toggle:hover {
+  color: var(--text-normal);
+  text-decoration: underline;
+}
+.hypermnesic-peek-body {
+  margin: 2px 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
