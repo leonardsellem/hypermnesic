@@ -133,12 +133,13 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
     def search(query: str, k: int = 10) -> dict:
-        backend.converge()
+        cr = backend.converge()
         res = retrieve.search(backend.idx, query, embedder=backend.embedder, k=k,
                               recency_fn=retrieve.git_commit_recency(backend.repo))
         return {
             "query": query,
-            "degraded_lexical_only": res.degraded,
+            "degraded_lexical_only": res.degraded or cr.degraded,
+            "manual_reindex_recommended": cr.manual_reindex_recommended,
             "hits": [
                 {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
                  "channels": sorted(h.channels),
@@ -150,17 +151,20 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Pages reachable from a page via body wikilinks (in+out edges).")
     def build_context(path: str, depth: int = 1) -> dict:
-        backend.converge()
+        cr = backend.converge()
         reachable = graph_mod.build_context(backend.graph, path, depth=depth)
-        return {"start": path, "depth": depth, "context": reachable}
+        return {"start": path, "depth": depth, "context": reachable,
+                "manual_reindex_recommended": cr.manual_reindex_recommended}
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Thinking-mode: related notes + Socratic prompts + tensions. "
                           "Never writes (wrote: false) — a help-me-think surface, not a write.")
     def think(topic: str, k: int = 8, depth: int = 1) -> dict:
-        backend.converge()
-        return think_mod.think(backend.idx, topic, embedder=backend.embedder,
-                               graph=backend.graph, k=k, depth=depth).as_dict()
+        cr = backend.converge()
+        out = think_mod.think(backend.idx, topic, embedder=backend.embedder,
+                              graph=backend.graph, k=k, depth=depth).as_dict()
+        out["manual_reindex_recommended"] = cr.manual_reindex_recommended
+        return out
 
     if write_enabled:
         # The one sanctioned write path, exposed over MCP only on a write-enabled

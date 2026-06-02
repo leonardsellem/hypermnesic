@@ -11,7 +11,7 @@ import pytest
 from hypermnesic import config, index, mcp_server
 from hypermnesic import embed as embed_mod
 
-TAILNET_IP = "100.64.0.55"
+TAILNET_IP = "100.64.0.1"   # CGNAT/Tailscale documentation range — not a real node
 
 
 def _commit(repo, rel, body, msg="add"):
@@ -261,3 +261,21 @@ def test_write_then_read_converges_dense_and_reindex_keeps_it(make_corpus, fake_
     idx2 = index.Index(index.state_dir_for(repo) / "index.db")
     assert "notes/w.md" in idx2.all_paths()
     idx2.close()
+
+
+def test_search_surfaces_manual_reindex_signal(make_corpus, fake_embedder, monkeypatch):
+    # Review #3: the oversized-delta / degraded signal from convergence must reach the
+    # caller rather than being discarded by the read tool.
+    from hypermnesic import converge as converge_mod
+    repo = make_corpus({"a.md": "# A\n\nMARK alpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+
+    def fake_converge(*a, **k):
+        return converge_mod.ConvergeResult(status="oversized_delta",
+                                           manual_reindex_recommended=True)
+
+    monkeypatch.setattr(converge_mod, "converge", fake_converge)
+    out = _call(srv, "search", {"query": "MARK"})
+    assert out["manual_reindex_recommended"] is True          # signal surfaced, not dropped
