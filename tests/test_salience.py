@@ -10,9 +10,18 @@ from __future__ import annotations
 import subprocess
 
 from hypermnesic import audit_log as al
-from hypermnesic import generated, salience
+from hypermnesic import commit_note as cn
+from hypermnesic import config, generated, salience
+from hypermnesic import embed as embed_mod
 from hypermnesic import graph as graph_mod
 from hypermnesic import index as index_mod
+
+
+class _DownEmbedder:
+    dim = config.EMBED_DIM
+
+    def embed(self, texts):
+        raise embed_mod.EmbeddingError("API down")
 
 
 def _git(repo, *a):
@@ -100,3 +109,42 @@ def test_empty_scores_digest_says_nothing_dormant():
     note = salience.build_digest_note([], now="2026-06-02T00:00:00+00:00")
     assert "nothing dormant" in note.lower()
     assert "generated_by: hypermnesic" in note
+
+
+# --- U30: salience forces full convergence before reading note_vectors --------
+
+def test_salience_fully_embeds_before_scoring(make_corpus, fake_embedder, tmp_path):
+    # FR-R39: a stale (unembedded) note must be embedded before centrality is
+    # computed — otherwise note_vectors() silently omits it.
+    repo, idx, g, log = _env(make_corpus, fake_embedder, tmp_path)
+    cn.commit_note(repo, "notes/fresh.md", body="# Fresh\n\nfresh unembedded note.\n",
+                   idx=idx, log=log)
+    assert idx.stale_chunk_ids()                              # lexical-ahead gap exists
+    assert "notes/fresh.md" not in idx.note_vectors()         # not embedded yet
+    report = salience.score_notes(idx, g, log, embedder=fake_embedder, repo=repo)
+    assert report.coverage_complete is True
+    assert not idx.stale_chunk_ids()                          # fully embedded now
+    assert set(idx.note_vectors()) == set(idx.all_paths())    # every path has a vector
+    assert any(s.path == "notes/fresh.md" for s in report.scores)
+    idx.close()
+
+
+def test_salience_partial_coverage_when_embedder_unavailable(make_corpus, fake_embedder, tmp_path):
+    # FR-R40: embedder down mid-fill → result flagged coverage_complete: false (still scores).
+    repo, idx, g, log = _env(make_corpus, fake_embedder, tmp_path)
+    cn.commit_note(repo, "notes/fresh.md", body="# Fresh\n\nfresh unembedded note.\n",
+                   idx=idx, log=log)
+    assert idx.stale_chunk_ids()
+    report = salience.score_notes(idx, g, log, embedder=_DownEmbedder(), repo=repo)
+    assert report.coverage_complete is False                  # could not fully embed
+    assert report.scores                                      # partial result still produced
+    idx.close()
+
+
+def test_salience_report_is_iterable_and_carries_coverage(make_corpus, fake_embedder, tmp_path):
+    repo, idx, g, log = _env(make_corpus, fake_embedder, tmp_path)   # built fully embedded
+    report = salience.score_notes(idx, g, log)                # no embedder → already complete
+    assert report.coverage_complete is True                   # nothing stale → complete
+    assert len(report) == len(list(report)) == len(report.scores)
+    assert report[0] is report.scores[0]                      # indexable like the list it wraps
+    idx.close()

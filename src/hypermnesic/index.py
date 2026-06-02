@@ -341,23 +341,48 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
     synchronously; dense embeddings are an async follow-up (pass ``embedder`` to
     also refresh vectors for changed files). Advances the checkpoint to HEAD.
     """
+    head, cp, have_cp, changes = changes_since_checkpoint(idx, repo)
+    if head is None:
+        return {"status": "no-git", "replayed": 0}
+    if changes is None:
+        return {"status": "current", "replayed": 0, "to": head}
+    lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()  # single indexer
+    try:
+        return replay_changes(idx, repo, head, cp, changes, embedder=embedder, have_cp=have_cp)
+    finally:
+        lock.release()
+
+
+def changes_since_checkpoint(idx: Index, repo: Path):
+    """Pure delta plan from the index checkpoint to HEAD — no lock, no mutation.
+
+    Returns ``(head, cp, have_cp, changes)``. ``head`` is None when ``repo`` is
+    not a git repo; ``changes`` is None when the index is already current
+    (cp == head). Convergence uses this to size the delta (oversized-delta guard,
+    FR-R33) before deciding whether to replay."""
     repo = Path(repo)
     head = _git_head(repo)
     if not head:
-        return {"status": "no-git", "replayed": 0}
+        return (None, None, False, None)
     cp = idx.get_checkpoint()
     if cp == head:
-        return {"status": "current", "replayed": 0, "to": head}
+        return (head, cp, True, None)
     have_cp = bool(cp) and subprocess.run(
         ["git", "-C", str(repo), "cat-file", "-t", cp or ""],
         capture_output=True, text=True).stdout.strip() == "commit"
     changes = (_changed_md_since(repo, cp, head) if have_cp
                else [("A", p) for p in _md_files_at(repo, head)])
-    lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()  # single indexer
-    try:
-        return _replay(idx, repo, head, cp, changes, embedder, have_cp)
-    finally:
-        lock.release()
+    return (head, cp, have_cp, changes)
+
+
+def replay_changes(idx: Index, repo: Path, head: str, cp: str | None,
+                   changes: list[tuple[str, str]], *, embedder=None,
+                   have_cp: bool = True) -> dict:
+    """Lock-free delta-replay of a precomputed change set — the caller MUST hold
+    the single-indexer lock. Advances the checkpoint to ``head``. ``converge``
+    calls this while holding the lock; :func:`catch_up` wraps it with the lock
+    for standalone callers."""
+    return _replay(idx, Path(repo), head, cp, changes, embedder, have_cp)
 
 
 def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
@@ -381,56 +406,101 @@ def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
             "full": not have_cp}
 
 
-def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128) -> dict:
+def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
+                budget: int | None = None) -> dict:
     """Async embed pass (U13): fill the dense vectors that lag lexical (AE5).
 
     Embeds only chunks/docs that have no vector yet — idempotent, resumable. Chunk
     text comes from the index; doc surfaces are recomputed from the committed file
     via ``ingest.doc_surface`` (so commit_note-written pages get a doc lane too).
-    Holds the single-indexer lock (it mutates vectors)."""
-    config.assert_embedder_agrees(embedder)
-    repo = Path(repo)
+    Holds the single-indexer lock (it mutates vectors).
+
+    ``budget`` (U26): when set, embed at most ``budget`` stale chunks and a
+    bounded (``budget``-capped) share of the missing doc-surface vectors this
+    call, leaving the rest for the next call — this bounds first-read latency on
+    a converging read (KTD3). Because each lane only ever processes *missing*
+    items, capping a slice stays idempotent and resumable: re-running drains the
+    remainder, never re-embeds. ``None`` preserves the embed-all behavior (the
+    full analytical pass for salience/connections, and ``hypermnesic embed``)."""
     lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()
     try:
-        stale = idx.stale_chunk_ids()
-        n_chunks = 0
-        for i in range(0, len(stale), batch):
-            ids = stale[i:i + batch]
-            rows = idx.conn.execute(
-                f"SELECT chunk_id, text FROM chunks WHERE chunk_id IN "
-                f"({','.join('?' * len(ids))})", ids).fetchall()
-            vecs = embedder.embed([r[1] for r in rows])
-            for (cid, _text), vec in zip(rows, vecs, strict=True):
-                idx.conn.execute(
-                    "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
-                    (cid, sqlite_vec.serialize_float32(vec)))
-            idx.conn.commit()
-            n_chunks += len(rows)
-
-        doc_batch: list[tuple[str, str]] = []
-        n_docs = 0
-
-        def _flush_docs():
-            nonlocal n_docs
-            if not doc_batch:
-                return
-            idx.add_docs(doc_batch, embedder.embed([s for _, s in doc_batch]))
-            n_docs += len(doc_batch)
-            doc_batch.clear()
-
-        for path in idx.paths_missing_doc_vector():
-            fp = repo / path
-            if not fp.is_file():
-                continue
-            surface = ingest.doc_surface(fp.read_text(encoding="utf-8", errors="replace"), path)
-            if surface:
-                doc_batch.append((path, surface))
-                if len(doc_batch) >= batch:
-                    _flush_docs()
-        _flush_docs()
-        return {"chunks_embedded": n_chunks, "docs_embedded": n_docs}
+        return embed_stale_locked(idx, repo, embedder, batch=batch, budget=budget)
     finally:
         lock.release()
+
+
+def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
+                       budget: int | None = None) -> dict:
+    """Lock-free core of :func:`embed_stale` — the caller MUST already hold the
+    single-indexer lock (``converge`` holds it for the whole convergence pass, so
+    it cannot re-enter the public :func:`embed_stale`, whose own acquire would
+    self-conflict across descriptors). Budget semantics: see :func:`embed_stale`.
+    """
+    config.assert_embedder_agrees(embedder)
+    repo = Path(repo)
+    stale = idx.stale_chunk_ids()
+    if budget is not None:
+        stale = stale[:budget]
+    n_chunks = 0
+    for i in range(0, len(stale), batch):
+        ids = stale[i:i + batch]
+        rows = idx.conn.execute(
+            f"SELECT chunk_id, text FROM chunks WHERE chunk_id IN "
+            f"({','.join('?' * len(ids))})", ids).fetchall()
+        vecs = embedder.embed([r[1] for r in rows])
+        for (cid, _text), vec in zip(rows, vecs, strict=True):
+            idx.conn.execute(
+                "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
+                (cid, sqlite_vec.serialize_float32(vec)))
+        idx.conn.commit()
+        n_chunks += len(rows)
+
+    doc_batch: list[tuple[str, str]] = []
+    n_docs = 0
+
+    def _flush_docs():
+        nonlocal n_docs
+        if not doc_batch:
+            return
+        idx.add_docs(doc_batch, embedder.embed([s for _, s in doc_batch]))
+        n_docs += len(doc_batch)
+        doc_batch.clear()
+
+    missing_docs = idx.paths_missing_doc_vector()
+    if budget is not None:
+        missing_docs = missing_docs[:budget]
+    for path in missing_docs:
+        fp = repo / path
+        if not fp.is_file():
+            continue
+        surface = ingest.doc_surface(fp.read_text(encoding="utf-8", errors="replace"), path)
+        if surface:
+            doc_batch.append((path, surface))
+            if len(doc_batch) >= batch:
+                _flush_docs()
+    _flush_docs()
+    return {"chunks_embedded": n_chunks, "docs_embedded": n_docs}
+
+
+def ensure_full_coverage(idx: Index, repo: Path, embedder) -> bool:
+    """Full (unbudgeted) embed so ``note_vectors()`` reflects every chunk before an
+    analytical read (U30/FR-R39 — salience centrality + connection similarity must
+    not silently compute on a half-embedded corpus).
+
+    Returns coverage completeness (FR-R40): ``True`` when no stale chunk remains;
+    ``False`` when the embedder is absent or fails mid-fill (e.g. API down) — the
+    analytical result is then partial, and the caller surfaces that. Best-effort
+    under lock contention: a busy lock leaves coverage partial rather than blocking.
+    """
+    if not idx.stale_chunk_ids():
+        return True                          # already complete — nothing to fill
+    if embedder is None or repo is None:
+        return False                         # cannot fill → partial
+    try:
+        embed_stale(idx, repo, embedder, budget=None)   # unbounded analytical pass
+    except Exception:
+        pass                                 # embedder down / lock busy → partial coverage
+    return not idx.stale_chunk_ids()
 
 
 def reindex_isolated(repo: Path, embedder, *, state_dir: Path | None = None) -> dict:

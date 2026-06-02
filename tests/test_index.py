@@ -253,3 +253,70 @@ def test_sqlite_vec_loads():
     v = conn.execute("SELECT vec_version()").fetchone()[0]
     assert isinstance(v, str)
     conn.close()
+
+
+# --- U26: bounded embed_stale budget + convergence tunables ----------------
+
+def _stale_index(make_corpus, fake_embedder, n: int):
+    """A fully-embedded seed index plus ``n`` lexical-only (vector-less) chunks.
+
+    ``upsert_lexical`` on phantom paths is the cheap way to manufacture the AE5
+    lexical-ahead-of-dense gap without git commits or embedding work — exactly the
+    state a bounded convergence embed must drain in slices."""
+    from hypermnesic import ingest
+    repo = make_corpus({"seed.md": "# Seed\n\nseed body.\n"})
+    idx = index.build_index(repo, fake_embedder)        # seed fully embedded
+    for i in range(n):
+        rel = f"notes/n{i}.md"
+        idx.upsert_lexical(rel, ingest.chunks_for_text(rel, f"# N{i}\n\nbody {i}.\n"))
+    return repo, idx
+
+
+def test_embed_stale_budget_caps_and_resumes_without_duplicates(make_corpus, fake_embedder):
+    repo, idx = _stale_index(make_corpus, fake_embedder, 300)
+    assert len(idx.stale_chunk_ids()) == 300
+    r1 = index.embed_stale(idx, repo, fake_embedder, budget=128)
+    assert r1["chunks_embedded"] == 128
+    assert len(idx.stale_chunk_ids()) == 172
+    r2 = index.embed_stale(idx, repo, fake_embedder, budget=128)
+    assert r2["chunks_embedded"] == 128
+    assert len(idx.stale_chunk_ids()) == 44
+    r3 = index.embed_stale(idx, repo, fake_embedder, budget=128)
+    assert r3["chunks_embedded"] == 44
+    assert idx.stale_chunk_ids() == []                  # drained
+    # no duplicate vectors: one vec row per chunk (300 notes + the seed chunk)
+    n_chunks = idx.conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+    n_vecs = idx.conn.execute("SELECT COUNT(*) FROM vec_chunks").fetchone()[0]
+    assert n_vecs == n_chunks
+    idx.close()
+
+
+def test_embed_stale_budget_none_embeds_all_in_one_pass(make_corpus, fake_embedder):
+    repo, idx = _stale_index(make_corpus, fake_embedder, 200)
+    assert len(idx.stale_chunk_ids()) == 200
+    res = index.embed_stale(idx, repo, fake_embedder, budget=None)   # unbounded (today's behavior)
+    assert res["chunks_embedded"] == 200
+    assert idx.stale_chunk_ids() == []
+    idx.close()
+
+
+def test_embed_stale_budget_idempotent_on_clean(make_corpus, fake_embedder):
+    repo, idx = _stale_index(make_corpus, fake_embedder, 10)
+    index.embed_stale(idx, repo, fake_embedder, budget=128)          # drains all 10
+    res = index.embed_stale(idx, repo, fake_embedder, budget=128)    # nothing stale now
+    assert res["chunks_embedded"] == 0 and res["docs_embedded"] == 0
+    idx.close()
+
+
+def test_embed_stale_budget_on_clean_index_is_zero(make_corpus, fake_embedder):
+    repo = make_corpus({"seed.md": "# Seed\n\nseed body.\n"})
+    idx = index.build_index(repo, fake_embedder)        # nothing stale
+    res = index.embed_stale(idx, repo, fake_embedder, budget=64)
+    assert res["chunks_embedded"] == 0 and res["docs_embedded"] == 0
+    idx.close()
+
+
+def test_converge_tunables_are_defined_and_sane():
+    assert isinstance(config.CONVERGE_EMBED_BUDGET, int) and config.CONVERGE_EMBED_BUDGET > 0
+    assert config.CONVERGE_DEBOUNCE_SECONDS >= 0
+    assert isinstance(config.CONVERGE_MAX_DELTA_FILES, int) and config.CONVERGE_MAX_DELTA_FILES > 0
