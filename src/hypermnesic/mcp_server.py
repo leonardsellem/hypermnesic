@@ -101,7 +101,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  authoring_host: bool = False, write_enabled: bool = False,
                  write_allowlist: list[str] | None = None,
                  audit_actor_fn: Callable[[], str] | None = None,
-                 json_response: bool = True) -> FastMCP:
+                 json_response: bool = True,
+                 stateless_http: bool = True) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
 
     Refuses ``0.0.0.0`` — the bind invariant is enforced at construction. Every
@@ -115,11 +116,22 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     ``DEFAULT_WRITE_ALLOWLIST``); ``audit_actor_fn`` overrides the server-set audit
     actor (defaults to the verified Tailscale node identity).
 
-    ``json_response`` (U32/DEP-R15, default True) makes the streamable-http transport
-    return a buffered single JSON body for ``tools/call`` instead of an SSE stream, so
-    a buffering client (Obsidian ``requestUrl``, Plan 2) does not hang waiting to
-    stream. The mcp SDK defaults this to ``False`` (SSE); we flip it on. Single-JSON is
-    spec-compliant for standard MCP clients too (they accept application/json).
+    A buffering, handshake-less client (Obsidian ``requestUrl``, Plan 2) needs BOTH
+    streamable-http axes flipped from the mcp SDK defaults:
+
+    ``json_response`` (U32/DEP-R15, default True) makes ``tools/call`` return a buffered
+    single JSON body instead of an SSE stream, so a buffering client does not hang
+    waiting to stream. The SDK defaults this to ``False`` (SSE); we flip it on.
+    Single-JSON is spec-compliant for standard MCP clients too (they accept
+    application/json).
+
+    ``stateless_http`` (default True) serves each JSON-RPC POST independently, with no
+    ``initialize`` handshake and no ``Mcp-Session-Id`` required. The SDK defaults to
+    STATEFUL session mode, which 400s a bare single-shot call ("Missing session ID") —
+    exactly the call the Obsidian companion makes. Stateless drops nothing we use: all
+    four tools (search / build_context / think / commit_note) are stateless
+    request/response with no session-scoped state or server-initiated streaming.
+    Full-handshake SDK clients still connect (a stateless server accepts the handshake).
     """
     if host in ("0.0.0.0", "::", ""):
         raise ValueError(
@@ -138,7 +150,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         )
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
     mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
-                  json_response=json_response)
+                  json_response=json_response, stateless_http=stateless_http)
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
