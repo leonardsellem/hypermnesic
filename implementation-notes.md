@@ -1,8 +1,15 @@
-# hypermnesic — implementation notes (Phase 0)
+# hypermnesic — implementation notes (running log: Phase 0 → 2.5)
 
-Running log of decisions, deviations from the plan, and open questions. The
-authoritative plan lives in the gbrain-brain vault at
-`projects/hypermnesic/docs/plans/2026-06-01-001-feat-hypermnesic-phase0-kernel-plan.md`.
+Running log of decisions, deviations from the plan, and open questions, in ship
+order. The Phase-0 kernel plan lives in the gbrain-brain vault at
+`projects/hypermnesic/docs/plans/2026-06-01-001-feat-hypermnesic-phase0-kernel-plan.md`;
+the Phase-1 → 2.5 plans live in-repo under `docs/plans/`.
+
+> **Provenance.** The Phase 0 and Phase 1 entries below are first-hand live-gate
+> notes. The **Phase 2** and **Phase 2.5** sections were reconstructed from the
+> merged plans (`docs/plans/…-005/006/007-…`) and PR history (#1/#2/#3) during a
+> 2026-06-02 documentation pass — accurate to what shipped, but not a live-gate
+> log like the sections above them.
 
 ## Conventions
 
@@ -281,3 +288,91 @@ still guards the result (diff-or-die unchanged). Re-running the read-only vault
 audit: **abort rate 11.1% -> 0.0%** across 2,698 editable docs (2 unparseable-YAML
 docs remain = operator hygiene). The write kernel is now practically usable for
 field edits on the real vault. Live cutover still gated on per-action go-ahead.
+
+## Phase 2 — the human/product surface (U18–U25, plan 005; PR #1)
+
+Turns the kernel into the human surface: review-gated proposals, the H1–H6
+experience axis, and multi-format coverage — all under the trust floor of
+no-surprise-rewrite maintenance. Built **foundation-first** (the proposal queue
+before every proposal-emitting feature). The Obsidian surface ships **Hybrid**:
+generated markdown + native **Bases** (Phase 2a, zero plugin code) plus a thin
+desktop companion (Phase 2b).
+
+- **U18 review-gated proposal/PR queue** (`propose.py`) [R10/R11/F5/#12]: a
+  `propose()` primitive that lands narrow, path-scoped, gate-checked diffs on
+  `hypermnesic/proposals/*` branches and surfaces them as GitHub PRs the owner
+  approves — never auto-merged. The foundation every other proposal-emitting
+  feature depends on.
+- **U19 multi-format sidecars** (`sidecar.py`) [R13/#10]: content-addressed
+  extract-to-markdown for PDF/DOCX/XLSX/PPTX/PNG, routed Docling (MIT) ↔
+  MarkItDown (MIT), hash-gated so re-extraction is skipped when the source is
+  unchanged.
+- **U20 thinking-mode** (`think.py`) [R7/H1/KD2]: an observable, **no-write**
+  reasoning boundary — a read-only `think` surface distinct from the write path.
+- **U21 salience + spaced-review digest** (`salience.py`) [R6/H4/F3/KTD2]:
+  salience scoring and a spaced-review digest for resurfacing.
+- **U22 connection / serendipity proposals** (`connect.py`) [R6/H3/F3/AE4/KTD3]:
+  surfaces non-obvious links as review-gated connection proposals.
+- **U23 always-organized navigation surface** (`nav_surface.py`) [R6/H5/F3/AE4]:
+  generated MOCs / dashboards + native Obsidian **Bases** (Phase 2a).
+- **U24 frictionless capture → deferred triage** (`capture.py`) [R6/H6/F5]: land
+  raw text in `sources/` with zero ceremony; triaged later in thinking-mode.
+- **U25 Obsidian companion** (`obsidian-plugin/`) [R6/H2/KD2]: a thin, read-only,
+  desktop plugin for retrieval-while-writing (Phase 2b) — debounced `search` /
+  `build_context` against the tailnet MCP, with a "you may be reinventing [[X]]"
+  warning. Read-only by construction (hard `callTool` allowlist + a static
+  read-only test).
+
+Deferred to Phase 3: the authenticated gateway (R4/KD4), full LLM
+knowledge-graph extraction (#7), schema-as-data (#14), progressive activation (#15).
+
+## Phase 2.5 (Plan 1) — engine convergence, git-first write tool, role-aware installer (U26–U34, plan 006; PRs #2/#3)
+
+Plan 1 of 2. Makes the index converge automatically on the read path, gives
+agents a git-first write tool over MCP, and ships a role-aware installer so the
+master/client/single topology is deployable. The Obsidian companion redesign that
+consumes the recency signal is **Plan 2** (plan 007, in planning).
+
+- **U26 bounded embed budget + convergence tunables** [FR-R31]: `embed_stale`
+  gains a `budget` cap so first-read latency is bounded; analytical callers pass
+  `None` (unbounded). Progress is idempotent/resumable across reads.
+- **U27 `converge()` primitive** (`converge.py`) [FR-R24..R35]: one shared
+  read-path step — debounce check, host-aware staleness, `catch_up`, the bounded
+  embed slice, a non-blocking indexer lock (skip if held — reads never stall on a
+  writer), an oversized-delta guard (signals a manual reindex, never
+  auto-reindexes), and graceful lexical-only degradation when the embedder is down.
+- **U28 wire convergence into read entrypoints** [FR-R24/R41/R34]: every MCP read
+  tool and CLI read converges first; adds the `retrieve` CLI command.
+- **U29 per-Hit write-recency** (`retrieve.py`) [FR-R42]: each `Hit` carries
+  `recency` — epoch seconds of the most recent commit touching its path
+  (`git_commit_recency`), `None` when untracked. A **raw timestamp**, not a
+  pre-decayed score; the consumer derives its own forgetting curve.
+- **U30 full convergence for salience + connections** [FR-R39/R40]: the
+  analytical surfaces force a complete convergence before scoring, so
+  `note_vectors()` never runs on a half-embedded corpus; adds a
+  `coverage_complete` flag.
+- **U31 git-first `commit_note` MCP write tool** (`commit_note.py`,
+  `mcp_server.py`) [DEP-R5/R6/R8]: the write tool over MCP, reusing the
+  diff-or-die gate, protected-path guard, allowlist, and audit log unchanged.
+  Registered as `WRITE_TOOL_NAMES = {commit_note}`, separate from
+  `READ_TOOL_NAMES = {search, build_context, think}`, and exposed **only on a
+  write-enabled master** — read-only clients never receive it.
+- **U32 single-JSON serve** (`mcp_server.py`) [DEP-R15]: `build_server(…,
+  json_response=True)` (default) returns one buffered JSON response (non-SSE), so
+  Obsidian's `requestUrl` works without SSE.
+- **U33 opt-in install-hooks + converge command** (`install.py`, `cli.py`)
+  [FR-R36/R37/R38]: an idempotent managed-block post-merge hook that pre-warms
+  convergence after a pull; plus the `converge` CLI command.
+- **U34 role-aware installer** (`install.py`) [DEP-R1..R4/R9/R11]: `hypermnesic
+  install --role={single|master|client}`. Master = systemd **or** Docker service
+  + convergence hook + role config; client = config-only, emits/patches
+  `mcpServers.hypermnesic = {type: streamable-http, url}` (no engine, no index);
+  single = localhost. Tailnet membership is the MVP auth boundary; OAuth deferred.
+
+**Review-fix follow-ups (PR #3):** index non-ASCII git paths + guard `git show`
+failures (`converge.py`); batch write-recency into one `git log` pass
+(`retrieve.py`, perf); `digest_proposal` forces full convergence before scoring
+(`salience.py`); surface the convergence manual-reindex / degraded signal in the
+read-tool responses (`mcp_server.py`); installer fails loud before provisioning +
+hardened hook/client/strip (`install.py`); test fixtures use a CGNAT
+documentation IP range instead of a real homelab Tailscale IP.
