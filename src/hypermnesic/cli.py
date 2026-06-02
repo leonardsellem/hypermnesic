@@ -249,7 +249,7 @@ def _cmd_install(args) -> int:
             args.role, repo=(Path(args.repo) if args.repo else None),
             bind=args.bind, port=args.port, path=args.path, service=args.service,
             master_url=args.master_url, mcp_config_path=args.mcp_config)
-    except install.InstallError as exc:
+    except (install.InstallError, FileNotFoundError) as exc:
         print(f"install failed: {exc}", file=sys.stderr)   # fail loud; nothing provisioned
         return 1
     if args.json:
