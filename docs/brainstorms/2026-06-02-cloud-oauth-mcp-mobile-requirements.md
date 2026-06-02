@@ -37,6 +37,30 @@ This document is the **requirements + threat-model design for operator sign-off*
 - **Cloud writes** land in a dedicated review zone (e.g. `captures/` or a `mobile/` prefix).
 - **Sequencing:** mobile now; the gbrain decommission stays parked at Gate A.
 
+## Build status (2026-06-02) — code complete + proven live
+
+The lane is **implemented test-first and proven end-to-end over HTTP** (ephemeral loopback,
+torn down). Commits: `55295bf` (AS provider + consent gate), `31b639c` (serve wiring + CLI).
+Full suite **454 passed**.
+
+**Live smoke (the exact ChatGPT/Claude connector flow):** AS metadata `200`
+(`authorization_code`+`refresh_token`, PKCE `S256`, DCR); RFC 9728 protected-resource metadata
+at `/.well-known/oauth-protected-resource/mcp` `200`; DCR registered a client; `/authorize`
+**redirects to `/consent`** (the operator gate, not a direct code); consent with a **wrong
+token → 403**, with the **operator approval token → code issued** + redirect to the client;
+`/token` exchanged (SDK validated PKCE) → access token; **`/mcp` unauthenticated → 401, with
+the cloud token → 200**. The per-tool write scope still gates `commit_note`.
+
+**Remaining = operational (operator-involved), no more code:**
+1. Operator sets `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` (a secret they hold; gates every connection).
+2. **Public Funnel exposure** — `tailscale funnel` a hypermnesic hostname/path → the cloud serve
+   (`serve-cloud`), so ChatGPT/Claude's servers can reach it (this is the public-internet step,
+   as honcho uses).
+3. **Per-app connector install** — add the public URL in ChatGPT Cloud + Claude Cloud, complete
+   the OAuth flow (approve at `/consent` with the token). The compat spike (Open Q6) is this step.
+4. Homelab mirror (`gbrain-brain/projects/homelab/services/hypermnesic-cloud.md` + `LOG.md`) + a
+   persistent deploy unit; merge the branch first (a unit shouldn't run from the worktree).
+
 ## Problem Frame
 
 The gbrain-decommission plan (008/009) made hypermnesic the memory layer over a **tailnet-only,
