@@ -148,9 +148,12 @@ class MinimalAS:
     # --- revocation --------------------------------------------------------
     def revoke(self, token: str, client_id: str, client_secret: str) -> bool:
         self._auth_client(client_id, client_secret)
-        existed = self._tokens.pop(token, None) is not None
+        rec = self._tokens.get(token)
+        if rec is None or rec.client_id != client_id:   # RFC 7009: only the owner may revoke
+            return False                                 # uniform reply — leaks no existence
+        self._tokens.pop(token, None)
         self._persist()
-        return existed
+        return True
 
     # --- metadata (RFC 8414) ----------------------------------------------
     def metadata(self, public_url: str) -> dict:

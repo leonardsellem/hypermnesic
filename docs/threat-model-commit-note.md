@@ -183,6 +183,10 @@ ceiling + revocation bound a compromise; DCR is locked to the enrolled static cl
 enrollment so an arbitrary tailnet node cannot self-issue; the auto-query hook degrades
 **silently** (no recall, never a turn-blocking 401 storm) when the AS/endpoint is down; U11
 adds standing AS-availability + token-verify-failure SPOF monitoring with a restart runbook.
+The **RS→AS introspection channel is loopback** (the RS master and the AS are co-located on
+the homelab; the master introspects over `127.0.0.1`), so a tailnet node cannot MITM token
+*validation* (security-review residual, 2026-06-02); only token *issuance* from a remote peer
+(the Mac) crosses the tailnet, and that authenticates the client to the AS.
 *Accepted risk:* the AS is a single point of failure for *recall availability* (not for git,
 the source of truth) — consciously accepted, monitored, not eliminated.
 
@@ -192,10 +196,16 @@ None/exception path, scope check inverted, audience check skipped) **grants** wr
 failing *open*.
 *Mitigation (U2):* the verifier **fails closed** — any raw-validation exception, a `None`
 result, an expired token, or a non-matching audience returns `None` (→ 401), never a
-default-allow; scope enforcement is the SDK's audited middleware, not engine code; the
-verifier is covered by explicit valid/invalid/expired/wrong-/no-audience tests. *Residual:* a
-defect in the SDK's `BearerAuthBackend`/`RequireAuthMiddleware` is inherited; pinned + tracked
-upstream.
+default-allow; the verifier is covered by explicit valid/invalid/expired/wrong-/no-audience
+tests. **Write-scope is enforced per-tool, not only by the transport.** The SDK middleware
+applies one `required_scopes` list to *all* tools, so it cannot separate read clients from
+write clients on a single endpoint — a write-enabled master started without a write scope in
+`required_scopes` would otherwise expose `commit_note` to any valid (e.g. `read`-scoped)
+token (the realized V14 case, found in the 2026-06-02 security review). Fix: **`commit_note`
+self-enforces the `write` scope** from the authenticated principal (`get_access_token()`),
+independent of the transport scope list; a token lacking `write` is refused before any write
+(`tests/test_mcp_server.py::test_commit_note_rejects_read_scoped_principal`). *Residual:* a
+defect in the SDK's `BearerAuthBackend`/`RequireAuthMiddleware` is inherited; pinned + tracked.
 
 ## 4. Accepted risks (this phase)
 

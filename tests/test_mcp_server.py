@@ -468,3 +468,42 @@ def test_auth_with_wildcard_host_refused_bind_first(built_index):
     with pytest.raises(ValueError, match="(?i)tailnet|0\\.0\\.0\\.0|bind"):
         mcp_server.build_server(built_index, host="0.0.0.0",
                                 token_verifier=_verifier(), auth=_auth_settings())
+
+
+# --- U2 (security review): the write tool self-enforces the write scope ------
+
+def _set_principal(scopes):
+    """Set the authenticated principal in the SDK auth contextvar (what the HTTP auth
+    middleware does for a real request). Returns (var, token) so the test can reset it."""
+    from mcp.server.auth.middleware.auth_context import auth_context_var
+    from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
+    from mcp.server.auth.provider import AccessToken
+    at = AccessToken(token="t", client_id="agent", scopes=list(scopes), expires_at=None,
+                     resource=_RES, claims={"aud": _RES})
+    return auth_context_var, auth_context_var.set(AuthenticatedUser(at))
+
+
+def test_commit_note_rejects_read_scoped_principal(make_corpus, fake_embedder):
+    # the V14 inverted-failure case: a read-scoped token reaches the write tool (because the
+    # transport's global required_scopes can't separate read from write on one endpoint). The
+    # write tool MUST self-enforce the write scope and refuse.
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder)                  # auth-on
+    var, tok = _set_principal(["read"])                       # read-only principal
+    try:
+        out = _call(srv, "commit_note", {"path": "notes/n.md", "body": "# N\n\nbody.\n"})
+    finally:
+        var.reset(tok)
+    assert out["committed"] is False and "scope" in out["refused"].lower()
+    assert not (repo / "notes/n.md").exists()                 # nothing written
+
+
+def test_commit_note_allows_write_scoped_principal(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder)
+    var, tok = _set_principal(["read", "write"])
+    try:
+        out = _call(srv, "commit_note", {"path": "notes/n.md", "body": "# N\n\nbody.\n"})
+    finally:
+        var.reset(tok)
+    assert out["committed"] is True and out["created"]
