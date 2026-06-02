@@ -100,7 +100,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  path: str = DEFAULT_PATH, embedder=None, repo: Path | None = None,
                  authoring_host: bool = False, write_enabled: bool = False,
                  write_allowlist: list[str] | None = None,
-                 audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:
+                 audit_actor_fn: Callable[[], str] | None = None,
+                 json_response: bool = True) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
 
     Refuses ``0.0.0.0`` — the bind invariant is enforced at construction. Every
@@ -113,6 +114,12 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     incapable of writing. ``write_allowlist`` bounds the writable paths (defaults to
     ``DEFAULT_WRITE_ALLOWLIST``); ``audit_actor_fn`` overrides the server-set audit
     actor (defaults to the verified Tailscale node identity).
+
+    ``json_response`` (U32/DEP-R15, default True) makes the streamable-http transport
+    return a buffered single JSON body for ``tools/call`` instead of an SSE stream, so
+    a buffering client (Obsidian ``requestUrl``, Plan 2) does not hang waiting to
+    stream. The mcp SDK defaults this to ``False`` (SSE); we flip it on. Single-JSON is
+    spec-compliant for standard MCP clients too (they accept application/json).
     """
     if host in ("0.0.0.0", "::", ""):
         raise ValueError(
@@ -120,7 +127,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             "must bind a specific Tailscale interface address (KTD10)"
         )
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
-    mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path)
+    mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
+                  json_response=json_response)
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
