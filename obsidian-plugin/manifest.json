@@ -1,0 +1,9 @@
+{
+  "id": "hypermnesic-companion",
+  "name": "hypermnesic companion",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Read-only retrieval-while-writing: shows related notes and a 'you may be reinventing [[X]]' warning from the tailnet hypermnesic MCP. Never writes the vault.",
+  "author": "Leonard Sellem",
+  "isDesktopOnly": true
+}
