@@ -18,6 +18,7 @@ import math
 from dataclasses import dataclass
 
 from hypermnesic import generated
+from hypermnesic import index as index_mod
 from hypermnesic import propose as propose_mod
 
 # Fixed weights → deterministic scores. (Tuning is an implementation-time concern.)
@@ -33,6 +34,25 @@ class SalienceScore:
     centrality: float
     write_recency: float       # 0..1, 1 = most recently written
     dormant: bool
+
+
+@dataclass
+class SalienceReport:
+    """Salience scores plus whether centrality was computed over a fully-embedded
+    corpus (U30/FR-R40). Iterable/indexable so callers can treat it as the score
+    list directly (``for s in report`` / ``report[0]`` / ``len(report)``)."""
+
+    scores: list[SalienceScore]
+    coverage_complete: bool
+
+    def __iter__(self):
+        return iter(self.scores)
+
+    def __len__(self):
+        return len(self.scores)
+
+    def __getitem__(self, i):
+        return self.scores[i]
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -74,9 +94,16 @@ def _write_recency(audit_log) -> dict[str, float]:
     return {p: rank[ts] for p, ts in last.items()}
 
 
-def score_notes(idx, graph, audit_log, *, dormancy_threshold: float = 0.5) -> list[SalienceScore]:
-    """Deterministic salience over every indexed path. Sorted by score desc, then
-    path (stable ties)."""
+def score_notes(idx, graph, audit_log, *, embedder=None, repo=None,
+                dormancy_threshold: float = 0.5) -> SalienceReport:
+    """Deterministic salience over every indexed path, returned as a
+    :class:`SalienceReport` (sorted by score desc, then path for stable ties).
+
+    U30/FR-R39: when ``embedder`` and ``repo`` are given, a full unbudgeted embed
+    runs first so embedding centrality is computed over every chunk rather than a
+    half-embedded corpus; ``report.coverage_complete`` (FR-R40) is ``False`` if the
+    embedder was unavailable/failed mid-fill (the centrality is then partial)."""
+    coverage_complete = index_mod.ensure_full_coverage(idx, repo, embedder)
     paths = sorted(idx.all_paths())
     vectors = idx.note_vectors()
     centrality = _centralities(vectors)
@@ -95,10 +122,10 @@ def score_notes(idx, graph, audit_log, *, dormancy_threshold: float = 0.5) -> li
                                     centrality=cent, write_recency=rec,
                                     dormant=rec < dormancy_threshold))
     scores.sort(key=lambda s: (-s.score, s.path))
-    return scores
+    return SalienceReport(scores=scores, coverage_complete=coverage_complete)
 
 
-def dormant_salient(scores: list[SalienceScore], *, top_n: int = 10) -> list[SalienceScore]:
+def dormant_salient(scores, *, top_n: int = 10) -> list[SalienceScore]:
     """Salient-but-dormant: dormant notes ranked by structural importance
     (link + centrality, NOT recency — recency is what makes them dormant)."""
     dormant = [s for s in scores if s.dormant]

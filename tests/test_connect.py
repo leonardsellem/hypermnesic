@@ -95,3 +95,26 @@ def test_suggestions_are_bounded_by_cap(make_corpus):
     g = _graph({k: k for k in vecs})                              # no links among them
     pairs = connect.candidate_pairs(vecs, g, threshold=0.8, cap=2)
     assert len(pairs) == 2                                         # bounded
+
+
+# --- U30/FR-R39: full convergence before reading note vectors -----------------
+
+def test_connection_proposals_fully_embeds_before_reading_index_vectors(make_corpus, fake_embedder):
+    # When vectors are derived from the index, a stale (unembedded) chunk must not
+    # cause its note to be silently dropped from note_vectors() — the full embed runs first.
+    from hypermnesic import audit_log as al
+    from hypermnesic import commit_note as cn
+    from hypermnesic import index as index_mod
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n", "b.md": "# B\n\nbeta.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    log = al.AuditLog(repo / ".hypermnesic" / "audit.jsonl", actor_fn=lambda: "tailnet:test")
+    cn.commit_note(repo, "notes/c.md", body="# C\n\ngamma fresh note.\n", idx=idx, log=log)
+    assert idx.stale_chunk_ids()                                  # lexical-ahead gap present
+    # threshold high → no spurious pairs from orthogonal fake vectors; the point is the
+    # full embed running, observable as zero stale chunks afterward (note_vectors complete).
+    connect.connection_proposals(repo, graph=g, idx=idx, embedder=fake_embedder, threshold=0.999)
+    assert not idx.stale_chunk_ids()                              # every chunk embedded (FR-R39)
+    assert set(idx.note_vectors()) == set(idx.all_paths())
+    idx.close()
