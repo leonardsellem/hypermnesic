@@ -11,8 +11,18 @@ stays a rebuildable projection (a reindex never loses a committed write).
 
 The server binds to a specific Tailscale interface address at the socket level
 (KTD10) — "tailnet-only" is a binding invariant, never ``0.0.0.0`` and never the
-mere absence of a public DNS record. Tailnet membership is the MVP auth boundary
-for both read and write (KTD5); per-identity OAuth is a deferred seam.
+mere absence of a public DNS record.
+
+Auth (U2/R12): the server is an OAuth 2.1 **Resource Server**. Auth is opt-in and
+additive — a read-only ``serve`` with no auth keeps the Phase-1 tailnet-only-no-auth
+build — but a **write-enabled master refuses to start without auth configured**
+(``write_enabled ⇒ auth-required``, an engine invariant mirroring the ``0.0.0.0``
+bind refusal): the tailnet is no longer the sole boundary for the write tool. When a
+``token_verifier`` + ``AuthSettings`` are supplied, the FastMCP transport validates
+the bearer token (the verifier enforces RFC 8707 audience binding + expiry), enforces
+the required scope, and advertises RFC 9728 Protected-Resource metadata. The token
+*issuer* is a separate tailnet-internal AS (U12), independent of gbrain's AS. (This
+supersedes the prior "per-identity OAuth is a deferred seam" posture, KTD5.)
 
 The dense channel degrades gracefully: if the embedding API is unreachable,
 lexical + graph results still return (the dense channel is simply absent).
@@ -38,6 +48,9 @@ from hypermnesic import think as think_mod
 
 DEFAULT_PORT = 8848
 DEFAULT_PATH = "/mcp"
+# Loopback binds are exempt from the write_enabled⇒auth-required invariant (U2): a
+# localhost serve is reachable only by the local user — never the tailnet.
+_LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
 # The write tool's explicit allowlist (KTD4). The protected-path guard refuses the
 # dangerous classes regardless; this further bounds *where* an agent write may land.
 # Overridable per install (U34 role config); tune to the vault's writable zones.
@@ -101,6 +114,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  authoring_host: bool = False, write_enabled: bool = False,
                  write_allowlist: list[str] | None = None,
                  audit_actor_fn: Callable[[], str] | None = None,
+                 token_verifier=None, auth=None,
                  json_response: bool = True,
                  stateless_http: bool = True) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
@@ -138,6 +152,28 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             f"refusing to bind to {host!r}: hypermnesic MCP is tailnet-only and "
             "must bind a specific Tailscale interface address (KTD10)"
         )
+    # U2: auth is configured as a pair — a verifier validates the tokens an AuthSettings
+    # advertises. Supplying one without the other is a half-configured auth surface; refuse
+    # before constructing FastMCP so the message is engine-level, not an SDK internal.
+    if (auth is None) ^ (token_verifier is None):
+        raise ValueError(
+            "OAuth auth requires BOTH a token_verifier and AuthSettings (or neither): "
+            "supply --auth-issuer-url + --auth-resource-url together, or omit auth entirely"
+        )
+    # U2 engine invariant: write_enabled ⇒ auth-required on any tailnet-reachable bind.
+    # A write-enabled master serving a Tailscale interface address MUST run auth-on —
+    # mirroring the 0.0.0.0 refusal — so a unit re-render or a Phase-1 rollback can never
+    # silently serve commit_note unauthenticated *on the tailnet* (R12). A loopback bind is
+    # exempt: it is reachable only by the local user (the same trust boundary the CLI write
+    # path already has), preserving the Phase-1 single-user localhost drop-in. (The live
+    # master binds the tailnet IP directly, so it is always covered.)
+    if write_enabled and auth is None and host not in _LOCALHOST_BINDS:
+        raise ValueError(
+            "refusing a write-enabled tailnet serve without auth configured: "
+            "write_enabled ⇒ auth-required on a non-loopback bind (R12 engine invariant, "
+            "mirroring the 0.0.0.0 refusal). Pass --auth-issuer-url + --auth-resource-url "
+            "(+ --required-scope), serve read-only, or bind 127.0.0.1 for a local drop-in."
+        )
     # An explicit but effectively-empty allowlist on a write-enabled serve would narrow
     # writes to NOTHING — a silent brick. Refuse at construction (no half-open server),
     # before any disk/backend touch. Omitting write_allowlist (None) keeps the default.
@@ -150,7 +186,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         )
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
     mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
-                  json_response=json_response, stateless_http=stateless_http)
+                  json_response=json_response, stateless_http=stateless_http,
+                  token_verifier=token_verifier, auth=auth)   # U2: RS-only OAuth2 (or no-auth)
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")

@@ -46,6 +46,33 @@ def test_master_systemd_renders_write_enabled_unit_and_config(make_corpus, monke
     assert _KEY not in json.dumps(res)                    # never echoed in the result either
 
 
+# --- U2: OAuth2 RS flags rendered on the master ExecStart -------------------
+
+def test_master_systemd_renders_auth_flags_when_provided(make_corpus, monkeypatch):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    install.install("master", repo=repo, bind=TAILNET_IP, service="systemd",
+                    auth_issuer_url="https://homelab.taildabf2.ts.net/honcho/",
+                    auth_resource_url="https://homelab.taildabf2.ts.net/mcp",
+                    required_scope=["write"])
+    unit = (repo / ".hypermnesic" / "hypermnesic.service").read_text()
+    execstart = next(ln for ln in unit.splitlines() if ln.startswith("ExecStart="))
+    assert "--enable-write" in execstart
+    assert "--auth-issuer-url https://homelab.taildabf2.ts.net/honcho/" in execstart
+    assert "--auth-resource-url https://homelab.taildabf2.ts.net/mcp" in execstart
+    assert "--required-scope write" in execstart
+
+
+def test_master_systemd_no_auth_flags_when_absent(make_corpus, monkeypatch):
+    # without auth params the unit renders as before (Phase-1 parity for the render path);
+    # the write_enabled⇒auth-required invariant is enforced at serve startup, not at render.
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    install.install("master", repo=repo, bind=TAILNET_IP, service="systemd")
+    unit = (repo / ".hypermnesic" / "hypermnesic.service").read_text()
+    assert "--auth-issuer-url" not in unit and "--auth-resource-url" not in unit
+
+
 # --- master / docker --------------------------------------------------------
 
 def test_master_docker_renders_compose_not_systemd(make_corpus, monkeypatch):

@@ -272,11 +272,28 @@ def _cmd_serve(args) -> int:
     # write_allowlist is None when --allowlist is omitted → build_server applies its
     # DEFAULT_WRITE_ALLOWLIST; an explicit empty allowlist is refused at startup (U1).
     # audit_actor_fn is left to default to the verified Tailscale node identity.
+    #
+    # U2: --auth-* enables OAuth2 RS mode. Enabling auth requires BOTH issuer + resource
+    # URLs (make_auth_settings enforces it); the token verifier introspects opaque tokens
+    # against the AS discovered from the issuer (RS credentials from the env, never flags).
+    token_verifier = None
+    auth_settings = None
     try:
+        if args.auth_issuer_url or args.auth_resource_url:
+            from hypermnesic import auth as auth_mod
+            auth_settings = auth_mod.make_auth_settings(
+                issuer_url=args.auth_issuer_url, resource_server_url=args.auth_resource_url,
+                required_scopes=args.required_scope or [])
+            verify_raw = auth_mod.verify_raw_from_discovery(
+                issuer_url=args.auth_issuer_url, resource_server_url=args.auth_resource_url,
+                required_scopes=args.required_scope or [])
+            token_verifier = auth_mod.build_token_verifier(
+                resource_server_url=args.auth_resource_url, verify_raw=verify_raw)
         srv = mcp_server.build_server(
             Path(args.index_db), host=args.host, port=args.port, path=args.path,
             repo=(Path(args.repo) if args.repo else None),
-            write_enabled=args.enable_write, write_allowlist=args.allowlist)
+            write_enabled=args.enable_write, write_allowlist=args.allowlist,
+            token_verifier=token_verifier, auth=auth_settings)
     except ValueError as exc:
         print(f"serve failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
         return 1
@@ -294,7 +311,9 @@ def _cmd_install(args) -> int:
         res = install.install(
             args.role, repo=(Path(args.repo) if args.repo else None),
             bind=args.bind, port=args.port, path=args.path, service=args.service,
-            master_url=args.master_url, mcp_config_path=args.mcp_config)
+            master_url=args.master_url, mcp_config_path=args.mcp_config,
+            auth_issuer_url=args.auth_issuer_url, auth_resource_url=args.auth_resource_url,
+            required_scope=args.required_scope)
     except (install.InstallError, FileNotFoundError) as exc:
         print(f"install failed: {exc}", file=sys.stderr)   # fail loud; nothing provisioned
         return 1
@@ -423,6 +442,13 @@ def build_parser() -> argparse.ArgumentParser:
                               "Omit for the default; an empty value is refused at startup")
     p_serve.add_argument("--repo", default=None,
                          help="git repo the index projects (default: index-db grandparent)")
+    p_serve.add_argument("--auth-issuer-url", default=None,
+                         help="OAuth2 AS issuer URL (enables RS auth; needs --auth-resource-url)")
+    p_serve.add_argument("--auth-resource-url", default=None,
+                         help="this RS's resource identifier (RFC 8707 audience); "
+                              "e.g. https://homelab.taildabf2.ts.net/mcp")
+    p_serve.add_argument("--required-scope", action="append", default=None, metavar="SCOPE",
+                         help="repeatable required OAuth2 scope (e.g. write)")
     p_serve.set_defaults(func=_cmd_serve)
 
     p_install = sub.add_parser("install",
@@ -439,6 +465,12 @@ def build_parser() -> argparse.ArgumentParser:
                            help="MCP client config file to write/patch (client role)")
     p_install.add_argument("--port", type=int, default=8848)
     p_install.add_argument("--path", default="/mcp")
+    p_install.add_argument("--auth-issuer-url", default=None,
+                           help="OAuth2 AS issuer URL for the master ExecStart (U2)")
+    p_install.add_argument("--auth-resource-url", default=None,
+                           help="this RS's resource identifier (RFC 8707 audience) for the master")
+    p_install.add_argument("--required-scope", action="append", default=None, metavar="SCOPE",
+                           help="repeatable required OAuth2 scope rendered on the master ExecStart")
     p_install.add_argument("--json", action="store_true")
     p_install.set_defaults(func=_cmd_install)
     return parser

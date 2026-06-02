@@ -275,3 +275,40 @@ def test_converge_now_forces_pass_within_debounce(make_corpus, fake_embedder,
     idx = index.Index(index.state_dir_for(repo) / "index.db")
     assert "warm2.md" in idx.all_paths()
     idx.close()
+
+
+# --- U2: serve OAuth2 flags plumb a verifier + AuthSettings into build_server --
+
+_ISS = "https://homelab.taildabf2.ts.net/honcho/"
+_RES = "https://homelab.taildabf2.ts.net/mcp"
+
+
+def test_serve_auth_flags_plumb_verifier_and_settings(monkeypatch, tmp_path):
+    captured, srv = _capture_build(monkeypatch)
+    from hypermnesic import auth
+    # stub discovery so no network is touched at serve-build time
+    monkeypatch.setattr(auth, "verify_raw_from_discovery", lambda **k: (lambda t: None))
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--enable-write", "--auth-issuer-url", _ISS, "--auth-resource-url", _RES,
+                   "--required-scope", "write"])
+    assert rc == 0 and srv.ran
+    assert captured["auth"] is not None
+    assert str(captured["auth"].resource_server_url).rstrip("/") == _RES
+    assert captured["auth"].required_scopes == ["write"]
+    assert captured["token_verifier"] is not None
+    assert captured["write_enabled"] is True
+
+
+def test_serve_issuer_without_resource_refused(tmp_path, capsys):
+    # enabling auth requires BOTH issuer and resource URLs → fail loud, exit 1
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--auth-issuer-url", _ISS])
+    assert rc == 1
+    assert "auth" in capsys.readouterr().err.lower()
+
+
+def test_serve_no_auth_flags_unchanged(monkeypatch, tmp_path):
+    captured, srv = _capture_build(monkeypatch)
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1"])
+    assert rc == 0
+    assert captured.get("auth") is None and captured.get("token_verifier") is None

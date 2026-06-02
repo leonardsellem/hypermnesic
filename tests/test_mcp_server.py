@@ -194,6 +194,11 @@ _NONCANON = "---\nstatus:    active\ncreated: 2026-05-02\n---\nbody\n"
 def _write_server(repo, fake_embedder, **kw):
     index.build_index(repo, fake_embedder).close()
     db = index.state_dir_for(repo) / "index.db"
+    # U2 invariant: a write-enabled master runs auth-on. Inject a test verifier+settings
+    # (the in-process _call bypasses the HTTP auth middleware, so write-tool behavior is
+    # unchanged — this just satisfies write_enabled⇒auth-required at construction).
+    kw.setdefault("token_verifier", _verifier())
+    kw.setdefault("auth", _auth_settings())
     return mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
                                    write_enabled=True, **kw)
 
@@ -204,7 +209,8 @@ def test_write_enabled_lists_commit_note_read_only_excludes_it(make_corpus, fake
     db = index.state_dir_for(repo) / "index.db"
     ro = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
     rw = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
-                                 write_enabled=True)
+                                 write_enabled=True, token_verifier=_verifier(),
+                                 auth=_auth_settings())
     ro_names = {t.name for t in asyncio.run(ro.list_tools())}
     rw_names = {t.name for t in asyncio.run(rw.list_tools())}
     assert "commit_note" not in ro_names                       # read-only structurally excludes it
@@ -381,3 +387,84 @@ def test_resolve_is_read_tool_and_converges(make_corpus, fake_embedder):
     _commit(repo, "infrastructure/box.md", "# Box\n\nBOXMARKER body.\n", "add box")
     out = _call(srv, "resolve", {"name": "box"})
     assert out["resolved"] == "infrastructure/box.md"          # converged before resolving
+
+
+# --- U2: OAuth2 Resource-Server wiring + write_enabled⇒auth-required invariant -
+
+_RES = "https://homelab.taildabf2.ts.net/mcp"
+_ISS = "https://homelab.taildabf2.ts.net/honcho/"
+
+
+def _auth_settings():
+    from hypermnesic import auth
+    return auth.make_auth_settings(issuer_url=_ISS, resource_server_url=_RES,
+                                   required_scopes=["write"])
+
+
+def _verifier():
+    from hypermnesic import auth
+    return auth.build_token_verifier(resource_server_url=_RES, verify_raw=lambda t: None)
+
+
+def test_build_server_no_auth_is_phase1_unauthenticated(built_index, fake_embedder):
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
+    assert srv.settings.auth is None              # no auth flags → Phase-1 unauthenticated build
+
+
+def test_build_server_with_auth_sets_resource_server(built_index, fake_embedder):
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder,
+                                  token_verifier=_verifier(), auth=_auth_settings())
+    assert srv.settings.auth is not None
+    assert str(srv.settings.auth.resource_server_url).rstrip("/") == _RES
+    assert srv.settings.auth.required_scopes == ["write"]
+
+
+def test_read_only_serve_with_auth_builds(built_index, fake_embedder):
+    # auth is opt-in/additive for a read-only serve too (no write tool)
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder,
+                                  token_verifier=_verifier(), auth=_auth_settings())
+    names = {t.name for t in asyncio.run(srv.list_tools())}
+    assert "commit_note" not in names
+
+
+def test_write_enabled_without_auth_refused(built_index):
+    # the engine invariant: a write-enabled TAILNET master must NOT start auth-off (mirrors 0.0.0.0)
+    with pytest.raises(ValueError, match="(?i)auth"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True)
+
+
+def test_write_enabled_localhost_without_auth_allowed(make_corpus, fake_embedder):
+    # loopback exemption: a single-user localhost write serve does not require auth (only
+    # the local user can reach it — the same boundary the CLI write path already has).
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host="127.0.0.1", embedder=fake_embedder, repo=repo,
+                                  write_enabled=True)
+    assert "commit_note" in {t.name for t in asyncio.run(srv.list_tools())}
+    assert srv.settings.auth is None
+
+
+def test_write_enabled_verifier_without_auth_settings_refused(built_index):
+    # both halves required: a verifier but no AuthSettings is a half-configured auth → refuse
+    with pytest.raises(ValueError, match="(?i)auth"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True,
+                                token_verifier=_verifier())
+
+
+def test_write_enabled_with_auth_starts_and_lists_commit_note(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
+                                  write_enabled=True, token_verifier=_verifier(),
+                                  auth=_auth_settings())
+    assert "commit_note" in {t.name for t in asyncio.run(srv.list_tools())}
+    assert srv.settings.auth is not None
+
+
+def test_auth_with_wildcard_host_refused_bind_first(built_index):
+    # the bind invariant is checked FIRST: 0.0.0.0 is refused even with auth configured
+    with pytest.raises(ValueError, match="(?i)tailnet|0\\.0\\.0\\.0|bind"):
+        mcp_server.build_server(built_index, host="0.0.0.0",
+                                token_verifier=_verifier(), auth=_auth_settings())
