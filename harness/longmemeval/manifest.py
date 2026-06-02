@@ -158,8 +158,12 @@ def default_manifest() -> Manifest:
     )
 
 
+DOWNLOAD_TIMEOUT = 120  # seconds; fail a stalled CDN connection rather than hang forever
+
+
 def _urlopen(url: str):
-    return urllib.request.urlopen(url)  # noqa: S310 — pinned HF https URL, hash-verified
+    # noqa: S310 — pinned HF https URL, hash-verified after download
+    return urllib.request.urlopen(url, timeout=DOWNLOAD_TIMEOUT)  # noqa: S310
 
 
 def download_dataset(dest: Path, *, url: str = DATASET_URL, expected_sha256: str,
@@ -180,11 +184,9 @@ def download_dataset(dest: Path, *, url: str = DATASET_URL, expected_sha256: str
     fd, tmp_name = tempfile.mkstemp(dir=str(dest.parent), prefix=".dl-", suffix=".part")
     tmp = Path(tmp_name)
     try:
-        resp = opener(url)
-        read = resp.read
-        with open(fd, "wb") as out:
+        with opener(url) as resp, open(fd, "wb") as out:  # both closed on every exit
             while True:
-                block = read(chunk)
+                block = resp.read(chunk)
                 if not block:
                     break
                 h.update(block)

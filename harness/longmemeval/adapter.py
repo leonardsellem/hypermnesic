@@ -16,10 +16,15 @@ degraded — never a lexical-only score (the engine never silently zero-fills).
 The live CLI also calls ``embed.smoke_embed_or_die()`` before scoring.
 
 **Embedding cache:** ``CachingEmbedder`` keys vectors by ``(model, dim, text)``
-hash, so the per-session and per-turn corpora (which embed the same conversation
-text) and the F3 critic re-run reuse embeddings instead of re-paying — keeping a
-re-run well under the U1 cost ceiling. The default store is in-memory;
-``SqliteEmbeddingCache`` persists across processes.
+hash. Its largest win is the **F3 critic re-run** (and any repeated diagnostic
+run): every chunk that is byte-identical to a prior run is served from the store,
+so a re-run re-embeds nothing. Within a single cold run it also collapses
+duplicate chunk text inside one index build. Cross-corpus reuse between the
+per-session and per-turn corpora only occurs for **single-turn sessions** (a
+round's text is a subset of its session's text, so multi-turn sessions hash
+differently) — the U1 cost ceiling already prices both corpora independently
+(``COST_N_CORPORA=2``), so this does not change the budget. The default store is
+in-memory; ``SqliteEmbeddingCache`` persists across processes.
 """
 
 from __future__ import annotations
@@ -30,11 +35,21 @@ from array import array
 from collections.abc import MutableMapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Protocol
 
 from hypermnesic import embed as embed_mod
 from hypermnesic import index, retrieve
 from longmemeval import manifest as mf
 from longmemeval.materialize import Instance, Materialized, materialize_instance
+
+
+class Embedder(Protocol):
+    """The minimal embedder surface the harness depends on (``embed.OpenAIEmbedder``,
+    ``CachingEmbedder``, and the test ``FakeEmbedder`` all satisfy it)."""
+
+    dim: int
+
+    def embed(self, texts: list[str]) -> list[list[float]]: ...
 
 # Diagnostic retrieval depth: how deep a candidate list to rank before slicing at
 # @5/@10/@50 in the scorer. This is a *measurement* depth (it must exceed the
@@ -73,7 +88,8 @@ class CachingEmbedder:
     ``SqliteEmbeddingCache`` gives cross-process persistence.
     """
 
-    def __init__(self, embedder, store: MutableMapping[str, list[float]] | None = None):
+    def __init__(self, embedder: Embedder,
+                 store: MutableMapping[str, list[float]] | None = None):
         self._embedder = embedder
         self.dim = embedder.dim
         self.model = getattr(embedder, "model", "unknown")
@@ -100,6 +116,11 @@ class CachingEmbedder:
                 out[i] = vec
                 fresh[key] = vec
             self._store.update(fresh)     # one write/commit for the whole batch
+        # Invariant: every slot filled (zip(strict=True) above guarantees miss
+        # parity). Assert loudly rather than silently shortening the list, which
+        # would misalign chunks↔vectors in index.build and corrupt the metrics.
+        assert all(v is not None for v in out), \
+            f"embed: {out.count(None)}/{len(texts)} slots unfilled"
         return [v for v in out if v is not None]
 
 
@@ -147,6 +168,12 @@ class SqliteEmbeddingCache:
     def close(self) -> None:
         self.conn.close()
 
+    def __enter__(self) -> SqliteEmbeddingCache:
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
+
 
 def _ranked_units(hits, path_to_unit: dict[str, str]) -> list[str]:
     """Collapse ranked chunk hits → ordered unique unit ids (session or turn).
@@ -164,7 +191,7 @@ def _ranked_units(hits, path_to_unit: dict[str, str]) -> list[str]:
     return out
 
 
-def retrieve_for_corpus(materialized: Materialized, question: str, embedder, *,
+def retrieve_for_corpus(materialized: Materialized, question: str, embedder: Embedder, *,
                         state_dir: Path,
                         weights: tuple[float, float, float] | None = None,
                         use_doc_lane: bool = mf.RETRIEVAL_USE_DOC_LANE,
@@ -174,28 +201,31 @@ def retrieve_for_corpus(materialized: Materialized, question: str, embedder, *,
 
     Catches ``EmbeddingError`` (build or search) → ``degraded=True`` with an
     empty ranking, so a down embedder voids rather than crashing or silently
-    scoring lexical-only.
+    scoring lexical-only. ``search_depth`` is passed as both ``k`` and
+    ``candidate_k`` — the diagnostic uses ``SEARCH_DEPTH`` (deep, to measure @50);
+    the QA headline passes the frozen production ``candidate_k`` so it mirrors the
+    shipped read path (R19).
     """
     weights = tuple(mf.RETRIEVAL_WEIGHTS) if weights is None else weights
     gold = set(materialized.gold_units)
+    iid, gran = materialized.instance_id, materialized.granularity
     try:
         idx = index.build_index(materialized.corpus_dir, embedder, state_dir=Path(state_dir))
     except embed_mod.EmbeddingError:
-        return HaystackResult(materialized.instance_id, materialized.granularity, [], True, gold)
+        return HaystackResult(iid, gran, [], True, gold)
     try:
         res = retrieve.search(idx, question, embedder=embedder, k=search_depth,
                               candidate_k=search_depth, use_doc_lane=use_doc_lane,
                               collapse_duplicates=collapse_duplicates, weights=weights)
     except embed_mod.EmbeddingError:
-        idx.close()
-        return HaystackResult(materialized.instance_id, materialized.granularity, [], True, gold)
-    idx.close()
-    return HaystackResult(materialized.instance_id, materialized.granularity,
-                          _ranked_units(res.hits, materialized.path_to_unit),
+        return HaystackResult(iid, gran, [], True, gold)
+    finally:
+        idx.close()  # always release the SQLite handle, even on a non-embedding error
+    return HaystackResult(iid, gran, _ranked_units(res.hits, materialized.path_to_unit),
                           res.degraded, gold)
 
 
-def retrieve_instances(instances: list[Instance], work_dir: Path, embedder, *,
+def retrieve_instances(instances: list[Instance], work_dir: Path, embedder: Embedder, *,
                        weights: tuple[float, float, float] | None = None,
                        search_depth: int = SEARCH_DEPTH) -> RetrievalRun:
     """Materialize + retrieve every instance over both granularities.

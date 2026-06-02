@@ -26,6 +26,10 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openai import OpenAI
 
 DEFAULT_GEN_LENGTH = 512
 RESERVE_TOKENS = 1000  # the official reader's fixed budget reserve
@@ -92,7 +96,7 @@ class Reader:
         self._client = client
         self._counter = token_counter  # lazily built from tiktoken if None
 
-    def _get_client(self):
+    def _get_client(self) -> OpenAI:
         if self._client is None:
             from openai import OpenAI
 

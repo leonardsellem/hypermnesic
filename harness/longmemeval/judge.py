@@ -25,9 +25,13 @@ iteration only — the headline MUST use this keyed judge. Modeled on
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from longmemeval import manifest as mf
 from longmemeval.materialize import normalize_question_type
+
+if TYPE_CHECKING:
+    from openai import OpenAI
 
 JUDGE_MODEL = mf.JUDGE_MODEL  # "gpt-4o-2024-08-06"
 MAX_TOKENS = 10
@@ -130,7 +134,7 @@ class Judge:
         self._api_key = api_key
         self._client = client
 
-    def _get_client(self):
+    def _get_client(self) -> OpenAI:
         if self._client is None:
             from openai import OpenAI
 

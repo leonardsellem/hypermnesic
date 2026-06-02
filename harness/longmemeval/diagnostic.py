@@ -30,8 +30,8 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from longmemeval.adapter import RetrievalRun
-from longmemeval.materialize import normalize_question_type, turn_to_session
+from longmemeval.adapter import Embedder, RetrievalRun
+from longmemeval.materialize import Instance, normalize_question_type, turn_to_session
 
 SESSION_KS = (5, 10)
 TURN_KS = (5, 10, 50)
@@ -180,8 +180,8 @@ def score_diagnostic(run: RetrievalRun) -> dict:
     }
 
 
-def run_diagnostic(instances, work_dir, embedder, *, headline: bool,
-                   search_depth: int | None = None) -> dict:
+def run_diagnostic(instances: list[Instance], work_dir: Path, embedder: Embedder, *,
+                   headline: bool, search_depth: int | None = None) -> dict:
     """Retrieve + score a set of instances, stamping the headline label (AE4).
 
     ``headline`` MUST be True only for the full `_s` set (no sampling, R17); the
@@ -213,6 +213,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", default=None, help="write the result JSON here")
     ap.add_argument("--cache", default="harness/longmemeval/.embed_cache.sqlite")
     ap.add_argument("--limit", type=int, default=None, help="dev: cap instances (non-headline)")
+    ap.add_argument("--json", action="store_true",
+                    help="print the full result JSON to stdout (default: a summary line)")
     args = ap.parse_args(argv)
 
     from hypermnesic import embed
@@ -222,19 +224,25 @@ def main(argv: list[str] | None = None) -> int:
     instances = materialize.load_dataset(Path(args.dataset))
     if args.limit:
         instances = instances[:args.limit]
-    store = adapter.SqliteEmbeddingCache(Path(args.cache))
-    embedder = adapter.CachingEmbedder(embed.OpenAIEmbedder(), store=store)
     # Only the full `_s` set (no --limit) is headline-eligible (R17).
-    result = run_diagnostic(instances, Path(args.work_dir), embedder,
-                            headline=args.limit is None)
-    store.close()
+    with adapter.SqliteEmbeddingCache(Path(args.cache)) as store:  # always closed
+        embedder = adapter.CachingEmbedder(embed.OpenAIEmbedder(), store=store)
+        result = run_diagnostic(instances, Path(args.work_dir), embedder,
+                                headline=args.limit is None)
     result["limited_to"] = args.limit  # non-None ⇒ a dev/non-headline subset
     blob = json.dumps(result, ensure_ascii=False, indent=2)
     if args.out:
         Path(args.out).write_text(blob + "\n", encoding="utf-8")
         print(f"wrote diagnostic result → {args.out}")
-    else:
+    elif args.json:
         print(blob)
+    else:
+        sess, turn = result.get("session", {}), result.get("turn", {})
+        print(f"verdict={result['verdict']} headline={result.get('headline')} "
+              f"n={result.get('n_instances', '-')} | "
+              f"session recall_all@10={sess.get('recall_all@10', '-')} "
+              f"ndcg_any@10={sess.get('ndcg_any@10', '-')} | "
+              f"turn recall_all@10={turn.get('recall_all@10', '-')}")
     return 0 if not result["void"] else 1
 
 

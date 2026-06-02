@@ -145,11 +145,21 @@ def _session_gold(inst: Instance) -> set[str]:
     return {s.session_id for s in inst.sessions if "answer" in s.session_id}
 
 
+def _fresh_corpus_dir(dest_dir: Path) -> Path:
+    """Make ``dest_dir`` and remove any pre-existing ``*.md`` so a re-run into a
+    persistent work-dir can't leave stale sessions that build_index would index as
+    phantom documents (silent recall regression when a dataset shrinks)."""
+    dest_dir = Path(dest_dir)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for stale in dest_dir.glob("*.md"):
+        stale.unlink()
+    return dest_dir
+
+
 def materialize_sessions(inst: Instance, dest_dir: Path) -> Materialized:
     """Write one markdown file per session (the QA corpus) and reconstruct the
     session-level gold set."""
-    dest_dir = Path(dest_dir)
-    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_dir = _fresh_corpus_dir(dest_dir)
     path_to_unit: dict[str, str] = {}
     for i, s in enumerate(inst.sessions):
         name = f"{i:04d}__{_slug(s.session_id)}.md"
@@ -184,8 +194,7 @@ def _rounds(session: Session) -> list[tuple[int, list[Turn]]]:
 def materialize_turns(inst: Instance, dest_dir: Path) -> Materialized:
     """Write one markdown file per user-turn round (the turn diagnostic corpus)
     and reconstruct the turn-level gold set (rounds carrying ``has_answer``)."""
-    dest_dir = Path(dest_dir)
-    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_dir = _fresh_corpus_dir(dest_dir)
     path_to_unit: dict[str, str] = {}
     gold: set[str] = set()
     abstain = inst.is_abstention
