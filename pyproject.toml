@@ -30,6 +30,14 @@ sidecar = [
     "pdfplumber>=0.11",    # MIT — permissive table-density heuristic
 ]
 
+# LongMemEval benchmark harness (Phase 2 reader). Permissive only (KTD1) — the
+# license gate MUST stay clean with this installed: tiktoken is MIT. Not part of
+# the engine or `dev`; CI's offline smoke does not need it (the reader's token
+# counter is injectable for tests).
+bench = [
+    "tiktoken>=0.7",       # MIT — o200k_base token counting for the GPT-4.1/4o reader
+]
+
 [project.scripts]
 hypermnesic = "hypermnesic.cli:main"
 
