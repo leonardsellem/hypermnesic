@@ -266,3 +266,38 @@ def test_local_only_repo_still_commits_without_remote(make_corpus, fake_embedder
                        idx=idx, log=log, allowlist=["sources/"])
     assert r.new_sha and not r.noop and (repo / "sources/solo.md").exists()
     idx.close()
+
+
+def test_commit_note_is_path_scoped_no_sweep_of_foreign_staged(make_corpus, fake_embedder,
+                                                               tmp_path):
+    # Coexistence: another committer has work STAGED in the shared index when commit_note
+    # runs. commit_note must commit ONLY its own note — never sweep the foreign staged
+    # change into its commit (which a no-pathspec `git commit` would, then push it).
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    (repo / "sources").mkdir(exist_ok=True)
+    (repo / "sources/foreign.md").write_text("# foreign\n\nFOREIGNWORD staged elsewhere.\n",
+                                             encoding="utf-8")
+    _git(repo, "add", "--", "sources/foreign.md")               # a fleet committer staged this
+    r = cn.commit_note(repo, "sources/mine.md", body="# Mine\n\nMINEWORD body.\n",
+                       summary="mine", idx=idx, log=log, allowlist=["sources/"])
+    assert r.new_sha and not r.noop
+    committed = _git(repo, "show", "--name-only", "--format=", r.new_sha).split()
+    assert committed == ["sources/mine.md"]                     # ONLY the note — no sweep
+    assert "sources/foreign.md" in _git(repo, "diff", "--cached", "--name-only")  # still staged
+    idx.close()
+
+
+def test_commit_note_noop_detection_ignores_foreign_staged(make_corpus, fake_embedder, tmp_path):
+    # An idempotent edit while foreign changes are staged is still a no-op for OUR path
+    # (the path-scoped staged check must not be confused by the foreign staged change).
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    cn.commit_note(repo, "sources/x.md", body="# X\n\nbody.\n", idx=idx, log=log,
+                   allowlist=["sources/"])
+    (repo / "sources/foreign.md").write_text("# f\n\nstaged.\n", encoding="utf-8")
+    _git(repo, "add", "--", "sources/foreign.md")
+    head = _git(repo, "rev-parse", "HEAD")
+    r2 = cn.commit_note(repo, "sources/x.md", body="# X\n\nbody.\n", idx=idx, log=log,
+                        allowlist=["sources/"])               # identical content → no-op
+    assert r2.noop is True
+    assert _git(repo, "rev-parse", "HEAD") == head             # no commit despite foreign staged
+    idx.close()

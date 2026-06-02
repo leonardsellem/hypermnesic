@@ -188,11 +188,16 @@ def _commit_locked(repo, rel, body, set_fields, summary, idx, log) -> CommitResu
     fpath.parent.mkdir(parents=True, exist_ok=True)
     fpath.write_text(new_text, encoding="utf-8")
     _git_checked(repo, "add", "--", rel)
-    if _git(repo, "diff", "--cached", "--quiet").returncode == 0:  # nothing staged
+    # Path-scoped throughout (coexistence): on a shared checkout another committer may
+    # have unrelated changes staged in the index. Scope both the noop check and the
+    # commit to THIS note's path so we never sweep a fleet committer's staged work into
+    # our commit (and push it). The process-local index_write_lock gives no cross-process
+    # exclusion, so the pathspec — not the lock — is what isolates our write.
+    if _git(repo, "diff", "--cached", "--quiet", "--", rel).returncode == 0:  # nothing staged
         return CommitResult(rel, not existed, old_sha, "", noop=True)
 
     msg = summary or f"commit_note: {rel}"
-    _git_checked(repo, "commit", "-q", "-m", msg)
+    _git_checked(repo, "commit", "-q", "-m", msg, "--", rel)
     if remote is not None:
         _push_with_retry(repo, remote, branch)             # push, retry on non-ff; raises
     new_sha = _head(repo)                                  # re-read: a retry rebase rewrites it
@@ -271,7 +276,10 @@ def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log,
     if new_text != original:
         new_fp.write_text(new_text, encoding="utf-8")
     _git(repo, "add", "--", new_rel)
-    _git(repo, "commit", "-q", "-m", summary or f"rename: {old_rel} -> {new_rel}")
+    # Path-scoped commit (coexistence): only the moved pair, never a fleet committer's
+    # other staged changes on the shared checkout.
+    _git(repo, "commit", "-q", "-m", summary or f"rename: {old_rel} -> {new_rel}",
+         "--", old_rel, new_rel)
     new_sha = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
 
     if idx is not None:
