@@ -138,6 +138,16 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             f"refusing to bind to {host!r}: hypermnesic MCP is tailnet-only and "
             "must bind a specific Tailscale interface address (KTD10)"
         )
+    # An explicit but effectively-empty allowlist on a write-enabled serve would narrow
+    # writes to NOTHING — a silent brick. Refuse at construction (no half-open server),
+    # before any disk/backend touch. Omitting write_allowlist (None) keeps the default.
+    if write_enabled and write_allowlist is not None and not [
+        a for a in write_allowlist if a and a.strip()
+    ]:
+        raise ValueError(
+            "refusing a write-enabled serve with an empty --allowlist: it would permit "
+            "no writes at all. Omit --allowlist for the default, or pass real prefixes (U1)."
+        )
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
     mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
                   json_response=json_response, stateless_http=stateless_http)
@@ -198,8 +208,12 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 r = commit_note_mod.commit_note(
                     backend.repo, path, body=body, set_fields=set_fields, summary=summary,
                     idx=backend.idx, log=audit, allowlist=allowlist)
-            except (serialize_mod.WriteGuardError, fg_mod.FrontmatterDriftError) as exc:
-                # diff-or-die / protected-path / allowlist refusal — no commit, no audit.
+            except (serialize_mod.WriteGuardError, fg_mod.FrontmatterDriftError,
+                    serialize_mod.HeadDriftError, serialize_mod.DirtyTreeError,
+                    commit_note_mod.GitCoordinationError) as exc:
+                # diff-or-die / protected-path / allowlist refusal, OR a coordination
+                # refusal (remote drift / push could not reach origin/main) — no commit
+                # reached the shared remote, no audit entry (U11). Never a silent success.
                 return {"committed": False, "refused": str(exc)}
             return {"committed": not r.noop, "path": r.path, "created": r.created,
                     "noop": r.noop, "new_sha": r.new_sha, "diff": r.diff}

@@ -775,7 +775,7 @@ wheels = [
 
 [[package]]
 name = "hypermnesic"
-version = "0.0.1"
+version = "0.0.3"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },

@@ -135,6 +135,57 @@ def test_converge_command_catches_up_to_head(make_corpus, fake_embedder, monkeyp
     idx.close()
 
 
+# --- U1: serve --allowlist + repo/write plumb-through -------------------------
+
+class _FakeSrv:
+    def __init__(self): self.ran = False
+    def run(self, **kw): self.ran = True
+
+
+def _capture_build(monkeypatch):
+    """Replace mcp_server.build_server with a capturing fake (no socket bind)."""
+    captured: dict = {}
+    srv = _FakeSrv()
+
+    def fake_build(index_db, **kw):
+        captured["index_db"] = index_db
+        captured.update(kw)
+        return srv
+
+    from hypermnesic import mcp_server
+    monkeypatch.setattr(mcp_server, "build_server", fake_build)
+    return captured, srv
+
+
+def test_serve_plumbs_repeatable_allowlist_repo_and_write(monkeypatch, tmp_path):
+    captured, srv = _capture_build(monkeypatch)
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--enable-write", "--allowlist", "projects/", "--allowlist", "memory/",
+                   "--repo", str(tmp_path)])
+    assert rc == 0 and srv.ran
+    assert captured["write_allowlist"] == ["projects/", "memory/"]   # repeatable → list
+    assert captured["write_enabled"] is True
+    assert str(captured["repo"]) == str(tmp_path)                    # repo plumbed
+
+
+def test_serve_no_allowlist_passes_none_for_default(monkeypatch, tmp_path):
+    captured, _ = _capture_build(monkeypatch)
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--enable-write"])
+    assert rc == 0
+    assert captured["write_allowlist"] is None      # None → build_server uses the default
+    assert captured["repo"] is None                 # no --repo → build_server derives it
+
+
+def test_serve_empty_allowlist_write_enabled_fails_loud(tmp_path, capsys):
+    # Real build_server: an empty --allowlist on a write-enabled serve is refused at
+    # startup → the CLI exits 1 with a clear message (no half-open server, no traceback).
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--enable-write", "--allowlist", ""])
+    assert rc == 1
+    assert "serve failed" in capsys.readouterr().err.lower()
+
+
 def test_installed_hook_execution_invokes_convergence(make_corpus, fake_embedder):
     # Simulated post-merge: execute the installed hook; it must run convergence so a
     # just-merged file is indexed. Runs the baked-in absolute hypermnesic path, offline.

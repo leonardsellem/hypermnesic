@@ -231,9 +231,18 @@ def _cmd_install_hooks(args) -> int:
 def _cmd_serve(args) -> int:
     from hypermnesic import mcp_server
 
-    srv = mcp_server.build_server(Path(args.index_db), host=args.host,
-                                  port=args.port, path=args.path,
-                                  write_enabled=args.enable_write)
+    # repo defaults to None → build_server derives it from the index-db grandparent.
+    # write_allowlist is None when --allowlist is omitted → build_server applies its
+    # DEFAULT_WRITE_ALLOWLIST; an explicit empty allowlist is refused at startup (U1).
+    # audit_actor_fn is left to default to the verified Tailscale node identity.
+    try:
+        srv = mcp_server.build_server(
+            Path(args.index_db), host=args.host, port=args.port, path=args.path,
+            repo=(Path(args.repo) if args.repo else None),
+            write_enabled=args.enable_write, write_allowlist=args.allowlist)
+    except ValueError as exc:
+        print(f"serve failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
+        return 1
     srv.run(transport="streamable-http")
     return 0
 
@@ -356,6 +365,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_serve.add_argument("--path", default="/mcp")
     p_serve.add_argument("--enable-write", action="store_true",
                          help="register the git-first commit_note write tool (master role)")
+    p_serve.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
+                         help="repeatable writable path prefix (write-enabled serve). "
+                              "Omit for the default; an empty value is refused at startup")
+    p_serve.add_argument("--repo", default=None,
+                         help="git repo the index projects (default: index-db grandparent)")
     p_serve.set_defaults(func=_cmd_serve)
 
     p_install = sub.add_parser("install",
