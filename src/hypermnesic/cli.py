@@ -130,6 +130,23 @@ def _cmd_think(args) -> int:
     return 0
 
 
+def _cmd_capture(args) -> int:
+    """Frictionless capture: land raw text in sources/ immediately (free-append)."""
+    from hypermnesic import capture, index
+
+    db = index.state_dir_for(Path(args.repo)) / "index.db"
+    idx = index.Index(db) if db.exists() else None
+    res = capture.capture(Path(args.repo), args.text, idx=idx)
+    if idx is not None:
+        idx.close()
+    out = {"fast_path": res.fast_path, "files": res.files, "commit": res.commit_sha}
+    if args.json:
+        _print_json(out)
+    else:
+        print(f"captured → {res.files[0]} (committed)")
+    return 0
+
+
 def _cmd_serve(args) -> int:
     from hypermnesic import mcp_server
 
@@ -190,6 +207,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_think.add_argument("--k", type=int, default=8)
     p_think.add_argument("--json", action="store_true")
     p_think.set_defaults(func=_cmd_think)
+
+    p_capture = sub.add_parser("capture", help="frictionless capture: land raw text in sources/")
+    p_capture.add_argument("repo", help="repo to capture into")
+    p_capture.add_argument("text", help="the raw text to capture")
+    p_capture.add_argument("--json", action="store_true")
+    p_capture.set_defaults(func=_cmd_capture)
 
     p_serve = sub.add_parser("serve", help="run the read-only tailnet MCP server")
     p_serve.add_argument("--index-db", required=True, help="path to the index .db")
