@@ -114,6 +114,42 @@ def test_client_patch_preserves_existing_servers(monkeypatch, tmp_path):
     assert data["mcpServers"]["hypermnesic"]["url"] == url          # added
 
 
+# --- U5: OAuth2-aware client config (secret-free) ---------------------------
+
+def test_install_client_emits_oauth2_aware_config_no_secret(tmp_path):
+    cfg = tmp_path / "clients.json"
+    url = "https://homelab.taildabf2.ts.net/mcp"
+    install.install("client", master_url=url, mcp_config_path=str(cfg),
+                    auth_issuer_url="https://homelab.taildabf2.ts.net/honcho/",
+                    auth_resource_url=url, required_scope=["write"])
+    entry = json.loads(cfg.read_text())["mcpServers"]["hypermnesic"]
+    assert entry["type"] == "streamable-http" and entry["url"] == url
+    assert entry["auth"]["type"] == "oauth2"
+    assert entry["auth"]["resource"] == url                       # RFC 8707 audience
+    assert entry["auth"]["token_env"] == "HYPERMNESIC_MCP_TOKEN"  # a POINTER, not a value
+    blob = json.dumps(entry)
+    assert "HYPERMNESIC_MCP_TOKEN=" not in blob                   # never an inline token value
+    assert "client_secret" not in blob.lower() and "Bearer " not in blob
+
+
+def test_install_client_oauth_preserves_other_servers(tmp_path):
+    cfg = tmp_path / "c.json"
+    cfg.write_text(json.dumps({"mcpServers": {"other": {"url": "http://x/mcp"}}}))
+    install.install("client", master_url="https://h/mcp", mcp_config_path=str(cfg),
+                    auth_issuer_url="https://h/as/", auth_resource_url="https://h/mcp")
+    servers = json.loads(cfg.read_text())["mcpServers"]
+    assert servers["other"]["url"] == "http://x/mcp"              # preserved
+    assert servers["hypermnesic"]["auth"]["type"] == "oauth2"
+
+
+def test_install_client_no_auth_stays_bare_streamable_http(tmp_path):
+    # backward-compat: without auth params the client entry is the Phase-1 bare shape
+    cfg = tmp_path / "c.json"
+    install.install("client", master_url="http://m/mcp", mcp_config_path=str(cfg))
+    entry = json.loads(cfg.read_text())["mcpServers"]["hypermnesic"]
+    assert entry == {"type": "streamable-http", "url": "http://m/mcp"}
+
+
 def test_client_requires_master_url_and_config(monkeypatch, tmp_path):
     with pytest.raises(install.InstallError):
         install.install("client", master_url=None, mcp_config_path=str(tmp_path / "c.json"))

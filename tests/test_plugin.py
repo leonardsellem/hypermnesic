@@ -93,3 +93,16 @@ def test_no_secrets_committed_in_plugin_tree():
 
 def test_plugin_readme_exists():
     assert _README.exists() and _README.read_text(encoding="utf-8").strip()
+
+
+# --- U5: the plugin's self-hosted MCP wiring (OAuth2-aware, secret-free) ------
+
+def test_plugin_mcp_json_is_oauth2_aware_and_secret_free():
+    mcp = json.loads((_PLUGIN_DIR / ".mcp.json").read_text(encoding="utf-8"))
+    entry = mcp["mcpServers"]["hypermnesic"]
+    assert entry["type"] == "streamable-http"
+    assert entry["url"].startswith("https://homelab.taildabf2.ts.net")  # the preserved hostname
+    assert entry["auth"]["type"] == "oauth2"
+    assert entry["auth"]["token_env"] == "HYPERMNESIC_MCP_TOKEN"         # pointer, not a value
+    blob = json.dumps(mcp)
+    assert "HYPERMNESIC_MCP_TOKEN=" not in blob and "Bearer " not in blob # no inlined secret
