@@ -38,11 +38,12 @@ def test_binds_to_tailscale_ip_not_wildcard(built_index):
     assert srv.settings.host != "0.0.0.0"
 
 
-def test_exactly_two_read_tools_no_write_tool(built_index, fake_embedder):
+def test_only_read_tools_no_write_tool(built_index, fake_embedder):
+    # U20 adds a third read tool (think); the invariant is "read-only, structural".
     srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     tools = asyncio.run(srv.list_tools())
     names = {t.name for t in tools}
-    assert names == {"search", "build_context"}
+    assert names == {"search", "build_context", "think"}
     # read-only is structural: no write-ish tool exists
     assert not any(
         kw in n for t in tools for n in [t.name]

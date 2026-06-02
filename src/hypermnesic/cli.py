@@ -102,6 +102,34 @@ def _cmd_init(args) -> int:
     return 0
 
 
+def _cmd_think(args) -> int:
+    """Thinking-mode (read-only): related notes + Socratic prompts, never writes."""
+    from hypermnesic import graph as graph_mod
+    from hypermnesic import index, think
+
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    idx = index.Index(db)
+    g = graph_mod.Graph.from_index(idx)
+    try:  # dense channel is optional — degrade to lexical+graph if no key (same as the server)
+        from hypermnesic import embed
+        embedder = embed.OpenAIEmbedder()
+    except Exception:
+        embedder = None
+    r = think.think(idx, args.topic, embedder=embedder, graph=g, k=args.k)
+    idx.close()
+    if args.json:
+        _print_json(r.as_dict())
+    else:
+        print(f"# thinking about: {r.topic}  (wrote={r.wrote})")
+        for h in r.related:
+            print(f"  - {h['path']}: {h['heading']}")
+        for q in r.questions + r.tensions:
+            print(f"  ? {q}")
+        if r.note:
+            print(f"  ({r.note})")
+    return 0
+
+
 def _cmd_serve(args) -> int:
     from hypermnesic import mcp_server
 
@@ -153,6 +181,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--no-rebuild", action="store_true")
     p_init.add_argument("--json", action="store_true")
     p_init.set_defaults(func=_cmd_init)
+
+    p_think = sub.add_parser("think",
+                             help="thinking-mode (read-only): related notes + prompts, no write")
+    p_think.add_argument("repo", help="repo whose index to think over")
+    p_think.add_argument("topic", help="the topic/question to think about")
+    p_think.add_argument("--index-db", default=None, help="index db (default: <repo>/.hypermnesic)")
+    p_think.add_argument("--k", type=int, default=8)
+    p_think.add_argument("--json", action="store_true")
+    p_think.set_defaults(func=_cmd_think)
 
     p_serve = sub.add_parser("serve", help="run the read-only tailnet MCP server")
     p_serve.add_argument("--index-db", required=True, help="path to the index .db")
