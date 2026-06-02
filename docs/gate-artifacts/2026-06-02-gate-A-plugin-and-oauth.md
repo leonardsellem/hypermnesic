@@ -54,6 +54,25 @@ higher-risk than an isolated AS. → built a **new, gbrain-independent** minimal
 
 ---
 
+## ⚠ Critical finding — the live master auth-on flip breaks the Obsidian companion
+
+The live `hypermnesic.service` master (`:8848`, Phase-1 **auth-off**) currently serves the
+**read-only Obsidian companion** (and a canary). Source check: `obsidian-plugin/src/core.ts`
+sends **no `Authorization` header — zero OAuth support**. Because the U2 auth middleware gates
+**every** tool (not just `commit_note`), flipping the write-master to **auth-on** would return
+**401 to the companion's read calls** and break it. The plan's U8 precondition *"every consumer
+holds a valid token before the flip"* is **not satisfiable for the companion as written**.
+
+This is an operator decision (it was not resolved in the plan). Options, for you to pick:
+1. **Add OAuth (a `read`-scoped token) to the Obsidian companion** before the flip (companion code change — separate from this plan).
+2. **Serve the companion from a read-only, auth-off endpoint** (a `client`/read-replica bind) while the **write** master runs auth-on — two binds, one boundary.
+3. **Accept a brief companion outage** at the flip and re-provision it immediately after.
+
+Until this is chosen, the **live master must NOT be flipped to auth-on** — so the persistent
+homelab rollout (AS unit, master flip, hostname repoint) waits for your call. (It also waits on
+a **branch merge**: a persistent AS/master unit should run the installed engine, not this
+feature-branch worktree.) The ephemeral proof above already demonstrates the enforcement works.
+
 ## Rollback state
 
 **Fully reversible — nothing live was changed.** All Phase-A work is in-repo code + the plugin;
@@ -74,9 +93,9 @@ To complete Gate A and authorize Phase B, the operator should:
      enroll the homelab Claude + Codex identities + the RS introspection client.
    - Install the plugin on the homelab Claude + Codex.
    - Stand up the auth-on hypermnesic master endpoint (the `tailscale serve /mcp` repoint —
-     U8 pulled forward — so the hostname means hypermnesic, OAuth2-fronted, from Gate A).
-     *This is the one live-service-affecting step; it follows the U8 no-gap order
-     (AS up → tokens provisioned+verified → flip), and is reversible.*
+     U8 pulled forward). **Blocked on the companion finding above** — pick how the read-only
+     companion survives an auth-on master before this runs. Follows the U8 no-gap order
+     (AS up → tokens provisioned+verified → flip); reversible.
 2. **Provide the Mac-side evidence** (criteria 5, 7): from the Mac, an authenticated
    `tools/list`/`search` against the endpoint + the Mac plugin install, pasted here.
 3. **Approve Gate A** so Phase B (read-parity U6 → content-distill cutover U7 → reach repoint
