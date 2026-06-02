@@ -7,4 +7,4 @@ portability probe. Files are the single source of truth; the index is a pure,
 disposable projection of the git tree.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
