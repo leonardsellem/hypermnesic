@@ -46,6 +46,33 @@ def test_master_systemd_renders_write_enabled_unit_and_config(make_corpus, monke
     assert _KEY not in json.dumps(res)                    # never echoed in the result either
 
 
+# --- U2: OAuth2 RS flags rendered on the master ExecStart -------------------
+
+def test_master_systemd_renders_auth_flags_when_provided(make_corpus, monkeypatch):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    install.install("master", repo=repo, bind=TAILNET_IP, service="systemd",
+                    auth_issuer_url="https://homelab.taildabf2.ts.net/honcho/",
+                    auth_resource_url="https://homelab.taildabf2.ts.net/mcp",
+                    required_scope=["write"])
+    unit = (repo / ".hypermnesic" / "hypermnesic.service").read_text()
+    execstart = next(ln for ln in unit.splitlines() if ln.startswith("ExecStart="))
+    assert "--enable-write" in execstart
+    assert "--auth-issuer-url https://homelab.taildabf2.ts.net/honcho/" in execstart
+    assert "--auth-resource-url https://homelab.taildabf2.ts.net/mcp" in execstart
+    assert "--required-scope write" in execstart
+
+
+def test_master_systemd_no_auth_flags_when_absent(make_corpus, monkeypatch):
+    # without auth params the unit renders as before (Phase-1 parity for the render path);
+    # the write_enabled⇒auth-required invariant is enforced at serve startup, not at render.
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    install.install("master", repo=repo, bind=TAILNET_IP, service="systemd")
+    unit = (repo / ".hypermnesic" / "hypermnesic.service").read_text()
+    assert "--auth-issuer-url" not in unit and "--auth-resource-url" not in unit
+
+
 # --- master / docker --------------------------------------------------------
 
 def test_master_docker_renders_compose_not_systemd(make_corpus, monkeypatch):
@@ -85,6 +112,42 @@ def test_client_patch_preserves_existing_servers(monkeypatch, tmp_path):
     data = json.loads(cfg_path.read_text())
     assert data["mcpServers"]["other"]["url"] == "http://x/mcp"     # preserved
     assert data["mcpServers"]["hypermnesic"]["url"] == url          # added
+
+
+# --- U5: OAuth2-aware client config (secret-free) ---------------------------
+
+def test_install_client_emits_oauth2_aware_config_no_secret(tmp_path):
+    cfg = tmp_path / "clients.json"
+    url = "https://homelab.taildabf2.ts.net/mcp"
+    install.install("client", master_url=url, mcp_config_path=str(cfg),
+                    auth_issuer_url="https://homelab.taildabf2.ts.net/honcho/",
+                    auth_resource_url=url, required_scope=["write"])
+    entry = json.loads(cfg.read_text())["mcpServers"]["hypermnesic"]
+    assert entry["type"] == "streamable-http" and entry["url"] == url
+    assert entry["auth"]["type"] == "oauth2"
+    assert entry["auth"]["resource"] == url                       # RFC 8707 audience
+    assert entry["auth"]["token_env"] == "HYPERMNESIC_MCP_TOKEN"  # a POINTER, not a value
+    blob = json.dumps(entry)
+    assert "HYPERMNESIC_MCP_TOKEN=" not in blob                   # never an inline token value
+    assert "client_secret" not in blob.lower() and "Bearer " not in blob
+
+
+def test_install_client_oauth_preserves_other_servers(tmp_path):
+    cfg = tmp_path / "c.json"
+    cfg.write_text(json.dumps({"mcpServers": {"other": {"url": "http://x/mcp"}}}))
+    install.install("client", master_url="https://h/mcp", mcp_config_path=str(cfg),
+                    auth_issuer_url="https://h/as/", auth_resource_url="https://h/mcp")
+    servers = json.loads(cfg.read_text())["mcpServers"]
+    assert servers["other"]["url"] == "http://x/mcp"              # preserved
+    assert servers["hypermnesic"]["auth"]["type"] == "oauth2"
+
+
+def test_install_client_no_auth_stays_bare_streamable_http(tmp_path):
+    # backward-compat: without auth params the client entry is the Phase-1 bare shape
+    cfg = tmp_path / "c.json"
+    install.install("client", master_url="http://m/mcp", mcp_config_path=str(cfg))
+    entry = json.loads(cfg.read_text())["mcpServers"]["hypermnesic"]
+    assert entry == {"type": "streamable-http", "url": "http://m/mcp"}
 
 
 def test_client_requires_master_url_and_config(monkeypatch, tmp_path):

@@ -1,0 +1,14 @@
+{
+  "name": "hypermnesic",
+  "description": "Memory for coding agents over the self-hosted, OAuth2-authenticated tailnet MCP. The default memory layer (not gbrain).",
+  "version": "0.0.3",
+  "author": {
+    "name": "Leonard Sellem",
+    "email": "leonard@sellem.me"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "hooks": "./hooks/hooks.json",
+    "host_flag": "--host codex"
+  }
+}

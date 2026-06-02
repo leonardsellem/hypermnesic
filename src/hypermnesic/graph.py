@@ -81,6 +81,20 @@ class Graph:
             return matches[0]
         return None  # ambiguous or nonexistent → dead link, tolerated
 
+    # --- entity resolution (public) --------------------------------------
+    def resolve(self, name: str) -> str | None:
+        """Resolve an entity name to an existing page's repo-relative ``.md`` path.
+
+        gbrain's ``get`` role, exposed as a first-class verb (U1): the caller (an
+        ingest job doing entity resolution) strips ``.md`` to form a wikilink target.
+        Uses the *same* exact-path / ``.md``-suffix / unambiguous-stem matching the
+        body-wikilink resolver uses — including stripping a ``|display`` alias and a
+        ``#anchor`` — so resolution is identical to how a ``[[name]]`` would bind.
+        Ambiguous (stem shared by >1 page) or missing names return ``None`` rather
+        than guessing — never a wrong wikilink target.
+        """
+        return self._resolve(_link_target(name))
+
     # --- traversal -------------------------------------------------------
     def neighbors(self, path: str) -> set[str]:
         return self.out_edges.get(path, set()) | self.in_edges.get(path, set())

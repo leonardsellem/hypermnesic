@@ -11,8 +11,18 @@ stays a rebuildable projection (a reindex never loses a committed write).
 
 The server binds to a specific Tailscale interface address at the socket level
 (KTD10) — "tailnet-only" is a binding invariant, never ``0.0.0.0`` and never the
-mere absence of a public DNS record. Tailnet membership is the MVP auth boundary
-for both read and write (KTD5); per-identity OAuth is a deferred seam.
+mere absence of a public DNS record.
+
+Auth (U2/R12): the server is an OAuth 2.1 **Resource Server**. Auth is opt-in and
+additive — a read-only ``serve`` with no auth keeps the Phase-1 tailnet-only-no-auth
+build — but a **write-enabled master refuses to start without auth configured**
+(``write_enabled ⇒ auth-required``, an engine invariant mirroring the ``0.0.0.0``
+bind refusal): the tailnet is no longer the sole boundary for the write tool. When a
+``token_verifier`` + ``AuthSettings`` are supplied, the FastMCP transport validates
+the bearer token (the verifier enforces RFC 8707 audience binding + expiry), enforces
+the required scope, and advertises RFC 9728 Protected-Resource metadata. The token
+*issuer* is a separate tailnet-internal AS (U12), independent of gbrain's AS. (This
+supersedes the prior "per-identity OAuth is a deferred seam" posture, KTD5.)
 
 The dense channel degrades gracefully: if the embedding API is unreachable,
 lexical + graph results still return (the dense channel is simply absent).
@@ -38,10 +48,18 @@ from hypermnesic import think as think_mod
 
 DEFAULT_PORT = 8848
 DEFAULT_PATH = "/mcp"
+# Loopback binds are exempt from the write_enabled⇒auth-required invariant (U2): a
+# localhost serve is reachable only by the local user — never the tailnet.
+_LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
 # The write tool's explicit allowlist (KTD4). The protected-path guard refuses the
 # dangerous classes regardless; this further bounds *where* an agent write may land.
 # Overridable per install (U34 role config); tune to the vault's writable zones.
 DEFAULT_WRITE_ALLOWLIST = ("notes/", "sources/", "dashboards/", "captures/")
+# The OAuth scope the write tool requires of its caller (U2/V14). Enforced PER-TOOL inside
+# commit_note, independent of the transport's global required_scopes — the SDK middleware
+# applies one scope list to ALL tools, so it cannot separate read clients from write clients
+# on a single endpoint. A read-scoped token that reaches commit_note is refused here.
+WRITE_SCOPE = "write"
 
 
 class _Backend:
@@ -101,6 +119,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  authoring_host: bool = False, write_enabled: bool = False,
                  write_allowlist: list[str] | None = None,
                  audit_actor_fn: Callable[[], str] | None = None,
+                 token_verifier=None, auth=None, auth_server_provider=None,
+                 write_scope: str = WRITE_SCOPE,
                  json_response: bool = True,
                  stateless_http: bool = True) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
@@ -138,6 +158,32 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             f"refusing to bind to {host!r}: hypermnesic MCP is tailnet-only and "
             "must bind a specific Tailscale interface address (KTD10)"
         )
+    # U2: auth is configured as a pair — AuthSettings + EITHER a token_verifier (RS-only,
+    # the tailnet lane) OR an auth_server_provider (AS+RS, the cloud lane). Supplying settings
+    # without a validator (or vice versa), or both validators, is a half-/mis-configured auth
+    # surface; refuse before constructing FastMCP so the message is engine-level.
+    if token_verifier is not None and auth_server_provider is not None:
+        raise ValueError("specify a token_verifier OR an auth_server_provider, not both")
+    _auth_configured = token_verifier is not None or auth_server_provider is not None
+    if (auth is None) ^ (not _auth_configured):
+        raise ValueError(
+            "OAuth auth requires BOTH AuthSettings and a token_verifier/auth_server_provider "
+            "(or neither): supply them together, or omit auth entirely"
+        )
+    # U2 engine invariant: write_enabled ⇒ auth-required on any tailnet-reachable bind.
+    # A write-enabled master serving a Tailscale interface address MUST run auth-on —
+    # mirroring the 0.0.0.0 refusal — so a unit re-render or a Phase-1 rollback can never
+    # silently serve commit_note unauthenticated *on the tailnet* (R12). A loopback bind is
+    # exempt: it is reachable only by the local user (the same trust boundary the CLI write
+    # path already has), preserving the Phase-1 single-user localhost drop-in. (The live
+    # master binds the tailnet IP directly, so it is always covered.)
+    if write_enabled and auth is None and host not in _LOCALHOST_BINDS:
+        raise ValueError(
+            "refusing a write-enabled tailnet serve without auth configured: "
+            "write_enabled ⇒ auth-required on a non-loopback bind (R12 engine invariant, "
+            "mirroring the 0.0.0.0 refusal). Pass --auth-issuer-url + --auth-resource-url "
+            "(+ --required-scope), serve read-only, or bind 127.0.0.1 for a local drop-in."
+        )
     # An explicit but effectively-empty allowlist on a write-enabled serve would narrow
     # writes to NOTHING — a silent brick. Refuse at construction (no half-open server),
     # before any disk/backend touch. Omitting write_allowlist (None) keeps the default.
@@ -150,7 +196,9 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         )
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
     mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
-                  json_response=json_response, stateless_http=stateless_http)
+                  json_response=json_response, stateless_http=stateless_http,
+                  token_verifier=token_verifier, auth=auth,   # U2 RS-only / no-auth …
+                  auth_server_provider=auth_server_provider)  # … or the cloud AS+RS lane
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
@@ -179,6 +227,17 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 "manual_reindex_recommended": cr.manual_reindex_recommended}
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
+              description="Entity resolution: resolve a name to an existing page path "
+                          "(gbrain's `get` role), or null if ambiguous/missing. The caller "
+                          "strips `.md` (use `slug`) to form a wikilink target.")
+    def resolve(name: str) -> dict:
+        cr = backend.converge()
+        resolved = backend.graph.resolve(name)
+        slug = resolved[:-3] if resolved and resolved.endswith(".md") else resolved
+        return {"name": name, "resolved": resolved, "slug": slug,
+                "manual_reindex_recommended": cr.manual_reindex_recommended}
+
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Thinking-mode: related notes + Socratic prompts + tensions. "
                           "Never writes (wrote: false) — a help-me-think surface, not a write.")
     def think(topic: str, k: int = 8, depth: int = 1) -> dict:
@@ -204,6 +263,18 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                               "The index follows as a projection — a reindex never loses it.")
         def commit_note(path: str, body: str | None = None,
                         set_fields: dict | None = None, summary: str | None = None) -> dict:
+            # V14 / security-review fix: when auth is on, the write tool self-enforces the
+            # write scope — independent of the transport's (misconfigurable, global)
+            # required_scopes. The HTTP auth middleware guarantees a principal for any
+            # authenticated request; a None principal is only the in-process bypass (no HTTP,
+            # no attacker). A token lacking the write scope is refused before any write.
+            if auth is not None:
+                from mcp.server.auth.middleware.auth_context import get_access_token
+                principal = get_access_token()
+                if principal is not None and write_scope not in (principal.scopes or []):
+                    return {"committed": False,
+                            "refused": f"insufficient_scope: '{write_scope}' scope required "
+                                       "for commit_note"}
             try:
                 r = commit_note_mod.commit_note(
                     backend.repo, path, body=body, set_fields=set_fields, summary=summary,
@@ -221,5 +292,122 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     return mcp
 
 
-READ_TOOL_NAMES = {"search", "build_context", "think"}
+# The public cloud lane defaults writes to a dedicated, easily-reviewed quarantine zone —
+# NOT the full vault — so a prompt-injected cloud LLM's write is bounded + obvious (V19).
+CLOUD_WRITE_ALLOWLIST = ("captures/",)
+
+_CONSENT_HTML = """<!doctype html><html><head><meta charset="utf-8">
+<title>hypermnesic — authorize</title></head>
+<body style="font-family:system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">
+<h2>Authorize a connection to your hypermnesic memory</h2>
+<p>This client is requesting access. Approve it ONLY if you recognise it — entering your
+approval token grants it the scopes below. Only you hold this token.</p>
+<ul><li><b>Client:</b> {client}</li><li><b>Redirect:</b> {redirect}</li>
+<li><b>Scopes:</b> {scopes}</li></ul>
+{error}
+<form method="post" action="/consent">
+<input type="hidden" name="pending" value="{pending}">
+<label>Approval token<br><input type="password" name="approval_token" autocomplete="off"
+style="width:100%;padding:.5rem"></label>
+<p><button type="submit" style="padding:.5rem 1rem">Approve</button></p>
+</form></body></html>"""
+
+_CONSENT_ERROR_HTML = """<!doctype html><html><head><meta charset="utf-8">
+<title>hypermnesic — authorize</title></head>
+<body style="font-family:system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">
+<h2>Authorization request not found</h2>
+<p>This authorization request is unknown or has expired. Start the connection again
+from your app.</p></body></html>"""
+
+# Anti-clickjacking + no-script CSP + no-store: the page where the operator types the token.
+_CONSENT_HEADERS = {
+    "X-Frame-Options": "DENY",
+    "Content-Security-Policy": (
+        "default-src 'none'; style-src 'unsafe-inline'; "
+        "form-action 'self'; frame-ancestors 'none'"),
+    "Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
+}
+
+
+def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, int]:
+    """Render the consent page. Looks the pending id up FIRST and renders a generic error for an
+    unknown id — the raw id (attacker input) is never reflected (no XSS sink). All client-supplied
+    fields (DCR client_name, redirect) are HTML-escaped. Returns (html, status)."""
+    import html as _html
+
+    details = provider.pending_details(pending_id)
+    if details is None:
+        return _CONSENT_ERROR_HTML, 404          # do not reflect an unknown/arbitrary id
+    err = f'<p style="color:#b00">{_html.escape(error)}</p>' if error else ""
+    html = _CONSENT_HTML.format(
+        pending=_html.escape(pending_id),
+        client=_html.escape(str(details.get("client_name") or details["client_id"])),
+        redirect=_html.escape(str(details["redirect_uri"])),
+        scopes=_html.escape(" ".join(details["scopes"])), error=err)
+    return html, (403 if error else 200)
+
+
+def _register_consent_route(mcp: FastMCP, provider) -> None:
+    """Add the operator-authenticated ``/consent`` route. ``provider.authorize`` routes the
+    browser here; only the operator's approval token issues the code (the public-write gate).
+    The page is escaped, framed-denied, and shows which client is being approved."""
+    from starlette.requests import Request
+    from starlette.responses import HTMLResponse, RedirectResponse
+
+    from hypermnesic import auth_cloud
+
+    @mcp.custom_route("/consent", methods=["GET", "POST"])
+    async def consent(request: Request):
+        if request.method == "GET":
+            html, status = _render_consent(provider, request.query_params.get("pending", ""))
+            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
+        form = await request.form()
+        pending = str(form.get("pending", ""))
+        try:
+            redirect = provider.finalize_consent(pending, approval_token=str(
+                form.get("approval_token", "")))
+        except auth_cloud.ConsentError as exc:
+            html, status = _render_consent(provider, pending, error=str(exc))
+            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
+        return RedirectResponse(redirect, status_code=302, headers=_CONSENT_HEADERS)
+
+
+def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
+                       path: str = DEFAULT_PATH, repo: Path | None = None, embedder=None,
+                       resource: str, public_url: str, approval_token: str,
+                       scopes_supported=("read", "write"), token_ttl_seconds: int = 3600,
+                       write_allowlist: list[str] | None = None,
+                       audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:
+    """Build the **public cloud** OAuth MCP (ChatGPT/Claude mobile lane): the SDK's
+    authorization_code + DCR + PKCE Authorization Server (``auth_cloud.CloudAuthProvider``)
+    wired into a write-enabled serve, plus the operator-authenticated ``/consent`` route. The
+    same read tools + the gated ``commit_note`` (per-tool write scope) as the tailnet serve.
+    Exposed publicly via Funnel; the operator's approval token gates every connection."""
+    from mcp.server.auth.settings import (
+        AuthSettings,
+        ClientRegistrationOptions,
+        RevocationOptions,
+    )
+
+    from hypermnesic import auth_cloud
+
+    provider = auth_cloud.CloudAuthProvider(
+        resource=resource, public_url=public_url, approval_token=approval_token,
+        scopes_supported=list(scopes_supported), token_ttl_seconds=token_ttl_seconds)
+    auth = AuthSettings(
+        issuer_url=public_url, resource_server_url=resource, required_scopes=None,
+        client_registration_options=ClientRegistrationOptions(
+            enabled=True, valid_scopes=list(scopes_supported), default_scopes=["read"]),
+        revocation_options=RevocationOptions(enabled=True))
+    # default the public lane to the tighter cloud review zone (not the full vault allowlist)
+    cloud_allowlist = list(write_allowlist) if write_allowlist is not None else list(
+        CLOUD_WRITE_ALLOWLIST)
+    mcp = build_server(index_db, host=host, port=port, path=path, repo=repo, embedder=embedder,
+                       write_enabled=True, write_allowlist=cloud_allowlist,
+                       audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth)
+    _register_consent_route(mcp, provider)
+    return mcp
+
+
+READ_TOOL_NAMES = {"search", "build_context", "think", "resolve"}
 WRITE_TOOL_NAMES = {"commit_note"}            # registered only when write_enabled (U31)
