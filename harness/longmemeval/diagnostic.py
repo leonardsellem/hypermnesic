@@ -88,13 +88,17 @@ def _rankings(results, gran: str) -> list[tuple[list[str], set[str]]]:
     return pairs
 
 
-def _aggregate(results, gran: str, ks: tuple[int, ...]) -> dict:
-    pairs = _rankings(results, gran)
+def _score_pairs(pairs: list[tuple[list[str], set[str]]], ks: tuple[int, ...]) -> dict:
+    """recall_all@k + ndcg_any@k means over a list of (ranking, gold) pairs."""
     out: dict = {"n": len(pairs)}
     for k in ks:
         out[f"recall_all@{k}"] = _mean([recall_all_at_k(r, g, k) for r, g in pairs])
         out[f"ndcg_any@{k}"] = _mean([ndcg_any_at_k(r, g, k) for r, g in pairs])
     return out
+
+
+def _aggregate(results, gran: str, ks: tuple[int, ...]) -> dict:
+    return _score_pairs(_rankings(results, gran), ks)
 
 
 def _aggregate_any(results, gran: str, ks: tuple[int, ...]) -> dict:
@@ -103,27 +107,25 @@ def _aggregate_any(results, gran: str, ks: tuple[int, ...]) -> dict:
             for k in ks}
 
 
+def _derived_session_ranking(turn_ranked: list[str]) -> list[str]:
+    """Map a per-turn ranking back to a deduped session ranking (turn_to_session)."""
+    derived: list[str] = []
+    seen: set[str] = set()
+    for tid in turn_ranked:
+        sid = turn_to_session(tid)
+        if sid not in seen:
+            seen.add(sid)
+            derived.append(sid)
+    return derived
+
+
 def _aggregate_turn_derived_session(results, ks: tuple[int, ...]) -> dict:
     """Session recall computed by mapping the per-turn ranking back to sessions
-    (turn_to_session), scored against the session-level gold — localizes whether
-    the evidence is reachable at all when the session ranking misses it."""
-    pairs = []
-    for r in results:
-        if not r.session.gold_units:
-            continue
-        derived: list[str] = []
-        seen: set[str] = set()
-        for tid in r.turn.ranked_units:
-            sid = turn_to_session(tid)
-            if sid not in seen:
-                seen.add(sid)
-                derived.append(sid)
-        pairs.append((derived, set(r.session.gold_units)))
-    out: dict = {"n": len(pairs)}
-    for k in ks:
-        out[f"recall_all@{k}"] = _mean([recall_all_at_k(r, g, k) for r, g in pairs])
-        out[f"ndcg_any@{k}"] = _mean([ndcg_any_at_k(r, g, k) for r, g in pairs])
-    return out
+    and scoring against the session-level gold — localizes whether the evidence
+    is reachable at all when the session ranking misses it."""
+    pairs = [(_derived_session_ranking(r.turn.ranked_units), set(r.session.gold_units))
+             for r in results if r.session.gold_units]
+    return _score_pairs(pairs, ks)
 
 
 def _gold_size_distribution(results, gran: str) -> dict:
@@ -182,6 +184,25 @@ def score_diagnostic(run: RetrievalRun) -> dict:
     }
 
 
+def run_diagnostic(instances, work_dir, embedder, *, headline: bool,
+                   search_depth: int | None = None) -> dict:
+    """Retrieve + score a set of instances, stamping the headline label (AE4).
+
+    ``headline`` MUST be True only for the full `_s` set (no sampling, R17); the
+    CI smoke subset and any ``--limit`` run pass ``headline=False`` so the verdict
+    doc can never substitute a subset number for the headline.
+    """
+    from longmemeval import adapter
+
+    instances = list(instances)
+    kw = {} if search_depth is None else {"search_depth": search_depth}
+    run = adapter.retrieve_instances(instances, Path(work_dir), embedder, **kw)
+    result = score_diagnostic(run)
+    result["headline"] = bool(headline)
+    result["n_instances_total"] = len(instances)
+    return result
+
+
 # --- F2 live run entry ------------------------------------------------------
 def main(argv: list[str] | None = None) -> int:
     """F2 — the retrieval-only diagnostic run (cheap, embeddings-only).
@@ -207,9 +228,10 @@ def main(argv: list[str] | None = None) -> int:
         instances = instances[:args.limit]
     store = adapter.SqliteEmbeddingCache(Path(args.cache))
     embedder = adapter.CachingEmbedder(embed.OpenAIEmbedder(), store=store)
-    run = adapter.retrieve_instances(instances, Path(args.work_dir), embedder)
+    # Only the full `_s` set (no --limit) is headline-eligible (R17).
+    result = run_diagnostic(instances, Path(args.work_dir), embedder,
+                            headline=args.limit is None)
     store.close()
-    result = score_diagnostic(run)
     result["limited_to"] = args.limit  # non-None ⇒ a dev/non-headline subset
     blob = json.dumps(result, ensure_ascii=False, indent=2)
     if args.out:
