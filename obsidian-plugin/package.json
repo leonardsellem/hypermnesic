@@ -1,0 +1,23 @@
+{
+  "name": "hypermnesic-companion",
+  "version": "0.1.0",
+  "description": "Strictly read-only recall surface for Obsidian over the tailnet hypermnesic MCP.",
+  "main": "main.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "Leonard Sellem",
+  "scripts": {
+    "build": "node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs",
+    "typecheck": "tsc --noEmit --skipLibCheck"
+  },
+  "devDependencies": {
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.26.0",
+    "@types/node": "^20.11.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.20.0",
+    "obsidian": "^1.5.0",
+    "typescript": "^5.4.0"
+  }
+}
