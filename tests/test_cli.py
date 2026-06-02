@@ -339,3 +339,33 @@ def test_serve_auth_refuses_wildcard_bind(tmp_path, capsys):
     rc = cli.main(["serve-auth", "--host", "0.0.0.0", "--port", "8849",
                    "--public-url", "https://h/as", "--state", str(tmp_path / "s.json")])
     assert rc == 1 and "wildcard" in capsys.readouterr().err.lower()
+
+
+# --- cloud OAuth MCP: serve-cloud reads the approval token from env, never a flag ---
+
+def test_serve_cloud_requires_approval_token_env(tmp_path, capsys, monkeypatch):
+    monkeypatch.delenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", raising=False)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp"])
+    assert rc == 1 and "approval" in capsys.readouterr().err.lower()
+
+
+def test_serve_cloud_plumbs_to_build_cloud_server(tmp_path, monkeypatch):
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret")
+    captured: dict = {}
+    srv = _FakeSrv()
+
+    def fake_cloud(index_db, **kw):
+        captured["index_db"] = index_db
+        captured.update(kw)
+        return srv
+
+    from hypermnesic import mcp_server
+    monkeypatch.setattr(mcp_server, "build_cloud_server", fake_cloud)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp",
+                   "--token-ttl", "1800"])
+    assert rc == 0 and srv.ran
+    assert captured["resource"] == "https://h/cloud/mcp" and captured["public_url"] == "https://h/cloud"
+    assert captured["approval_token"] == "op-secret"          # from env, never a CLI flag
+    assert captured["token_ttl_seconds"] == 1800

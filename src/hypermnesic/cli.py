@@ -369,6 +369,34 @@ def _cmd_auth_add_client(args) -> int:
     return 0
 
 
+def _cmd_serve_cloud(args) -> int:
+    """Run the PUBLIC cloud OAuth MCP (ChatGPT/Claude mobile lane): the SDK authorization_code
+    + DCR + PKCE AS + the operator-authenticated /consent gate + a write-enabled serve. Exposed
+    publicly via Funnel. The operator approval token is read from the environment, NEVER a flag
+    (it would otherwise leak via the process table / logs; it gates every public connection)."""
+    import os
+
+    from hypermnesic import mcp_server
+
+    approval = os.environ.get("HYPERMNESIC_CLOUD_APPROVAL_TOKEN")
+    if not approval:
+        print("serve-cloud failed: set HYPERMNESIC_CLOUD_APPROVAL_TOKEN (the operator approval "
+              "token) in the environment — never a flag; it gates every public connection",
+              file=sys.stderr)
+        return 1
+    try:
+        srv = mcp_server.build_cloud_server(
+            Path(args.index_db), host=args.host, port=args.port, path=args.path,
+            repo=(Path(args.repo) if args.repo else None),
+            resource=args.resource, public_url=args.public_url, approval_token=approval,
+            token_ttl_seconds=args.token_ttl, write_allowlist=args.allowlist)
+    except ValueError as exc:
+        print(f"serve-cloud failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
+        return 1
+    srv.run(transport="streamable-http")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hypermnesic", description="hypermnesic CLI")
     parser.add_argument("--version", action="version", version=f"hypermnesic {__version__}")
@@ -541,6 +569,24 @@ def build_parser() -> argparse.ArgumentParser:
                           help="owner-only env file the generated secret is written to")
     p_addcli.add_argument("--env-var", default=None, help="env var name to write the secret under")
     p_addcli.set_defaults(func=_cmd_auth_add_client)
+
+    p_cloud = sub.add_parser("serve-cloud",
+                             help="run the PUBLIC cloud OAuth MCP (ChatGPT/Claude mobile lane)")
+    p_cloud.add_argument("--index-db", required=True, help="path to the index .db")
+    p_cloud.add_argument("--host", default="127.0.0.1",
+                         help="local bind (Funnel proxies the public hostname to it)")
+    p_cloud.add_argument("--port", type=int, default=8850)
+    p_cloud.add_argument("--path", default="/mcp")
+    p_cloud.add_argument("--public-url", required=True,
+                         help="the public AS/issuer URL (e.g. https://<host>.ts.net/cloud)")
+    p_cloud.add_argument("--resource", required=True,
+                         help="the public MCP resource identifier (RFC 8707 audience)")
+    p_cloud.add_argument("--repo", default=None, help="git repo the index projects")
+    p_cloud.add_argument("--token-ttl", type=int, default=3600,
+                         help="access-token lifetime ceiling (seconds)")
+    p_cloud.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
+                         help="writable path prefix (default: the engine allowlist)")
+    p_cloud.set_defaults(func=_cmd_serve_cloud)
     return parser
 
 

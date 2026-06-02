@@ -463,6 +463,29 @@ def test_write_enabled_with_auth_starts_and_lists_commit_note(make_corpus, fake_
     assert srv.settings.auth is not None
 
 
+def test_build_server_accepts_auth_server_provider_cloud_lane(built_index):
+    # the cloud lane passes an auth_server_provider (AS+RS) instead of a token_verifier
+    from mcp.server.auth.settings import AuthSettings
+
+    from hypermnesic import auth_cloud
+    prov = auth_cloud.CloudAuthProvider(resource=_RES, public_url="https://h/cloud",
+                                        approval_token="x", scopes_supported=["read", "write"])
+    auth = AuthSettings(issuer_url="https://h/cloud", resource_server_url=_RES,
+                        required_scopes=None)
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, auth_server_provider=prov,
+                                  auth=auth)
+    assert srv.settings.auth is not None
+
+
+def test_build_server_rejects_both_verifier_and_provider(built_index):
+    from hypermnesic import auth_cloud
+    prov = auth_cloud.CloudAuthProvider(resource=_RES, public_url="https://h/cloud",
+                                        approval_token="x", scopes_supported=["read"])
+    with pytest.raises(ValueError, match="(?i)both|not both|provider"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, token_verifier=_verifier(),
+                                auth_server_provider=prov, auth=_auth_settings())
+
+
 def test_auth_with_wildcard_host_refused_bind_first(built_index):
     # the bind invariant is checked FIRST: 0.0.0.0 is refused even with auth configured
     with pytest.raises(ValueError, match="(?i)tailnet|0\\.0\\.0\\.0|bind"):
