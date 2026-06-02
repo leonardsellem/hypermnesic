@@ -20,6 +20,7 @@ retrieval gold — matching the official ``run_retrieval.py``, which excludes th
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -97,6 +98,13 @@ def parse_instance(raw: dict) -> Instance:
         sessions=sessions,
         answer_session_ids=list(raw.get("answer_session_ids") or []),
     )
+
+
+def load_dataset(path: Path) -> list[Instance]:
+    """Parse the downloaded LongMemEval JSON (a list of instance dicts) into
+    ``Instance`` objects, preserving dataset order."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    return [parse_instance(d) for d in data]
 
 
 def turn_to_session(turn_id: str) -> str:
