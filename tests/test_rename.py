@@ -8,8 +8,11 @@ import pytest
 
 from hypermnesic import audit_log as al
 from hypermnesic import commit_note as cn
+from hypermnesic import frontmatter_gate as fg
 from hypermnesic import index as ix
 from hypermnesic import serialize
+
+_NONCANON = "---\nstatus:    active\ncreated: 2026-05-02\n---\nbody\n"
 
 
 def _log(tmp_path):
@@ -93,3 +96,67 @@ def test_rename_dry_run_previews_without_moving(make_corpus, fake_embedder, tmp_
 def _head(repo):
     return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
                           capture_output=True, text=True).stdout.strip()
+
+
+# --- U13: decoupled tombstone seam (Option A — no Hypermnesic→GBrain dependency) ---
+
+def test_rename_tombstone_fn_called_with_neutral_old_path(make_corpus, fake_embedder, tmp_path):
+    # The seam passes the NEUTRAL repo-relative old path — the engine performs no
+    # .md-strip and knows nothing of any external tombstone format/path.
+    repo = make_corpus({"old.md": "# Old\n\nbody.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    seen = []
+    cn.rename_note(repo, "old.md", "new.md", idx=idx, log=_log(tmp_path),
+                   tombstone_fn=lambda rel: seen.append(rel))
+    assert seen == ["old.md"]                              # neutral rel-path, not 'old' slug
+    assert "new.md" in idx.all_paths() and "old.md" not in idx.all_paths()
+    idx.close()
+
+
+def test_rename_tombstone_is_written_before_the_git_mv(make_corpus, fake_embedder, tmp_path):
+    # Tombstone-first: when the sink runs the old file is still present and the new one
+    # absent — a crash between tombstone and mv cannot leave an un-tombstoned orphan.
+    repo = make_corpus({"old.md": "# Old\n\nbody.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    observed = {}
+
+    def sink(rel):
+        observed["old_present"] = (repo / "old.md").exists()
+        observed["new_present"] = (repo / "new.md").exists()
+
+    cn.rename_note(repo, "old.md", "new.md", idx=idx, log=_log(tmp_path), tombstone_fn=sink)
+    assert observed == {"old_present": True, "new_present": False}     # ran before the mv
+    idx.close()
+
+
+def test_rename_gate_abort_skips_tombstone(make_corpus, fake_embedder, tmp_path):
+    # The gate runs before the tombstone, so a gate-abort leaves NO orphan tombstone
+    # for a slug that was never removed.
+    repo = make_corpus({"doc.md": _NONCANON})
+    idx = ix.build_index(repo, fake_embedder)
+    seen = []
+    with pytest.raises(fg.FrontmatterDriftError):
+        cn.rename_note(repo, "doc.md", "doc2.md", set_fields={"newkey": "x"},
+                       idx=idx, log=_log(tmp_path), tombstone_fn=lambda rel: seen.append(rel))
+    assert seen == [] and (repo / "doc.md").exists()      # no tombstone, no move
+    idx.close()
+
+
+def test_rename_dry_run_skips_tombstone(make_corpus, fake_embedder, tmp_path):
+    repo = make_corpus({"old.md": "# Old\n\nbody.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    seen = []
+    cn.rename_note(repo, "old.md", "new.md", idx=idx, log=_log(tmp_path),
+                   tombstone_fn=lambda rel: seen.append(rel), dry_run=True)
+    assert seen == []                                     # preview only → no removal, no tombstone
+    assert (repo / "old.md").exists() and not (repo / "new.md").exists()
+    idx.close()
+
+
+def test_rename_without_tombstone_fn_is_unchanged(make_corpus, fake_embedder, tmp_path):
+    # Default None → identical to prior behavior; portable / non-gbrain use is untouched.
+    repo = make_corpus({"old.md": "# Old\n\nRENAMEWORD body.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    r = cn.rename_note(repo, "old.md", "new.md", idx=idx, log=_log(tmp_path))
+    assert r.new_sha and "new.md" in idx.all_paths() and "old.md" not in idx.all_paths()
+    idx.close()

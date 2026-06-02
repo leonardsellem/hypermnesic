@@ -279,3 +279,54 @@ def test_search_surfaces_manual_reindex_signal(make_corpus, fake_embedder, monke
     monkeypatch.setattr(converge_mod, "converge", fake_converge)
     out = _call(srv, "search", {"query": "MARK"})
     assert out["manual_reindex_recommended"] is True          # signal surfaced, not dropped
+
+
+# --- U1: explicit allowlist plumb-through + empty-allowlist startup rejection ---
+
+def test_write_enabled_empty_allowlist_rejected_at_startup(built_index):
+    # An empty (or whitespace-only) allowlist on a write-enabled serve narrows writes
+    # to NOTHING — refuse at construction so there is no half-open server. (U1)
+    for bad in ([], [""], ["  "], ["", "  "]):
+        with pytest.raises(ValueError):
+            mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True,
+                                    write_allowlist=bad)
+
+
+def test_read_only_serve_ignores_allowlist(built_index, fake_embedder):
+    # Read-only: --allowlist is inert (no write tool), and an empty list does NOT
+    # trigger the write-path startup rejection.
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder,
+                                  write_allowlist=[])           # would reject if write_enabled
+    names = {t.name for t in asyncio.run(srv.list_tools())}
+    assert "commit_note" not in names and names == mcp_server.READ_TOOL_NAMES
+
+
+def test_explicit_allowlist_permits_only_listed_prefixes(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder, write_allowlist=["projects/"])
+    permitted = _call(srv, "commit_note", {"path": "projects/p.md", "body": "# P\n\nbody.\n"})
+    assert permitted["committed"] and permitted["created"]      # in the explicit list
+    refused = _call(srv, "commit_note", {"path": "sources/s.md", "body": "# S\n\nbody.\n"})
+    assert refused["committed"] is False and refused["refused"]  # default 'sources/' not listed
+    assert not (repo / "sources/s.md").exists()
+
+
+def test_write_tool_coordination_refusal_maps_to_refused(make_corpus, fake_embedder, tmp_path):
+    # U11 over MCP: a push that cannot reach the shared remote surfaces as
+    # {committed: False, refused}, not a silent success or an uncaught exception.
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    bare = tmp_path / "o.git"
+    subprocess.run(["git", "init", "--bare", "-b", "main", str(bare)], check=True,
+                   capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "remote", "add", "origin", str(bare)],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "push", "-u", "origin", "main"],
+                   check=True, capture_output=True)
+    hook = bare / "hooks" / "pre-receive"
+    hook.write_text("#!/bin/sh\nexit 1\n")
+    hook.chmod(0o755)
+    srv = _write_server(repo, fake_embedder, write_allowlist=["sources/"])
+    out = _call(srv, "commit_note", {"path": "sources/n.md", "body": "# N\n\nbody.\n"})
+    assert out["committed"] is False and out["refused"]         # refusal, not silent success
+    audit = repo / ".hypermnesic" / "audit.jsonl"
+    assert not audit.exists() or audit.read_text().strip() == ""   # no audit on a non-landed write
