@@ -333,16 +333,20 @@ export default class HypermnesicPlugin extends Plugin {
       pagePreviewEnabled: () => this.pagePreviewEnabled(),
       decorateLocalRow: (row, ref, sourcePath) => this.decorateLocalRow(row, ref, sourcePath),
       decorateNonLocalRow: (row, ref) => this.decorateNonLocalRow(row, ref),
-      renderNudge: (host, snapshot) => {
+      renderNudge: (host, snapshot, hoverParent) => {
         if (!snapshot.result) return;
-        renderNudge(host, snapshot.result, {
-          app: this.app,
-          getUrl: () => this.settings.mcpUrl,
-          store: this.nudgeStore(),
-          threshold: () => this.settings.reinventThreshold,
-          activePath: () => this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path ?? "",
-          openNote: (path) => this.app.workspace.openLinkText(path, "", false),
-        });
+        renderNudge(
+          host,
+          snapshot.result,
+          {
+            getUrl: () => this.settings.mcpUrl,
+            store: this.nudgeStore(),
+            threshold: () => this.settings.reinventThreshold,
+            activePath: () => this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path ?? "",
+            rowDeps: this.renderDeps,
+          },
+          hoverParent,
+        );
       },
     };
   }
