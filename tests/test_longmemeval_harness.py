@@ -480,3 +480,75 @@ def test_load_dataset_parses_instance_list(tmp_path):
     insts = mat.load_dataset(ds)
     assert [i.question_id for i in insts] == ["q1", "q2_abs"]
     assert insts[1].is_abstention is True
+
+
+# ---------------------------------------------------------------------------
+# U5 — offline pipeline tests + CI smoke subset
+# ---------------------------------------------------------------------------
+
+from pathlib import Path  # noqa: E402
+
+SMOKE_PATH = Path(__file__).resolve().parents[1] / "harness/longmemeval/smoke.example.jsonl"
+
+
+def _smoke_rows():
+    return [json.loads(line) for line in
+            SMOKE_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def test_smoke_subset_spans_five_abilities_and_is_synthetic():
+    rows = _smoke_rows()
+    types = {r["question_type"] for r in rows}
+    # 4 retrieval abilities + abstention = the 5 V1 abilities
+    assert {"single-session-user", "multi-session", "knowledge-update",
+            "temporal-reasoning"} <= types
+    assert any(r["question_id"].endswith("_abs") for r in rows)  # abstention
+    # synthetic guard: committed smoke data must never look like a real corpus
+    blob = SMOKE_PATH.read_text(encoding="utf-8")
+    assert "@" not in blob and "/home/" not in blob and "/Users/" not in blob
+
+
+def test_full_phase1_pipeline_runs_offline_on_smoke_set(tmp_path, fake_embedder):
+    # Happy path: the whole Phase-1 pipeline (materialize → index → retrieve →
+    # score) runs end-to-end on the synthetic set with FakeEmbedder, no key.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    result = diag.run_diagnostic(instances, tmp_path / "work", fake_embedder, headline=False)
+    assert result["void"] is False
+    assert "session" in result and "turn" in result
+    n_non_abs = sum(1 for r in _smoke_rows() if not r["question_id"].endswith("_abs"))
+    assert result["n_instances"] == n_non_abs
+    for ability in ("single-session-user", "multi-session",
+                    "knowledge-update", "temporal-reasoning"):
+        assert ability in result["per_ability"]
+
+
+def test_smoke_run_is_labeled_non_headline(tmp_path, fake_embedder):
+    # Covers AE4: a subset run is labeled non-headline and is never the headline.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    result = diag.run_diagnostic(instances, tmp_path / "work", fake_embedder, headline=False)
+    assert result["headline"] is False
+    assert result["n_instances_total"] == len(instances)
+    assert result["n_instances_total"] < 500  # the smoke set is not the full `_s` set
+
+
+def test_abstention_scored_in_its_own_bucket_not_folded(tmp_path, fake_embedder):
+    # Covers AE1: the abstention instance is counted separately and excluded from
+    # the retrieval aggregates (never folded into another ability).
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    result = diag.run_diagnostic(instances, tmp_path / "work", fake_embedder, headline=False)
+    assert result["n_excluded_abstention"] == 1
+    # the abstention instance's question_type bucket must not absorb it as scorable
+    abst = next(r for r in _smoke_rows() if r["question_id"].endswith("_abs"))
+    bucket = result["per_ability"].get(abst["question_type"])
+    n_real_in_bucket = sum(1 for r in _smoke_rows()
+                           if r["question_type"] == abst["question_type"]
+                           and not r["question_id"].endswith("_abs"))
+    assert (bucket["n"] if bucket else 0) == n_real_in_bucket
+
+
+def test_smoke_run_voids_on_degraded_embedder(tmp_path):
+    # Covers AE2: a degraded embedder voids the whole run rather than scoring.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    result = diag.run_diagnostic(instances, tmp_path / "work", _DownEmbedder(), headline=False)
+    assert result["void"] is True
+    assert result["verdict"] == "void"
