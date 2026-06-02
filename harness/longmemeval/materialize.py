@@ -113,6 +113,13 @@ def turn_to_session(turn_id: str) -> str:
     return _TURN_SUFFIX.sub("", turn_id)
 
 
+def normalize_question_type(question_type: str) -> str:
+    """Canonicalize a ``question_type`` (lowercase, hyphenated) — the single
+    source of truth used for both the diagnostic/QA ability buckets and the
+    judge's per-type prompt selection, so they can never key differently."""
+    return (question_type or "").strip().lower().replace("_", "-")
+
+
 def _slug(text: str) -> str:
     return _UNSAFE.sub("-", text).strip("-")[:60] or "x"
 

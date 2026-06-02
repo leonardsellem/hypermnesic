@@ -88,16 +88,18 @@ class CachingEmbedder:
         miss_slots: list[tuple[int, str]] = []
         for i, text in enumerate(texts):
             key = self._key(text)
-            if key in self._store:
+            try:                          # single lookup (no separate membership probe)
                 out[i] = self._store[key]
-            else:
+            except KeyError:
                 miss_texts.append(text)
                 miss_slots.append((i, key))
         if miss_texts:
             vecs = self._embedder.embed(miss_texts)
+            fresh: dict[str, list[float]] = {}
             for (i, key), vec in zip(miss_slots, vecs, strict=True):
                 out[i] = vec
-                self._store[key] = vec
+                fresh[key] = vec
+            self._store.update(fresh)     # one write/commit for the whole batch
         return [v for v in out if v is not None]
 
 
@@ -109,6 +111,10 @@ class SqliteEmbeddingCache:
 
     def __init__(self, path: Path):
         self.conn = sqlite3.connect(str(path))
+        # WAL + NORMAL sync: a cache is rebuildable, so trade strict durability for
+        # far fewer fsyncs on the cold-population pass (the dominant SQLite write cost).
+        self.conn.execute("PRAGMA journal_mode=WAL")
+        self.conn.execute("PRAGMA synchronous=NORMAL")
         self.conn.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, vec BLOB)")
         self.conn.commit()
 
@@ -123,8 +129,16 @@ class SqliteEmbeddingCache:
         return list(array("d", row[0]))
 
     def __setitem__(self, key: str, vec: list[float]) -> None:
-        self.conn.execute("INSERT OR REPLACE INTO cache (key, vec) VALUES (?, ?)",
-                          (key, array("d", vec).tobytes()))
+        self.update({key: vec})
+
+    def update(self, items: dict[str, list[float]]) -> None:
+        """Batch-insert vectors with a single commit (one fsync per embed batch,
+        not per vector — the cold-run hot path)."""
+        if not items:
+            return
+        self.conn.executemany(
+            "INSERT OR REPLACE INTO cache (key, vec) VALUES (?, ?)",
+            [(k, array("d", v).tobytes()) for k, v in items.items()])
         self.conn.commit()
 
     def _count(self) -> int:
@@ -193,7 +207,7 @@ def retrieve_instances(instances: list[Instance], work_dir: Path, embedder, *,
     work_dir = Path(work_dir)
     run = RetrievalRun()
     for inst in instances:
-        base = work_dir / _safe(inst.question_id)
+        base = work_dir / safe_name(inst.question_id)
         sessions_m, turns_m = materialize_instance(inst, base)
         sres = retrieve_for_corpus(sessions_m, inst.question, embedder,
                                    state_dir=base / "state_sessions",
@@ -207,5 +221,8 @@ def retrieve_instances(instances: list[Instance], work_dir: Path, embedder, *,
     return run
 
 
-def _safe(name: str) -> str:
+def safe_name(name: str) -> str:
+    """Filesystem-safe per-instance work-dir name. Shared by the diagnostic
+    (``retrieve_instances``) and QA (``run_qa``) runners so both lay out the same
+    per-haystack directories — the embed cache hits only if they agree."""
     return "".join(c if c.isalnum() or c in "._-" else "-" for c in name)[:80] or "x"

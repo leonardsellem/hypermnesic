@@ -27,6 +27,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from longmemeval import manifest as mf
+from longmemeval.materialize import normalize_question_type
 
 JUDGE_MODEL = mf.JUDGE_MODEL  # "gpt-4o-2024-08-06"
 MAX_TOKENS = 10
@@ -98,7 +99,7 @@ def prompt_kind(question_type: str, is_abstention: bool) -> str:
     """Select the template kind from question_type + the `_abs` flag."""
     if is_abstention:
         return "abstention"
-    qt = (question_type or "").strip().lower().replace("_", "-")
+    qt = normalize_question_type(question_type)
     if qt == "temporal-reasoning":
         return "temporal"
     if qt == "knowledge-update":
@@ -140,7 +141,7 @@ class Judge:
     def grade(self, *, question: str, answer: str, response: str,
               question_type: str, is_abstention: bool) -> JudgeResult:
         kind = prompt_kind(question_type, is_abstention)
-        prompt = _TEMPLATES[kind].format(question=question, answer=answer, response=response)
+        prompt = build_prompt(question, answer, response, question_type, is_abstention)
         try:
             resp = self._get_client().chat.completions.create(
                 model=self.model,

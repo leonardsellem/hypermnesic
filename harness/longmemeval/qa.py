@@ -31,9 +31,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from longmemeval import manifest as mf
-from longmemeval.adapter import retrieve_for_corpus
+from longmemeval.adapter import retrieve_for_corpus, safe_name
 from longmemeval.judge import Judge
-from longmemeval.materialize import materialize_sessions, session_units
+from longmemeval.materialize import (
+    materialize_sessions,
+    normalize_question_type,
+    session_units,
+)
 from longmemeval.reader import RetrievedUnit
 
 
@@ -50,10 +54,6 @@ class QAAnswer:
 
 def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs) if xs else 0.0
-
-
-def _normalize_type(qt: str) -> str:
-    return (qt or "").strip().lower().replace("_", "-")
 
 
 def score_column(answers: list[QAAnswer]) -> dict:
@@ -102,7 +102,7 @@ def run_qa(instances, work_dir, embedder, readers, judge, *, headline: bool,
     # phase 1: retrieve top-k session context per instance (void gate, R20)
     retrievals = []
     for inst in instances:
-        base = work_dir / _safe(inst.question_id)
+        base = work_dir / safe_name(inst.question_id)
         sessions_m = materialize_sessions(inst, base / "sessions")
         sres = retrieve_for_corpus(sessions_m, inst.question, embedder,
                                    state_dir=base / "state_sessions")
@@ -123,7 +123,7 @@ def run_qa(instances, work_dir, embedder, readers, judge, *, headline: bool,
                              is_abstention=inst.is_abstention)
             answers.append(QAAnswer(
                 instance_id=inst.question_id,
-                question_type=_normalize_type(inst.question_type),
+                question_type=normalize_question_type(inst.question_type),
                 is_abstention=inst.is_abstention, correct=jr.correct,
                 reader_model=reader.model, reader_error=ra.error, judge_error=jr.error))
         columns[reader.model] = score_column(answers)
@@ -137,10 +137,6 @@ def run_qa(instances, work_dir, embedder, readers, judge, *, headline: bool,
         "k": k,
         "columns": columns,
     }
-
-
-def _safe(name: str) -> str:
-    return "".join(c if c.isalnum() or c in "._-" else "-" for c in name)[:80] or "x"
 
 
 # --- F1 live (GATED) run entry ----------------------------------------------
