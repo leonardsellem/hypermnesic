@@ -52,9 +52,10 @@ path, and the human-facing surfaces built on top:
   companion. **Merged** (PR #1).
 - **Phase 2.5 (Plan 1)** — engine convergence, the `commit_note` MCP write tool,
   single-JSON serve, and the role-aware installer. **Completed** (PRs #2/#3).
-- **Phase 2.5 (Plan 2)** — the Obsidian companion redesign that consumes the
-  recency signal. **In planning**
-  (`docs/plans/2026-06-02-007-feat-phase-2-5-obsidian-companion-plan.md`).
+- **Phase 2.5 (Plan 2)** — the Obsidian companion redesign: a calm, read-only
+  recall surface (status-bar / opt-in sidebar / optional inline marker),
+  thinking-mode, forgetting-curve ranking off the engine recency signal, and an
+  interrogable reinvention nudge. **Merged** (PR #5).
 
 ## Docs
 
