@@ -14,6 +14,7 @@
  */
 import {
   Editor,
+  HoverPopover,
   ItemView,
   MarkdownFileInfo,
   MarkdownView,
@@ -43,6 +44,10 @@ interface PluginData {
 /** The opt-in sidebar. It renders the core's last snapshot through the shared
  *  renderer; it issues no query of its own (KTD1). */
 class RecallSidebarView extends ItemView {
+  // Satisfy HoverParent so the shared renderer can anchor native Page-preview
+  // popovers to this leaf (KTD4).
+  hoverPopover: HoverPopover | null = null;
+
   constructor(
     leaf: WorkspaceLeaf,
     private plugin: HypermnesicPlugin,
@@ -66,7 +71,7 @@ class RecallSidebarView extends ItemView {
 
   draw(): void {
     const root = this.containerEl.children[1] as HTMLElement;
-    renderResultList(root, this.plugin.snapshot, this.plugin.renderDeps);
+    renderResultList(root, this.plugin.snapshot, this.plugin.renderDeps, this);
   }
 }
 
@@ -95,6 +100,13 @@ export default class HypermnesicPlugin extends Plugin {
     this.renderDeps = this.buildRenderDeps();
 
     this.registerView(SIDEBAR_VIEW_TYPE, (leaf) => new RecallSidebarView(leaf, this));
+
+    // Register as a Page-preview emitter so reference rows get native hover
+    // previews integrated with the core plugin + the user's modifier preference.
+    this.registerHoverLinkSource("hypermnesic-companion", {
+      display: "hypermnesic",
+      defaultMod: true,
+    });
 
     if (this.settings.showStatusBar) this.createStatusBar();
 
@@ -207,10 +219,22 @@ export default class HypermnesicPlugin extends Plugin {
     }
   }
 
+  /** Whether the core "Page preview" plugin is enabled — gates native hover
+   *  preview; when off, reference rows fall back to the engine-snippet peek. */
+  private pagePreviewEnabled(): boolean {
+    const ip = (
+      this.app as unknown as {
+        internalPlugins?: { getPluginById?(id: string): { enabled?: boolean } | null };
+      }
+    ).internalPlugins;
+    return !!ip?.getPluginById?.("page-preview")?.enabled;
+  }
+
   private buildRenderDeps(): RenderDeps {
     return {
       app: this.app,
-      openNote: (path) => this.app.workspace.openLinkText(path, "", false),
+      openFile: (file, newLeaf) => void this.app.workspace.getLeaf(newLeaf).openFile(file),
+      pagePreviewEnabled: () => this.pagePreviewEnabled(),
       renderNudge: (host, snapshot) => {
         if (!snapshot.result) return;
         renderNudge(host, snapshot.result, {

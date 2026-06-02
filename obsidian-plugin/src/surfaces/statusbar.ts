@@ -98,7 +98,9 @@ export class StatusBarSurface {
   }
 
   private renderPopover(): void {
-    if (this.popover) renderResultList(this.popover, this.model, this.deps);
+    // The popover is a body-appended element with no HoverParent leaf, so native
+    // Page-preview is best-effort here (KTD4); rows fall back to the snippet peek.
+    if (this.popover) renderResultList(this.popover, this.model, this.deps, null);
   }
 
   /** Remove the body-appended popover. Registered for auto-cleanup on unload. */
