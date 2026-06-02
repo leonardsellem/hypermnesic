@@ -12,6 +12,7 @@ directly (no sockets). Secrets/tokens are never echoed; the approval token is st
 from __future__ import annotations
 
 import asyncio
+import json
 
 import pytest
 from mcp.server.auth.provider import AuthorizationParams
@@ -157,6 +158,81 @@ def test_metadata_advertises_authorization_code_and_dcr():
     assert set(meta["scopes_supported"]) >= {"read", "write"}
 
 
+# --- security-review fixes (pre-public-exposure) ----------------------------
+
+def test_revocation_kills_the_whole_grant_incl_refresh():
+    # Critical: revoking the access token must also kill its refresh token (the operator's
+    # kill switch) — otherwise a leaked grant re-mints access tokens for the refresh TTL.
+    p = _provider()
+    _run(p.register_client(_client()))
+    tokens = _redeem(p)
+    _run(p.revoke_token(_run(p.load_access_token(tokens.access_token))))
+    assert _run(p.load_access_token(tokens.access_token)) is None
+    assert _run(p.load_refresh_token(_client(), tokens.refresh_token)) is None   # refresh dead too
+
+
+def test_refresh_rotates_old_token_invalidated():
+    # High: exchanging a refresh token must invalidate the old one (rotation), not leave both live.
+    p = _provider()
+    _run(p.register_client(_client()))
+    tokens = _redeem(p)
+    old_rt = _run(p.load_refresh_token(_client(), tokens.refresh_token))
+    _run(p.exchange_refresh_token(_client(), old_rt, scopes=["read"]))
+    assert _run(p.load_refresh_token(_client(), tokens.refresh_token)) is None   # old refresh dead
+
+
+def test_wrong_approval_token_drops_pending_after_max_failures():
+    # High: a fixed pending_id must not be brute-forceable indefinitely.
+    p = _provider()
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params())).split("pending=")[1]
+    for _ in range(5):
+        with pytest.raises(auth_cloud.ConsentError):
+            p.finalize_consent(pending, approval_token="WRONG")
+    # after the failure cap the pending is gone — the correct token no longer works either
+    with pytest.raises(auth_cloud.ConsentError):
+        p.finalize_consent(pending, approval_token="op-approval-secret")
+
+
+def test_pending_expires():
+    clock = {"t": 1_000_000}
+    p = auth_cloud.CloudAuthProvider(resource=RES, public_url=PUBLIC,
+                                     approval_token="op-approval-secret",
+                                     scopes_supported=["read", "write"], now=lambda: clock["t"])
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params())).split("pending=")[1]
+    clock["t"] += 10_000                                          # well past the pending TTL
+    with pytest.raises(auth_cloud.ConsentError):
+        p.finalize_consent(pending, approval_token="op-approval-secret")
+
+
+def test_access_token_audience_enforced_at_load():
+    # Low (defense-in-depth): a token whose bound resource isn't ours is rejected at the RS.
+    p = _provider()
+    _run(p.register_client(_client()))
+    tokens = _redeem(p)
+    at = _run(p.load_access_token(tokens.access_token))
+    assert str(at.resource).rstrip("/") == RES                   # bound to our single resource
+    # tamper the stored resource → load rejects it
+    p._access[tokens.access_token].resource = "https://homelab.taildabf2.ts.net/other"
+    assert _run(p.load_access_token(tokens.access_token)) is None
+
+
+def test_pending_details_exposes_client_for_an_identified_consent():
+    p = _provider()
+    c = OAuthClientInformationFull(
+        client_id="cid-1", client_secret="s", redirect_uris=[REDIRECT],
+        grant_types=["authorization_code"], response_types=["code"], scope="read write",
+        client_name="ChatGPT", token_endpoint_auth_method="none")
+    _run(p.register_client(c))
+    pending = _run(p.authorize(c, _params(scopes=("read", "write")))).split("pending=")[1]
+    details = p.pending_details(pending)
+    assert details is not None
+    assert details["client_id"] == "cid-1" and "write" in details["scopes"]
+    assert REDIRECT.split("/")[2] in str(details["redirect_uri"])  # operator sees the host
+    assert p.pending_details("unknown-id") is None                 # unknown → None (no reflection)
+
+
 # --- serve wiring: build_cloud_server (AS+RS + DCR + consent + write tool) ----
 
 def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fake_embedder):
@@ -176,3 +252,54 @@ def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fak
     names = {t.name for t in _aio.run(srv.list_tools())}
     assert "commit_note" in names and {"search", "resolve"} <= names          # read + write
     assert "/consent" in [r.path for r in srv._custom_starlette_routes]       # consent route added
+
+
+def test_consent_render_escapes_client_fields_and_hides_unknown_pending():
+    # Critical (XSS): the consent page must HTML-escape attacker-controlled DCR fields, and
+    # must NOT reflect an unknown/arbitrary pending id at all (the reflected-XSS sink).
+    from hypermnesic import mcp_server
+    p = _provider()
+    evil = OAuthClientInformationFull(
+        client_id="cid-evil", client_secret="s", redirect_uris=["https://evil.example/cb"],
+        grant_types=["authorization_code"], response_types=["code"], scope="read write",
+        client_name="<script>alert(1)</script>", token_endpoint_auth_method="none")
+    _run(p.register_client(evil))
+    pending = _run(p.authorize(evil, _params(scopes=("read", "write")))).split("pending=")[1]
+    html, status = mcp_server._render_consent(p, pending)
+    assert status == 200
+    assert "<script>alert(1)</script>" not in html and "&lt;script&gt;" in html  # escaped
+    assert "write" in html and "chatgpt.com" in html              # scopes + target shown
+    html2, status2 = mcp_server._render_consent(p, '"><script>evil()</script>')
+    assert status2 == 404 and "<script>evil()</script>" not in html2 and "evil()" not in html2
+
+
+def test_cloud_server_defaults_to_tighter_write_zone(make_corpus, fake_embedder):
+    # residual: the public lane defaults writes to a dedicated review zone (captures/), not the
+    # full vault — a cloud write to notes/ is refused.
+    import asyncio as _aio
+
+    from mcp.server.auth.middleware.auth_context import auth_context_var
+    from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
+    from mcp.server.auth.provider import AccessToken
+
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more")
+
+    def _call(name, args):
+        out = _aio.run(srv.call_tool(name, args))
+        return out[1] if isinstance(out, tuple) else json.loads(out[0].text)
+
+    var = auth_context_var.set(AuthenticatedUser(AccessToken(
+        token="t", client_id="c", scopes=["read", "write"], resource=RES, claims={"aud": RES})))
+    try:
+        refused = _call("commit_note", {"path": "notes/x.md", "body": "# x\n\nbody.\n"})
+        ok = _call("commit_note", {"path": "captures/x.md", "body": "# x\n\nbody.\n"})
+    finally:
+        auth_context_var.reset(var)
+    assert refused["committed"] is False and refused["refused"]    # notes/ outside the cloud zone
+    assert ok["committed"] is True                                 # captures/ = cloud zone
