@@ -69,6 +69,16 @@ def test_binds_to_tailscale_ip_not_wildcard(built_index):
     assert srv.settings.host != "0.0.0.0"
 
 
+def test_serve_returns_single_json_not_sse(built_index, fake_embedder):
+    # U32/DEP-R15: tools/call returns a buffered single JSON body, not an SSE stream,
+    # so an Obsidian requestUrl (buffering) client does not hang. SDK default is SSE.
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
+    assert srv.settings.json_response is True
+    # opt-out remains available for a streaming client
+    sse = mcp_server.build_server(built_index, host=TAILNET_IP, json_response=False)
+    assert sse.settings.json_response is False
+
+
 def test_only_read_tools_no_write_tool(built_index, fake_embedder):
     # U20 adds a third read tool (think); the invariant is "read-only, structural".
     srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
