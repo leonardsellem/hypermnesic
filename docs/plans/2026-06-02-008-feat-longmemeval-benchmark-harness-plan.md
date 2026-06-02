@@ -1,7 +1,7 @@
 ---
 title: "feat: LongMemEval V1 head-to-head benchmark harness"
 type: feat
-status: active
+status: completed
 date: 2026-06-02
 origin: docs/brainstorms/2026-06-02-longmemeval-benchmark-protocol-requirements.md
 deepened: 2026-06-02
