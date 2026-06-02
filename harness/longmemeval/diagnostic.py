@@ -31,7 +31,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from longmemeval.adapter import RetrievalRun
-from longmemeval.materialize import turn_to_session
+from longmemeval.materialize import normalize_question_type, turn_to_session
 
 SESSION_KS = (5, 10)
 TURN_KS = (5, 10, 50)
@@ -66,10 +66,6 @@ def ndcg_any_at_k(ranked: list[str], gold: set[str], k: int) -> float:
     ideal_hits = min(len(gold), k)
     idcg = sum(1.0 / math.log2(i + 2) for i in range(ideal_hits))
     return dcg / idcg if idcg else 0.0
-
-
-def _normalize_type(qt: str) -> str:
-    return qt.strip().lower().replace("_", "-")
 
 
 def _mean(xs: list[float]) -> float:
@@ -151,7 +147,7 @@ def score_diagnostic(run: RetrievalRun) -> dict:
 
     by_type: dict[str, list] = defaultdict(list)
     for r in scored:
-        by_type[_normalize_type(r.instance.question_type)].append(r)
+        by_type[normalize_question_type(r.instance.question_type)].append(r)
 
     per_ability: dict[str, dict] = {}
     for qt, group in sorted(by_type.items()):
