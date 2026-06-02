@@ -944,6 +944,7 @@ class _FakeBatchClient:
         self.files = self._Files(self)
         self.batches = self._Batches(self)
         self.created_batches = 0
+        self.batch_models: list[set] = []  # set of body.model per created batch
 
     class _Files:
         def __init__(self, c):
@@ -967,6 +968,7 @@ class _FakeBatchClient:
             self.c.created_batches += 1
             reqs = [json.loads(line) for line in
                     self.c._files[input_file_id].decode("utf-8").splitlines() if line.strip()]
+            self.c.batch_models.append({r["body"]["model"] for r in reqs})
             lines = []
             for r in reqs:
                 cid = r["custom_id"]
@@ -1058,3 +1060,21 @@ def test_run_qa_batch_voids_on_degraded_retrieval(tmp_path):
                           jdg.Judge(), headline=False, client=_FakeBatchClient(),
                           poll_interval=0, sleep=_no_sleep)
     assert out["void"] is True and "columns" not in out
+
+
+def test_run_qa_batch_submits_one_batch_per_model(tmp_path, fake_embedder):
+    # OpenAI rejects a batch that mixes models ("mismatched_model"). Two reader
+    # columns must therefore go in SEPARATE single-model batches (the judge is a
+    # single model → one batch). Regression guard for the headline batch failure.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    readers = [rdr.Reader("gpt-4.1-2025-04-14", token_counter=lambda s: len(s.split())),
+               rdr.Reader("gpt-4o-2024-08-06", token_counter=lambda s: len(s.split()))]
+    client = _FakeBatchClient()
+    out = qa.run_qa_batch(instances, tmp_path / "work", fake_embedder, readers,
+                          jdg.Judge(), headline=True, client=client,
+                          poll_interval=0, sleep=_no_sleep)
+    assert out["void"] is False
+    assert set(out["columns"]) == {"gpt-4.1-2025-04-14", "gpt-4o-2024-08-06"}
+    # 2 reader batches (one per model) + 1 judge batch; EVERY batch single-model
+    assert client.created_batches == 3
+    assert all(len(models) == 1 for models in client.batch_models), client.batch_models

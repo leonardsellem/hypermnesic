@@ -168,27 +168,29 @@ def run_qa(instances: list[Instance], work_dir: Path, embedder: Embedder,
 def run_qa_batch(instances: list[Instance], work_dir: Path, embedder: Embedder,
                  readers: list[Reader], judge: Judge, *, headline: bool, client,
                  k: int = mf.RETRIEVAL_K, **batch_kw) -> dict:
-    """Run F1 via the OpenAI **Batch API** (50% cheaper). Two stages: one reader
-    batch across all (column × instance), then one judge batch over the reader
-    answers. Retrieval + scoring are identical to ``run_qa``; only the LLM
-    transport differs. ``client`` is an OpenAI-like client; ``batch_kw`` is passed
-    to ``batch.submit_and_collect`` (``poll_interval``, ``timeout``, ``sleep``,
-    ``log``)."""
+    """Run F1 via the OpenAI **Batch API** (50% cheaper). Two stages: a reader
+    batch **per model** (OpenAI rejects a batch that mixes models —
+    ``mismatched_model``), then one judge batch over the reader answers (the judge
+    is a single model). Retrieval + scoring are identical to ``run_qa``; only the
+    LLM transport differs. ``client`` is an OpenAI-like client; ``batch_kw`` is
+    passed to ``batch.submit_and_collect`` (``poll_interval``, ``timeout``,
+    ``sleep``, ``log``)."""
     retrievals = _retrieve_phase(instances, work_dir, embedder, k)
     if retrievals is None:
         return _void_result("batch")
 
-    # stage 1: one reader batch over every (column, instance)
-    reader_reqs, rmeta = [], {}
+    # stage 1: one reader batch PER MODEL (a batch must be single-model)
+    rmeta, reader_out = {}, {}
     for reader in readers:
+        reqs = []
         for inst, ranked, units_map in retrievals:
             body, truncated, used = reader.request_body(
                 inst.question, inst.question_date, _context(ranked, units_map, k))
-            cid = f"r-{len(reader_reqs)}"
-            reader_reqs.append({"custom_id": cid, "method": "POST",
-                                "url": "/v1/chat/completions", "body": body})
+            cid = f"r-{len(rmeta)}"  # global counter → unique across all readers
+            reqs.append({"custom_id": cid, "method": "POST",
+                         "url": "/v1/chat/completions", "body": body})
             rmeta[cid] = (reader, inst, truncated, used)
-    reader_out = batch.submit_and_collect(client, reader_reqs, **batch_kw)
+        reader_out.update(batch.submit_and_collect(client, reqs, **batch_kw))
     answers = {cid: meta[0].answer_from_content(
                    reader_out.get(cid, {}).get("content"),
                    truncated=meta[2], units_used=meta[3],
