@@ -72,6 +72,44 @@ def test_plugin_performs_no_vault_writes():
     assert offenders == [], f"plugin must not write the vault, found: {offenders}"
 
 
+def test_plugin_performs_no_editor_or_cm_writes():
+    # The link-insertion surface (U3) is the first place the plugin could mutate
+    # the active note, so the read-only proof is widened beyond vault.*/adapter.*
+    # to the full editor + CodeMirror mutation surface. Editor mutators stay
+    # method-qualified so Setting.setValue (a settings control) is not a false
+    # positive; the bare CodeMirror `.dispatch(` is the canonical CM6 write path
+    # the gutter extension could otherwise reach. Extend this list as the
+    # Obsidian/CM6 API surface grows.
+    forbidden = [
+        "editor.replaceSelection(",
+        "editor.replaceRange(",
+        "editor.setValue(",
+        "editor.setLine(",
+        "editor.transaction(",
+        "editor.exec(",
+        ".dispatch(",  # CodeMirror EditorView.dispatch — the CM6 write door
+        "vault.process(",
+        "vault.rename(",
+        "vault.copy(",
+        "fileManager.processFrontMatter(",
+        "fileManager.renameFile(",
+    ]
+    offenders: list[str] = []
+    for name, src in _all_sources().items():
+        offenders += [f"{name}:{w}" for w in forbidden if w in src]
+    assert offenders == [], f"plugin must not mutate notes, found: {offenders}"
+
+
+def test_insertion_module_imports_no_codemirror_editor():
+    # The reference module resolves/renders existing notes and produces link TEXT
+    # for the user to paste/drop; it must never reach for a CodeMirror editor
+    # module (drag/clipboard need neither). This keeps the insertion surface
+    # structurally incapable of an editor write, not merely scanned for one.
+    ref = (_PLUGIN / "src" / "surfaces" / "reference.ts").read_text(encoding="utf-8")
+    assert "@codemirror/view" not in ref, "reference.ts must not import @codemirror/view"
+    assert "@codemirror/state" not in ref, "reference.ts must not import @codemirror/state"
+
+
 def test_default_mcp_url_is_empty_and_guarded():
     # DEP-R17: opt-in off-device send. The default URL is empty, and callTool
     # refuses to reach the network with no endpoint — so a fresh install
