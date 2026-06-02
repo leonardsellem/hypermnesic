@@ -119,7 +119,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  authoring_host: bool = False, write_enabled: bool = False,
                  write_allowlist: list[str] | None = None,
                  audit_actor_fn: Callable[[], str] | None = None,
-                 token_verifier=None, auth=None, write_scope: str = WRITE_SCOPE,
+                 token_verifier=None, auth=None, auth_server_provider=None,
+                 write_scope: str = WRITE_SCOPE,
                  json_response: bool = True,
                  stateless_http: bool = True) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
@@ -157,13 +158,17 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             f"refusing to bind to {host!r}: hypermnesic MCP is tailnet-only and "
             "must bind a specific Tailscale interface address (KTD10)"
         )
-    # U2: auth is configured as a pair — a verifier validates the tokens an AuthSettings
-    # advertises. Supplying one without the other is a half-configured auth surface; refuse
-    # before constructing FastMCP so the message is engine-level, not an SDK internal.
-    if (auth is None) ^ (token_verifier is None):
+    # U2: auth is configured as a pair — AuthSettings + EITHER a token_verifier (RS-only,
+    # the tailnet lane) OR an auth_server_provider (AS+RS, the cloud lane). Supplying settings
+    # without a validator (or vice versa), or both validators, is a half-/mis-configured auth
+    # surface; refuse before constructing FastMCP so the message is engine-level.
+    if token_verifier is not None and auth_server_provider is not None:
+        raise ValueError("specify a token_verifier OR an auth_server_provider, not both")
+    _auth_configured = token_verifier is not None or auth_server_provider is not None
+    if (auth is None) ^ (not _auth_configured):
         raise ValueError(
-            "OAuth auth requires BOTH a token_verifier and AuthSettings (or neither): "
-            "supply --auth-issuer-url + --auth-resource-url together, or omit auth entirely"
+            "OAuth auth requires BOTH AuthSettings and a token_verifier/auth_server_provider "
+            "(or neither): supply them together, or omit auth entirely"
         )
     # U2 engine invariant: write_enabled ⇒ auth-required on any tailnet-reachable bind.
     # A write-enabled master serving a Tailscale interface address MUST run auth-on —
@@ -192,7 +197,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
     mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
                   json_response=json_response, stateless_http=stateless_http,
-                  token_verifier=token_verifier, auth=auth)   # U2: RS-only OAuth2 (or no-auth)
+                  token_verifier=token_verifier, auth=auth,   # U2 RS-only / no-auth …
+                  auth_server_provider=auth_server_provider)  # … or the cloud AS+RS lane
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
@@ -283,6 +289,82 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             return {"committed": not r.noop, "path": r.path, "created": r.created,
                     "noop": r.noop, "new_sha": r.new_sha, "diff": r.diff}
 
+    return mcp
+
+
+_CONSENT_HTML = """<!doctype html><html><head><meta charset="utf-8">
+<title>hypermnesic — authorize</title></head>
+<body style="font-family:system-ui;max-width:32rem;margin:4rem auto;padding:0 1rem">
+<h2>Authorize a connection to your hypermnesic memory</h2>
+<p>A client is requesting access. Approve it by entering your approval token. Only you
+hold this token, so an anonymous visitor cannot approve a connection.</p>
+{error}
+<form method="post" action="/consent">
+<input type="hidden" name="pending" value="{pending}">
+<label>Approval token<br><input type="password" name="approval_token" autocomplete="off"
+style="width:100%;padding:.5rem"></label>
+<p><button type="submit" style="padding:.5rem 1rem">Approve</button></p>
+</form></body></html>"""
+
+
+def _register_consent_route(mcp: FastMCP, provider) -> None:
+    """Add the operator-authenticated ``/consent`` route. ``provider.authorize`` routes the
+    browser here; only the operator's approval token issues the code (the public-write gate)."""
+    from starlette.requests import Request
+    from starlette.responses import HTMLResponse, RedirectResponse
+
+    from hypermnesic import auth_cloud
+
+    def _html(pending: str, error: str = "") -> str:
+        # the pending id is not a secret; the approval token is operator-entered, never pre-filled
+        block = (f'<p style="color:#b00">{error}</p>' if error else "")
+        return _CONSENT_HTML.format(pending=pending, error=block)
+
+    @mcp.custom_route("/consent", methods=["GET", "POST"])
+    async def consent(request: Request):
+        if request.method == "GET":
+            return HTMLResponse(_html(request.query_params.get("pending", "")))
+        form = await request.form()
+        pending = str(form.get("pending", ""))
+        try:
+            redirect = provider.finalize_consent(pending, approval_token=str(
+                form.get("approval_token", "")))
+        except auth_cloud.ConsentError as exc:
+            return HTMLResponse(_html(pending, error=str(exc)), status_code=403)
+        return RedirectResponse(redirect, status_code=302)
+
+
+def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
+                       path: str = DEFAULT_PATH, repo: Path | None = None, embedder=None,
+                       resource: str, public_url: str, approval_token: str,
+                       scopes_supported=("read", "write"), token_ttl_seconds: int = 3600,
+                       write_allowlist: list[str] | None = None,
+                       audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:
+    """Build the **public cloud** OAuth MCP (ChatGPT/Claude mobile lane): the SDK's
+    authorization_code + DCR + PKCE Authorization Server (``auth_cloud.CloudAuthProvider``)
+    wired into a write-enabled serve, plus the operator-authenticated ``/consent`` route. The
+    same read tools + the gated ``commit_note`` (per-tool write scope) as the tailnet serve.
+    Exposed publicly via Funnel; the operator's approval token gates every connection."""
+    from mcp.server.auth.settings import (
+        AuthSettings,
+        ClientRegistrationOptions,
+        RevocationOptions,
+    )
+
+    from hypermnesic import auth_cloud
+
+    provider = auth_cloud.CloudAuthProvider(
+        resource=resource, public_url=public_url, approval_token=approval_token,
+        scopes_supported=list(scopes_supported), token_ttl_seconds=token_ttl_seconds)
+    auth = AuthSettings(
+        issuer_url=public_url, resource_server_url=resource, required_scopes=None,
+        client_registration_options=ClientRegistrationOptions(
+            enabled=True, valid_scopes=list(scopes_supported), default_scopes=["read"]),
+        revocation_options=RevocationOptions(enabled=True))
+    mcp = build_server(index_db, host=host, port=port, path=path, repo=repo, embedder=embedder,
+                       write_enabled=True, write_allowlist=write_allowlist,
+                       audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth)
+    _register_consent_route(mcp, provider)
     return mcp
 
 

@@ -155,3 +155,24 @@ def test_metadata_advertises_authorization_code_and_dcr():
     assert meta["registration_endpoint"].endswith("/register")
     assert meta["authorization_endpoint"].endswith("/authorize")
     assert set(meta["scopes_supported"]) >= {"read", "write"}
+
+
+# --- serve wiring: build_cloud_server (AS+RS + DCR + consent + write tool) ----
+
+def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fake_embedder):
+    import asyncio as _aio
+
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(
+        db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+        resource=RES, public_url=PUBLIC, approval_token="op-secret")
+    assert srv.settings.auth is not None
+    assert str(srv.settings.auth.resource_server_url).rstrip("/") == RES
+    assert srv.settings.auth.client_registration_options.enabled is True      # DCR wired
+    assert srv.settings.auth.revocation_options.enabled is True               # revocation wired
+    names = {t.name for t in _aio.run(srv.list_tools())}
+    assert "commit_note" in names and {"search", "resolve"} <= names          # read + write
+    assert "/consent" in [r.path for r in srv._custom_starlette_routes]       # consent route added
