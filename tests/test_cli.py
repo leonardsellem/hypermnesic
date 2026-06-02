@@ -351,7 +351,7 @@ def test_serve_cloud_requires_approval_token_env(tmp_path, capsys, monkeypatch):
 
 
 def test_serve_cloud_plumbs_to_build_cloud_server(tmp_path, monkeypatch):
-    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret")
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret-token-24-chars-or-more")
     captured: dict = {}
     srv = _FakeSrv()
 
@@ -367,5 +367,15 @@ def test_serve_cloud_plumbs_to_build_cloud_server(tmp_path, monkeypatch):
                    "--token-ttl", "1800"])
     assert rc == 0 and srv.ran
     assert captured["resource"] == "https://h/cloud/mcp" and captured["public_url"] == "https://h/cloud"
-    assert captured["approval_token"] == "op-secret"          # from env, never a CLI flag
+    assert captured["approval_token"] == "op-secret-token-24-chars-or-more"   # from env
     assert captured["token_ttl_seconds"] == 1800
+
+
+def test_serve_cloud_refuses_weak_approval_token(tmp_path, capsys, monkeypatch):
+    # a public WRITE surface gated by a single token needs an entropy floor (online-brute-force)
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "short")
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp"])
+    assert rc == 1
+    err = capsys.readouterr().err.lower()
+    assert "approval" in err and ("24" in err or "characters" in err or "weak" in err)

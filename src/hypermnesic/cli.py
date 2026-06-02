@@ -376,12 +376,18 @@ def _cmd_serve_cloud(args) -> int:
     (it would otherwise leak via the process table / logs; it gates every public connection)."""
     import os
 
-    from hypermnesic import mcp_server
+    from hypermnesic import auth_cloud, mcp_server
 
     approval = os.environ.get("HYPERMNESIC_CLOUD_APPROVAL_TOKEN")
     if not approval:
         print("serve-cloud failed: set HYPERMNESIC_CLOUD_APPROVAL_TOKEN (the operator approval "
               "token) in the environment — never a flag; it gates every public connection",
+              file=sys.stderr)
+        return 1
+    if len(approval) < auth_cloud.MIN_APPROVAL_TOKEN_LEN:
+        print(f"serve-cloud failed: the approval token is too weak — it is the only gate on every "
+              f"public write, so use at least {auth_cloud.MIN_APPROVAL_TOKEN_LEN} characters "
+              "(e.g. `python -c \"import secrets; print(secrets.token_urlsafe(32))\"`)",
               file=sys.stderr)
         return 1
     try:

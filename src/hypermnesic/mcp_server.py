@@ -292,12 +292,18 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     return mcp
 
 
+# The public cloud lane defaults writes to a dedicated, easily-reviewed quarantine zone —
+# NOT the full vault — so a prompt-injected cloud LLM's write is bounded + obvious (V19).
+CLOUD_WRITE_ALLOWLIST = ("captures/",)
+
 _CONSENT_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <title>hypermnesic — authorize</title></head>
-<body style="font-family:system-ui;max-width:32rem;margin:4rem auto;padding:0 1rem">
+<body style="font-family:system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">
 <h2>Authorize a connection to your hypermnesic memory</h2>
-<p>A client is requesting access. Approve it by entering your approval token. Only you
-hold this token, so an anonymous visitor cannot approve a connection.</p>
+<p>This client is requesting access. Approve it ONLY if you recognise it — entering your
+approval token grants it the scopes below. Only you hold this token.</p>
+<ul><li><b>Client:</b> {client}</li><li><b>Redirect:</b> {redirect}</li>
+<li><b>Scopes:</b> {scopes}</li></ul>
 {error}
 <form method="post" action="/consent">
 <input type="hidden" name="pending" value="{pending}">
@@ -306,32 +312,64 @@ style="width:100%;padding:.5rem"></label>
 <p><button type="submit" style="padding:.5rem 1rem">Approve</button></p>
 </form></body></html>"""
 
+_CONSENT_ERROR_HTML = """<!doctype html><html><head><meta charset="utf-8">
+<title>hypermnesic — authorize</title></head>
+<body style="font-family:system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">
+<h2>Authorization request not found</h2>
+<p>This authorization request is unknown or has expired. Start the connection again
+from your app.</p></body></html>"""
+
+# Anti-clickjacking + no-script CSP + no-store: the page where the operator types the token.
+_CONSENT_HEADERS = {
+    "X-Frame-Options": "DENY",
+    "Content-Security-Policy": (
+        "default-src 'none'; style-src 'unsafe-inline'; "
+        "form-action 'self'; frame-ancestors 'none'"),
+    "Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
+}
+
+
+def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, int]:
+    """Render the consent page. Looks the pending id up FIRST and renders a generic error for an
+    unknown id — the raw id (attacker input) is never reflected (no XSS sink). All client-supplied
+    fields (DCR client_name, redirect) are HTML-escaped. Returns (html, status)."""
+    import html as _html
+
+    details = provider.pending_details(pending_id)
+    if details is None:
+        return _CONSENT_ERROR_HTML, 404          # do not reflect an unknown/arbitrary id
+    err = f'<p style="color:#b00">{_html.escape(error)}</p>' if error else ""
+    html = _CONSENT_HTML.format(
+        pending=_html.escape(pending_id),
+        client=_html.escape(str(details.get("client_name") or details["client_id"])),
+        redirect=_html.escape(str(details["redirect_uri"])),
+        scopes=_html.escape(" ".join(details["scopes"])), error=err)
+    return html, (403 if error else 200)
+
 
 def _register_consent_route(mcp: FastMCP, provider) -> None:
     """Add the operator-authenticated ``/consent`` route. ``provider.authorize`` routes the
-    browser here; only the operator's approval token issues the code (the public-write gate)."""
+    browser here; only the operator's approval token issues the code (the public-write gate).
+    The page is escaped, framed-denied, and shows which client is being approved."""
     from starlette.requests import Request
     from starlette.responses import HTMLResponse, RedirectResponse
 
     from hypermnesic import auth_cloud
 
-    def _html(pending: str, error: str = "") -> str:
-        # the pending id is not a secret; the approval token is operator-entered, never pre-filled
-        block = (f'<p style="color:#b00">{error}</p>' if error else "")
-        return _CONSENT_HTML.format(pending=pending, error=block)
-
     @mcp.custom_route("/consent", methods=["GET", "POST"])
     async def consent(request: Request):
         if request.method == "GET":
-            return HTMLResponse(_html(request.query_params.get("pending", "")))
+            html, status = _render_consent(provider, request.query_params.get("pending", ""))
+            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
         form = await request.form()
         pending = str(form.get("pending", ""))
         try:
             redirect = provider.finalize_consent(pending, approval_token=str(
                 form.get("approval_token", "")))
         except auth_cloud.ConsentError as exc:
-            return HTMLResponse(_html(pending, error=str(exc)), status_code=403)
-        return RedirectResponse(redirect, status_code=302)
+            html, status = _render_consent(provider, pending, error=str(exc))
+            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
+        return RedirectResponse(redirect, status_code=302, headers=_CONSENT_HEADERS)
 
 
 def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
@@ -361,8 +399,11 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
         client_registration_options=ClientRegistrationOptions(
             enabled=True, valid_scopes=list(scopes_supported), default_scopes=["read"]),
         revocation_options=RevocationOptions(enabled=True))
+    # default the public lane to the tighter cloud review zone (not the full vault allowlist)
+    cloud_allowlist = list(write_allowlist) if write_allowlist is not None else list(
+        CLOUD_WRITE_ALLOWLIST)
     mcp = build_server(index_db, host=host, port=port, path=path, repo=repo, embedder=embedder,
-                       write_enabled=True, write_allowlist=write_allowlist,
+                       write_enabled=True, write_allowlist=cloud_allowlist,
                        audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth)
     _register_consent_route(mcp, provider)
     return mcp
