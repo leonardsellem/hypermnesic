@@ -17,12 +17,24 @@ from __future__ import annotations
 
 import difflib
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 
 from hypermnesic import frontmatter_gate as fg
 from hypermnesic import ingest, serialize
+
+# Bounded retry when the shared remote advances non-fast-forward between our
+# fetch+ff and our push (multiple pushers on origin/main). Module-level so tests
+# can shrink it; small because contention on a single-note write is brief.
+_PUSH_MAX_ATTEMPTS = 5
+
+
+class GitCoordinationError(Exception):
+    """A coordinated write could not reach the shared remote (fetch/ff/push failed
+    or the non-ff retry was exhausted). Surfaced as a refusal — never swallowed —
+    after the local-ahead commit is dropped so it cannot wedge ``gbrain-pull --ff-only``."""
 
 
 @dataclass
@@ -44,6 +56,79 @@ def _preview_diff(rel: str, old: str, new: str) -> str:
 def _git(repo, *args) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(repo), *args],
                           capture_output=True, text=True)
+
+
+def _git_checked(repo, *args) -> subprocess.CompletedProcess:
+    """``_git`` that raises on a non-zero return code, so a failed stage/commit/push
+    surfaces as a refusal instead of a silent success (U11)."""
+    cp = _git(repo, *args)
+    if cp.returncode != 0:
+        raise GitCoordinationError(
+            f"git {' '.join(args)} failed (rc={cp.returncode}): {cp.stderr.strip()}")
+    return cp
+
+
+def _head(repo) -> str | None:
+    return _git(repo, "rev-parse", "HEAD").stdout.strip() or None
+
+
+def _current_branch(repo) -> str:
+    return _git(repo, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip() or "main"
+
+
+def _default_remote(repo) -> str | None:
+    """The push target — ``origin`` when present, else the first remote, else None
+    (a local-only / portable checkout, which skips coordination entirely)."""
+    remotes = _git(repo, "remote").stdout.split()
+    if "origin" in remotes:
+        return "origin"
+    return remotes[0] if remotes else None
+
+
+def _looks_non_ff(text: str) -> bool:
+    t = text.lower()
+    return any(s in t for s in ("non-fast-forward", "fetch first",
+                                "failed to push some refs", "[rejected]", " rejected"))
+
+
+def _fetch_and_ff(repo, remote, branch) -> None:
+    """Fetch the shared remote and fast-forward the local branch to its tip. We hold
+    no local commit yet, so this is a clean ff or a no-op; a divergence we cannot
+    ff is a refusal. Pairs with the post-fetch ``preflight(expected_head=base)`` drift
+    guard (V8 mitigation: fetch+ff before preflight)."""
+    if _git(repo, "fetch", remote).returncode != 0:
+        raise GitCoordinationError(f"git fetch {remote} failed (remote unreachable?)")
+    tracking = f"{remote}/{branch}"
+    if _git(repo, "rev-parse", "--verify", "--quiet", tracking).returncode != 0:
+        return                                  # remote has no such branch yet → push creates it
+    cp = _git(repo, "merge", "--ff-only", tracking)
+    if cp.returncode != 0:
+        raise GitCoordinationError(
+            f"cannot fast-forward {branch} to {tracking}: {cp.stderr.strip()}")
+
+
+def _push_with_retry(repo, remote, branch) -> None:
+    """Push the local commit to the shared remote, retrying on non-fast-forward by
+    fetching + rebasing our single commit onto the advanced tip. On an unrecoverable
+    failure (conflict, auth/network, exhausted retries) drop the local-ahead commit
+    (``reset --hard`` to the remote tip) and raise — never leave an un-pushed commit."""
+    for _ in range(_PUSH_MAX_ATTEMPTS):
+        cp = _git(repo, "push", remote, branch)
+        if cp.returncode == 0:
+            return
+        if not _looks_non_ff(cp.stderr + cp.stdout):
+            break                               # auth/network/hook reject → unrecoverable
+        if _git(repo, "fetch", remote).returncode != 0:
+            break
+        rb = _git(repo, "rebase", f"{remote}/{branch}")
+        if rb.returncode != 0:
+            _git(repo, "rebase", "--abort")     # conflicting change → cannot converge cleanly
+            break
+    # unrecoverable / exhausted → restore a clean, non-local-ahead tree, then refuse.
+    _git(repo, "fetch", remote)
+    _git(repo, "reset", "--hard", f"{remote}/{branch}")
+    raise GitCoordinationError(
+        f"push to {remote}/{branch} did not succeed; aborted with no local-ahead commit")
 
 
 def _render_new(set_fields: dict, body: str) -> str:
@@ -85,27 +170,39 @@ def _commit_locked(repo, rel, body, set_fields, summary, idx, log) -> CommitResu
         original = fpath.read_text(encoding="utf-8")
         new_text = fg.gated_edit(original, body=body, set_fields=set_fields)  # diff-or-die (U8)
         if new_text == original:  # idempotent: identical content → no-op
-            head = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
-            return CommitResult(rel, False, head, "", noop=True)
+            return CommitResult(rel, False, _head(repo), "", noop=True)
     else:
         new_text = _render_new(set_fields or {}, body or "")
 
-    old_sha = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
+    # --- multi-host coordination (U11): on a shared remote, converge BEFORE writing
+    # so a stale-base edit aborts clean (no clobber), and push so we never commit
+    # local-only (which would wedge gbrain-pull --ff-only). No remote → solo path.
+    remote = _default_remote(repo)
+    branch = _current_branch(repo)
+    base = _head(repo)                                      # base captured at edit base-read
+    if remote is not None:
+        _fetch_and_ff(repo, remote, branch)                # fetch + fast-forward (raises)
+        serialize.preflight(repo, expected_head=base)      # HeadDriftError on base drift
+
+    old_sha = base
     fpath.parent.mkdir(parents=True, exist_ok=True)
     fpath.write_text(new_text, encoding="utf-8")
-    _git(repo, "add", "--", rel)
+    _git_checked(repo, "add", "--", rel)
     if _git(repo, "diff", "--cached", "--quiet").returncode == 0:  # nothing staged
         return CommitResult(rel, not existed, old_sha, "", noop=True)
 
     msg = summary or f"commit_note: {rel}"
-    _git(repo, "commit", "-q", "-m", msg)
-    new_sha = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
+    _git_checked(repo, "commit", "-q", "-m", msg)
+    if remote is not None:
+        _push_with_retry(repo, remote, branch)             # push, retry on non-ff; raises
+    new_sha = _head(repo)                                  # re-read: a retry rebase rewrites it
 
     # synchronous lexical + graph extraction (embeddings are async — AE5)
     if idx is not None:
         idx.upsert_lexical(rel, ingest.chunks_for_text(rel, new_text))
 
-    # append audit log — summaries only, server-set actor (U11)
+    # append audit log — summaries only, server-set actor (U11). Only after the write
+    # has reached the shared remote (or is purely local) — never on a refused push.
     if log is not None:
         log.append(verb=("create" if not existed else "edit"), path=rel,
                    old_sha=old_sha, new_sha=new_sha, summary=summary or msg)
@@ -117,10 +214,18 @@ def _commit_locked(repo, rel, body, set_fields, summary, idx, log) -> CommitResu
 def rename_note(repo, old_path: str, new_path: str, *, body: str | None = None,
                 set_fields: dict | None = None, summary: str | None = None,
                 idx=None, log=None, allowlist: list[str] | None = None,
+                tombstone_fn: Callable[[str], None] | None = None,
                 dry_run: bool = False) -> CommitResult:
     """U10 — rename/move as one atomic surface: git mv + index re-key, with no
-    re-materialization of the old slug and no tombstone. Optional content edit in
-    the same move goes through the diff-or-die gate first (abort = no git op)."""
+    re-materialization of the old slug. Optional content edit in the same move goes
+    through the diff-or-die gate first (abort = no git op).
+
+    ``tombstone_fn`` (U13) is an optional sink invoked with the **neutral
+    repo-relative old path** just before the removing git op, so a deployment that
+    coexists with an external DB→disk restore can record the removed slug and prevent
+    its resurrection. It defaults to ``None`` (no-op): the engine stays repo-agnostic
+    — it owns no external path or format, so it takes on no dependency on any
+    particular companion system."""
     repo = Path(repo)
     new_rel = serialize.check(repo, new_path, allowlist=allowlist)   # guard both ends
     old_rel = serialize.check(repo, old_path, allowlist=allowlist)
@@ -136,12 +241,14 @@ def rename_note(repo, old_path: str, new_path: str, *, body: str | None = None,
         return CommitResult(new_rel, created=False, new_sha=None, diff=diff, dry_run=True)
     lock = serialize.index_write_lock(repo).acquire()               # single-writer (KTD9/R13)
     try:
-        return _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log)
+        return _rename_locked(repo, old_rel, new_rel, body, set_fields, summary,
+                              idx, log, tombstone_fn)
     finally:
         lock.release()
 
 
-def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log) -> CommitResult:
+def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log,
+                   tombstone_fn) -> CommitResult:
     old_fp = repo / old_rel
     if not old_fp.exists():
         raise FileNotFoundError(old_rel)
@@ -150,6 +257,13 @@ def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log) 
     new_text = original
     if body is not None or set_fields:
         new_text = fg.gated_edit(original, body=body, set_fields=set_fields)  # may abort first
+
+    # Tombstone-first (U13): record the removed slug BEFORE the git op — after the gate
+    # (so a gate-abort leaves no orphan tombstone), so a crash mid-op cannot leave an
+    # un-tombstoned orphan. The engine passes the neutral old rel-path; the injected
+    # sink owns any external path/format. No sink → no-op (portable, no coupling).
+    if tombstone_fn is not None:
+        tombstone_fn(old_rel)
 
     old_sha = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
     _git(repo, "mv", old_rel, new_rel)
