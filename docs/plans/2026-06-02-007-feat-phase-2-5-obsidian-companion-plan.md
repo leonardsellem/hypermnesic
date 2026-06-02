@@ -29,6 +29,20 @@ This plan rebuilds the surface around one shared core, makes the read-only guara
 
 ---
 
+## Grounding — Plan 1 shipped (2026-06-02; PRs #2 + #3 merged to `main`)
+
+Plan 1 (U26–U34 + code-review follow-ups) is **complete and merged**, so its engine contract is now concrete rather than assumed. This plan consumes it directly — the capability handshake (KTD4) and mtime fallback (KTD3) remain, but now guard against an *older/read-only* serve, not an unshipped one:
+
+- **`search` response shape** (shipped MCP tool): top-level `{ query, degraded_lexical_only, manual_reindex_recommended, hits }`; each hit is `{ path, heading, score (float), channels: string[] (sorted — `lexical`/`dense`/`doc`), snippet (≤280 chars), recency: float | null }`.
+- **`recency` is epoch seconds** — the Unix committer-time of the most recent commit touching the path (`null` when untracked). The engine emits a **raw timestamp, not a pre-decayed score**; the companion derives its own forgetting curve from it (resolves the recency-representation open question).
+- **`manual_reindex_recommended: bool`** is a NEW per-read signal on all three read tools (the oversized-delta / stale-index hint Plan 1's convergence surfaces). U41's state machine consumes it as an explicit "stale — reindex on the master" state, alongside `degraded_lexical_only`.
+- **`degraded_lexical_only`** now reflects both query-embedding AND convergence-embedding degradation (dense channel down either way → lexical-only).
+- **Read tools are exactly `{ search, build_context, think }`** (`READ_TOOL_NAMES`). The write tool `commit_note` is registered ONLY on a write-enabled master (`WRITE_TOOL_NAMES`), never reachable by this read-only client — so the plugin's allowlist mirrors the server's structural split.
+- **Single-JSON serve is the default** (`build_server(..., json_response=True)`), so `requestUrl` (buffered, non-streaming) works without SSE.
+- **The installer's `--role=client`** (Plan 1 U34) emits/patches an MCP-client config entry `{"mcpServers": {"hypermnesic": {"type": "streamable-http", "url": "<master>/mcp"}}}`. The plugin's settings URL (U41) is that same value: a provisioned client install pre-fills it, while a manual install starts **empty** (opt-in off-device send, DEP-R17). The plugin should read this shape if it auto-detects an installed client config.
+
+---
+
 ## Requirements
 
 Traced to the companion half of the fresh-recall doc (its R1–R23) and the deployment doc's Obsidian-compliance group (its R15–R20). The engine-side requirements live in Plan 1.
@@ -59,11 +73,11 @@ Traced to the companion half of the fresh-recall doc (its R1–R23) and the depl
 
 - KTD2 — Calm-primary, sidebar opt-in, pause-triggered. The default surface is a low-footprint status-bar indicator (+ optional editor-margin markers); retrieval fires on a thinking pause (cursor idle / paragraph boundary / hotkey), never per-keystroke, and holds findings during sustained typing. Rationale: the companion defers to the writer. (see origin: fresh-recall KD3, R3, R7)
 
-- KTD3 — Forgetting-curve ranking consumes the engine recency field, with a local-mtime fallback. Results rank by relevance × staleness using the per-`Hit` recency Plan 1 surfaces; when absent (engine not yet upgraded, or capability handshake reports it missing), fall back to the note's local mtime. Rationale: the anti-amnesia differentiator works independently of Plan 1's ship order. (see origin: fresh-recall KD4, R9; deployment KD7)
+- KTD3 — Forgetting-curve ranking consumes the engine recency field, with a local-mtime fallback. Results rank by relevance × staleness using the per-`Hit` recency Plan 1 surfaces — now concretely an **epoch-seconds float (git committer-time), `null` when untracked**; the companion derives the decay. When the field is absent or `null` (older serve, or handshake reports it missing), fall back to the note's local mtime. Rationale: the anti-amnesia differentiator works independently of Plan 1's ship order. (see origin: fresh-recall KD4, R9; deployment KD7)
 
 - KTD4 — Capability handshake decouples the plugin from the engine version. On load the plugin probes which MCP tools/channels and result fields exist (e.g. whether `think` is served, whether `Hit` carries recency) and lights surfaces up or degrades them accordingly. Rationale: the engine can grow without a lockstep plugin release. (see origin: fresh-recall KD6, R5)
 
-- KTD5 — Trust is shown, not asserted. One explicit interaction-state machine (idle/loading/results/stale/offline/degraded/error with an as-of stamp), per-result channel provenance, a persistent "read-only · tailnet · no text retained" badge, and an in-settings list of the allowlisted read tools. Rationale: the read-only guarantee must be legible in the UI, not just in code. (see origin: fresh-recall KD5, R17–R19)
+- KTD5 — Trust is shown, not asserted. One explicit interaction-state machine (idle/loading/results/stale/offline/degraded/error with an as-of stamp), plus a distinct **"stale — reindex on master"** state driven by Plan 1's `manual_reindex_recommended` flag; per-result channel provenance, a persistent "read-only · tailnet · no text retained" badge, and an in-settings list of the allowlisted read tools. Rationale: the read-only guarantee must be legible in the UI, not just in code. (see origin: fresh-recall KD5, R17–R19)
 
 - KTD6 — Modular TypeScript, with the read-only guarantee kept statically verifiable. The redesign splits the plugin into a shared-core module + surface modules (esbuild bundles to one `main.js`). Because the static read-only test scans source, the tool allowlist and the no-vault-write guarantee are kept in a scannable location and the test's scan target is updated in lockstep. Rationale: the surface count needs modularity, but the structural read-only proof must not regress. (see origin: deployment R20; this plan's confirmed modular-vs-single-file call-out)
 
@@ -171,7 +185,7 @@ Execution posture: the TypeScript surfaces are verified by **manual Obsidian loa
 - **Requirements:** FR-R9.
 - **Dependencies:** U36. Consumes Plan 1's per-`Hit` recency field (U29) when present.
 - **Files:** `obsidian-plugin/src/ranking.ts` (new).
-- **Approach:** A pure ranking function over the core's cached hits: combine relevance (score) with staleness (down-weight recently-touched notes). Staleness source = the per-`Hit` recency field from Plan 1 when the handshake reports it; otherwise the note's local mtime (`vault.adapter` stat / metadata) as a fallback. Threshold/weights are tunables.
+- **Approach:** A pure ranking function over the core's cached hits: combine relevance (score) with staleness (down-weight recently-touched notes). Staleness source = the per-`Hit` `recency` field from Plan 1 (an **epoch-seconds float**, `null` when untracked) when present and non-null; otherwise the note's local mtime (`vault.adapter` stat / metadata) as a fallback. Compute the decay client-side (the engine emits a raw timestamp, not a pre-decayed score). Threshold/weights are tunables.
 - **Execution note:** test-first for the ranking function determinism and the fallback branch.
 - **Patterns to follow:** the engine's relevance scoring shape (read-only consumption).
 - **Test scenarios:**
@@ -237,7 +251,7 @@ Execution posture: the TypeScript surfaces are verified by **manual Obsidian loa
 - **Requirements:** FR-R17, R18, R19, R20, R21, R22; DEP-R16, R17, R18.
 - **Dependencies:** U36 (states wrap the pipeline); cross-cuts U38.
 - **Files:** `obsidian-plugin/src/state.ts` (new), `obsidian-plugin/src/settings.ts` (new), `obsidian-plugin/main.ts`, `obsidian-plugin/README.md`, `obsidian-plugin/manifest.json`.
-- **Approach:** Implement one interaction-state machine — idle / loading / results / stale (with an as-of stamp when a refresh fails) / offline-tailnet / degraded (lexical-only) / error — each visibly distinct across all surfaces; surface `degraded_lexical_only` explicitly. Add a persistent "read-only · tailnet · no text retained" badge and an in-settings list of the allowlisted read tools. Accessibility: `aria-live` on result updates, full keyboard nav, and never color-as-sole-signal (provenance/staleness carry text/tooltip equivalents). Settings (`PluginSettingTab`, sentence-case names, `setHeading`): MCP URL **defaulting to empty** (opt-in off-device send — removes the hardcoded `100.103.0.55` default), pause/debounce interval, result count, reinvention threshold, per-surface toggles; persisted via `loadData`/`saveData`; any future credential read from settings, never logged. Update `README.md` with the network/account disclosure (which remote service, that note text is transmitted, opt-in). Leave a clean seam for future protocol-handler OAuth (`registerObsidianProtocolHandler` + PKCE) without implementing it.
+- **Approach:** Implement one interaction-state machine — idle / loading / results / stale (with an as-of stamp when a refresh fails) / offline-tailnet / degraded (lexical-only) / reindex-recommended / error — each visibly distinct across all surfaces; surface `degraded_lexical_only` explicitly, and surface Plan 1's `manual_reindex_recommended` as the distinct "stale index — reindex on master" state. Add a persistent "read-only · tailnet · no text retained" badge and an in-settings list of the allowlisted read tools. Accessibility: `aria-live` on result updates, full keyboard nav, and never color-as-sole-signal (provenance/staleness carry text/tooltip equivalents). Settings (`PluginSettingTab`, sentence-case names, `setHeading`): MCP URL **defaulting to empty** (opt-in off-device send — removes the hardcoded `100.103.0.55` default), pause/debounce interval, result count, reinvention threshold, per-surface toggles; persisted via `loadData`/`saveData`; any future credential read from settings, never logged. A provisioned `--role=client` install (Plan 1 U34) supplies the endpoint via its emitted `mcpServers.hypermnesic.url` config; a manual install starts empty until the user sets it — the empty default never transmits. Update `README.md` with the network/account disclosure (which remote service, that note text is transmitted, opt-in). Leave a clean seam for future protocol-handler OAuth (`registerObsidianProtocolHandler` + PKCE) without implementing it.
 - **Execution note:** test-first for the default-empty-URL "no off-device send until configured" behavior.
 - **Patterns to follow:** the existing `HypermnesicSettingTab` + `loadData`/`saveData`; Obsidian `PluginSettingTab`/`setHeading` conventions; `createEl` safe DOM (no `innerHTML`).
 - **Test scenarios:**
@@ -254,11 +268,11 @@ Execution posture: the TypeScript surfaces are verified by **manual Obsidian loa
 ## Risks & Dependencies
 
 - **R-1 Read-only proof regresses during modularization (KTD6).** Splitting `main.ts` could move the allowlist out of the test's scan target, silently weakening the guarantee. Mitigation: update the test's scan target in lockstep (U35/U39); keep the allowlist + no-write guarantee in one scannable module.
-- **R-2 Plan 1 not yet landed.** Forgetting-curve recency (U37), `think` over MCP, and the single-JSON serve are Plan 1 deliverables. Mitigation: the capability handshake (KTD4) + mtime fallback (KTD3) make the companion build and run against today's engine; engine-fed recency and `think` light up when Plan 1 ships.
+- **R-2 Engine-version skew (Plan 1 has landed).** Plan 1 shipped (PRs #2/#3 merged), so forgetting-curve recency (U37), `think` over MCP, the `manual_reindex_recommended` signal, and the single-JSON serve are all available on a current master. The residual risk is *version skew* — a master running an older build, or a deliberately read-only serve. Mitigation: the capability handshake (KTD4) + mtime fallback (KTD3) keep the companion working against any engine version; the engine-fed fields light up when present and degrade cleanly when absent/`null`.
 - **R-3 CM6 gutter complexity.** Inline/gutter widgets are the highest-complexity surface. Mitigation: status-bar is the calm-primary default; the gutter is optional and registered via the supported `registerEditorExtension` path; if it proves heavy, it can ship after the status-bar surface.
 - **R-4 Off-device transmission is reviewer-sensitive.** Sending note text to a remote endpoint is the most scrutinized plugin behavior. Mitigation: default-empty URL (opt-in), README disclosure, read-only badge (U41); never transmit without a configured endpoint.
 - **Dependency:** Obsidian desktop install for manual verification; node/esbuild for the build; the existing permissive-license gate applies to the new devDeps.
-- **Dependency (Plan 1):** the per-`Hit` recency field, `think` exposure already exists server-side, and the single-JSON serve.
+- **Dependency (Plan 1 — SHIPPED):** the per-`Hit` `recency` field (epoch-seconds float, `null`-safe), `think` in `READ_TOOL_NAMES`, the `manual_reindex_recommended` read-signal, the single-JSON serve (`json_response=True` default), and the `--role=client` MCP-config emitter — all merged to `main` and available to consume.
 
 ---
 
@@ -288,7 +302,8 @@ Execution posture: the TypeScript surfaces are verified by **manual Obsidian loa
 - Pause-trigger defaults (idle ms, paragraph-boundary detection) — pick an initial model, tune against real writing (origin resolved the model; values are tuning).
 - Block-hash cache eviction policy and size bound.
 - Status-bar popover vs command-palette switcher for "expand related"; whether the opted-in sidebar reuses the popover renderer (KTD1 leans yes).
-- Exact recency representation consumed from Plan 1's `Hit` (timestamp vs decayed score) — settle once U29 lands.
+- ~~Exact recency representation consumed from Plan 1's `Hit`~~ — **RESOLVED (U29 shipped):** it is an epoch-seconds float (git committer-time), `null` when untracked. The companion derives its own decay client-side.
+- Whether to also consume Plan 1's new `manual_reindex_recommended` read-signal as a first-class surface state (this plan now says yes — KTD5/U41) vs treating it as advisory-only.
 - Whether the gutter ships in this plan or as a fast-follow if CM6 cost is high (R-3).
 - Forgetting-curve weights (relevance vs staleness).
 
@@ -297,7 +312,7 @@ Execution posture: the TypeScript surfaces are verified by **manual Obsidian loa
 ## Sources / Research
 
 - Origin docs: `docs/brainstorms/2026-06-02-phase-2-5-fresh-recall-requirements.md` (companion R1–R23), `docs/brainstorms/2026-06-02-deployment-topology-write-model-requirements.md` (R15–R20).
-- Plan 1: `docs/plans/2026-06-02-006-feat-phase-2-5-engine-deployment-plan.md` (recency field, `think` exposure, single-JSON serve, convergence).
+- Plan 1 (status: **completed**, merged to `main` via PRs #2/#3): `docs/plans/2026-06-02-006-feat-phase-2-5-engine-deployment-plan.md` (recency field, `think` exposure, single-JSON serve, convergence, role-aware installer). See the "Grounding — Plan 1 shipped" section above for the concrete consumed contract.
 - Current plugin (ce-repo-research-analyst, 2026-06-02): `obsidian-plugin/main.ts` (file-head query, sidebar-only, `READ_ONLY_TOOLS` lacks `think`, hardcoded `mcpUrl` default `100.103.0.55:8848`, `editor-change` debounce, `onunload` detach **violation**), `obsidian-plugin/manifest.json` (`isDesktopOnly: true`), build scaffolding **verified absent**; `tests/test_obsidian_plugin.py` (4 tests incl. the exact-string allowlist assertion `new Set(["search", "build_context"])` and the no-vault-write scan — both must stay green / update in lockstep).
 - Obsidian official developer docs (2026, ce-framework-docs-researcher): `requestUrl` (not `fetch`); Developer Policies (network/account disclosure, no telemetry/remote-code/secrets); Plugin guidelines (no leaf-detach on unload, `getLeavesOfType`, auto-cleanup registrations, no default hotkeys, `setHeading`/sentence-case, safe DOM); `registerEditorExtension` for CM6; `registerObsidianProtocolHandler` + PKCE for OAuth; `isDesktopOnly` implications (status-bar unsupported on mobile). URLs in the deployment-topology requirements doc's Sources.
-- Engine contract: `src/hypermnesic/retrieve.py` (`Hit`, `degraded_lexical_only`), `src/hypermnesic/think.py`, `src/hypermnesic/mcp_server.py` (read tools, `readOnlyHint`).
+- Engine contract (shipped): `src/hypermnesic/retrieve.py` (`Hit` now carries `recency: float | None`; `git_commit_recency`), `src/hypermnesic/think.py`, `src/hypermnesic/mcp_server.py` (`READ_TOOL_NAMES` = `{search, build_context, think}`, `WRITE_TOOL_NAMES` = `{commit_note}` master-only; `search`/`build_context`/`think` responses carry `manual_reindex_recommended`; `build_server(json_response=True)`), `src/hypermnesic/install.py` (`--role=client` writes `mcpServers.hypermnesic` = `{type: streamable-http, url}`).

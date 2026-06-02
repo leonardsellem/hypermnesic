@@ -1,7 +1,7 @@
 ---
 title: "feat: Phase 2.5 (Plan 1 of 2) — Engine convergence, git-first write tool, and the role-aware installer"
 type: feat
-status: active
+status: completed
 created: 2026-06-02
 origin:
   - "docs/brainstorms/2026-06-02-phase-2-5-fresh-recall-requirements.md (engine half)"
