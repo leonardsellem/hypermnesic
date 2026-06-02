@@ -1,9 +1,20 @@
 # Cloud OAuth MCP — go-live runbook (ChatGPT/Claude mobile, read+write)
 
+> ## ✅ DEPLOYED 2026-06-02 (homelab steps 1-3, 5 executed; verified live end-to-end through the Funnel)
+> Triggered by the operator's failed ChatGPT/Claude connector attempts. RCA: the lane had never
+> been deployed (`hypermnesic-cloud.service` absent, no `/cloud` Funnel route → discovery 404 →
+> "Authorization failed"). Now **live**: `hypermnesic-cloud.service` on `127.0.0.1:8850`, Funnel
+> `/cloud` (+ two root well-knowns) on :443, approval token in `~/.config/hypermnesic-cloud/cloud.env`
+> (0600). An engine fix shipped on the way (commit `a8170fc`: FastMCP's loopback DNS-rebinding
+> protection 421'd the Funnel's public Host — `build_server` now trusts declared `public_hosts`).
+> Proven live: discovery 200 → DCR → consent → token → authed `tools/list`+`search`+`commit_note`→`captures/`
+> 200, `notes/` refused, unauth 401. Mirror: `gbrain-brain/projects/homelab/services/hypermnesic-cloud.md`.
+> **ONLY step 4 remains — the operator adds the connector in each app and types the approval token.**
+
 Ready-to-execute steps to take the **public** cloud OAuth MCP live, with rollback inverses.
-The code is complete, tested (463 passing), live-proven, and security-hardened (commit `ec80801`).
-**Nothing here has run.** It exposes a public **write** endpoint to your memory, so it is gated on
-your explicit go-ahead. The agent can do the homelab-side steps (1–3, 5) reversibly on your
+The code is complete, tested (464 passing), live-proven, and security-hardened (commit `ec80801`,
+public-Host fix `a8170fc`). It exposes a public **write** endpoint to your memory, so it is gated on
+your explicit go-ahead. The agent did the homelab-side steps (1–3, 5) reversibly on your
 approval; **steps 4 (the ChatGPT/Claude connector install) and the approval token are yours.**
 
 > Secrets (V9): the approval token + RS env never appear in a flag, a log, or a committed file.
