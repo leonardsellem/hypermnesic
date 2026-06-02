@@ -1,6 +1,6 @@
 {
   "name": "hypermnesic-companion",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Strictly read-only recall surface for Obsidian over the tailnet hypermnesic MCP.",
   "main": "main.js",
   "private": true,

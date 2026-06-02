@@ -11,7 +11,7 @@
  * dismissable/mutable PER NOTE — muting is plugin-local state (persisted via the
  * store) and never edits the note. It exposes no write affordance in v1.
  */
-import { HoverParent, Notice } from "obsidian";
+import { ButtonComponent, HoverParent, Notice } from "obsidian";
 import { ContextResponse, CoreResult, callTool, parseToolResult } from "./core";
 import { ReferenceRowDeps, renderReference, resolveReference } from "./surfaces/reference";
 
@@ -73,11 +73,10 @@ export function renderNudge(
   }
 
   const actions = box.createEl("div", { cls: "hypermnesic-nudge-actions" });
+  const peekOut = box.createEl("div", { cls: "hypermnesic-nudge-peek" });
 
   // "Check context" — a one-hop build_context peek (read-only).
-  const peekOut = box.createEl("div", { cls: "hypermnesic-nudge-peek" });
-  const peekBtn = actions.createEl("button", { text: "Check context" });
-  peekBtn.addEventListener("click", async () => {
+  new ButtonComponent(actions).setButtonText("Check context").onClick(async () => {
     peekOut.empty();
     peekOut.setText("loading…");
     try {
@@ -91,8 +90,7 @@ export function renderNudge(
   });
 
   // "Mute for this note" — plugin-local, persisted, never edits the note.
-  const muteBtn = actions.createEl("button", { text: "Mute for this note" });
-  muteBtn.addEventListener("click", async () => {
+  new ButtonComponent(actions).setButtonText("Mute for this note").onClick(async () => {
     await deps.store.mute(activePath);
     box.remove();
     new Notice("hypermnesic: nudge muted for this note");
