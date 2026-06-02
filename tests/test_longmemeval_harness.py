@@ -229,3 +229,140 @@ def test_abstention_instance_carries_no_retrieval_gold(tmp_path):
     mt = mat.materialize_turns(inst, tmp_path / "t")
     assert ms.gold_units == set()
     assert mt.gold_units == set()
+
+
+# ---------------------------------------------------------------------------
+# U3 — per-haystack index + retrieval adapter (+ content-hash embedding cache)
+# ---------------------------------------------------------------------------
+
+from longmemeval import adapter  # noqa: E402
+
+from hypermnesic import embed as embed_mod  # noqa: E402
+from hypermnesic.config import EMBED_DIM  # noqa: E402
+
+
+class _CountingEmbedder:
+    """Wraps an embedder and counts how many texts it is asked to embed."""
+
+    def __init__(self, inner):
+        self._inner = inner
+        self.dim = inner.dim
+        self.model = getattr(inner, "model", "counting")
+        self.n_embedded = 0
+
+    def embed(self, texts):
+        self.n_embedded += len(texts)
+        return self._inner.embed(texts)
+
+
+class _DownEmbedder:
+    """An embedder whose API is down — every embed call fails (R20/AE2)."""
+
+    dim = EMBED_DIM
+    model = "down"
+
+    def embed(self, texts):
+        raise embed_mod.EmbeddingError("API down")
+
+
+def _other_instance():
+    return mat.parse_instance({
+        "question_id": "q2",
+        "question_type": "multi-session",
+        "question": "Which city did I move to?",
+        "answer": "Berlin",
+        "question_date": "2023-07-01",
+        "haystack_session_ids": ["x_alpha", "x_answer"],
+        "haystack_dates": ["2023-06-10", "2023-06-15"],
+        "haystack_sessions": [
+            [{"role": "user", "content": "Planning a relocation"},
+             {"role": "assistant", "content": "Exciting!"}],
+            [{"role": "user", "content": "I moved to Berlin last week", "has_answer": True},
+             {"role": "assistant", "content": "Welcome to Berlin."}],
+        ],
+        "answer_session_ids": ["x_answer"],
+    })
+
+
+def test_retrieve_for_corpus_maps_hits_to_unit_ids(tmp_path, fake_embedder):
+    inst = mat.parse_instance(_instance())
+    m = mat.materialize_sessions(inst, tmp_path / "corpus")
+    r = adapter.retrieve_for_corpus(m, inst.question, fake_embedder, state_dir=tmp_path / "st")
+    assert r.degraded is False
+    assert r.ranked_units  # the index answered with at least one hit
+    assert set(r.ranked_units) <= {"s_intro", "s_answer", "s_filler"}
+    # turn granularity maps to turn ids too
+    mt = mat.materialize_turns(inst, tmp_path / "turns")
+    rt = adapter.retrieve_for_corpus(mt, inst.question, fake_embedder, state_dir=tmp_path / "stt")
+    assert set(rt.ranked_units) <= set(mt.path_to_unit.values())
+
+
+def test_per_haystack_isolation_no_cross_instance_leak(tmp_path, fake_embedder):
+    a, b = mat.parse_instance(_instance()), _other_instance()
+    ma = mat.materialize_sessions(a, tmp_path / "A")
+    mb = mat.materialize_sessions(b, tmp_path / "B")
+    ra = adapter.retrieve_for_corpus(ma, a.question, fake_embedder, state_dir=tmp_path / "sa")
+    rb = adapter.retrieve_for_corpus(mb, b.question, fake_embedder, state_dir=tmp_path / "sb")
+    assert set(ra.ranked_units) <= {"s_intro", "s_answer", "s_filler"}
+    assert set(rb.ranked_units) <= {"x_alpha", "x_answer"}
+    assert not (set(ra.ranked_units) & set(rb.ranked_units))  # no leakage
+
+
+def test_state_dir_lives_outside_corpus_which_is_unmodified(tmp_path, fake_embedder):
+    inst = mat.parse_instance(_instance())
+    corpus = tmp_path / "corpus"
+    m = mat.materialize_sessions(inst, corpus)
+    before = {p.name: p.read_bytes() for p in corpus.glob("*.md")}
+    state = tmp_path / "state"
+    adapter.retrieve_for_corpus(m, inst.question, fake_embedder, state_dir=state)
+    after = {p.name: p.read_bytes() for p in corpus.glob("*.md")}
+    assert before == after  # corpus tree untouched
+    assert not (corpus / ".hypermnesic").exists()  # state dir is external
+    assert (state / "index.db").exists()
+
+
+def test_degraded_embedder_voids_the_run(tmp_path):
+    # Covers AE2: when embeddings are unavailable, the run is voided, not scored.
+    inst = mat.parse_instance(_instance())
+    run = adapter.retrieve_instances([inst], tmp_path / "work", _DownEmbedder())
+    assert run.void is True
+    # a void run produces no scorable ranking
+    assert all(res.session.degraded and res.turn.degraded for res in run.results)
+
+
+def test_healthy_run_is_not_void(tmp_path, fake_embedder):
+    inst = mat.parse_instance(_instance())
+    run = adapter.retrieve_instances([inst], tmp_path / "work", fake_embedder)
+    assert run.void is False
+    assert len(run.results) == 1
+    assert run.results[0].session.granularity == "session"
+    assert run.results[0].turn.granularity == "turn"
+
+
+def test_embedding_cache_avoids_re_embedding_identical_content(tmp_path, fake_embedder):
+    # The content-hash cache (R12/R19 cost mitigation): a re-run over identical
+    # chunk text issues no duplicate embed calls to the underlying embedder.
+    counter = _CountingEmbedder(fake_embedder)
+    cached = adapter.CachingEmbedder(counter)
+    inst = mat.parse_instance(_instance())
+    m = mat.materialize_sessions(inst, tmp_path / "corpus")
+    r1 = adapter.retrieve_for_corpus(m, inst.question, cached, state_dir=tmp_path / "s1")
+    first = counter.n_embedded
+    assert first > 0
+    r2 = adapter.retrieve_for_corpus(m, inst.question, cached, state_dir=tmp_path / "s2")
+    assert counter.n_embedded == first  # nothing re-embedded on the re-run
+    assert r1.ranked_units == r2.ranked_units
+
+
+def test_sqlite_embedding_cache_round_trips(tmp_path, fake_embedder):
+    store = adapter.SqliteEmbeddingCache(tmp_path / "cache.sqlite")
+    cached = adapter.CachingEmbedder(fake_embedder, store=store)
+    [v1] = cached.embed(["hello world"])
+    assert "hello world" not in store  # store is keyed by content hash, not raw text
+    [v2] = cached.embed(["hello world"])  # second call served from the store
+    assert v1 == v2 and len(v1) == EMBED_DIM
+    store.close()
+    # a fresh store over the same file still holds the vector (persistence)
+    reopened = adapter.SqliteEmbeddingCache(tmp_path / "cache.sqlite")
+    assert reopened._count() >= 1
+    reopened.close()
