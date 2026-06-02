@@ -181,10 +181,13 @@ PYTHONPATH=harness uv run python harness/longmemeval/diagnostic.py \
   --dataset harness/longmemeval/longmemeval_s_cleaned.json \
   --out harness/longmemeval/results/diagnostic.json
 
-# 3. Phase 2 — end-to-end QA headline (gated; both reader columns; shared judge).
+# 3. Phase 2 — end-to-end QA headline (GATED; both reader columns; shared judge).
+#    --confirm-paid-run is required; without it the runner prints the gate + cost
+#    estimate and refuses to spend (R17, this unit's Execution note).
 PYTHONPATH=harness uv run python harness/longmemeval/qa.py \
   --dataset harness/longmemeval/longmemeval_s_cleaned.json \
-  --out harness/longmemeval/results/qa.json
+  --out harness/longmemeval/results/qa.json \
+  --confirm-paid-run
 ```
 
 CI runs **only** the offline smoke (`tests/test_longmemeval_harness.py`), never a paid
