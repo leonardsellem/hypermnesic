@@ -381,18 +381,29 @@ def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
             "full": not have_cp}
 
 
-def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128) -> dict:
+def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
+                budget: int | None = None) -> dict:
     """Async embed pass (U13): fill the dense vectors that lag lexical (AE5).
 
     Embeds only chunks/docs that have no vector yet — idempotent, resumable. Chunk
     text comes from the index; doc surfaces are recomputed from the committed file
     via ``ingest.doc_surface`` (so commit_note-written pages get a doc lane too).
-    Holds the single-indexer lock (it mutates vectors)."""
+    Holds the single-indexer lock (it mutates vectors).
+
+    ``budget`` (U26): when set, embed at most ``budget`` stale chunks and a
+    bounded (``budget``-capped) share of the missing doc-surface vectors this
+    call, leaving the rest for the next call — this bounds first-read latency on
+    a converging read (KTD3). Because each lane only ever processes *missing*
+    items, capping a slice stays idempotent and resumable: re-running drains the
+    remainder, never re-embeds. ``None`` preserves the embed-all behavior (the
+    full analytical pass for salience/connections, and ``hypermnesic embed``)."""
     config.assert_embedder_agrees(embedder)
     repo = Path(repo)
     lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()
     try:
         stale = idx.stale_chunk_ids()
+        if budget is not None:
+            stale = stale[:budget]
         n_chunks = 0
         for i in range(0, len(stale), batch):
             ids = stale[i:i + batch]
@@ -418,7 +429,10 @@ def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128) -> dict:
             n_docs += len(doc_batch)
             doc_batch.clear()
 
-        for path in idx.paths_missing_doc_vector():
+        missing_docs = idx.paths_missing_doc_vector()
+        if budget is not None:
+            missing_docs = missing_docs[:budget]
+        for path in missing_docs:
             fp = repo / path
             if not fp.is_file():
                 continue
