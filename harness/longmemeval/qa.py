@@ -30,6 +30,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
+from longmemeval import batch
 from longmemeval import manifest as mf
 from longmemeval.adapter import Embedder, retrieve_for_corpus, safe_name
 from longmemeval.judge import Judge
@@ -101,18 +102,20 @@ def _context(ranked_unit_ids: list[str], units_map: dict[str, tuple[str, str]],
     return ctx
 
 
-def run_qa(instances: list[Instance], work_dir: Path, embedder: Embedder,
-           readers: list[Reader], judge: Judge, *, headline: bool,
-           k: int = mf.RETRIEVAL_K) -> dict:
-    """Run F1 for one or more reader columns under a shared judge.
+def _void_result(mode: str) -> dict:
+    return {"track": "qa-headline", "verdict": "void", "void": True, "mode": mode,
+            "note": "retrieval degraded to lexical-only; headline voided (R20)."}
 
-    Retrieval (per-session corpus, top-k) is done once per instance and shared;
-    each reader column then reads + is graded. A degraded retrieval voids the run.
-    Retrieval uses the **frozen production** ``candidate_k`` (R19) so the top-k the
-    reader sees mirrors the shipped read path — not the diagnostic's deep depth.
+
+def _retrieve_phase(instances: list[Instance], work_dir: Path, embedder: Embedder,
+                    k: int):
+    """Retrieve top-k session context per instance, once, shared across columns.
+
+    Returns the list of ``(instance, ranked_unit_ids, units_map)`` or ``None`` if any
+    corpus degraded (void gate, R20). Retrieval uses the **frozen production**
+    ``candidate_k`` (R19) so the top-k the reader sees mirrors the shipped read path.
     """
     work_dir = Path(work_dir)
-    # phase 1: retrieve top-k session context per instance (void gate, R20)
     retrievals = []
     for inst in instances:
         base = work_dir / safe_name(inst.question_id)
@@ -121,11 +124,30 @@ def run_qa(instances: list[Instance], work_dir: Path, embedder: Embedder,
                                    state_dir=base / "state_sessions",
                                    search_depth=mf.RETRIEVAL_CANDIDATE_K)
         if sres.degraded:
-            return {"track": "qa-headline", "verdict": "void", "void": True,
-                    "note": "retrieval degraded to lexical-only; headline voided (R20)."}
+            return None
         retrievals.append((inst, sres.ranked_units, session_units(inst)))
+    return retrievals
 
-    # phase 2: per reader column (shared retrieval + judge); only the reader repeats
+
+def _qa_answer(inst: Instance, reader: Reader, ra, jr) -> QAAnswer:
+    return QAAnswer(instance_id=inst.question_id,
+                    question_type=normalize_question_type(inst.question_type),
+                    is_abstention=inst.is_abstention, correct=jr.correct,
+                    reader_model=reader.model, reader_error=ra.error, judge_error=jr.error)
+
+
+def run_qa(instances: list[Instance], work_dir: Path, embedder: Embedder,
+           readers: list[Reader], judge: Judge, *, headline: bool,
+           k: int = mf.RETRIEVAL_K) -> dict:
+    """Run F1 (sync API) for one or more reader columns under a shared judge.
+
+    Retrieval is done once and shared; each reader column then reads + is graded.
+    A degraded retrieval voids the run.
+    """
+    retrievals = _retrieve_phase(instances, work_dir, embedder, k)
+    if retrievals is None:
+        return _void_result("sync")
+
     columns: dict[str, dict] = {}
     for reader in readers:
         answers: list[QAAnswer] = []
@@ -135,22 +157,68 @@ def run_qa(instances: list[Instance], work_dir: Path, embedder: Embedder,
             jr = judge.grade(question=inst.question, answer=inst.answer,
                              response=ra.answer, question_type=inst.question_type,
                              is_abstention=inst.is_abstention)
-            answers.append(QAAnswer(
-                instance_id=inst.question_id,
-                question_type=normalize_question_type(inst.question_type),
-                is_abstention=inst.is_abstention, correct=jr.correct,
-                reader_model=reader.model, reader_error=ra.error, judge_error=jr.error))
+            answers.append(_qa_answer(inst, reader, ra, jr))
         columns[reader.model] = score_column(answers)
 
-    return {
-        "track": "qa-headline",
-        "verdict": "reported",
-        "void": False,
-        "headline": bool(headline),
-        "judge_model": judge.model,
-        "k": k,
-        "columns": columns,
-    }
+    return {"track": "qa-headline", "verdict": "reported", "void": False,
+            "headline": bool(headline), "judge_model": judge.model, "k": k,
+            "mode": "sync", "columns": columns}
+
+
+def run_qa_batch(instances: list[Instance], work_dir: Path, embedder: Embedder,
+                 readers: list[Reader], judge: Judge, *, headline: bool, client,
+                 k: int = mf.RETRIEVAL_K, **batch_kw) -> dict:
+    """Run F1 via the OpenAI **Batch API** (50% cheaper). Two stages: one reader
+    batch across all (column × instance), then one judge batch over the reader
+    answers. Retrieval + scoring are identical to ``run_qa``; only the LLM
+    transport differs. ``client`` is an OpenAI-like client; ``batch_kw`` is passed
+    to ``batch.submit_and_collect`` (``poll_interval``, ``timeout``, ``sleep``,
+    ``log``)."""
+    retrievals = _retrieve_phase(instances, work_dir, embedder, k)
+    if retrievals is None:
+        return _void_result("batch")
+
+    # stage 1: one reader batch over every (column, instance)
+    reader_reqs, rmeta = [], {}
+    for reader in readers:
+        for inst, ranked, units_map in retrievals:
+            body, truncated, used = reader.request_body(
+                inst.question, inst.question_date, _context(ranked, units_map, k))
+            cid = f"r-{len(reader_reqs)}"
+            reader_reqs.append({"custom_id": cid, "method": "POST",
+                                "url": "/v1/chat/completions", "body": body})
+            rmeta[cid] = (reader, inst, truncated, used)
+    reader_out = batch.submit_and_collect(client, reader_reqs, **batch_kw)
+    answers = {cid: meta[0].answer_from_content(
+                   reader_out.get(cid, {}).get("content"),
+                   truncated=meta[2], units_used=meta[3],
+                   error=reader_out.get(cid, {"error": "missing batch result"}).get("error"))
+               for cid, meta in rmeta.items()}
+
+    # stage 2: one judge batch over the reader answers (each column graded separately)
+    judge_reqs, jmeta = [], {}
+    for cid, (reader, inst, _t, _u) in rmeta.items():
+        ra = answers[cid]
+        body, kind = judge.request_body(question=inst.question, answer=inst.answer,
+                                        response=ra.answer, question_type=inst.question_type,
+                                        is_abstention=inst.is_abstention)
+        jcid = f"j-{len(judge_reqs)}"
+        judge_reqs.append({"custom_id": jcid, "method": "POST",
+                           "url": "/v1/chat/completions", "body": body})
+        jmeta[jcid] = (reader, inst, kind, ra)
+    judge_out = batch.submit_and_collect(client, judge_reqs, **batch_kw)
+
+    # score per column
+    by_col: dict[str, list[QAAnswer]] = {r.model: [] for r in readers}
+    for jcid, (reader, inst, kind, ra) in jmeta.items():
+        res = judge_out.get(jcid, {"content": None, "error": "missing batch result"})
+        jr = judge.grade_from_content(res.get("content"), kind=kind, error=res.get("error"))
+        by_col[reader.model].append(_qa_answer(inst, reader, ra, jr))
+    columns = {model: score_column(ans) for model, ans in by_col.items()}
+
+    return {"track": "qa-headline", "verdict": "reported", "void": False,
+            "headline": bool(headline), "judge_model": judge.model, "k": k,
+            "mode": "batch", "columns": columns}
 
 
 # --- F1 live (GATED) run entry ----------------------------------------------
@@ -179,6 +247,10 @@ def main(argv: list[str] | None = None) -> int:
                     default=[mf.READER_LEAD, mf.READER_ANCHOR],
                     help="reader model columns (default: GPT-4.1 lead + GPT-4o anchor)")
     ap.add_argument("--limit", type=int, default=None, help="dev: cap instances (non-headline)")
+    ap.add_argument("--batch", action="store_true",
+                    help="route reader+judge through the OpenAI Batch API (50%% cheaper)")
+    ap.add_argument("--poll-interval", type=float, default=30.0,
+                    help="batch poll interval in seconds (--batch only)")
     ap.add_argument("--confirm-paid-run", action="store_true",
                     help="required: acknowledge this spends real budget")
     args = ap.parse_args(argv)
@@ -189,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.dataset:
         ap.error("--dataset is required for a confirmed run")
 
-    from hypermnesic import embed
+    from hypermnesic import config, embed
     from longmemeval import adapter, materialize, reader
 
     embed.smoke_embed_or_die()  # verify embed-quiescence before scoring (R20)
@@ -200,8 +272,16 @@ def main(argv: list[str] | None = None) -> int:
     with adapter.SqliteEmbeddingCache(Path(args.cache)) as store:  # always closed
         embedder = adapter.CachingEmbedder(embed.OpenAIEmbedder(), store=store)
         readers = [reader.Reader(m) for m in args.readers]
-        result = run_qa(instances, Path(args.work_dir), embedder, readers, Judge(),
-                        headline=headline)
+        if args.batch:
+            from openai import OpenAI
+            client = OpenAI(api_key=config.get_api_key())
+            result = run_qa_batch(instances, Path(args.work_dir), embedder, readers,
+                                  Judge(), headline=headline, client=client,
+                                  poll_interval=args.poll_interval,
+                                  log=lambda m: print(m, flush=True))  # live, not buffered
+        else:
+            result = run_qa(instances, Path(args.work_dir), embedder, readers, Judge(),
+                            headline=headline)
     blob = json.dumps(result, ensure_ascii=False, indent=2)
     if args.out:
         Path(args.out).write_text(blob + "\n", encoding="utf-8")

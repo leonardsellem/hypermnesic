@@ -141,18 +141,35 @@ class Reader:
         return [{"role": "system", "content": _SYSTEM},
                 {"role": "user", "content": user}]
 
+    def request_body(self, question: str, question_date: str,
+                     units: list[RetrievedUnit]) -> tuple[dict, bool, int]:
+        """The chat.completions request body for this read, without calling the API.
+        Returns ``(body, truncated, units_used)`` so the sync path and the Batch API
+        path share one source of the con/json/date-sorted prompt + decode params."""
+        messages, truncated, used = self._build_messages(question, question_date, units)
+        body = {"model": self.model, "messages": messages,
+                "temperature": self.temperature, "max_tokens": self.gen_length}
+        return body, truncated, used
+
+    def answer_from_content(self, content: str | None, *, truncated: bool,
+                            units_used: int, error: str | None = None) -> ReaderAnswer:
+        """Wrap a completion's content (or an error) into a ``ReaderAnswer`` — shared
+        by the sync call and the Batch API result parser."""
+        if error is not None:
+            return ReaderAnswer("", self.model, self.headline, truncated, units_used, error)
+        return ReaderAnswer((content or "").strip(), self.model, self.headline,
+                            truncated, units_used)
+
     def answer(self, question: str, question_date: str,
                units: list[RetrievedUnit]) -> ReaderAnswer:
-        messages, truncated, used = self._build_messages(question, question_date, units)
+        body, truncated, used = self.request_body(question, question_date, units)
         try:
-            resp = self._get_client().chat.completions.create(
-                model=self.model, messages=messages,
-                temperature=self.temperature, max_tokens=self.gen_length,
-            )
-            text = (resp.choices[0].message.content or "").strip()
+            resp = self._get_client().chat.completions.create(**body)
+            content = resp.choices[0].message.content
         except Exception as exc:  # graceful — never crash a 500-Q run on one call
-            return ReaderAnswer("", self.model, self.headline, truncated, used, repr(exc))
-        return ReaderAnswer(text, self.model, self.headline, truncated, used)
+            return self.answer_from_content(None, truncated=truncated, units_used=used,
+                                            error=repr(exc))
+        return self.answer_from_content(content, truncated=truncated, units_used=used)
 
 
 def _text_of(messages: list[dict]) -> str:

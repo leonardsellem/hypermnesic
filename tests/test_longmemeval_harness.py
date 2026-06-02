@@ -916,3 +916,145 @@ def test_sqlite_cache_context_manager_closes(tmp_path, fake_embedder):
     # connection is closed on exit — a query now raises
     with pytest.raises(sqlite3.ProgrammingError):
         store._count()
+
+
+# ---------------------------------------------------------------------------
+# Batch API path (50%-cheaper offline run) — transport + orchestration
+# ---------------------------------------------------------------------------
+
+from longmemeval import batch as lme_batch  # noqa: E402
+
+
+class _Obj:
+    def __init__(self, **kw):
+        self.__dict__.update(kw)
+
+
+class _FakeBatchClient:
+    """In-memory simulation of the OpenAI Batch API: files.create / batches.create
+    (synthesizes responses from the uploaded request JSONL) / batches.retrieve /
+    files.content. `reply_for(custom_id, body)` decides each completion's content."""
+
+    def __init__(self, reply_for=None):
+        self._reply_for = reply_for or (
+            lambda cid, body: "yes" if cid.startswith("j") else "an answer")
+        self._files: dict[str, bytes] = {}
+        self._batches: dict[str, object] = {}
+        self._n = 0
+        self.files = self._Files(self)
+        self.batches = self._Batches(self)
+        self.created_batches = 0
+
+    class _Files:
+        def __init__(self, c):
+            self.c = c
+
+        def create(self, *, file, purpose):
+            self.c._n += 1
+            fid = f"file-{self.c._n}"
+            self.c._files[fid] = file.read() if hasattr(file, "read") else file
+            return _Obj(id=fid)
+
+        def content(self, file_id):
+            data = self.c._files[file_id]
+            return _Obj(read=lambda: data)
+
+    class _Batches:
+        def __init__(self, c):
+            self.c = c
+
+        def create(self, *, input_file_id, endpoint, completion_window):
+            self.c.created_batches += 1
+            reqs = [json.loads(line) for line in
+                    self.c._files[input_file_id].decode("utf-8").splitlines() if line.strip()]
+            lines = []
+            for r in reqs:
+                cid = r["custom_id"]
+                content = self.c._reply_for(cid, r["body"])
+                lines.append(json.dumps({
+                    "custom_id": cid,
+                    "response": {"status_code": 200,
+                                 "body": {"choices": [{"message": {"content": content}}]}},
+                    "error": None}))
+            self.c._n += 1
+            ofid = f"file-{self.c._n}"
+            self.c._files[ofid] = ("\n".join(lines) + "\n").encode("utf-8")
+            self.c._n += 1
+            bid = f"batch-{self.c._n}"
+            b = _Obj(id=bid, status="completed", output_file_id=ofid, error_file_id=None)
+            self.c._batches[bid] = b
+            return b
+
+        def retrieve(self, bid):
+            return self.c._batches[bid]
+
+
+def _no_sleep(_):
+    pass
+
+
+def test_batch_submit_and_collect_round_trips():
+    reqs = [
+        {"custom_id": "r-0", "method": "POST", "url": "/v1/chat/completions",
+         "body": {"model": "gpt-4.1-mini", "messages": []}},
+        {"custom_id": "j-0", "method": "POST", "url": "/v1/chat/completions",
+         "body": {"model": "gpt-4o-2024-08-06", "messages": []}},
+    ]
+    out = lme_batch.submit_and_collect(_FakeBatchClient(), reqs,
+                                       poll_interval=0, sleep=_no_sleep)
+    assert out["r-0"] == {"content": "an answer", "error": None}
+    assert out["j-0"] == {"content": "yes", "error": None}
+
+
+def test_batch_marks_per_request_errors():
+    # an output row carrying a non-200 / error surfaces as error, not a fake answer
+    class _Err(_FakeBatchClient):
+        class _Batches(_FakeBatchClient._Batches):
+            def create(self, *, input_file_id, endpoint, completion_window):
+                self.c._n += 1
+                ofid = f"file-{self.c._n}"
+                self.c._files[ofid] = (json.dumps({
+                    "custom_id": "r-0",
+                    "response": {"status_code": 429, "body": {}},
+                    "error": "rate_limited"}) + "\n").encode("utf-8")
+                self.c._n += 1
+                bid = f"batch-{self.c._n}"
+                b = _Obj(id=bid, status="completed", output_file_id=ofid, error_file_id=None)
+                self.c._batches[bid] = b
+                return b
+
+    client = _Err()
+    client.batches = _Err._Batches(client)
+    out = lme_batch.submit_and_collect(
+        client, [{"custom_id": "r-0", "method": "POST", "url": "/v1/chat/completions",
+                  "body": {"model": "m", "messages": []}}],
+        poll_interval=0, sleep=_no_sleep)
+    assert out["r-0"]["content"] is None and out["r-0"]["error"]
+
+
+def test_run_qa_batch_scores_both_phases_via_fake_client(tmp_path, fake_embedder):
+    # Orchestration: retrieve → reader batch → judge batch → score, end-to-end,
+    # with the fake batch client (no network, no key). The fake reader returns
+    # "Biscuit", the fake judge says "yes" → all-correct scoring.
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    readers = [rdr.Reader("gpt-4.1-mini", token_counter=lambda s: len(s.split()))]
+    judge = jdg.Judge()  # request_body only; no client call in batch mode
+    client = _FakeBatchClient(
+        reply_for=lambda cid, body: "yes" if cid.startswith("j") else "Biscuit")
+    out = qa.run_qa_batch(instances, tmp_path / "work", fake_embedder, readers, judge,
+                          headline=False, client=client, poll_interval=0, sleep=_no_sleep)
+    assert out["void"] is False and out["mode"] == "batch"
+    assert out["judge_model"] == "gpt-4o-2024-08-06"
+    assert client.created_batches == 2  # one reader batch + one judge batch
+    col = out["columns"]["gpt-4.1-mini"]
+    assert col["n"] == len(instances)
+    assert col["overall"] == 1.0 and col["task_averaged"] == 1.0 and col["abstention"] == 1.0
+
+
+def test_run_qa_batch_voids_on_degraded_retrieval(tmp_path):
+    instances = [mat.parse_instance(r) for r in _smoke_rows()]
+    readers = [rdr.Reader("gpt-4.1-mini", token_counter=lambda s: len(s.split()))]
+    out = qa.run_qa_batch(instances, tmp_path / "work", _DownEmbedder(), readers,
+                          jdg.Judge(), headline=False, client=_FakeBatchClient(),
+                          poll_interval=0, sleep=_no_sleep)
+    assert out["void"] is True and "columns" not in out
