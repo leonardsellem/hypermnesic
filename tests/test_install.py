@@ -208,3 +208,51 @@ def test_managed_block_shell_quotes_repo_path():
     # Review #6: a repo path with shell metacharacters is shlex-quoted in the hook command.
     block = install._managed_block(Path("/tmp/has space/repo"))
     assert "converge '/tmp/has space/repo'" in block
+
+
+# --- U2: venv-pinned service/hook executable --------------------------------
+
+def test_exe_prefers_which_when_on_path(monkeypatch):
+    # `which` first: a resolvable console script wins unconditionally.
+    monkeypatch.setattr(install.shutil, "which", lambda _n: "/usr/bin/hypermnesic")
+    assert install._hypermnesic_exe() == "/usr/bin/hypermnesic"
+
+
+def test_exe_falls_back_to_venv_path_when_not_on_path(monkeypatch, tmp_path):
+    # systemctl --user runs without the venv on $PATH, so `which` misses; the
+    # console script next to sys.executable is the absolute, resolvable target.
+    monkeypatch.setattr(install.shutil, "which", lambda _n: None)
+    venv_bin = tmp_path / "venv" / "bin"
+    venv_bin.mkdir(parents=True)
+    (venv_bin / "hypermnesic").write_text("#!/bin/sh\n")
+    monkeypatch.setattr(install.sys, "executable", str(venv_bin / "python3"))
+    exe = install._hypermnesic_exe()
+    assert exe == str(venv_bin / "hypermnesic")
+    assert Path(exe).is_absolute() and Path(exe).exists()      # absolute + real
+
+
+def test_exe_bare_name_when_unresolvable(monkeypatch, tmp_path):
+    # Neither PATH nor a venv-adjacent script → bare name fallback (no crash).
+    monkeypatch.setattr(install.shutil, "which", lambda _n: None)
+    monkeypatch.setattr(install.sys, "executable", str(tmp_path / "absent" / "python3"))
+    assert install._hypermnesic_exe() == "hypermnesic"
+
+
+def test_managed_block_shell_quotes_exe_path(monkeypatch):
+    # An absolute venv exe with a space stays shlex-quoted in the hook command.
+    monkeypatch.setattr(install, "_hypermnesic_exe", lambda: "/has space/bin/hypermnesic")
+    block = install._managed_block(Path("/tmp/repo"))
+    assert "'/has space/bin/hypermnesic' converge" in block
+
+
+def test_rendered_unit_execstart_is_absolute_existing_path(make_corpus, monkeypatch):
+    # The deploy invariant (Gate 1): the rendered ExecStart exe is an absolute path
+    # that exists, so `systemctl --user start` does not fail on a bare-name PATH miss.
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    install.install("master", repo=repo, bind=TAILNET_IP, service="systemd")
+    unit = (repo / ".hypermnesic" / "hypermnesic.service").read_text()
+    execstart = next(ln for ln in unit.splitlines() if ln.startswith("ExecStart="))
+    exe = execstart[len("ExecStart="):].split()[0]
+    assert Path(exe).is_absolute(), f"ExecStart exe not absolute: {exe!r}"
+    assert Path(exe).exists(), f"ExecStart exe missing: {exe!r}"

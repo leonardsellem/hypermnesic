@@ -17,6 +17,7 @@ import json
 import shlex
 import shutil
 import stat
+import sys
 from pathlib import Path
 
 from hypermnesic import config
@@ -42,9 +43,21 @@ HOOK_NAMES = ("post-merge",)
 
 
 def _hypermnesic_exe() -> str:
-    """Absolute path to the installed console script when resolvable (so the hook is
-    robust regardless of the runtime PATH); falls back to the bare name otherwise."""
-    return shutil.which("hypermnesic") or "hypermnesic"
+    """Absolute path to the installed console script when resolvable (so the unit and
+    hook are robust regardless of the runtime PATH); falls back to the bare name.
+
+    ``systemctl --user`` runs the unit without the project venv on ``$PATH``, so
+    ``shutil.which`` misses and a bare ``hypermnesic`` ExecStart would fail to start
+    (U2). When PATH resolution misses, fall back to the console script installed
+    next to the running interpreter (``<venv>/bin/hypermnesic``) before the bare
+    name — that is the absolute path the service actually needs."""
+    found = shutil.which("hypermnesic")
+    if found:
+        return found
+    venv_exe = Path(sys.executable).parent / "hypermnesic"
+    if venv_exe.exists():
+        return str(venv_exe)
+    return "hypermnesic"
 
 
 def _managed_block(repo: Path) -> str:
