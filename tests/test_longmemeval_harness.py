@@ -122,3 +122,110 @@ def test_download_capture_mode_reports_unverified_hash(tmp_path):
     assert res.verified is False
     assert res.sha256 == hashlib.sha256(payload).hexdigest()
     assert dest.exists()
+
+
+# ---------------------------------------------------------------------------
+# U2 — deterministic session→markdown materializer + gold reconstruction
+# ---------------------------------------------------------------------------
+
+from longmemeval import materialize as mat  # noqa: E402
+
+from hypermnesic import index  # noqa: E402
+
+
+def _instance(question_id="q1", question_type="single-session-user",
+              answer_sessions=("s_answer",)):
+    """A 3-session instance with exactly one evidence session (``s_answer``).
+
+    The evidence session's single user turn carries ``has_answer: true``; the
+    other two sessions are distractors.
+    """
+    return {
+        "question_id": question_id,
+        "question_type": question_type,
+        "question": "What is my dog's name?",
+        "answer": "Rex",
+        "question_date": "2023-06-01",
+        "haystack_session_ids": ["s_intro", "s_answer", "s_filler"],
+        "haystack_dates": ["2023-05-01", "2023-05-20", "2023-05-25"],
+        "haystack_sessions": [
+            [{"role": "user", "content": "Hi there"},
+             {"role": "assistant", "content": "Hello!"}],
+            [{"role": "user", "content": "My dog Rex loves long walks", "has_answer": True},
+             {"role": "assistant", "content": "Rex sounds lovely."}],
+            [{"role": "user", "content": "What's the weather"},
+             {"role": "assistant", "content": "Sunny"}],
+        ],
+        "answer_session_ids": list(answer_sessions),
+    }
+
+
+def test_parse_instance_fields_and_abstention_flag():
+    inst = mat.parse_instance(_instance())
+    assert inst.question_type == "single-session-user"
+    assert len(inst.sessions) == 3
+    assert inst.sessions[1].session_id == "s_answer"
+    assert inst.sessions[1].date == "2023-05-20"
+    assert inst.sessions[1].turns[0].has_answer is True
+    assert inst.is_abstention is False
+    assert mat.parse_instance(_instance(question_id="q9_abs")).is_abstention is True
+
+
+def test_materialize_sessions_yields_per_session_files_verbatim_and_gold(tmp_path):
+    inst = mat.parse_instance(_instance())
+    m = mat.materialize_sessions(inst, tmp_path / "sessions")
+    md_files = sorted((tmp_path / "sessions").glob("*.md"))
+    assert len(md_files) == 3  # one file per session
+    assert m.granularity == "session"
+    assert m.gold_units == {"s_answer"}  # session-level gold from answer_session_ids
+    assert set(m.path_to_unit.values()) == {"s_intro", "s_answer", "s_filler"}
+    # verbatim content (R4) — the user's words are copied as-is, no summarization
+    bodies = "\n".join(p.read_text(encoding="utf-8") for p in md_files)
+    assert "My dog Rex loves long walks" in bodies
+    assert "**user:**" in bodies and "**assistant:**" in bodies
+
+
+def test_materialize_turns_yields_per_user_turn_files_and_turn_gold(tmp_path):
+    inst = mat.parse_instance(_instance())
+    m = mat.materialize_turns(inst, tmp_path / "turns")
+    assert m.granularity == "turn"
+    # one round per user turn; each session here has exactly one user turn → 3 rounds
+    assert len(m.path_to_unit) == 3
+    assert m.gold_units == {"s_answer_turn0"}  # the evidence round
+    # turn→session derivation recovers the parent session (suffix-stripping)
+    assert mat.turn_to_session("s_answer_turn0") == "s_answer"
+    assert all(mat.turn_to_session(t) in {"s_intro", "s_answer", "s_filler"}
+               for t in m.path_to_unit.values())
+
+
+def test_rematerialize_is_byte_identical(tmp_path):
+    # Determinism (R5): same instance → byte-identical files (names + bytes).
+    inst = mat.parse_instance(_instance())
+    mat.materialize_sessions(inst, tmp_path / "a")
+    mat.materialize_sessions(inst, tmp_path / "b")
+    a = {p.name: p.read_bytes() for p in (tmp_path / "a").glob("*.md")}
+    b = {p.name: p.read_bytes() for p in (tmp_path / "b").glob("*.md")}
+    assert a == b and len(a) == 3
+
+
+def test_session_date_is_in_body_and_survives_indexing(tmp_path, fake_embedder):
+    # R6: the session date lives in the body (not frontmatter, which
+    # ingest.strip_frontmatter removes), so it survives into the index.
+    inst = mat.parse_instance(_instance())
+    corpus = tmp_path / "sessions"
+    mat.materialize_sessions(inst, corpus)
+    idx = index.build_index(corpus, fake_embedder)
+    indexed = " ".join(c["text"] for c in idx.all_chunks())
+    idx.close()
+    assert "2023-05-20" in indexed  # the evidence session's date is indexed
+
+
+def test_abstention_instance_carries_no_retrieval_gold(tmp_path):
+    # Covers AE1: an `_abs` instance is flagged abstention and has no retrieval
+    # gold at either granularity (it is scored in the abstention bucket, not here).
+    inst = mat.parse_instance(_instance(question_id="q9_abs"))
+    assert inst.is_abstention is True
+    ms = mat.materialize_sessions(inst, tmp_path / "s")
+    mt = mat.materialize_turns(inst, tmp_path / "t")
+    assert ms.gold_units == set()
+    assert mt.gold_units == set()
