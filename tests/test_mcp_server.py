@@ -22,6 +22,11 @@ def _commit(repo, rel, body, msg="add"):
                    check=True, capture_output=True)
 
 
+def _git(repo, *a):
+    return subprocess.run(["git", "-C", str(repo), *a],
+                          capture_output=True, text=True).stdout.strip()
+
+
 def _call(srv, name, args):
     """Invoke an MCP tool closure and return its parsed dict payload."""
     out = asyncio.run(srv.call_tool(name, args))
@@ -155,3 +160,94 @@ def test_search_response_carries_recency_field(make_corpus, fake_embedder):
     out = _call(srv, "search", {"query": "RECENCYMARKER"})
     hit = next(h for h in out["hits"] if h["path"] == "hetzner.md")
     assert "recency" in hit and isinstance(hit["recency"], (int, float))   # committed → epoch
+
+
+# --- U31: git-first gated commit_note write tool ----------------------------
+
+_NONCANON = "---\nstatus:    active\ncreated: 2026-05-02\n---\nbody\n"
+
+
+def _write_server(repo, fake_embedder, **kw):
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    return mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
+                                   write_enabled=True, **kw)
+
+
+def test_write_enabled_lists_commit_note_read_only_excludes_it(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    ro = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    rw = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
+                                 write_enabled=True)
+    ro_names = {t.name for t in asyncio.run(ro.list_tools())}
+    rw_names = {t.name for t in asyncio.run(rw.list_tools())}
+    assert "commit_note" not in ro_names                       # read-only structurally excludes it
+    assert "commit_note" in rw_names                           # write-enabled includes it
+    assert ro_names == mcp_server.READ_TOOL_NAMES
+    assert rw_names == mcp_server.READ_TOOL_NAMES | mcp_server.WRITE_TOOL_NAMES
+
+
+def test_write_tool_commits_exactly_one_path_and_audits(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder, audit_actor_fn=lambda: "tailnet:test-node")
+    head_before = _git(repo, "rev-parse", "HEAD")
+    out = _call(srv, "commit_note",
+                {"path": "notes/n.md", "body": "# N\n\nwidget body.\n", "summary": "add n"})
+    assert out["committed"] and out["created"] and out["new_sha"]
+    assert (repo / "notes/n.md").exists()
+    assert _git(repo, "rev-parse", "HEAD~1") == head_before    # HEAD advanced by exactly one commit
+    from hypermnesic import audit_log as al
+    e = al.AuditLog(repo / ".hypermnesic" / "audit.jsonl").entries()[-1]
+    assert e["path"] == "notes/n.md" and e["new_sha"] == out["new_sha"]
+    assert e["verb"] == "create"
+    assert e["actor"] == "tailnet:test-node"                   # server-set; caller can't supply
+    assert e["summary"] == "add n" and "widget body" not in e["summary"]   # summaries only
+
+
+def test_write_tool_gate_abort_no_commit_no_audit(make_corpus, fake_embedder):
+    repo = make_corpus({"notes/doc.md": _NONCANON})            # non-canonical frontmatter
+    srv = _write_server(repo, fake_embedder, audit_actor_fn=lambda: "tailnet:t")
+    head_before = _git(repo, "rev-parse", "HEAD")
+    before = (repo / "notes/doc.md").read_text()
+    out = _call(srv, "commit_note", {"path": "notes/doc.md", "set_fields": {"newkey": "x"}})
+    assert out["committed"] is False and out["refused"]        # diff-or-die over MCP
+    assert (repo / "notes/doc.md").read_text() == before       # file untouched
+    assert _git(repo, "rev-parse", "HEAD") == head_before      # no commit
+    audit_path = repo / ".hypermnesic" / "audit.jsonl"
+    assert not audit_path.exists() or audit_path.read_text().strip() == ""   # no audit entry
+
+
+def test_write_tool_protected_path_refused(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder)
+    head_before = _git(repo, "rev-parse", "HEAD")
+    out = _call(srv, "commit_note", {"path": "CLAUDE.md", "body": "# pwned\n"})
+    assert out["committed"] is False and out["refused"]
+    assert not (repo / "CLAUDE.md").exists()
+    assert _git(repo, "rev-parse", "HEAD") == head_before      # nothing committed
+
+
+def test_write_tool_rejects_path_outside_allowlist(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder, write_allowlist=["notes/"])
+    out = _call(srv, "commit_note", {"path": "other/x.md", "body": "# X\n\nbody.\n"})
+    assert out["committed"] is False and out["refused"]
+    assert not (repo / "other/x.md").exists()
+
+
+def test_write_then_read_converges_dense_and_reindex_keeps_it(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder)
+    out = _call(srv, "commit_note",
+                {"path": "notes/w.md", "body": "# W\n\nWRITEMARKER content.\n", "summary": "add w"})
+    assert out["committed"] and out["new_sha"]
+    # the next read converges → embeds the new chunk → densely recall-able
+    res = _call(srv, "search", {"query": "WRITEMARKER content."})
+    assert any(h["path"] == "notes/w.md" and "dense" in h["channels"] for h in res["hits"])
+    # git-first durability: a full reindex rebuilds from git and never loses the write
+    index.reindex_isolated(repo, fake_embedder)
+    idx2 = index.Index(index.state_dir_for(repo) / "index.db")
+    assert "notes/w.md" in idx2.all_paths()
+    idx2.close()
