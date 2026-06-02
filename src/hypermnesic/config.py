@@ -22,6 +22,18 @@ EMBED_DIM = 1536
 # expansion is opt-in and degrades gracefully if the model is unavailable.
 EXPANSION_MODEL = "gpt-4o-mini"
 
+# U18 proposal zone tiers — an explicit path-prefix list, NOT a heuristic.
+# Immutable free-append zones accept a NEW file directly (no proposal friction in
+# the moment — U24 capture depends on this); they never accept an overwrite.
+# Every other writable path is "curated": changes flow through propose→approve.
+IMMUTABLE_APPEND_ZONES = ("sources/",)
+
+
+def is_immutable_append_zone(rel_path: str) -> bool:
+    """True if ``rel_path`` lives under a free-append zone (config path-prefix)."""
+    return any(rel_path == z.rstrip("/") or rel_path.startswith(z)
+               for z in IMMUTABLE_APPEND_ZONES)
+
 # .env candidates, searched in order. Monkeypatched in tests.
 _DOTENV_PATHS = [Path.cwd() / ".env"]
 

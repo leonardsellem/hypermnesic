@@ -19,6 +19,7 @@ from mcp.types import ToolAnnotations
 from hypermnesic import graph as graph_mod
 from hypermnesic import index as index_mod
 from hypermnesic import retrieve
+from hypermnesic import think as think_mod
 
 DEFAULT_PORT = 8848
 DEFAULT_PATH = "/mcp"
@@ -93,7 +94,14 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         reachable = graph_mod.build_context(backend.graph, path, depth=depth)
         return {"start": path, "depth": depth, "context": reachable}
 
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
+              description="Thinking-mode: related notes + Socratic prompts + tensions. "
+                          "Never writes (wrote: false) — a help-me-think surface, not a write.")
+    def think(topic: str, k: int = 8, depth: int = 1) -> dict:
+        return think_mod.think(backend.idx, topic, embedder=backend.embedder,
+                               graph=backend.graph, k=k, depth=depth).as_dict()
+
     return mcp
 
 
-READ_TOOL_NAMES = {"search", "build_context"}
+READ_TOOL_NAMES = {"search", "build_context", "think"}

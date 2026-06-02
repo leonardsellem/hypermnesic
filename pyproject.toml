@@ -20,6 +20,15 @@ dev = [
     "ruff>=0.6",
     "pip-licenses>=5.0",   # MIT — transitive license scan for the U1 gate
 ]
+# U19 multi-format sidecar extractors — permissive only (KTD4). The license gate
+# (scripts/license_scan.py) MUST stay clean with these installed: zero AGPL/GPL/SSPL.
+# Explicitly NOT PyMuPDF (AGPL) or Marker (GPL + revenue-gate).
+sidecar = [
+    "docling>=2.0",        # MIT — complex/scanned/table/equation PDFs + image layout
+    "markitdown>=0.0.1",   # MIT — DOCX/PPTX and fast/simple PDF/XLSX
+    "pypdf>=4.0",          # BSD — permissive scanned-vs-native + page probe (NOT PyMuPDF)
+    "pdfplumber>=0.11",    # MIT — permissive table-density heuristic
+]
 
 [project.scripts]
 hypermnesic = "hypermnesic.cli:main"
