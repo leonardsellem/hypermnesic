@@ -149,10 +149,32 @@ def uninstall_hooks(repo) -> dict:
 # U34 — role-aware installer (single | master | client)
 # ---------------------------------------------------------------------------
 
-def render_systemd_unit(repo: Path, bind: str, port: int, path: str, exe: str) -> str:
+def _auth_execstart_flags(auth_issuer: str | None, auth_resource: str | None,
+                          required_scopes: list[str] | None) -> str:
+    """The OAuth2 RS flags for the master ExecStart (U2). Rendered only when both the
+    issuer and resource URLs are present; shlex-quoted so a URL with shell metacharacters
+    cannot break the unit. No secret is rendered — the RS introspection credentials are
+    read from the environment at runtime, never inlined (threat-model V9)."""
+    if not (auth_issuer and auth_resource):
+        return ""
+    flags = (f" --auth-issuer-url {shlex.quote(auth_issuer)}"
+             f" --auth-resource-url {shlex.quote(auth_resource)}")
+    for s in (required_scopes or []):
+        if s and s.strip():
+            flags += f" --required-scope {shlex.quote(s)}"
+    return flags
+
+
+def render_systemd_unit(repo: Path, bind: str, port: int, path: str, exe: str, *,
+                        auth_issuer: str | None = None, auth_resource: str | None = None,
+                        required_scopes: list[str] | None = None) -> str:
     """A portable user systemd unit running the write-enabled tailnet serve. The
-    OPENAI_API_KEY value is NEVER inlined — it is referenced via EnvironmentFile."""
+    OPENAI_API_KEY value is NEVER inlined — it is referenced via EnvironmentFile. When
+    auth is provided (U2), the OAuth2 RS flags are rendered on ExecStart so the
+    write-enabled master starts auth-on (the write_enabled⇒auth-required invariant); the
+    RS client credentials stay in the environment, never the unit."""
     state = index_mod.STATE_DIRNAME
+    auth = _auth_execstart_flags(auth_issuer, auth_resource, required_scopes)
     return f"""[Unit]
 Description=hypermnesic tailnet MCP server (master)
 After=network-online.target
@@ -161,10 +183,11 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory={repo}
-# OPENAI_API_KEY is read from the gitignored .env below — its VALUE is never inlined here.
+# OPENAI_API_KEY (and the OAuth2 RS introspection creds, if any) are read from the
+# gitignored .env / environment below — their VALUES are never inlined here.
 EnvironmentFile=-{repo}/.env
 ExecStart={exe} serve --index-db {repo}/{state}/index.db --host {bind} \
---port {port} --path {path} --enable-write
+--port {port} --path {path} --enable-write{auth}
 Restart=on-failure
 RestartSec=5
 
@@ -207,10 +230,39 @@ def _write_role_config(repo: Path, cfg: dict) -> Path:
     return p
 
 
+# The agent identity's bearer token is provided at runtime via this env var — never
+# inlined into a (plaintext, chezmoi-tracked) MCP client config (threat-model V9). The
+# emitted config only NAMES it; the value lives in the host's environment / secret store.
+CLIENT_TOKEN_ENV = "HYPERMNESIC_MCP_TOKEN"
+
+
+def _client_entry(master_url: str, *, auth_issuer_url: str | None,
+                  auth_resource_url: str | None, required_scope: list[str] | None) -> dict:
+    """The `mcpServers.hypermnesic` entry. Bare streamable-http when no auth (Phase-1
+    parity); OAuth2-aware (U5/R12) when an issuer/resource is given — carrying the
+    discovery reference + a *pointer* to the runtime token, never a secret value. The
+    exact per-host field names may be refined once U12 settles the AS; the invariant is
+    secret-free."""
+    entry: dict = {"type": "streamable-http", "url": master_url}
+    if auth_issuer_url or auth_resource_url:
+        scopes = [s for s in (required_scope or []) if s and s.strip()]
+        entry["auth"] = {
+            "type": "oauth2",
+            "issuer": auth_issuer_url,                       # AS discovery reference (no secret)
+            "resource": auth_resource_url or master_url,     # RFC 8707 audience
+            "required_scopes": scopes or None,
+            "token_env": CLIENT_TOKEN_ENV,                   # pointer to the runtime token
+        }
+    return entry
+
+
 def _install_client(master_url: str | None, mcp_config_path: str | None,
-                    *, server_name: str = "hypermnesic") -> dict:
+                    *, server_name: str = "hypermnesic", auth_issuer_url: str | None = None,
+                    auth_resource_url: str | None = None,
+                    required_scope: list[str] | None = None) -> dict:
     """Client = config only (no engine, no index). Write/patch an MCP client config
-    pointing at the master endpoint; preserve any other servers already present."""
+    pointing at the master endpoint; preserve any other servers already present. When
+    auth params are given the entry is OAuth2-aware and secret-free (U5)."""
     if not master_url:
         raise InstallError("role 'client' requires --master-url <https://master/mcp>")
     if not mcp_config_path:
@@ -227,23 +279,29 @@ def _install_client(master_url: str | None, mcp_config_path: str | None,
     servers = data.setdefault("mcpServers", {})
     if not isinstance(servers, dict):           # malformed existing config → reset the map
         servers = data["mcpServers"] = {}
-    servers[server_name] = {"type": "streamable-http", "url": master_url}   # idempotent upsert
+    servers[server_name] = _client_entry(master_url, auth_issuer_url=auth_issuer_url,
+                                          auth_resource_url=auth_resource_url,
+                                          required_scope=required_scope)   # idempotent upsert
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    authed = "auth" in servers[server_name]
     return {
         "role": "client",
         "artifacts": [str(path)],
-        "config": {"master_url": master_url},
+        "config": {"master_url": master_url, "oauth2": authed},
         "manual_steps": [
-            f"point your MCP client / Obsidian companion at {master_url} "
-            "(tailnet membership is the auth boundary — MVP)",
+            f"point your MCP client / Obsidian companion at {master_url}"
+            + (f" (OAuth2: provide the token via the {CLIENT_TOKEN_ENV} env var — never commit it)"
+               if authed else " (tailnet membership is the auth boundary — MVP)"),
         ],
     }
 
 
 def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAULT_PORT,
             path: str = DEFAULT_PATH, service: str = "systemd",
-            master_url: str | None = None, mcp_config_path: str | None = None) -> dict:
+            master_url: str | None = None, mcp_config_path: str | None = None,
+            auth_issuer_url: str | None = None, auth_resource_url: str | None = None,
+            required_scope: list[str] | None = None) -> dict:
     """Provision a host into ``role``.
 
     Pure, offline, idempotent: it verifies the environment, renders the service
@@ -255,7 +313,8 @@ def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAUL
     if role not in ROLES:
         raise InstallError(f"unknown role {role!r}; choose from {ROLES}")
     if role == "client":
-        return _install_client(master_url, mcp_config_path)
+        return _install_client(master_url, mcp_config_path, auth_issuer_url=auth_issuer_url,
+                               auth_resource_url=auth_resource_url, required_scope=required_scope)
 
     # --- engine roles: master | single -------------------------------------
     if repo is None:
@@ -289,7 +348,10 @@ def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAUL
     exe = _hypermnesic_exe()
     if service == "systemd":
         up = state / "hypermnesic.service"
-        up.write_text(render_systemd_unit(repo, bind, port, path, exe), encoding="utf-8")
+        up.write_text(render_systemd_unit(repo, bind, port, path, exe,
+                                          auth_issuer=auth_issuer_url,
+                                          auth_resource=auth_resource_url,
+                                          required_scopes=required_scope), encoding="utf-8")
         artifacts.append(str(up))
     else:  # docker
         dockerfile, compose = render_docker(repo, bind, port, path)

@@ -145,13 +145,17 @@ def _cmd_retrieve(args) -> int:
         embedder = embed.OpenAIEmbedder()
     except Exception:
         embedder = None
-    converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
+    # U1: --now forces a non-debounced converge (debounce_seconds=0) so a self-write
+    # committed within the 5 s window is caught in a single `retrieve --now`.
+    cr = converge_mod.converge(Path(args.repo), idx, embedder,
+                               debounce_seconds=(0 if args.now else None))
     res = retrieve.search(idx, args.query, embedder=embedder, k=args.k,
                           recency_fn=retrieve.git_commit_recency(Path(args.repo)))
     idx.close()
     out = {
         "query": args.query,
-        "degraded_lexical_only": res.degraded,
+        "degraded_lexical_only": res.degraded or cr.degraded,
+        "manual_reindex_recommended": cr.manual_reindex_recommended,   # U1: surface (was dropped)
         "hits": [
             {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
              "channels": sorted(h.channels), "snippet": h.text[:280], "recency": h.recency}
@@ -164,6 +168,38 @@ def _cmd_retrieve(args) -> int:
         print(f"# retrieve: {args.query}  (degraded={res.degraded})")
         for h in out["hits"]:
             print(f"  - {h['path']}: {h['heading']}  ({h['score']})")
+    return 0
+
+
+def _cmd_resolve(args) -> int:
+    """Entity resolution (read-only): name → existing page path, or null (U1).
+
+    gbrain's ``get`` role as a first-class verb. Converges first (``--now`` forces a
+    non-debounced pass so a fresh self-write resolves), builds the graph, then resolves
+    the name to a page. Ambiguous/missing → ``null`` (never a wrong guess). The caller
+    wikilinks ``slug`` (the ``.md``-stripped path)."""
+    from hypermnesic import converge as converge_mod
+    from hypermnesic import graph as graph_mod
+    from hypermnesic import index
+
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    idx = index.Index(db)
+    try:  # dense optional — same graceful degradation as `retrieve` / the server
+        from hypermnesic import embed
+        embedder = embed.OpenAIEmbedder()
+    except Exception:
+        embedder = None
+    converge_mod.converge(Path(args.repo), idx, embedder,
+                          debounce_seconds=(0 if args.now else None))
+    g = graph_mod.Graph.from_index(idx)
+    resolved = g.resolve(args.name)
+    idx.close()
+    slug = resolved[:-3] if resolved and resolved.endswith(".md") else resolved
+    out = {"name": args.name, "resolved": resolved, "slug": slug}
+    if args.json:
+        _print_json(out)
+    else:
+        print(resolved or "")          # empty line on null → scriptable
     return 0
 
 
@@ -202,8 +238,9 @@ def _cmd_converge(args) -> int:
         embedder = embed.OpenAIEmbedder()
     except Exception:
         embedder = None
-    res = converge_mod.converge(Path(args.repo), idx, embedder,
-                                authoring_host=args.authoring_host)
+    res = converge_mod.converge(Path(args.repo), idx, embedder,   # U1: --now forces a pass
+                                authoring_host=args.authoring_host,
+                                debounce_seconds=(0 if args.now else None))
     idx.close()
     if args.json:
         _print_json(res.as_dict())
@@ -235,11 +272,28 @@ def _cmd_serve(args) -> int:
     # write_allowlist is None when --allowlist is omitted → build_server applies its
     # DEFAULT_WRITE_ALLOWLIST; an explicit empty allowlist is refused at startup (U1).
     # audit_actor_fn is left to default to the verified Tailscale node identity.
+    #
+    # U2: --auth-* enables OAuth2 RS mode. Enabling auth requires BOTH issuer + resource
+    # URLs (make_auth_settings enforces it); the token verifier introspects opaque tokens
+    # against the AS discovered from the issuer (RS credentials from the env, never flags).
+    token_verifier = None
+    auth_settings = None
     try:
+        if args.auth_issuer_url or args.auth_resource_url:
+            from hypermnesic import auth as auth_mod
+            auth_settings = auth_mod.make_auth_settings(
+                issuer_url=args.auth_issuer_url, resource_server_url=args.auth_resource_url,
+                required_scopes=args.required_scope or [])
+            verify_raw = auth_mod.verify_raw_from_discovery(
+                issuer_url=args.auth_issuer_url, resource_server_url=args.auth_resource_url,
+                required_scopes=args.required_scope or [])
+            token_verifier = auth_mod.build_token_verifier(
+                resource_server_url=args.auth_resource_url, verify_raw=verify_raw)
         srv = mcp_server.build_server(
             Path(args.index_db), host=args.host, port=args.port, path=args.path,
             repo=(Path(args.repo) if args.repo else None),
-            write_enabled=args.enable_write, write_allowlist=args.allowlist)
+            write_enabled=args.enable_write, write_allowlist=args.allowlist,
+            token_verifier=token_verifier, auth=auth_settings)
     except ValueError as exc:
         print(f"serve failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
         return 1
@@ -257,7 +311,9 @@ def _cmd_install(args) -> int:
         res = install.install(
             args.role, repo=(Path(args.repo) if args.repo else None),
             bind=args.bind, port=args.port, path=args.path, service=args.service,
-            master_url=args.master_url, mcp_config_path=args.mcp_config)
+            master_url=args.master_url, mcp_config_path=args.mcp_config,
+            auth_issuer_url=args.auth_issuer_url, auth_resource_url=args.auth_resource_url,
+            required_scope=args.required_scope)
     except (install.InstallError, FileNotFoundError) as exc:
         print(f"install failed: {exc}", file=sys.stderr)   # fail loud; nothing provisioned
         return 1
@@ -269,6 +325,81 @@ def _cmd_install(args) -> int:
             print(f"  wrote {a}")
         for s in res.get("manual_steps", []):
             print(f"  next: {s}")
+    return 0
+
+
+def _cmd_serve_auth(args) -> int:
+    """Run the minimal tailnet-internal Authorization Server (U12). Clients are pre-enrolled
+    via `auth-add-client`; DCR stays locked. Refuses a wildcard bind (tailnet/loopback only)."""
+    from hypermnesic import auth_server
+
+    if args.host in ("0.0.0.0", "::", ""):
+        print("serve-auth failed: refusing a wildcard bind (tailnet/loopback only)",
+              file=sys.stderr)
+        return 1
+    a = auth_server.MinimalAS(allowed_resources=args.resource or [],
+                              token_ttl_seconds=args.token_ttl, state_path=Path(args.state),
+                              public_url=args.public_url)
+    print(f"hypermnesic AS on {args.host}:{args.port} — clients: {a.client_ids()}",
+          file=sys.stderr)                          # ids only; never a secret
+    a.serve(args.host, args.port)
+    return 0
+
+
+def _cmd_auth_add_client(args) -> int:
+    """Enroll a static client identity in the AS state. The generated secret is written to a
+    chmod-600 env file — NEVER printed to stdout or committed (threat-model V9). The state
+    file stores only a salted hash of the secret."""
+    import secrets as _secrets
+
+    from hypermnesic import auth_server
+
+    a = auth_server.MinimalAS(allowed_resources=args.resource or [], state_path=Path(args.state))
+    secret = _secrets.token_urlsafe(32)
+    a.add_client(args.client_id, secret, scopes=(args.scope or []), is_rs=args.rs)
+    var = args.env_var or ("HYPERMNESIC_RS_CLIENT_SECRET" if args.rs
+                           else "HYPERMNESIC_AS_CLIENT_SECRET")
+    out = Path(args.secret_out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(f"{var}={secret}\n", encoding="utf-8")   # the ONLY place the secret lands
+    out.chmod(0o600)
+    _print_json({"enrolled": args.client_id, "is_rs": args.rs, "scopes": args.scope or [],
+                 "secret_written_to": str(out), "env_var": var,
+                 "note": "secret is in the owner-only env file only; never committed or echoed"})
+    return 0
+
+
+def _cmd_serve_cloud(args) -> int:
+    """Run the PUBLIC cloud OAuth MCP (ChatGPT/Claude mobile lane): the SDK authorization_code
+    + DCR + PKCE AS + the operator-authenticated /consent gate + a write-enabled serve. Exposed
+    publicly via Funnel. The operator approval token is read from the environment, NEVER a flag
+    (it would otherwise leak via the process table / logs; it gates every public connection)."""
+    import os
+
+    from hypermnesic import auth_cloud, mcp_server
+
+    approval = os.environ.get("HYPERMNESIC_CLOUD_APPROVAL_TOKEN")
+    if not approval:
+        print("serve-cloud failed: set HYPERMNESIC_CLOUD_APPROVAL_TOKEN (the operator approval "
+              "token) in the environment — never a flag; it gates every public connection",
+              file=sys.stderr)
+        return 1
+    if len(approval) < auth_cloud.MIN_APPROVAL_TOKEN_LEN:
+        print(f"serve-cloud failed: the approval token is too weak — it is the only gate on every "
+              f"public write, so use at least {auth_cloud.MIN_APPROVAL_TOKEN_LEN} characters "
+              "(e.g. `python -c \"import secrets; print(secrets.token_urlsafe(32))\"`)",
+              file=sys.stderr)
+        return 1
+    try:
+        srv = mcp_server.build_cloud_server(
+            Path(args.index_db), host=args.host, port=args.port, path=args.path,
+            repo=(Path(args.repo) if args.repo else None),
+            resource=args.resource, public_url=args.public_url, approval_token=approval,
+            token_ttl_seconds=args.token_ttl, write_allowlist=args.allowlist)
+    except ValueError as exc:
+        print(f"serve-cloud failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
+        return 1
+    srv.run(transport="streamable-http")
     return 0
 
 
@@ -331,8 +462,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_retrieve.add_argument("--index-db", default=None,
                             help="index db (default: <repo>/.hypermnesic)")
     p_retrieve.add_argument("--k", type=int, default=10)
+    p_retrieve.add_argument("--now", action="store_true",
+                            help="force a non-debounced converge (catch a self-write "
+                                 "committed within the debounce window)")
     p_retrieve.add_argument("--json", action="store_true")
     p_retrieve.set_defaults(func=_cmd_retrieve)
+
+    p_resolve = sub.add_parser("resolve",
+                               help="entity resolution (read-only): name → existing page, or null")
+    p_resolve.add_argument("repo", help="repo whose index to resolve against")
+    p_resolve.add_argument("name", help="the entity name to resolve to a page")
+    p_resolve.add_argument("--index-db", default=None,
+                           help="index db (default: <repo>/.hypermnesic)")
+    p_resolve.add_argument("--now", action="store_true",
+                           help="force a non-debounced converge before resolving")
+    p_resolve.add_argument("--json", action="store_true")
+    p_resolve.set_defaults(func=_cmd_resolve)
 
     p_capture = sub.add_parser("capture", help="frictionless capture: land raw text in sources/")
     p_capture.add_argument("repo", help="repo to capture into")
@@ -347,6 +492,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="index db (default: <repo>/.hypermnesic)")
     p_conv.add_argument("--authoring-host", action="store_true",
                         help="also refresh the uncommitted working-tree overlay")
+    p_conv.add_argument("--now", action="store_true",
+                        help="force a non-debounced converge (ignore a fresh stamp)")
     p_conv.add_argument("--json", action="store_true")
     p_conv.set_defaults(func=_cmd_converge)
 
@@ -370,6 +517,13 @@ def build_parser() -> argparse.ArgumentParser:
                               "Omit for the default; an empty value is refused at startup")
     p_serve.add_argument("--repo", default=None,
                          help="git repo the index projects (default: index-db grandparent)")
+    p_serve.add_argument("--auth-issuer-url", default=None,
+                         help="OAuth2 AS issuer URL (enables RS auth; needs --auth-resource-url)")
+    p_serve.add_argument("--auth-resource-url", default=None,
+                         help="this RS's resource identifier (RFC 8707 audience); "
+                              "e.g. https://homelab.<tailnet-host>.ts.net/mcp")
+    p_serve.add_argument("--required-scope", action="append", default=None, metavar="SCOPE",
+                         help="repeatable required OAuth2 scope (e.g. write)")
     p_serve.set_defaults(func=_cmd_serve)
 
     p_install = sub.add_parser("install",
@@ -386,8 +540,59 @@ def build_parser() -> argparse.ArgumentParser:
                            help="MCP client config file to write/patch (client role)")
     p_install.add_argument("--port", type=int, default=8848)
     p_install.add_argument("--path", default="/mcp")
+    p_install.add_argument("--auth-issuer-url", default=None,
+                           help="OAuth2 AS issuer URL for the master ExecStart (U2)")
+    p_install.add_argument("--auth-resource-url", default=None,
+                           help="this RS's resource identifier (RFC 8707 audience) for the master")
+    p_install.add_argument("--required-scope", action="append", default=None, metavar="SCOPE",
+                           help="repeatable required OAuth2 scope rendered on the master ExecStart")
     p_install.add_argument("--json", action="store_true")
     p_install.set_defaults(func=_cmd_install)
+
+    p_authsrv = sub.add_parser("serve-auth",
+                               help="run the tailnet-internal OAuth2 Authorization Server (U12)")
+    p_authsrv.add_argument("--host", required=True, help="tailnet/loopback IP (not 0.0.0.0)")
+    p_authsrv.add_argument("--port", type=int, default=8849)
+    p_authsrv.add_argument("--public-url", required=True, help="the AS issuer URL (RFC 8414)")
+    p_authsrv.add_argument("--resource", action="append", default=None, metavar="URL",
+                           help="repeatable allowed RFC 8707 resource (the RS audience)")
+    p_authsrv.add_argument("--state", required=True, help="AS state file (clients + tokens)")
+    p_authsrv.add_argument("--token-ttl", type=int, default=3600,
+                           help="access-token lifetime ceiling (seconds)")
+    p_authsrv.set_defaults(func=_cmd_serve_auth)
+
+    p_addcli = sub.add_parser("auth-add-client",
+                              help="enroll a static AS client (secret → owner-only env file)")
+    p_addcli.add_argument("--state", required=True, help="AS state file to enroll into")
+    p_addcli.add_argument("--client-id", required=True)
+    p_addcli.add_argument("--scope", action="append", default=None, metavar="SCOPE",
+                          help="repeatable granted scope (e.g. write)")
+    p_addcli.add_argument("--resource", action="append", default=None, metavar="URL",
+                          help="allowed resource(s) for the AS (kept consistent with serve-auth)")
+    p_addcli.add_argument("--rs", action="store_true",
+                          help="this is the Resource Server's introspection client")
+    p_addcli.add_argument("--secret-out", required=True,
+                          help="owner-only env file the generated secret is written to")
+    p_addcli.add_argument("--env-var", default=None, help="env var name to write the secret under")
+    p_addcli.set_defaults(func=_cmd_auth_add_client)
+
+    p_cloud = sub.add_parser("serve-cloud",
+                             help="run the PUBLIC cloud OAuth MCP (ChatGPT/Claude mobile lane)")
+    p_cloud.add_argument("--index-db", required=True, help="path to the index .db")
+    p_cloud.add_argument("--host", default="127.0.0.1",
+                         help="local bind (Funnel proxies the public hostname to it)")
+    p_cloud.add_argument("--port", type=int, default=8850)
+    p_cloud.add_argument("--path", default="/mcp")
+    p_cloud.add_argument("--public-url", required=True,
+                         help="the public AS/issuer URL (e.g. https://<host>.ts.net/cloud)")
+    p_cloud.add_argument("--resource", required=True,
+                         help="the public MCP resource identifier (RFC 8707 audience)")
+    p_cloud.add_argument("--repo", default=None, help="git repo the index projects")
+    p_cloud.add_argument("--token-ttl", type=int, default=3600,
+                         help="access-token lifetime ceiling (seconds)")
+    p_cloud.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
+                         help="writable path prefix (default: the engine allowlist)")
+    p_cloud.set_defaults(func=_cmd_serve_cloud)
     return parser
 
 

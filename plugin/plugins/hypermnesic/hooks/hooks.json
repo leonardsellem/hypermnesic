@@ -1,0 +1,39 @@
+{
+  "description": "hypermnesic auto-query hooks — session orientation, prompt-time recall, dangerous-op guard. Calls hypermnesic, never gbrain.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/hypermnesic_agent_hook.py --host claude",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/hypermnesic_agent_hook.py --host claude",
+            "timeout": 6
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/hypermnesic_agent_hook.py --host claude",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

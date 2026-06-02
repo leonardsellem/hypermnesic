@@ -201,3 +201,181 @@ def test_installed_hook_execution_invokes_convergence(make_corpus, fake_embedder
     idx = index.Index(index.state_dir_for(repo) / "index.db")
     assert "merged.md" in idx.all_paths()                      # the hook converged the index
     idx.close()
+
+
+# --- U1: resolve verb + --now convergence-freshness knob + manual-reindex -----
+
+def test_resolve_returns_path_and_slug_for_known_entity(make_corpus, fake_embedder,
+                                                        monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"infrastructure/hetzner.md": "# Hetzner\n\nThe homelab box.\n",
+                        "notes/dup.md": "# D1\n\n", "archive/dup.md": "# D2\n\n"})
+    index.build_index(repo, fake_embedder).close()
+    rc = cli.main(["resolve", str(repo), "Hetzner", "--json"])
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["resolved"] == "infrastructure/hetzner.md"
+    assert out["slug"] == "infrastructure/hetzner"             # caller wikilinks the slug
+
+
+def test_resolve_ambiguous_and_missing_are_null(make_corpus, fake_embedder,
+                                                monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"notes/dup.md": "# D1\n\n", "archive/dup.md": "# D2\n\n"})
+    index.build_index(repo, fake_embedder).close()
+    cli.main(["resolve", str(repo), "dup", "--json"])
+    assert json.loads(capsys.readouterr().out)["resolved"] is None       # ambiguous → null
+    cli.main(["resolve", str(repo), "no-such-entity", "--json"])
+    assert json.loads(capsys.readouterr().out)["resolved"] is None       # missing → null
+
+
+def test_retrieve_now_forces_fresh_self_write_within_debounce(make_corpus, fake_embedder,
+                                                             monkeypatch, tmp_path, capsys):
+    # Covers AE1: a single `retrieve --now` makes a just-committed self-write recall-able
+    # inside the 5 s debounce window; the default (debounced) path still skips it.
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    cli.main(["retrieve", str(repo), "alpha", "--json"])           # prime the debounce stamp
+    capsys.readouterr()
+    _commit(repo, "selfwrite.md", "# Self\n\nSELFWRITEMARKER body.\n", "add self")
+    cli.main(["retrieve", str(repo), "SELFWRITEMARKER", "--json"])  # default: debounced skip
+    debounced = json.loads(capsys.readouterr().out)
+    assert not any(h["path"] == "selfwrite.md" for h in debounced["hits"])      # not yet caught up
+    cli.main(["retrieve", str(repo), "SELFWRITEMARKER", "--now", "--json"])     # forced converge
+    forced = json.loads(capsys.readouterr().out)
+    assert any(h["path"] == "selfwrite.md" for h in forced["hits"])             # recall-able now
+
+
+def test_retrieve_json_surfaces_manual_reindex_on_oversized_delta(make_corpus, fake_embedder,
+                                                                 monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    monkeypatch.setattr(config, "CONVERGE_MAX_DELTA_FILES", 2)     # small cap → trip oversized
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    for i in range(3):                                             # 3 > 2 → oversized delta
+        _commit(repo, f"big{i}.md", f"# Big{i}\n\nbody {i}.\n", f"big {i}")
+    cli.main(["retrieve", str(repo), "alpha", "--now", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    assert out["manual_reindex_recommended"] is True              # CLI surfaces it (was dropped)
+
+
+def test_converge_now_forces_pass_within_debounce(make_corpus, fake_embedder,
+                                                  monkeypatch, tmp_path):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    cli.main(["converge", str(repo), "--json"])                # writes a fresh debounce stamp
+    _commit(repo, "warm2.md", "# W2\n\nWARM2MARKER.\n", "add warm2")
+    cli.main(["converge", str(repo), "--json"])                # default → debounced, no catch-up
+    idx = index.Index(index.state_dir_for(repo) / "index.db")
+    assert "warm2.md" not in idx.all_paths()
+    idx.close()
+    cli.main(["converge", str(repo), "--now", "--json"])       # --now → forced catch-up
+    idx = index.Index(index.state_dir_for(repo) / "index.db")
+    assert "warm2.md" in idx.all_paths()
+    idx.close()
+
+
+# --- U2: serve OAuth2 flags plumb a verifier + AuthSettings into build_server --
+
+_ISS = "https://homelab.<tailnet-host>.ts.net/honcho/"
+_RES = "https://homelab.<tailnet-host>.ts.net/mcp"
+
+
+def test_serve_auth_flags_plumb_verifier_and_settings(monkeypatch, tmp_path):
+    captured, srv = _capture_build(monkeypatch)
+    from hypermnesic import auth
+    # stub discovery so no network is touched at serve-build time
+    monkeypatch.setattr(auth, "verify_raw_from_discovery", lambda **k: (lambda t: None))
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--enable-write", "--auth-issuer-url", _ISS, "--auth-resource-url", _RES,
+                   "--required-scope", "write"])
+    assert rc == 0 and srv.ran
+    assert captured["auth"] is not None
+    assert str(captured["auth"].resource_server_url).rstrip("/") == _RES
+    assert captured["auth"].required_scopes == ["write"]
+    assert captured["token_verifier"] is not None
+    assert captured["write_enabled"] is True
+
+
+def test_serve_issuer_without_resource_refused(tmp_path, capsys):
+    # enabling auth requires BOTH issuer and resource URLs → fail loud, exit 1
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--auth-issuer-url", _ISS])
+    assert rc == 1
+    assert "auth" in capsys.readouterr().err.lower()
+
+
+def test_serve_no_auth_flags_unchanged(monkeypatch, tmp_path):
+    captured, srv = _capture_build(monkeypatch)
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1"])
+    assert rc == 0
+    assert captured.get("auth") is None and captured.get("token_verifier") is None
+
+
+# --- U12: AS enrollment writes the secret to a file, never stdout ------------
+
+def test_auth_add_client_writes_secret_to_file_not_stdout(tmp_path, capsys):
+    state = tmp_path / "as-state.json"
+    secret_out = tmp_path / "rs.env"
+    rc = cli.main(["auth-add-client", "--state", str(state), "--client-id", "hypermnesic-rs",
+                   "--rs", "--secret-out", str(secret_out),
+                   "--resource", "https://homelab.<tailnet-host>.ts.net/mcp"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    info = json.loads(out)
+    assert info["enrolled"] == "hypermnesic-rs" and info["is_rs"] is True
+    body = secret_out.read_text()
+    assert body.startswith("HYPERMNESIC_RS_CLIENT_SECRET=")
+    secret_value = body.split("=", 1)[1].strip()
+    assert secret_value and secret_value not in out          # the secret is never echoed (V9)
+    assert secret_value not in state.read_text()             # AS stores only a hash
+    import os
+    assert (os.stat(secret_out).st_mode & 0o777) == 0o600    # owner-only
+
+
+def test_serve_auth_refuses_wildcard_bind(tmp_path, capsys):
+    rc = cli.main(["serve-auth", "--host", "0.0.0.0", "--port", "8849",
+                   "--public-url", "https://h/as", "--state", str(tmp_path / "s.json")])
+    assert rc == 1 and "wildcard" in capsys.readouterr().err.lower()
+
+
+# --- cloud OAuth MCP: serve-cloud reads the approval token from env, never a flag ---
+
+def test_serve_cloud_requires_approval_token_env(tmp_path, capsys, monkeypatch):
+    monkeypatch.delenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", raising=False)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp"])
+    assert rc == 1 and "approval" in capsys.readouterr().err.lower()
+
+
+def test_serve_cloud_plumbs_to_build_cloud_server(tmp_path, monkeypatch):
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret-token-24-chars-or-more")
+    captured: dict = {}
+    srv = _FakeSrv()
+
+    def fake_cloud(index_db, **kw):
+        captured["index_db"] = index_db
+        captured.update(kw)
+        return srv
+
+    from hypermnesic import mcp_server
+    monkeypatch.setattr(mcp_server, "build_cloud_server", fake_cloud)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp",
+                   "--token-ttl", "1800"])
+    assert rc == 0 and srv.ran
+    assert captured["resource"] == "https://h/cloud/mcp" and captured["public_url"] == "https://h/cloud"
+    assert captured["approval_token"] == "op-secret-token-24-chars-or-more"   # from env
+    assert captured["token_ttl_seconds"] == 1800
+
+
+def test_serve_cloud_refuses_weak_approval_token(tmp_path, capsys, monkeypatch):
+    # a public WRITE surface gated by a single token needs an entropy floor (online-brute-force)
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "short")
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp"])
+    assert rc == 1
+    err = capsys.readouterr().err.lower()
+    assert "approval" in err and ("24" in err or "characters" in err or "weak" in err)
