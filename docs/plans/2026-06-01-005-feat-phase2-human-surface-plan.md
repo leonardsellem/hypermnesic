@@ -1,7 +1,7 @@
 ---
 title: "feat: Phase 2 — the human/product surface (review-gated proposals, H1–H6, sidecars)"
 type: feat
-status: active
+status: completed
 created: 2026-06-01
 origin:
   - "gbrain-brain: projects/hypermnesic/docs/brainstorms/2026-06-01-hypermnesic-product-vision-requirements.md"

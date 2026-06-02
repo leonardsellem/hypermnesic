@@ -1,0 +1,128 @@
+/* hypermnesic companion — minimal, theme-friendly styling for the calm surfaces.
+   Uses Obsidian CSS variables so it adapts to light/dark themes. No layout the
+   functionality depends on; provenance/staleness carry text + tooltips, never
+   color alone (FR-R20). */
+
+.hypermnesic-trust-badge {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  padding: 2px 6px;
+  margin-bottom: 6px;
+  display: inline-block;
+}
+
+.hypermnesic-status {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  margin: 4px 0;
+}
+
+.hypermnesic-related-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hypermnesic-hit {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.hypermnesic-hit a:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+.hypermnesic-heading {
+  color: var(--text-muted);
+}
+
+.hypermnesic-hit-meta {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.hypermnesic-chip {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-on-accent);
+  background: var(--interactive-accent);
+  border-radius: var(--radius-s);
+  padding: 0 5px;
+  opacity: 0.85;
+}
+
+.hypermnesic-chip-lexical { background: var(--color-blue); }
+.hypermnesic-chip-dense { background: var(--color-purple); }
+.hypermnesic-chip-doc { background: var(--color-green); }
+
+.hypermnesic-staleness {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+.hypermnesic-statusbar {
+  cursor: pointer;
+}
+.hypermnesic-statusbar:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.hypermnesic-popover {
+  z-index: var(--layer-popover);
+  min-width: 280px;
+  max-width: 420px;
+  padding: 10px 12px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
+}
+
+.hypermnesic-nudge {
+  border-left: 3px solid var(--color-orange);
+  background: var(--background-secondary);
+  padding: 6px 8px;
+  margin: 6px 0;
+  border-radius: var(--radius-s);
+}
+
+.hypermnesic-nudge-snippet {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  margin: 4px 0;
+}
+
+.hypermnesic-nudge-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.hypermnesic-wrote-badge {
+  display: inline-block;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-success);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  padding: 2px 6px;
+  margin-bottom: 8px;
+}
+
+.hypermnesic-inline-marker {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+
+.hypermnesic-active-block {
+  background: var(--background-modifier-hover);
+}
+
+.hypermnesic-settings-note {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}

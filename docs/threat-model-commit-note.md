@@ -1,14 +1,19 @@
 # Threat Model — the `commit_note` MCP write surface (pre-U7 gate)
 
-**Status:** mandatory gate artifact. Phase 1 (U7–U12, the write kernel) does not
-begin until this exists and is reviewed (plan Open Questions; the Phase-1 gate is
-*U5-passes AND this artifact exists*).
+**Status:** historical gate artifact — **signed off 2026-06-01** (see the footer).
+It was the mandatory pre-Phase-1 gate (Phase 1 could not begin until this existed
+and was reviewed: *U5-passes AND this artifact exists*). Phase 1 (U7–U12) and the
+gated `commit_note` MCP write tool (U31, registered only on a `write_enabled`
+master) have **since shipped**. This remains the threat model of record for the
+write surface; the mitigations below map to the live `frontmatter_gate.py` /
+`serialize.py` / `audit_log.py` / `commit_note.py` modules.
 
 **Scope.** The single sanctioned write path —
-`commit_note(path, body, frontmatter)` — exposed via the **tailnet-only** MCP
-server in Phase 1. Phase 0 is read-only and exposes **no** write tool, so this
-model governs net-new attack surface introduced at U7. Public/cloud reach
-(OAuth2.1/DCR gateway) is Phase 3 and explicitly out of scope here.
+`commit_note(path, body, frontmatter)` — exposed over the **tailnet-only** MCP
+server when serving write-enabled (Phase 0 was read-only and exposed **no** write
+tool, so this model governs the net-new attack surface introduced at U7 and now
+served via U31). Public/cloud reach (OAuth2.1/DCR gateway) is Phase 3 and
+explicitly out of scope here.
 
 ---
 
@@ -52,7 +57,12 @@ unconditionally regardless of caller — `.git/`, any CI/workflow dir,
 executable/script dirs, and agent-instruction files *anywhere in the tree* — plus
 an optional **per-repo writable-path allowlist**. The denylist is a *rule* (file
 class), not a fixed list, so it holds when the engine drops into an arbitrary
-repo it has never seen. *Residual:* a missed governance-file class. Prefer a
+repo it has never seen. As implemented in `serialize.py` the current rule covers:
+protected dirs anywhere in the path (`.git`, `.github`, `.obsidian`, `.claude`,
+`.codex`, `views`, `scripts`, `bin`, `hooks`, `skills`, `.hypermnesic`),
+instruction files anywhere (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`,
+`copilot-instructions.md`), and never-files (`.gitignore`, `.gitattributes`,
+`.gitmodules`). *Residual:* a missed governance-file class. Prefer a
 deny-by-default / allowlist posture for content paths where feasible.
 
 ### V2 — Prompt injection via ingested content (retrieval/index poisoning)
