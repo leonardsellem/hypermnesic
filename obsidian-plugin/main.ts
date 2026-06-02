@@ -18,6 +18,7 @@ import {
   ItemView,
   MarkdownFileInfo,
   MarkdownView,
+  Menu,
   Notice,
   Plugin,
   TFile,
@@ -29,6 +30,7 @@ import { HypermnesicSettingTab } from "./src/settings";
 import { RetrievalCore, extractCursorWindow } from "./src/core";
 import { RecallStateMachine, StateSnapshot } from "./src/state";
 import { RenderDeps, renderResultList } from "./src/surfaces/render";
+import { ResolvedReference, localLinkText } from "./src/surfaces/reference";
 import { StatusBarSurface } from "./src/surfaces/statusbar";
 import { hypermnesicGutter } from "./src/surfaces/gutter";
 import { runThinking } from "./src/thinking";
@@ -230,11 +232,75 @@ export default class HypermnesicPlugin extends Plugin {
     return !!ip?.getPluginById?.("page-preview")?.enabled;
   }
 
+  /** Run thinking-mode for a specific resolved reference (the "think about this
+   *  note" menu action). Read-only — opens the thinking surface, never writes. */
+  private thinkAboutReference(ref: ResolvedReference): void {
+    void runThinking(this.app, this.settings.mcpUrl, ref.display.title, this.core.capabilities.hasThink);
+  }
+
+  /** Right-click menu + drag/copy insertion for a resolvable row. Read-only:
+   *  the plugin supplies drag data and clipboard text; the user performs the
+   *  drop/paste (R5, R14, R15). */
+  private decorateLocalRow(row: HTMLElement, ref: ResolvedReference, sourcePath: string): void {
+    const file = ref.file;
+    if (!file) return;
+
+    // Native link-drag: set the vault-correct link text; the editor handles the
+    // drop. Dropping outside an editor is a harmless no-op (no partial state).
+    row.setAttribute("draggable", "true");
+    row.addEventListener("dragstart", (evt: DragEvent) => {
+      evt.dataTransfer?.setData("text/plain", localLinkText(this.app, file, sourcePath));
+    });
+
+    row.addEventListener("contextmenu", (evt) => {
+      evt.preventDefault();
+      const menu = new Menu();
+      menu.addItem((i) =>
+        i.setTitle("Open").setIcon("file").onClick(() => void this.app.workspace.getLeaf(false).openFile(file)),
+      );
+      menu.addItem((i) =>
+        i.setTitle("Open in new tab").setIcon("file-plus").onClick(() => void this.app.workspace.getLeaf("tab").openFile(file)),
+      );
+      menu.addItem((i) =>
+        i.setTitle("Open to the side").setIcon("panel-right").onClick(() => void this.app.workspace.getLeaf("split").openFile(file)),
+      );
+      menu.addSeparator();
+      menu.addItem((i) =>
+        i.setTitle("Think about this note").setIcon("brain").onClick(() => this.thinkAboutReference(ref)),
+      );
+      menu.addItem((i) =>
+        i.setTitle("Copy as link").setIcon("link").onClick(async () => {
+          await navigator.clipboard.writeText(localLinkText(this.app, file, sourcePath));
+          new Notice("hypermnesic: link copied");
+        }),
+      );
+      menu.showAtMouseEvent(evt);
+    });
+  }
+
+  /** Non-local rows offer only "copy path" — no wikilink that resolves to
+   *  nothing (R16). */
+  private decorateNonLocalRow(row: HTMLElement, ref: ResolvedReference): void {
+    row.addEventListener("contextmenu", (evt) => {
+      evt.preventDefault();
+      const menu = new Menu();
+      menu.addItem((i) =>
+        i.setTitle("Copy path").setIcon("copy").onClick(async () => {
+          await navigator.clipboard.writeText(ref.input.path);
+          new Notice("hypermnesic: path copied");
+        }),
+      );
+      menu.showAtMouseEvent(evt);
+    });
+  }
+
   private buildRenderDeps(): RenderDeps {
     return {
       app: this.app,
       openFile: (file, newLeaf) => void this.app.workspace.getLeaf(newLeaf).openFile(file),
       pagePreviewEnabled: () => this.pagePreviewEnabled(),
+      decorateLocalRow: (row, ref, sourcePath) => this.decorateLocalRow(row, ref, sourcePath),
+      decorateNonLocalRow: (row, ref) => this.decorateNonLocalRow(row, ref),
       renderNudge: (host, snapshot) => {
         if (!snapshot.result) return;
         renderNudge(host, snapshot.result, {
