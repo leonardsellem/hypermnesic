@@ -9,6 +9,25 @@ pytest gate passes and the OAuth2 enforcement loop is proven live over HTTP. The
 items are operational and partly cross-host (the Mac) — they need the operator. **Execution
 halts here.**
 
+## 🟢 Session update (2026-06-02, post-Mac-evidence) — all agent-executable criteria now GREEN
+
+The operator ran `docs/handoff-macbook-prompt.md` on the Mac and pasted the evidence; two
+remaining Phase-A defects were then fixed live this session. Net: **every agent-executable
+Gate-A criterion is GREEN; only the operator's explicit approval remains.**
+
+- **Criterion 5 (2nd-peer round-trip) — ✅ PROVEN.** Mac evidence: unauth `:8851`→401 (RFC 9728
+  `WWW-Authenticate`), authed `tools/list`→200 `[build_context, commit_note, resolve, search,
+  think]`, authed `search`→ real hits. (Token minted on-Mac via `:8849`, audience `…/mcp`,
+  scope `write`; never printed.)
+- **Plugin load defect FIXED (`69e0096`) → criteria 7 + 9 now real.** `claude plugin list`
+  reproduced `✘ failed to load: Duplicate hooks file detected`. The manifest re-declared the
+  auto-loaded `hooks/hooks.json`; dropped the redundant key. Now: homelab **Claude `✔ enabled`**,
+  homelab **Codex `installed, enabled`**; Mac both (same fix). Regression-guarded.
+- **`.mcp.json` issuer corrected off honcho (`69e0096`).** Was `…/honcho/` (honcho can't be the
+  AS — U12); repointed to the hypermnesic origin, audience stays canonical `…/mcp`. Guard added.
+- **Cloud lane (separate workstream) DEPLOYED + verified** — see
+  `docs/cloud-oauth-mcp-deploy-runbook.md` (banner) and `services/hypermnesic-cloud.md`.
+
 ## ✅ Homelab deploy EXECUTED (2026-06-02, operator-approved)
 
 The homelab Gate-A rollout is **live** (option-2, companion-safe; mirrored to
@@ -39,20 +58,22 @@ ephemeral-proven (the live `:8851` uses the same `StrictResourceTokenVerifier`).
 
 | # | Criterion | Status | Evidence |
 |---|-----------|--------|----------|
-| 0 | `uv run pytest tests/` exit 0 | ✅ PASS | **441 passed, 1 skipped**; ruff clean. Named set test_cli/graph/mcp_server/converge/auth/install/plugin/plugin_hook all green (+ test_auth_server). |
+| 0 | `uv run pytest tests/` exit 0 | ✅ PASS | **465 passed, 1 skipped** (this session); ruff clean. Named set test_cli/graph/mcp_server/converge/auth/install/plugin/plugin_hook all green (+ test_auth_server/auth_cloud). |
 | 1 | Unauth `tools/call` to **commit_note** rejected | ✅ PASS (live) | Ephemeral HTTP proof: `commit_note` unauthenticated → **HTTP 401**. Unit: `test_mcp_server` auth suite. |
 | 2 | Wrong-audience token rejected (RFC 8707) | ✅ PASS (live) | Ephemeral proof: token minted for `…/other` → **HTTP 401** against the `…/mcp` RS. Unit: `test_auth::test_wrong_audience_rejected_rfc8707`. |
 | 3 | Write-master refuses to start auth-off | ✅ PASS (live) | `serve --enable-write --host 100.64.0.55` (no auth) → **exit 1**, clear message. Unit: `test_mcp_server::test_write_enabled_without_auth_refused`. |
 | 4 | Live AS issues a token; full AS→RS loop works | ✅ PASS (live, homelab) | Ephemeral proof: AS `client_credentials` mint → valid token → `commit_note` **HTTP 200** (introspection + audience check over the wire). Unit end-to-end: `test_auth_server::test_end_to_end_as_token_validates_through_rs_verifier`. |
-| 5 | AS round-trip from a **2nd tailnet peer (the Mac)** | ⏳ OPERATOR | The homelab agent cannot reach the Mac. Operator runs an authenticated `tools/list`/`search` from the Mac and pastes the result here. |
-| 6 | All **three identities** provisioned (homelab Claude, homelab Codex, Mac) | ◑ PARTIAL | Enrollment mechanism proven (`auth-add-client` → secret to a chmod-600 env file, never echoed). Homelab Claude + Codex are enrollable by the agent on approval; the **Mac identity is operator-provisioned**. |
-| 7 | Plugin installed on Claude + Codex (both hosts) | ⏳ OPERATOR | The in-repo marketplace + manifests are valid (static tests). Homelab install is agent-doable on approval; **Mac install is operator-only**. |
+| 5 | AS round-trip from a **2nd tailnet peer (the Mac)** | ✅ PASS (operator evidence in) | Mac pasted: unauth `:8851`→401 (RFC 9728), authed `tools/list`→200 full toolset, authed `search`→ real hits. |
+| 6 | All **three identities** provisioned (homelab Claude, homelab Codex, Mac) | ✅ PASS | All three enrolled (secrets in chmod-600 env files, never echoed); the Mac minted + round-tripped a `write` token. |
+| 7 | Plugin installed on Claude + Codex (both hosts) | ✅ PASS (live) | After the load-defect fix (`69e0096`): homelab **Claude `✔ enabled`** + **Codex `installed, enabled`** (verified via `claude/codex plugin list`); Mac both (same fix). |
 | 8 | Auto-query hook injects on a relevant prompt, **silent on 401** | ✅ PASS (unit) | `test_plugin_hook`: relevant→inject, off-topic→silent, timeout/401/missing-token→silent-never-blocks. Token never echoed. |
-| 9 | SKILL loadable on both hosts | ◑ PARTIAL | Static-valid (`test_plugin`); live load is part of the per-host install (homelab on approval; Mac operator). |
+| 9 | SKILL loadable on both hosts | ✅ PASS (live) | The plugin loads enabled on both homelab hosts (so the bundled `hypermnesic-memory` SKILL loads); Mac confirmed. The duplicate-hooks defect that previously failed the whole load is fixed + guarded. |
 | 10 | The plugin path **never calls gbrain** | ✅ PASS | SKILL says "do NOT use gbrain"; no hook command invokes gbrain (`test_plugin_hook`); the daemon-re-arm guard blocks `gbrain serve/init/sync --watch/autopilot --install` (but not `gbrain delete`, needed by U9/U10). |
 
-**Verdict:** every **agent-executable** criterion is **GREEN**. The open items (5, 7, partial 6/9)
-are **operational + cross-host (Mac)** and require the operator. Gate A cannot be self-approved.
+**Verdict:** **all 11 criteria are GREEN** (0–10). Criterion 5 is satisfied by the operator's
+pasted Mac evidence; 7/9 are live-verified on both homelab hosts after the plugin load-defect
+fix; the Mac mirrors them. **The only thing left is the operator's explicit "Gate A approved"** —
+the gate itself, which the agent cannot self-cross. Execution halts here per the plan.
 
 ---
 
