@@ -1,0 +1,36 @@
+{
+  "cost_assumptions": {
+    "n_corpora": 2,
+    "n_instances": 500,
+    "note": "ceiling; the U3 content-hash cache makes re-runs and the F3 critic re-run far cheaper by reusing shared session/turn text.",
+    "price_per_million_tokens_usd": 0.13,
+    "tokens_per_instance": 115000,
+    "total_tokens": 115000000
+  },
+  "dataset_release": "longmemeval-cleaned-2025-09",
+  "dataset_sha256": "",
+  "dataset_url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json",
+  "dataset_variant": "_s",
+  "embed_dim": 1536,
+  "embed_model": "text-embedding-3-large",
+  "judge_model": "gpt-4o-2024-08-06",
+  "phase1_embedding_cost_ceiling_usd": 14.95,
+  "prompt_template_version": "longmemeval-v1-2024-10",
+  "reader_models": [
+    "gpt-4.1-2025-04-14",
+    "gpt-4o-2024-08-06",
+    "gpt-4.1-mini"
+  ],
+  "retrieval": {
+    "candidate_k": 50,
+    "collapse_duplicates": true,
+    "k": 10,
+    "use_doc_lane": true,
+    "weights": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "seed": 20260602
+}
