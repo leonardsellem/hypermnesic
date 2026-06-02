@@ -358,9 +358,29 @@ export default class HypermnesicPlugin extends Plugin {
     this.register(() => this.statusBar?.dispose());
   }
 
-  /** Settings-tab hook: re-probe capabilities after a URL change. */
+  /** Settings-tab hook: re-probe capabilities after a URL change, and re-rank the
+   *  visible result so ranking sliders (staleness weight, half-life) and the nudge
+   *  threshold apply live without a reload (R18, AE4). */
   onSettingsChanged(): void {
     void this.core.probe();
+    void this.reapplyRanking();
+  }
+
+  /** Re-run the pipeline for the last query (a block-cache hit — no new MCP call)
+   *  so the current settings re-rank the visible result, then fan it out. Falls
+   *  back to a repaint when there is no prior result. */
+  private async reapplyRanking(): Promise<void> {
+    const current = this.snapshot.result;
+    if (!current) {
+      this.applySnapshot(this.snapshot);
+      return;
+    }
+    try {
+      const result = await this.core.run(current.query, current.sourcePath);
+      this.applySnapshot(this.machine.success(result));
+    } catch {
+      this.applySnapshot(this.snapshot);
+    }
   }
 
   // ───────────────────────────── nudge mute (plugin-local) ──────────────────
