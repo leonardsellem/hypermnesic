@@ -40,6 +40,25 @@ authoritative plan lives in the gbrain-brain vault at
 
 Full resolved tree: 46 packages, **0 AGPL/GPL/SSPL**, 0 LGPL (G2 PASS).
 
+#### Obsidian companion devDeps (Phase 2.5 Plan 2, U35/U38)
+
+The committed plugin now builds via esbuild. Direct devDeps are all permissive
+(license-gate-clean — no AGPL/GPL/SSPL across the resolved `node_modules` tree):
+
+| Package | License |
+|---|---|
+| obsidian | MIT |
+| esbuild | MIT |
+| typescript | Apache-2.0 |
+| builtin-modules | MIT |
+| @types/node | MIT |
+| @codemirror/state | MIT |
+| @codemirror/view | MIT |
+
+`@codemirror/*` are added only so `tsc` resolves the CM6 imports for the optional
+inline marker (U38); esbuild marks them (and `obsidian`/`electron`) external, so
+they are never bundled — Obsidian provides them at runtime.
+
 ### Resolved blockers (U1)
 
 - **OPENAI_API_KEY**: operator populated `/home/ubuntu/dev/hypermnesic/.env`
