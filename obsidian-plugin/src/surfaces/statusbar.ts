@@ -90,11 +90,11 @@ export class StatusBarSurface {
   private position(): void {
     if (!this.popover) return;
     const rect = this.el.getBoundingClientRect();
-    this.popover.style.position = "fixed";
+    // Only the dynamic anchor geometry lives in JS — it must track the status-bar
+    // item's runtime rect. All static styling (position, max-height, overflow,
+    // surface) is in styles.css per the guideline (KTD7, R22).
     this.popover.style.bottom = `${window.innerHeight - rect.top + 6}px`;
     this.popover.style.right = `${Math.max(8, window.innerWidth - rect.right)}px`;
-    this.popover.style.maxHeight = "50vh";
-    this.popover.style.overflowY = "auto";
   }
 
   private renderPopover(): void {

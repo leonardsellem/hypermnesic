@@ -20,7 +20,7 @@ import {
 
 export interface RenderDeps extends ReferenceRowDeps {
   /** Optional reinvention-nudge renderer (U40), prepended to the list. */
-  renderNudge?(host: HTMLElement, snapshot: StateSnapshot): void;
+  renderNudge?(host: HTMLElement, snapshot: StateSnapshot, hoverParent: HoverParent | null): void;
 }
 
 /** States that still render the hit list (a banner is layered above it). */
@@ -64,7 +64,7 @@ export function renderResultList(
     return;
   }
 
-  if (deps.renderNudge) deps.renderNudge(container, model);
+  if (deps.renderNudge) deps.renderNudge(container, model, hoverParent);
 
   const list = container.createEl("ul", { cls: "hypermnesic-related-list" });
   list.setAttribute("role", "list");
