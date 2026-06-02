@@ -1,7 +1,8 @@
 # Hypermnesic on LongMemEval V1 — Benchmark Verdict
 
-**Status: Phase 1 retrieval diagnostic — RUN (2026-06-02, full `_s`; numbers below).
-Phase 2 — end-to-end QA headline (GPT-4.1 + GPT-4o columns): pending (gated).**
+**Status: Phase 1 retrieval diagnostic — RUN (2026-06-02, full `_s`).
+Phase 2 — end-to-end QA headline (GPT-4.1 + GPT-4o columns) — RUN (2026-06-02, full `_s`,
+both columns under the `gpt-4o-2024-08-06` judge; numbers below).**
 
 This document is the public-facing verdict for Hypermnesic on **LongMemEval V1**,
 in the integrity style of [`PARITY_VERDICT.md`](PARITY_VERDICT.md): it records
@@ -11,9 +12,9 @@ log and a no-tune-to-pass commitment. The re-runnable harness lives under
 [`harness/longmemeval/`](longmemeval/); the pinned reproducibility manifest is
 [`harness/longmemeval/manifest.json`](longmemeval/manifest.json).
 
-The numbers themselves are produced by running the harness (below); the tables here
-are seeded with the exact columns each run fills, marked **— (pending run)** until
-the run is executed and its aggregate transcribed.
+The numbers themselves are produced by running the harness (below). Both phases have
+now been run on the full `_s` set (2026-06-02) and their aggregates transcribed; the
+re-runnable harness + pinned manifest let a third party reproduce them.
 
 ---
 
@@ -35,42 +36,56 @@ the run is executed and its aggregate transcribed.
 
 Every cited leaderboard row is attributed by **reader · judge · dataset release**,
 so no reader mistakes our GPT-4.1-reader / GPT-4o-judge cell for a GPT-4.1-*graded*
-vendor row. (Exact figures and release per row are re-verified against primary
-sources when the headline is published in U9; the values below are the planning
-sources' figures and are marked accordingly.)
+vendor row. The anchor figures below were **re-verified against primary sources at
+publication** (2026-06-02) — and that re-verification corrected a planning-doc
+error: the ~84 GPT-4o-judge figure belongs to **Mastra Observational Memory**, not
+OMEGA. OMEGA publishes **no** GPT-4o-judge row; its only number is 95.4 at a GPT-4.1
+judge (see the corrections log).
 
-| Row | Reported | Reader | **Judge** | Dataset release | Directly comparable to… |
+| Row | Reported (overall) | Reader | **Judge** | Dataset release | Directly comparable to… |
 |---|---|---|---|---|---|
-| **Hypermnesic — lead** | *(pending)* | GPT-4.1 (`gpt-4.1-2025-04-14`) | **`gpt-4o-2024-08-06`** | cleaned-2025-09 | *this is us* |
-| **Hypermnesic — anchor** | *(pending)* | GPT-4o (`gpt-4o-2024-08-06`) | **`gpt-4o-2024-08-06`** | cleaned-2025-09 | *this is us* |
-| OMEGA (headline) | ~95.4 | GPT-4.1 | **GPT-4.1 (lenient)** | original† | ❌ different judge — **not** our cell |
-| OMEGA (GPT-4o-judge) | ~84.2 | GPT-4o | **`gpt-4o`** | original† | ✅ our **anchor** (mind the release) |
-| Zep | ~71 | GPT-4o | **`gpt-4o`** | original† | ✅ our anchor (mind the release) |
-| Full-context baseline | ~60 | GPT-4o | **`gpt-4o`** | — | ✅ our anchor |
-| Mem0 | ~93–94 | GPT-4.1† | **GPT-4.1†** | original† | ❌ unless judge/release match |
+| **Hypermnesic — lead** | **88.6** (task-avg 89.7) | GPT-4.1 (`gpt-4.1-2025-04-14`) | **`gpt-4o-2024-08-06`** | cleaned-2025-09 | *this is us* |
+| **Hypermnesic — anchor** | **83.2** (task-avg 86.6) | GPT-4o (`gpt-4o-2024-08-06`) | **`gpt-4o-2024-08-06`** | cleaned-2025-09 | *this is us* |
+| Mastra Observational Memory | 84.2 | GPT-4o | **`gpt-4o`** | original | ✅ our **anchor** (mind the release) |
+| Zep | 71.2 | GPT-4o | **`gpt-4o`** | original | ✅ our anchor (mind the release) |
+| Full-context baseline | 60.2 | GPT-4o | **`gpt-4o`** | original | ✅ our anchor (no-memory floor) |
+| OMEGA (headline) | 95.4 | GPT-4.1 | **GPT-4.1 (lenient)** | original | ❌ different judge — **not** our cell |
+| Mastra (OMEGA leaderboard) | 94.9 | GPT-4.1† | **GPT-4.1†** | original | ❌ different judge — **not** our cell |
 
-† *to re-verify against the primary source at publication (U9).*
+Sources (re-verified 2026-06-02): Zep arXiv 2501.13956 (full-context 60.2, Zep 71.2,
+both GPT-4o reader + GPT-4o judge, original `_s`); Mastra research page
+(Observational Memory 84.23, GPT-4o reader + GPT-4o judge); OMEGA leaderboard
+(`omegamax.co/benchmarks` — OMEGA 95.4 / Mastra 94.9, **GPT-4.1 judge throughout**).
+† the Mastra GPT-4.1-judge row is shown only to make the judge-axis gap explicit.
 
-### The ~11-point reader-vs-judge swing — decomposed
+### The reader-vs-judge swing — decomposed (with first-party numbers)
 
 Reader and judge choice **each** move the headline materially; conflating them is
-the field's most common comparability error:
+the field's most common comparability error. We resist the temptation to "decompose"
+the swing from *cross-vendor* numbers — there is **no** published system with both a
+GPT-4o-judge and a GPT-4.1-judge row on the same release, so any single point-spread
+attributed to "the reader axis" from public figures silently mixes reader, judge,
+generation model, and release. Instead we report each axis cleanly:
 
-- **Reader axis (~11 pts).** The same system scores **~95.4 with a GPT-4.1 reader**
-  vs **~84.2 with a GPT-4o reader** (OMEGA). That is why this harness publishes
-  **both** reader columns — a GPT-4.1 column alone, set beside GPT-4o-graded SOTA
-  rows, would be apples-to-oranges and forfeit the credibility the protocol prizes.
-- **Judge axis.** The vendor 93–96% rows were graded with a **GPT-4.1 judge**, which
-  is **more lenient** than `gpt-4o-2024-08-06`. Our judge is the canonical
-  `gpt-4o-2024-08-06` (the official aggregator hard-asserts this snapshot, R11).
+- **Reader axis — measured here, at a *fixed* judge.** Both our columns are graded by
+  the **same** `gpt-4o-2024-08-06` judge, so the gap between them is a *clean* reader
+  effect: **GPT-4.1 reader 89.7 vs GPT-4o reader 86.6 task-averaged** (88.6 vs 83.2
+  overall) — a **+3.1 pt task-avg / +5.4 pt overall** swing from the stronger reader
+  alone. That is why this harness publishes **both** reader columns: a GPT-4.1 column
+  set beside GPT-4o-graded SOTA rows would be apples-to-oranges.
+- **Judge axis — why the 95% rows are out of reach by construction.** The leaderboard's
+  93–96% rows (OMEGA 95.4, Mastra 94.9) are graded with a **GPT-4.1 judge**, which is
+  **more lenient** than `gpt-4o-2024-08-06`. Our judge is the canonical
+  `gpt-4o-2024-08-06` (the official aggregator hard-asserts this snapshot, R11). A
+  GPT-4.1-*judge* column is deliberately **out of scope** — a non-`gpt-4o-2024-08-06`
+  judge is rejected by the official aggregator.
 
 **Consequence (stated plainly):** our **GPT-4.1-reader / `gpt-4o-2024-08-06`-judge**
-cell is **not** the GPT-4.1-*graded* 95.4 row, and is **expected to land below it on
-judge strictness alone** — independent of memory quality. We do not claim to be "in
-the 93–96% column." The **truly comparable anchors** are the GPT-4o-*judge* rows:
-**full-context ≈60, Zep ≈71, OMEGA-on-GPT-4o ≈84.2**. A GPT-4.1-*judge* column is
-deliberately **out of scope** — a non-`gpt-4o-2024-08-06` judge is rejected by the
-official aggregator.
+cell (88.6) is **not** the GPT-4.1-*graded* 95.4 row, and is **expected to land below
+it on judge strictness alone** — independent of memory quality. We do not claim to be
+"in the 93–96% column." The **truly comparable anchors** are the GPT-4o-*judge* rows:
+**full-context 60.2, Zep 71.2, Mastra-on-GPT-4o 84.2** (all original-release; mind the
+release caveat).
 
 ---
 
@@ -170,20 +185,62 @@ not retrieval *coverage* or the reader — which is exactly the claim Phase 2 wi
 
 ## Phase 2 — end-to-end QA headline (GPT-4.1 + GPT-4o columns)
 
-**Pending.** The reader (U7), judge (U8), and QA runner (U9) land with offline tests
-in this harness; the **paid full 500-Q `_s` run is a deliberate, gated step** — it is
-triggered only after the Phase 1 diagnostic is reviewed and a budget (covering **both**
-reader passes under the shared `gpt-4o-2024-08-06` judge) is signed off. The headline
-metric is **task-averaged accuracy** (macro over the 6 `question_type` buckets,
-abstention excluded), reported beside **Overall** (micro) and **Abstention** (30),
-**per reader column** — matching the official `print_qa_metrics.py`.
+**Run 2026-06-02** over the **full 500-Q `_s` set** (470 answerable + 30 abstention),
+both reader columns graded by the canonical **`gpt-4o-2024-08-06`** judge, retrieval
+frozen at the manifest params (k=10), via the OpenAI **Batch API** (50% cost). The run
+was **not voided** (`verdict: reported`, embed-quiescent); **0 reader errors, 0 judge
+errors** across 1,000 reads + 1,000 grades. The headline metric is **task-averaged
+accuracy** (macro over the 6 `question_type` buckets, abstention excluded), reported
+beside **Overall** (micro) and **Abstention** (30) — matching the official
+`print_qa_metrics.py`.
 
 | Reader column | Judge | Overall (micro) | Task-averaged (macro, headline) | Abstention (30) |
 |---|---|---|---|---|
-| GPT-4.1 (`gpt-4.1-2025-04-14`) — lead | `gpt-4o-2024-08-06` | — | — | — |
-| GPT-4o (`gpt-4o-2024-08-06`) — anchor | `gpt-4o-2024-08-06` | — | — | — |
+| GPT-4.1 (`gpt-4.1-2025-04-14`) — lead | `gpt-4o-2024-08-06` | **88.6** | **89.7** | 76.7 (23/30) |
+| GPT-4o (`gpt-4o-2024-08-06`) — anchor | `gpt-4o-2024-08-06` | **83.2** | **86.6** | 70.0 (21/30) |
 
-*— (pending the gated Phase 2 run).*
+**Where this lands (the honest comparison).** On the matched **GPT-4o-reader /
+GPT-4o-judge** axis — the only apples-to-apples memory-system comparison — Hypermnesic's
+**anchor column (83.2 overall, 86.6 task-avg)** sits **on par with Mastra Observational
+Memory (84.2)**, **+12 over Zep (71.2)**, and **+23 over the no-memory full-context
+floor (60.2)**. The **lead column (88.6 / 89.7)** isolates the reader-strength gain at
+the same canonical judge (+5.4 overall). Neither column is comparable to the GPT-4.1-
+*judged* 95% leaderboard rows (OMEGA 95.4, Mastra 94.9) — that gap is a judge-leniency
+artefact, not a memory-quality result (see the comparability envelope). **Release
+caveat:** the anchors are on the **original** `_s`; we run **cleaned-2025-09**.
+
+### Per-ability accuracy (full `_s`, both columns, `gpt-4o-2024-08-06` judge)
+
+| Ability (`question_type`) | n | GPT-4.1 reader | GPT-4o reader |
+|---|---|---|---|
+| single-session-assistant | 56 | 98.2 | 98.2 |
+| single-session-user | 64 | 95.3 | 93.8 |
+| temporal-reasoning | 127 | 89.0 | 82.7 |
+| knowledge-update | 72 | 87.5 | 86.1 |
+| multi-session | 121 | 85.1 | **71.9** |
+| single-session-preference | 30 | 83.3 | 86.7 |
+| **Task-averaged (macro)** | — | **89.7** | **86.6** |
+
+**Reading — Phase 1 localization, confirmed end-to-end.** The GPT-4o reader's weakest
+bucket is **multi-session (71.9)** — precisely the ability Phase 1 flagged as a
+*retrieval-ordering* gap (multi-gold sets, `recall_all@10` 0.95 but `recall_any@10`
+1.00). The stronger GPT-4.1 reader recovers it to **85.1** from the *same* retrieved
+context, which localizes the residual to **reader synthesis over multi-session
+evidence**, not retrieval coverage. Date-sensitive abilities (temporal-reasoning,
+knowledge-update) hold up well (89.0 / 87.5 on the lead column) despite the engine's
+no-date-aware-ranking gap, consistent with `recall_any@10 = 1.000` there — at least one
+gold session is always retrieved, and a capable reader resolves the rest.
+
+### Run provenance & cost
+
+- **Mode:** OpenAI Batch API, single-model batches (a reader batch per model + one
+  1,000-request judge batch), polled to completion. The run writes
+  `results/headline.json` locally (gitignored alongside the corpus + embed cache, R15);
+  the committed artifact is the aggregate/per-ability tables in this doc.
+- **Actual spend: $31.30** (batch-priced) — GPT-4.1 reader $13.82 (13.55M in / 68k out),
+  GPT-4o reader $17.18 (13.55M in / 48k out), judge $0.29 (229k in / 1.5k out) — under
+  the $50 budget ceiling. A prior mixed-model batch failed validation at **$0** (the
+  Batch API rejects multi-model batches; fixed to one batch per model, regression-tested).
 
 ---
 
@@ -225,8 +282,10 @@ aggregate/per-ability numbers in this doc are committed (R15).
 - **Phase 1 (embeddings-only):** ceiling **≈ $15** (≈115M tokens across both corpora at
   `text-embedding-3-large` list price; see `cost_assumptions` in the manifest). The
   content-hash embedding cache makes re-runs and the F3 critic re-run far cheaper.
-- **Phase 2 (reader + judge):** recorded at run time per column; the dollar budget is a
-  user decision before the gated run.
+- **Phase 2 (reader + judge):** **actual $31.30** via the Batch API for the full 500-Q
+  two-column headline (GPT-4.1 reader $13.82 + GPT-4o reader $17.18 + shared judge $0.29),
+  against a $50 budget. The content-hash embedding cache makes the retrieval phase free on
+  re-runs. The sync (non-batch) path costs ~2× the same tokens.
 
 ---
 
@@ -252,8 +311,8 @@ change is recorded here, in the open.
   (single-session-user 70, single-session-assistant 56, single-session-preference 30,
   multi-session 133, knowledge-update 78, temporal-reasoning 133) + 30 abstention. The
   Phase-1 pipeline (materialize → index → retrieve → score) was verified to run
-  end-to-end on real instances offline (FakeEmbedder); the diagnostic + headline runs
-  themselves remain pending an API key + budget.
+  end-to-end on real instances offline (FakeEmbedder); at this point the diagnostic +
+  headline runs were still pending an API key + budget (both have since run — see below).
 - **2026-06-02 — Phase 1 retrieval diagnostic run (full `_s`).** Ran F2 over all 500
   instances (470 retrieval-scored, 30 `_abs` excluded) with the production embedder;
   embed-quiescent (`verdict: reported`, not voided). Per-ability counts are
@@ -263,6 +322,26 @@ change is recorded here, in the open.
   instances) — no tuning, no param change between the two segments. Numbers committed
   are aggregate/per-ability only (R15); per-instance outputs + the embed cache stay
   gitignored.
+- **2026-06-02 — Phase 2 QA headline run (full `_s`, both columns).** Ran the end-to-end
+  QA (retrieval → reader → `gpt-4o-2024-08-06` judge → scorer) over all 500 instances for
+  **both** reader columns via the OpenAI Batch API. `verdict: reported` (not voided), 0
+  reader/judge errors across 1,000 reads + 1,000 grades. Results: GPT-4.1 reader **88.6
+  overall / 89.7 task-avg / 76.7 abstention**; GPT-4o reader **83.2 / 86.6 / 70.0**.
+  Actual spend **$31.30** (batch), under the $50 budget. No tuning, no param change vs
+  Phase 1 (same frozen k=10 retrieval). A first attempt failed Batch API validation at
+  **$0** because it mixed both reader models in one batch (the Batch API requires a
+  single model per batch); fixed to one reader batch per model + a regression test, then
+  re-run clean.
+- **2026-06-02 — anchor figures re-verified at publication; OMEGA→Mastra correction.** Per
+  the per-row attribution commitment (R21), the cited GPT-4o-judge anchors were re-verified
+  against primary sources before publishing. This **corrected a planning-doc error**: the
+  ~84.2 GPT-4o-judge figure was attributed to "OMEGA" but actually belongs to **Mastra
+  Observational Memory** (GPT-4o reader + GPT-4o judge, Mastra research page). OMEGA
+  publishes **no** GPT-4o-judge row — its 95.4 is GPT-4.1-judged (`omegamax.co/benchmarks`).
+  Verified anchors (all original-release `_s`, GPT-4o reader + GPT-4o judge): full-context
+  **60.2** and Zep **71.2** (arXiv 2501.13956), Mastra **84.2**. The earlier "~11-pt reader
+  swing (same system, OMEGA)" claim conflated two different systems and was removed; the
+  reader swing is now reported from our own two columns at a *fixed* judge (+5.4 overall).
 
 ---
 
@@ -273,5 +352,8 @@ change is recorded here, in the open.
   `tests/test_longmemeval_harness.py`.
 - LongMemEval: `github.com/xiaowu0162/LongMemEval`; dataset
   `xiaowu0162/longmemeval-cleaned` (HF, MIT); paper arXiv 2410.10813.
-- Reader/judge comparability: the Zep and OMEGA LongMemEval reports (reader/judge/release
-  attribution above to be re-verified against these at publication).
+- Reader/judge comparability anchors (re-verified 2026-06-02): Zep arXiv 2501.13956
+  (full-context 60.2, Zep 71.2; GPT-4o reader + GPT-4o judge); Mastra research page,
+  *Observational Memory* (84.2; GPT-4o reader + GPT-4o judge); OMEGA leaderboard
+  `omegamax.co/benchmarks` (OMEGA 95.4 / Mastra 94.9; **GPT-4.1 judge**, shown only to
+  scope the judge axis — not comparable to our GPT-4o-judge columns).
