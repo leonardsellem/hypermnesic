@@ -51,6 +51,17 @@ token → 403**, with the **operator approval token → code issued** + redirect
 `/token` exchanged (SDK validated PKCE) → access token; **`/mcp` unauthenticated → 401, with
 the cloud token → 200**. The per-tool write scope still gates `commit_note`.
 
+**Pre-public-exposure security review (commit `ec80801`):** an adversarial review of the public
+write surface found and fixed **2 Critical + 3 High + Medium + Low** before any exposure —
+reflected XSS on the `/consent` token-entry page (→ escape + lookup-first + CSP/anti-frame);
+revocation not killing the refresh token (→ whole-grant revoke); no refresh rotation (→ rotate
+on use); clickjackable/identity-blind consent (→ show the client + anti-frame headers); approval
+token brute-forceable (→ failure cap + pending TTL + 24-char entropy floor); unbounded-growth DoS
+(→ sweep + caps); audience not enforced (→ enforced at the RS); and the cloud lane now writes to a
+tighter review zone (`captures/`). **Residual (operational):** rate-limiting + TLS termination at
+the Funnel edge; the single approval token is shared across connections (rotate the env var to
+invalidate). These are accepted, edge-layer concerns for the deploy.
+
 **Remaining = operational (operator-involved), no more code:**
 1. Operator sets `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` (a secret they hold; gates every connection).
 2. **Public Funnel exposure** — `tailscale funnel` a hypermnesic hostname/path → the cloud serve
