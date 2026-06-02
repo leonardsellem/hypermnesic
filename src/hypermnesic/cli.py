@@ -146,14 +146,15 @@ def _cmd_retrieve(args) -> int:
     except Exception:
         embedder = None
     converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
-    res = retrieve.search(idx, args.query, embedder=embedder, k=args.k)
+    res = retrieve.search(idx, args.query, embedder=embedder, k=args.k,
+                          recency_fn=retrieve.git_commit_recency(Path(args.repo)))
     idx.close()
     out = {
         "query": args.query,
         "degraded_lexical_only": res.degraded,
         "hits": [
             {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
-             "channels": sorted(h.channels), "snippet": h.text[:280]}
+             "channels": sorted(h.channels), "snippet": h.text[:280], "recency": h.recency}
             for h in res.hits
         ],
     }

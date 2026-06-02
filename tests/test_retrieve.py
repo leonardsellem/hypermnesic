@@ -2,8 +2,22 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+
 from hypermnesic import embed as embed_mod
 from hypermnesic import index, retrieve
+
+
+def _commit_dated(repo, rel, body, iso):
+    """Commit ``rel`` with an explicit author+committer date so write-recency is
+    deterministic (``git log --format=%ct`` reads the committer date)."""
+    (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / rel).write_text(body, encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_DATE": iso, "GIT_COMMITTER_DATE": iso}
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", rel],
+                   env=env, check=True, capture_output=True)
 
 NOTE_FR = """# Parité du rappel en français
 
@@ -145,4 +159,41 @@ def test_rerank_changes_order_not_membership(make_corpus, fake_embedder):
                           k=3, rerank=reverse_rerank)
     assert {h.chunk_id for h in base.hits} == {h.chunk_id for h in rer.hits}  # membership
     assert [h.chunk_id for h in base.hits] != [h.chunk_id for h in rer.hits]  # order
+    idx.close()
+
+
+# --- U29: per-Hit write-recency (engine-only; no ranking change) --------------
+
+def test_hit_recency_orders_recent_above_old(make_corpus, fake_embedder):
+    repo = make_corpus({"seed.md": "# Seed\n\nseed body.\n"})
+    _commit_dated(repo, "old.md", "# Old\n\nRECENCYMARKER older note.\n", "2020-01-01T00:00:00")
+    _commit_dated(repo, "new.md", "# New\n\nRECENCYMARKER newer note.\n", "2026-01-01T00:00:00")
+    idx = index.build_index(repo, fake_embedder)
+    rfn = retrieve.git_commit_recency(repo)
+    res = retrieve.search(idx, "RECENCYMARKER", embedder=fake_embedder, k=10, recency_fn=rfn)
+    by_path = {h.path: h.recency for h in res.hits}
+    assert by_path.get("old.md") is not None and by_path.get("new.md") is not None
+    assert by_path["new.md"] > by_path["old.md"]            # more-recent commit → larger epoch
+    idx.close()
+
+
+def test_hit_recency_is_none_without_recency_fn(make_corpus, fake_embedder):
+    idx = _idx(make_corpus, fake_embedder)
+    res = retrieve.search(idx, "Hetzner", embedder=fake_embedder, k=3)   # no recency_fn
+    assert res.hits and all(h.recency is None for h in res.hits)         # None-safe default
+    idx.close()
+
+
+def test_hit_recency_none_for_untracked_path(make_corpus, fake_embedder):
+    # an indexed-but-uncommitted path (overlay) has no commit metadata → recency None,
+    # and a result is still produced (absent-safe).
+    repo = make_corpus({"a.md": "# A\n\nUNTRACKEDMARKER committed.\n"})
+    idx = index.build_index(repo, fake_embedder)
+    from hypermnesic import ingest
+    idx.upsert_lexical("ghost.md",
+                       ingest.chunks_for_text("ghost.md", "# Ghost\n\nUNTRACKEDMARKER overlay.\n"))
+    rfn = retrieve.git_commit_recency(repo)
+    res = retrieve.search(idx, "UNTRACKEDMARKER", embedder=fake_embedder, k=10, recency_fn=rfn)
+    by_path = {h.path: h.recency for h in res.hits}
+    assert "ghost.md" in by_path and by_path["ghost.md"] is None          # no commit → None
     idx.close()

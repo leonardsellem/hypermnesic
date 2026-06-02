@@ -144,3 +144,14 @@ def test_reads_degrade_to_lexical_when_embedder_down(make_corpus, fake_embedder)
     out = _call(srv, "search", {"query": "DOWNMARKER"})
     assert out["degraded_lexical_only"] is True            # dense channel absent, flagged
     assert any(h["path"] == "a.md" for h in out["hits"])   # lexical still answers; no error
+
+
+def test_search_response_carries_recency_field(make_corpus, fake_embedder):
+    # U29: per-result recency surfaces in the MCP search payload (committed note → float epoch).
+    repo = make_corpus({"hetzner.md": "# Hetzner\n\nRECENCYMARKER homelab.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "search", {"query": "RECENCYMARKER"})
+    hit = next(h for h in out["hits"] if h["path"] == "hetzner.md")
+    assert "recency" in hit and isinstance(hit["recency"], (int, float))   # committed → epoch

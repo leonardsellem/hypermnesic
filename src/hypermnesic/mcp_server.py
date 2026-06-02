@@ -100,14 +100,15 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
               description="Hybrid (lexical + dense) search over the read-only index.")
     def search(query: str, k: int = 10) -> dict:
         backend.converge()
-        res = retrieve.search(backend.idx, query, embedder=backend.embedder, k=k)
+        res = retrieve.search(backend.idx, query, embedder=backend.embedder, k=k,
+                              recency_fn=retrieve.git_commit_recency(backend.repo))
         return {
             "query": query,
             "degraded_lexical_only": res.degraded,
             "hits": [
                 {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
                  "channels": sorted(h.channels),
-                 "snippet": h.text[:280]}
+                 "snippet": h.text[:280], "recency": h.recency}
                 for h in res.hits
             ],
         }

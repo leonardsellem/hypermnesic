@@ -14,8 +14,10 @@ silently degraded to lexical-only (G6).
 from __future__ import annotations
 
 import hashlib
+import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from hypermnesic import embed as embed_mod
 
@@ -30,6 +32,33 @@ class Hit:
     text: str
     score: float
     channels: set[str] = field(default_factory=set)
+    # U29: per-result write-recency — epoch seconds of the most recent commit that
+    # touched ``path`` (KTD7: git commit time is canonical, the index being a git
+    # projection). ``None`` when untracked / no commit metadata. Engine produces it;
+    # Plan 2's companion consumes it for forgetting-curve ranking. No ranking effect here.
+    recency: float | None = None
+
+
+def git_commit_recency(repo) -> Callable[[str], float | None]:
+    """Return a path → epoch-seconds resolver for the most recent commit touching
+    a path (the write-recency source of truth, KTD7), or ``None`` when the path is
+    untracked / has no commit. Cached per path so a multi-hit result queries each
+    path at most once. Access-recency is out of scope (no read logging)."""
+    repo = Path(repo)
+    cache: dict[str, float | None] = {}
+
+    def _recency(path: str) -> float | None:
+        if path not in cache:
+            try:
+                out = subprocess.run(
+                    ["git", "-C", str(repo), "log", "-1", "--format=%ct", "--", path],
+                    capture_output=True, text=True, check=True).stdout.strip()
+                cache[path] = float(out) if out else None
+            except (FileNotFoundError, subprocess.CalledProcessError, ValueError):
+                cache[path] = None
+        return cache[path]
+
+    return _recency
 
 
 @dataclass
@@ -54,6 +83,7 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
            expand: int = 0,
            expander: Callable[[str, int], list[str]] | None = None,
            use_doc_lane: bool = True,
+           recency_fn: Callable[[str], float | None] | None = None,
            weights: tuple[float, float, float] = (1.0, 1.0, 1.0)) -> SearchResult:
     """Hybrid search over ``idx``. Returns up to ``k`` fused hits.
 
@@ -131,7 +161,8 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
                 continue
             seen_text.add(th)
         hits.append(Hit(chunk_id=cid, path=ch["path"], heading=ch["heading"],
-                        text=ch["text"], score=score, channels=channels[cid]))
+                        text=ch["text"], score=score, channels=channels[cid],
+                        recency=recency_fn(ch["path"]) if recency_fn is not None else None))
 
     if rerank is not None:
         head = rerank(query, hits[:k])
