@@ -5,7 +5,7 @@
       "url": "https://homelab.taildabf2.ts.net/mcp",
       "auth": {
         "type": "oauth2",
-        "issuer": "https://homelab.taildabf2.ts.net/honcho/",
+        "issuer": "https://homelab.taildabf2.ts.net",
         "resource": "https://homelab.taildabf2.ts.net/mcp",
         "required_scopes": ["write"],
         "token_env": "HYPERMNESIC_MCP_TOKEN"

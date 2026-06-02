@@ -7,6 +7,5 @@
     "email": "leonard@sellem.me"
   },
   "homepage": "https://homelab.taildabf2.ts.net/mcp",
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }
