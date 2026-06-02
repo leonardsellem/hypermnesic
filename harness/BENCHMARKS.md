@@ -220,7 +220,15 @@ reader pre-training, which is part of why it is the higher-confidence signal.
 The integrity discipline of `PARITY_VERDICT.md`: every methodology correction or param
 change is recorded here, in the open.
 
-- *(none yet — Phase 1 harness landed; diagnostic + headline runs pending.)*
+- **2026-06-02 — dataset pinned.** Acquired the `longmemeval-cleaned` (2025-09) `_s`
+  release and pinned its SHA-256 (`d6f21ea9…c3a442`, 500 instances, 277,383,467 bytes)
+  in `manifest.py`/`manifest.json`. A re-download is now verified strictly against this
+  hash. Schema confirmed against the harness: 6 `question_type` buckets
+  (single-session-user 70, single-session-assistant 56, single-session-preference 30,
+  multi-session 133, knowledge-update 78, temporal-reasoning 133) + 30 abstention. The
+  Phase-1 pipeline (materialize → index → retrieve → score) was verified to run
+  end-to-end on real instances offline (FakeEmbedder); the diagnostic + headline runs
+  themselves remain pending an API key + budget.
 
 ---
 

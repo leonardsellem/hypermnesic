@@ -36,12 +36,12 @@ DATASET_URL = (
     "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/"
     "resolve/main/longmemeval_s_cleaned.json"
 )
-# Pinned at dataset-acquisition time (the U1 verification step). Until it is
-# pinned, ``download_dataset(..., expected_sha256=DATASET_SHA256)`` runs in
-# capture mode: it computes + reports the hash but does NOT certify the corpus as
-# verified. A headline run requires a non-empty pinned hash (R14/R16); fill this
-# in from the capture-mode report and commit it.
-DATASET_SHA256 = ""
+# Pinned at dataset-acquisition (the U1 verification step), 2026-06-02, from the
+# HF cleaned-2025-09 release: 500 instances, 277,383,467 bytes. A re-download is
+# now verified strictly against this hash; a divergent download fails loud and
+# installs no corpus (R14/R16). Re-pin only if the upstream release is bumped,
+# recording the change in harness/BENCHMARKS.md.
+DATASET_SHA256 = "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
 
 # --- pinned models ----------------------------------------------------------
 READER_LEAD = "gpt-4.1-2025-04-14"        # 1M context → `_s` fits untruncated
