@@ -15,7 +15,9 @@ import {
   HoverPopover,
   ItemView,
   MarkdownRenderer,
+  Notice,
   WorkspaceLeaf,
+  setIcon,
 } from "obsidian";
 import { ThinkResponse, callTool, parseToolResult } from "./core";
 import { renderTrustBadge } from "./state";
@@ -29,6 +31,19 @@ import {
 import { ReferenceInput } from "./surfaces/reference-model";
 
 export const THINKING_VIEW_TYPE = "hypermnesic-thinking";
+
+/** Bound the think-deeper history so a long chain can't grow memory unbounded;
+ *  at the cap, "think deeper" is disabled so "back" always reaches the origin. */
+const MAX_THINK_DEPTH = 10;
+
+/** A cached frame on the think-deeper history stack — engine data only, so each
+ *  render re-resolves references against the live vault (KTD6). */
+interface ThinkingFrame {
+  topic: string;
+  sourcePath: string;
+  state: ThinkingState;
+  response: ThinkResponse | null;
+}
 
 export interface ThinkingDeps {
   getUrl(): string;
@@ -58,6 +73,8 @@ export class ThinkingView extends ItemView {
   private sourcePath = "";
   private state: ThinkingState = "idle";
   private response: ThinkResponse | null = null;
+  /** Prior frames for the think-deeper back affordance (KTD6). */
+  private stack: ThinkingFrame[] = [];
 
   constructor(
     leaf: WorkspaceLeaf,
@@ -80,10 +97,50 @@ export class ThinkingView extends ItemView {
     this.render();
   }
 
-  /** Run thinking-mode for a topic and render in place (R8: one panel, refreshed).
-   *  `sourcePath` is the note the topic came from — it keeps reference resolution
-   *  stable as the panel survives navigation. */
+  /** Closing the leaf clears the chain so a re-opened panel starts fresh, never
+   *  resurrecting a stale back-stack (KTD6). */
+  async onClose(): Promise<void> {
+    this.stack = [];
+    this.response = null;
+    this.state = "idle";
+    this.topic = "";
+  }
+
+  /** Push the current frame and think about a related note in place (R11). */
+  private async deepen(topic: string, sourcePath: string): Promise<void> {
+    if (this.stack.length >= MAX_THINK_DEPTH) {
+      new Notice("hypermnesic: thinking depth limit reached");
+      return;
+    }
+    this.stack.push({
+      topic: this.topic,
+      sourcePath: this.sourcePath,
+      state: this.state,
+      response: this.response,
+    });
+    await this.loadTopic(topic, sourcePath);
+  }
+
+  /** Pop to the cached prior frame; render re-resolves its references (KTD6). */
+  private goBack(): void {
+    const prev = this.stack.pop();
+    if (!prev) return;
+    this.topic = prev.topic;
+    this.sourcePath = prev.sourcePath;
+    this.state = prev.state;
+    this.response = prev.response;
+    this.render();
+  }
+
+  /** Fresh entry point (the command / menu): start a new chain. `sourcePath` is
+   *  the note the topic came from — it keeps reference resolution stable as the
+   *  panel survives navigation (R8). */
   async setTopic(topic: string, sourcePath: string): Promise<void> {
+    this.stack = [];
+    await this.loadTopic(topic, sourcePath);
+  }
+
+  private async loadTopic(topic: string, sourcePath: string): Promise<void> {
     this.topic = topic;
     this.sourcePath = sourcePath;
 
@@ -135,6 +192,8 @@ export class ThinkingView extends ItemView {
     );
     badge.setAttribute("aria-label", "this thinking surface made no writes");
 
+    if (this.stack.length > 0) this.renderNav(root);
+
     if (this.topic) {
       root.createEl("h3", { cls: "hypermnesic-thinking-topic", text: this.topic });
     }
@@ -177,6 +236,24 @@ export class ThinkingView extends ItemView {
     this.renderProseSection(root, "Questions", questions, "hypermnesic-thinking-questions");
     this.renderRelatedSection(root, related);
     this.renderProseSection(root, "Tensions", tensions, "hypermnesic-thinking-tensions");
+  }
+
+  /** Back control + topic breadcrumb, shown while a think-deeper chain is open. */
+  private renderNav(root: HTMLElement): void {
+    const nav = root.createDiv({ cls: "hypermnesic-think-nav" });
+    const back = nav.createEl("button", { cls: "hypermnesic-back" });
+    back.setAttribute("aria-label", "Back to the previous thinking result");
+    setIcon(back, "arrow-left");
+    back.createSpan({ text: "Back" });
+    back.addEventListener("click", () => this.goBack());
+
+    const crumbs = nav.createSpan({ cls: "hypermnesic-breadcrumb" });
+    crumbs.setAttribute("aria-hidden", "true");
+    const trail = [...this.stack.map((f) => f.topic), this.topic];
+    trail.forEach((label, i) => {
+      if (i > 0) crumbs.createSpan({ cls: "hypermnesic-crumb-sep", text: " › " });
+      crumbs.createSpan({ cls: "hypermnesic-crumb", text: label });
+    });
   }
 
   private sectionHeader(host: HTMLElement, title: string, count: number): void {
@@ -229,11 +306,25 @@ export class ThinkingView extends ItemView {
     const list = sec.createEl("ul", { cls: "hypermnesic-related-list" });
     list.setAttribute("role", "list");
     const focusables: HTMLElement[] = [];
+    const atCap = this.stack.length >= MAX_THINK_DEPTH;
     for (const item of related) {
       const li = list.createEl("li", { cls: "hypermnesic-hit" });
       li.setAttribute("role", "listitem");
       const resolved = resolveReference(this.deps.rowDeps.app, toReferenceInput(item), this.sourcePath);
       focusables.push(renderReference(li, resolved, this.sourcePath, this.deps.rowDeps, this));
+
+      // Inline "think deeper" — re-runs `think` on this note in place (R11).
+      const deepen = li.createEl("button", { cls: "hypermnesic-deepen" });
+      setIcon(deepen, "brain");
+      if (atCap) {
+        deepen.setAttribute("disabled", "true");
+        deepen.setAttribute("aria-label", "Think deeper (depth limit reached)");
+      } else {
+        deepen.setAttribute("aria-label", `Think deeper about ${resolved.display.title}`);
+        deepen.addEventListener("click", () =>
+          void this.deepen(resolved.display.title, resolved.file?.path ?? this.sourcePath),
+        );
+      }
     }
     enableRovingFocus(list, focusables);
   }

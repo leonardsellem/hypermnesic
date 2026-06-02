@@ -227,3 +227,46 @@
   text-decoration: line-through dotted;
   cursor: default;
 }
+
+/* Think-deeper navigation (U5). */
+.hypermnesic-think-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  flex-wrap: wrap;
+}
+.hypermnesic-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-ui-smaller);
+}
+.hypermnesic-breadcrumb {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+.hypermnesic-crumb-sep {
+  color: var(--text-faint);
+}
+.hypermnesic-deepen {
+  margin-left: 6px;
+  padding: 2px 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  vertical-align: middle;
+}
+.hypermnesic-deepen:hover {
+  color: var(--text-normal);
+}
+.hypermnesic-deepen[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+.hypermnesic-deepen .svg-icon {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
