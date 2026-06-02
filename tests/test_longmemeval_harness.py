@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import sqlite3
 
 import pytest
 from longmemeval import manifest as mf
@@ -407,8 +408,8 @@ def test_recall_all_and_any_diverge_on_partial_gold():
 
 def test_ndcg_any_rewards_higher_rank_and_is_perfect_on_top():
     assert diag.ndcg_any_at_k(["g", "x", "y"], {"g"}, 5) == 1.0
-    low = diag.ndcg_any_at_k(["x", "y", "g"], {"g"}, 5)
-    assert 0.0 < low < 1.0
+    # one gold at rank 3: DCG = 1/log2(4) = 0.5, IDCG = 1/log2(2) = 1.0 → nDCG = 0.5
+    assert diag.ndcg_any_at_k(["x", "y", "g"], {"g"}, 5) == pytest.approx(0.5)
     assert diag.ndcg_any_at_k(["a", "b", "x"], {"a", "b"}, 5) == 1.0  # all gold on top
 
 
@@ -840,6 +841,10 @@ def test_full_qa_pipeline_wires_materialize_to_verdict_offline(tmp_path, fake_em
     assert out["void"] is False and out["headline"] is True
     col = out["columns"]["gpt-4.1-2025-04-14"]
     assert col["n"] == len(instances)
+    # every answer graded "yes" by the fake judge → all three numbers are 1.0
+    assert col["overall"] == 1.0
+    assert col["task_averaged"] == 1.0
+    assert col["abstention"] == 1.0
     # the reader actually saw retrieved context (the JSON history reached the model)
     assert any(m["role"] == "user" for m in cap["messages"])
 
@@ -851,3 +856,63 @@ def test_qa_main_requires_explicit_paid_run_confirmation(capsys):
     assert rc != 0
     printed = capsys.readouterr().out.lower()
     assert "gated" in printed or "budget" in printed or "confirm" in printed
+
+
+# ---------------------------------------------------------------------------
+# Code-review fixes (Tier-2 review) — regression coverage
+# ---------------------------------------------------------------------------
+
+
+def test_score_column_abstention_is_none_when_no_abstention_instances():
+    # The `if abst else None` branch: a column with no _abs instances reports
+    # abstention=None, not a misleading 0.0.
+    s = qa.score_column([_ans("a", "multi-session", True)])
+    assert s["abstention"] is None
+    assert s["task_averaged"] == 1.0
+
+
+def test_score_column_task_averaged_is_none_for_all_abstention_column():
+    # An all-abstention (or empty-bucket) column must not report task_averaged=0.0
+    # as if it were a real 0% headline — it has no scorable buckets.
+    s = qa.score_column([_ans("z_abs", "single-session-user", True, is_abs=True)])
+    assert s["task_averaged"] is None
+    assert s["abstention"] == 1.0
+    assert s["per_ability"] == {}
+
+
+def test_score_column_surfaces_reader_and_judge_error_counts():
+    # A partial reader/judge outage must be visible, not silently fold graded-False
+    # answers into a depressed task_averaged.
+    answers = [
+        qa.QAAnswer("a", "multi-session", False, True, "m"),
+        qa.QAAnswer("b", "multi-session", False, False, "m", reader_error="boom"),
+        qa.QAAnswer("c", "multi-session", False, False, "m", judge_error="down"),
+    ]
+    s = qa.score_column(answers)
+    assert s["reader_errors"] == 1
+    assert s["judge_errors"] == 1
+
+
+def test_rematerialize_shrunk_instance_leaves_no_stale_sessions(tmp_path):
+    # A re-run into a persistent work-dir must not leave phantom session files that
+    # build_index would index (silent recall regression when the dataset shrinks).
+    big = mat.parse_instance(_instance())  # 3 sessions
+    small = mat.parse_instance({**_instance(), "haystack_session_ids": ["s_only"],
+                                "haystack_dates": ["2023-05-01"],
+                                "haystack_sessions": [[{"role": "user", "content": "hi"}]],
+                                "answer_session_ids": ["s_only"]})
+    corpus = tmp_path / "sessions"
+    mat.materialize_sessions(big, corpus)
+    assert len(list(corpus.glob("*.md"))) == 3
+    m = mat.materialize_sessions(small, corpus)  # same dir, fewer sessions
+    assert len(list(corpus.glob("*.md"))) == 1   # the 2 stale files were cleared
+    assert set(m.path_to_unit.values()) == {"s_only"}
+
+
+def test_sqlite_cache_context_manager_closes(tmp_path, fake_embedder):
+    with adapter.SqliteEmbeddingCache(tmp_path / "c.sqlite") as store:
+        adapter.CachingEmbedder(fake_embedder, store=store).embed(["x"])
+        assert store._count() == 1
+    # connection is closed on exit — a query now raises
+    with pytest.raises(sqlite3.ProgrammingError):
+        store._count()

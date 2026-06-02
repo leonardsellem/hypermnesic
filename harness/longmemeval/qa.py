@@ -31,14 +31,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from longmemeval import manifest as mf
-from longmemeval.adapter import retrieve_for_corpus, safe_name
+from longmemeval.adapter import Embedder, retrieve_for_corpus, safe_name
 from longmemeval.judge import Judge
 from longmemeval.materialize import (
+    Instance,
     materialize_sessions,
     normalize_question_type,
     session_units,
 )
-from longmemeval.reader import RetrievedUnit
+from longmemeval.reader import Reader, RetrievedUnit
 
 
 @dataclass
@@ -67,8 +68,15 @@ def score_column(answers: list[QAAnswer]) -> dict:
         by_type[a.question_type].append(a)
     per_ability = {qt: _mean([1.0 if a.correct else 0.0 for a in group])
                    for qt, group in sorted(by_type.items())}
-    task_averaged = _mean(list(per_ability.values()))
+    # None (not 0.0) when there are no scorable buckets, so an all-abstention or
+    # empty column is not misread as a genuine 0% headline.
+    task_averaged = _mean(list(per_ability.values())) if per_ability else None
     abstention = _mean([1.0 if a.correct else 0.0 for a in abst]) if abst else None
+    # Surface partial-evaluation: a reader/judge outage scores graded-False answers
+    # that silently depress task_averaged. Counts let the caller see (and discount
+    # or re-run) a column that was only partially evaluated rather than trusting it.
+    reader_errors = sum(1 for a in answers if a.reader_error)
+    judge_errors = sum(1 for a in answers if a.judge_error)
 
     return {
         "overall": overall,                  # micro over all
@@ -78,6 +86,8 @@ def score_column(answers: list[QAAnswer]) -> dict:
         "n": len(answers),
         "n_abstention": len(abst),
         "per_ability": per_ability,
+        "reader_errors": reader_errors,
+        "judge_errors": judge_errors,
     }
 
 
@@ -91,12 +101,15 @@ def _context(ranked_unit_ids: list[str], units_map: dict[str, tuple[str, str]],
     return ctx
 
 
-def run_qa(instances, work_dir, embedder, readers, judge, *, headline: bool,
+def run_qa(instances: list[Instance], work_dir: Path, embedder: Embedder,
+           readers: list[Reader], judge: Judge, *, headline: bool,
            k: int = mf.RETRIEVAL_K) -> dict:
     """Run F1 for one or more reader columns under a shared judge.
 
     Retrieval (per-session corpus, top-k) is done once per instance and shared;
     each reader column then reads + is graded. A degraded retrieval voids the run.
+    Retrieval uses the **frozen production** ``candidate_k`` (R19) so the top-k the
+    reader sees mirrors the shipped read path — not the diagnostic's deep depth.
     """
     work_dir = Path(work_dir)
     # phase 1: retrieve top-k session context per instance (void gate, R20)
@@ -105,7 +118,8 @@ def run_qa(instances, work_dir, embedder, readers, judge, *, headline: bool,
         base = work_dir / safe_name(inst.question_id)
         sessions_m = materialize_sessions(inst, base / "sessions")
         sres = retrieve_for_corpus(sessions_m, inst.question, embedder,
-                                   state_dir=base / "state_sessions")
+                                   state_dir=base / "state_sessions",
+                                   search_depth=mf.RETRIEVAL_CANDIDATE_K)
         if sres.degraded:
             return {"track": "qa-headline", "verdict": "void", "void": True,
                     "note": "retrieval degraded to lexical-only; headline voided (R20)."}
@@ -140,16 +154,19 @@ def run_qa(instances, work_dir, embedder, readers, judge, *, headline: bool,
 
 
 # --- F1 live (GATED) run entry ----------------------------------------------
-_CEILING = mf.default_manifest().phase1_embedding_cost_ceiling_usd
-_GATE_MESSAGE = (
-    "LongMemEval QA headline is a GATED, paid run (R17: full 500-Q `_s`, no "
-    "sampling, both reader columns under the shared gpt-4o-2024-08-06 judge).\n"
-    "It is triggered only AFTER the Phase 1 diagnostic is reviewed and a budget "
-    "covering both reader passes is signed off.\n"
-    f"Estimated Phase-1 embedding ceiling: ${_CEILING} "
-    "(reader/judge cost recorded at run time).\n"
-    "Re-run with --confirm-paid-run once the budget is approved."
-)
+def _gate_message() -> str:
+    """The gate text shown when a paid run is attempted without confirmation.
+    Built lazily so importing this module never evaluates the manifest/config."""
+    ceiling = mf.default_manifest().phase1_embedding_cost_ceiling_usd
+    return (
+        "LongMemEval QA headline is a GATED, paid run (R17: full 500-Q `_s`, no "
+        "sampling, both reader columns under the shared gpt-4o-2024-08-06 judge).\n"
+        "It is triggered only AFTER the Phase 1 diagnostic is reviewed and a budget "
+        "covering both reader passes is signed off.\n"
+        f"Estimated Phase-1 embedding ceiling: ${ceiling} "
+        "(reader/judge cost recorded at run time).\n"
+        "Re-run with --confirm-paid-run once the budget is approved."
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -167,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     if not args.confirm_paid_run:
-        print(_GATE_MESSAGE)
+        print(_gate_message())
         return 2  # refuse to spend without explicit confirmation
     if not args.dataset:
         ap.error("--dataset is required for a confirmed run")
@@ -179,13 +196,12 @@ def main(argv: list[str] | None = None) -> int:
     instances = materialize.load_dataset(Path(args.dataset))
     if args.limit:
         instances = instances[:args.limit]
-    store = adapter.SqliteEmbeddingCache(Path(args.cache))
-    embedder = adapter.CachingEmbedder(embed.OpenAIEmbedder(), store=store)
-    readers = [reader.Reader(m) for m in args.readers]
-    judge = Judge()
     headline = args.limit is None and set(args.readers) == {mf.READER_LEAD, mf.READER_ANCHOR}
-    result = run_qa(instances, Path(args.work_dir), embedder, readers, judge, headline=headline)
-    store.close()
+    with adapter.SqliteEmbeddingCache(Path(args.cache)) as store:  # always closed
+        embedder = adapter.CachingEmbedder(embed.OpenAIEmbedder(), store=store)
+        readers = [reader.Reader(m) for m in args.readers]
+        result = run_qa(instances, Path(args.work_dir), embedder, readers, Judge(),
+                        headline=headline)
     blob = json.dumps(result, ensure_ascii=False, indent=2)
     if args.out:
         Path(args.out).write_text(blob + "\n", encoding="utf-8")
