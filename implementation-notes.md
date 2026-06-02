@@ -7,7 +7,7 @@ the Phase-1 → 2.5 plans live in-repo under `docs/plans/`.
 
 > **Provenance.** The Phase 0 and Phase 1 entries below are first-hand live-gate
 > notes. The **Phase 2** and **Phase 2.5** sections were reconstructed from the
-> merged plans (`docs/plans/…-005/006/007-…`) and PR history (#1/#2/#3) during a
+> merged plans (`docs/plans/…-005/006/007-…`) and PR history (#1/#2/#3/#5) during a
 > 2026-06-02 documentation pass — accurate to what shipped, but not a live-gate
 > log like the sections above them.
 
@@ -351,7 +351,7 @@ knowledge-graph extraction (#7), schema-as-data (#14), progressive activation (#
 Plan 1 of 2. Makes the index converge automatically on the read path, gives
 agents a git-first write tool over MCP, and ships a role-aware installer so the
 master/client/single topology is deployable. The Obsidian companion redesign that
-consumes the recency signal is **Plan 2** (plan 007, in planning).
+consumes the recency signal is **Plan 2** (plan 007, shipped — PR #5; see below).
 
 - **U26 bounded embed budget + convergence tunables** [FR-R31]: `embed_stale`
   gains a `budget` cap so first-read latency is bounded; analytical callers pass
@@ -396,3 +396,48 @@ failures (`converge.py`); batch write-recency into one `git log` pass
 read-tool responses (`mcp_server.py`); installer fails loud before provisioning +
 hardened hook/client/strip (`install.py`); test fixtures use a CGNAT
 documentation IP range instead of a real homelab Tailscale IP.
+
+## Phase 2.5 (Plan 2) — Obsidian companion redesign (U35–U41, plan 007; PR #5)
+
+Plan 2 of 2. Rebuilds the U25 single-file companion into a calm, modular,
+strictly read-only recall surface that consumes the shipped engine contract
+(per-`Hit` recency, the `think` read tool, the `manual_reindex_recommended`
+signal, single-JSON serve). The plugin is now bundled with esbuild from
+`main.ts` + `src/` (devDeps logged in the U1/Plan-2 dep table above); `obsidian`
+and the CM6 packages are marked external. Built phase-by-phase:
+
+- **U35 build scaffolding + lifecycle hygiene** (Phase A): `package.json`,
+  `esbuild.config.mjs`, `tsconfig.json`, `.gitignore`, `styles.css`. Fixes the
+  old `onunload` leaf-detach violation; registrations auto-clean.
+- **U36/U37 shared retrieval core + forgetting-curve ranking** (Phase B):
+  `src/core.ts` — one `RetrievalCore` behind the hard read-only allowlist
+  `READ_ONLY_TOOLS = {search, build_context, think}`, with a capability probe
+  (`hasThink`, `hitsCarryRecency`) so the plugin lights up or degrades against any
+  engine version. `src/ranking.ts` — forgetting-curve ranking: relevance ×
+  staleness from the engine `recency` (epoch seconds) with a local note-mtime
+  fallback; `recencyHalfLifeDays` (30) and `stalenessWeight` (0.35) tunables.
+- **U38–U40 calm surfaces + thinking-mode + reinvention nudge** (Phase C):
+  `src/surfaces/{statusbar,gutter,render}.ts` — a calm-primary status-bar that
+  expands to a popover, an opt-in sidebar (`openSidebarOnLoad` off), and an
+  optional CM6 inline gutter marker (`showGutter` off by default, R-3).
+  `src/thinking.ts` — thinking-mode (related notes + Socratic questions +
+  tensions, visible `wrote: false` badge) and selection-recall. `src/nudge.ts` —
+  an interrogable reinvention nudge that expands to the matched snippet + a
+  one-hop context peek; per-note mute is view-only (plugin-local, never edits the
+  note).
+- **U41 trust / state machine, accessibility, settings, compliance** (Phase D):
+  `src/state.ts` — one `RecallState` machine (idle / loading / results / stale /
+  offline / degraded / reindex / error; a failed refresh after a prior success
+  becomes "stale — as of HH:MM"). `src/settings.ts` — MCP URL **empty by default**
+  (opt-in off-device send; placeholder `http://<tailscale-host>:8848/mcp`), pause
+  interval, result count, reinvention threshold, per-surface toggles. Trust shown
+  not asserted (read-only · tailnet · no-text-retained posture, allowlist
+  surfaced); accessibility (`aria-live`, keyboard nav, never color-as-sole-signal);
+  Obsidian compliance (no leaf-detach on unload, `registerEditorExtension`,
+  sentence-case settings, safe DOM). The protocol-handler OAuth seam (PKCE) is
+  left as a seam, not implemented.
+
+Privacy: the default MCP URL is empty (`src/types.ts`), so a manual install
+transmits nothing off-device until configured; a provisioned `--role=client`
+install (Plan 1 U34) pre-fills the endpoint. The read-only guarantee stays
+statically verified by `tests/test_obsidian_plugin.py`.

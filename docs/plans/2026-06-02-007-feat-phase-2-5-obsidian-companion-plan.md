@@ -1,7 +1,7 @@
 ---
 title: "feat: Phase 2.5 (Plan 2 of 2) — Obsidian companion redesign (calm read-only recall surface)"
 type: feat
-status: active
+status: completed
 created: 2026-06-02
 origin:
   - "docs/brainstorms/2026-06-02-phase-2-5-fresh-recall-requirements.md (companion half R1–R23)"
