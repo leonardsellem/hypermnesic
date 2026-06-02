@@ -14,9 +14,11 @@
  */
 import {
   Editor,
+  HoverPopover,
   ItemView,
   MarkdownFileInfo,
   MarkdownView,
+  Menu,
   Notice,
   Plugin,
   TFile,
@@ -28,9 +30,10 @@ import { HypermnesicSettingTab } from "./src/settings";
 import { RetrievalCore, extractCursorWindow } from "./src/core";
 import { RecallStateMachine, StateSnapshot } from "./src/state";
 import { RenderDeps, renderResultList } from "./src/surfaces/render";
+import { ResolvedReference, localLinkText } from "./src/surfaces/reference";
 import { StatusBarSurface } from "./src/surfaces/statusbar";
 import { hypermnesicGutter } from "./src/surfaces/gutter";
-import { runThinking } from "./src/thinking";
+import { THINKING_VIEW_TYPE, ThinkingDeps, ThinkingView } from "./src/thinking";
 import { NudgeStore, renderNudge } from "./src/nudge";
 
 export const SIDEBAR_VIEW_TYPE = "hypermnesic-recall";
@@ -43,6 +46,10 @@ interface PluginData {
 /** The opt-in sidebar. It renders the core's last snapshot through the shared
  *  renderer; it issues no query of its own (KTD1). */
 class RecallSidebarView extends ItemView {
+  // Satisfy HoverParent so the shared renderer can anchor native Page-preview
+  // popovers to this leaf (KTD4).
+  hoverPopover: HoverPopover | null = null;
+
   constructor(
     leaf: WorkspaceLeaf,
     private plugin: HypermnesicPlugin,
@@ -66,7 +73,7 @@ class RecallSidebarView extends ItemView {
 
   draw(): void {
     const root = this.containerEl.children[1] as HTMLElement;
-    renderResultList(root, this.plugin.snapshot, this.plugin.renderDeps);
+    renderResultList(root, this.plugin.snapshot, this.plugin.renderDeps, this);
   }
 }
 
@@ -95,6 +102,14 @@ export default class HypermnesicPlugin extends Plugin {
     this.renderDeps = this.buildRenderDeps();
 
     this.registerView(SIDEBAR_VIEW_TYPE, (leaf) => new RecallSidebarView(leaf, this));
+    this.registerView(THINKING_VIEW_TYPE, (leaf) => new ThinkingView(leaf, this.buildThinkingDeps()));
+
+    // Register as a Page-preview emitter so reference rows get native hover
+    // previews integrated with the core plugin + the user's modifier preference.
+    this.registerHoverLinkSource("hypermnesic-companion", {
+      display: "hypermnesic",
+      defaultMod: true,
+    });
 
     if (this.settings.showStatusBar) this.createStatusBar();
 
@@ -185,7 +200,8 @@ export default class HypermnesicPlugin extends Plugin {
     }
   }
 
-  /** Thinking-mode (FR-R10/11): selection, else cursor window, else note title. */
+  /** Thinking-mode (FR-R10/11): selection, else cursor window, else note title.
+   *  Opens the dockable thinking panel and renders in place. */
   async thinkAbout(): Promise<void> {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view) {
@@ -194,7 +210,36 @@ export default class HypermnesicPlugin extends Plugin {
     }
     const selection = view.editor.getSelection().trim();
     const topic = selection || extractCursorWindow(view.editor) || view.file?.basename || "";
-    await runThinking(this.app, this.settings.mcpUrl, topic, this.core.capabilities.hasThink);
+    if (!topic.trim()) {
+      new Notice("hypermnesic: nothing to think about (empty selection/note)");
+      return;
+    }
+    await this.runThinkingInPanel(topic, view.file?.path ?? "");
+  }
+
+  private buildThinkingDeps(): ThinkingDeps {
+    return {
+      getUrl: () => this.settings.mcpUrl,
+      hasThink: () => this.core.capabilities.hasThink,
+      rowDeps: this.renderDeps,
+    };
+  }
+
+  /** Reveal the dockable thinking panel, reusing an open leaf if present (R8). */
+  async activateThinkingPanel(): Promise<ThinkingView | null> {
+    let leaf: WorkspaceLeaf | null = this.app.workspace.getLeavesOfType(THINKING_VIEW_TYPE)[0] ?? null;
+    if (!leaf) {
+      leaf = this.app.workspace.getRightLeaf(false);
+      if (!leaf) return null;
+      await leaf.setViewState({ type: THINKING_VIEW_TYPE, active: true });
+    }
+    this.app.workspace.revealLeaf(leaf);
+    return leaf.view instanceof ThinkingView ? leaf.view : null;
+  }
+
+  private async runThinkingInPanel(topic: string, sourcePath: string): Promise<void> {
+    const view = await this.activateThinkingPanel();
+    await view?.setTopic(topic, sourcePath);
   }
 
   /** Fan the one snapshot out to every surface (KTD1). */
@@ -207,20 +252,103 @@ export default class HypermnesicPlugin extends Plugin {
     }
   }
 
+  /** Whether the core "Page preview" plugin is enabled — gates native hover
+   *  preview; when off, reference rows fall back to the engine-snippet peek. */
+  private pagePreviewEnabled(): boolean {
+    const ip = (
+      this.app as unknown as {
+        internalPlugins?: { getPluginById?(id: string): { enabled?: boolean } | null };
+      }
+    ).internalPlugins;
+    return !!ip?.getPluginById?.("page-preview")?.enabled;
+  }
+
+  /** Run thinking-mode for a specific resolved reference (the "think about this
+   *  note" menu action). Read-only — opens the thinking surface, never writes. */
+  private thinkAboutReference(ref: ResolvedReference): void {
+    const sourcePath = ref.file?.path ?? this.app.workspace.getActiveFile()?.path ?? "";
+    void this.runThinkingInPanel(ref.display.title, sourcePath);
+  }
+
+  /** Right-click menu + drag/copy insertion for a resolvable row. Read-only:
+   *  the plugin supplies drag data and clipboard text; the user performs the
+   *  drop/paste (R5, R14, R15). */
+  private decorateLocalRow(row: HTMLElement, ref: ResolvedReference, sourcePath: string): void {
+    const file = ref.file;
+    if (!file) return;
+
+    // Drag-to-insert: carry the vault-correct link text (user's link-format, via
+    // generateMarkdownLink) as text/plain — universally honored, so a drop into
+    // any editor reliably inserts the link and a drop elsewhere is a harmless
+    // no-op (never a silent partial state). Copy-as-link is the guaranteed path.
+    row.setAttribute("draggable", "true");
+    row.addEventListener("dragstart", (evt: DragEvent) => {
+      evt.dataTransfer?.setData("text/plain", localLinkText(this.app, file, sourcePath));
+    });
+
+    row.addEventListener("contextmenu", (evt) => {
+      evt.preventDefault();
+      const menu = new Menu();
+      menu.addItem((i) =>
+        i.setTitle("Open").setIcon("file").onClick(() => void this.app.workspace.getLeaf(false).openFile(file)),
+      );
+      menu.addItem((i) =>
+        i.setTitle("Open in new tab").setIcon("file-plus").onClick(() => void this.app.workspace.getLeaf("tab").openFile(file)),
+      );
+      menu.addItem((i) =>
+        i.setTitle("Open to the side").setIcon("panel-right").onClick(() => void this.app.workspace.getLeaf("split").openFile(file)),
+      );
+      menu.addSeparator();
+      menu.addItem((i) =>
+        i.setTitle("Think about this note").setIcon("brain").onClick(() => this.thinkAboutReference(ref)),
+      );
+      menu.addItem((i) =>
+        i.setTitle("Copy as link").setIcon("link").onClick(async () => {
+          await navigator.clipboard.writeText(localLinkText(this.app, file, sourcePath));
+          new Notice("hypermnesic: link copied");
+        }),
+      );
+      menu.showAtMouseEvent(evt);
+    });
+  }
+
+  /** Non-local rows offer only "copy path" — no wikilink that resolves to
+   *  nothing (R16). */
+  private decorateNonLocalRow(row: HTMLElement, ref: ResolvedReference): void {
+    row.addEventListener("contextmenu", (evt) => {
+      evt.preventDefault();
+      const menu = new Menu();
+      menu.addItem((i) =>
+        i.setTitle("Copy path").setIcon("copy").onClick(async () => {
+          await navigator.clipboard.writeText(ref.input.path);
+          new Notice("hypermnesic: path copied");
+        }),
+      );
+      menu.showAtMouseEvent(evt);
+    });
+  }
+
   private buildRenderDeps(): RenderDeps {
     return {
       app: this.app,
-      openNote: (path) => this.app.workspace.openLinkText(path, "", false),
-      renderNudge: (host, snapshot) => {
+      openFile: (file, newLeaf) => void this.app.workspace.getLeaf(newLeaf).openFile(file),
+      pagePreviewEnabled: () => this.pagePreviewEnabled(),
+      decorateLocalRow: (row, ref, sourcePath) => this.decorateLocalRow(row, ref, sourcePath),
+      decorateNonLocalRow: (row, ref) => this.decorateNonLocalRow(row, ref),
+      renderNudge: (host, snapshot, hoverParent) => {
         if (!snapshot.result) return;
-        renderNudge(host, snapshot.result, {
-          app: this.app,
-          getUrl: () => this.settings.mcpUrl,
-          store: this.nudgeStore(),
-          threshold: () => this.settings.reinventThreshold,
-          activePath: () => this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path ?? "",
-          openNote: (path) => this.app.workspace.openLinkText(path, "", false),
-        });
+        renderNudge(
+          host,
+          snapshot.result,
+          {
+            getUrl: () => this.settings.mcpUrl,
+            store: this.nudgeStore(),
+            threshold: () => this.settings.reinventThreshold,
+            activePath: () => this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path ?? "",
+            rowDeps: this.renderDeps,
+          },
+          hoverParent,
+        );
       },
     };
   }
@@ -232,9 +360,29 @@ export default class HypermnesicPlugin extends Plugin {
     this.register(() => this.statusBar?.dispose());
   }
 
-  /** Settings-tab hook: re-probe capabilities after a URL change. */
+  /** Settings-tab hook: re-probe capabilities after a URL change, and re-rank the
+   *  visible result so ranking sliders (staleness weight, half-life) and the nudge
+   *  threshold apply live without a reload (R18, AE4). */
   onSettingsChanged(): void {
     void this.core.probe();
+    void this.reapplyRanking();
+  }
+
+  /** Re-run the pipeline for the last query (a block-cache hit — no new MCP call)
+   *  so the current settings re-rank the visible result, then fan it out. Falls
+   *  back to a repaint when there is no prior result. */
+  private async reapplyRanking(): Promise<void> {
+    const current = this.snapshot.result;
+    if (!current) {
+      this.applySnapshot(this.snapshot);
+      return;
+    }
+    try {
+      const result = await this.core.run(current.query, current.sourcePath);
+      this.applySnapshot(this.machine.success(result));
+    } catch {
+      this.applySnapshot(this.snapshot);
+    }
   }
 
   // ───────────────────────────── nudge mute (plugin-local) ──────────────────
