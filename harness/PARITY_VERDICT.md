@@ -1,5 +1,10 @@
 # U5 Parity Verdict — PASS (2026-06-01)
 
+> **Dated snapshot (2026-06-01).** The threat-model sign-off referenced below
+> landed the same day, and Phase 1 (U7–U12) plus Phases 2 and 2.5-Plan-1 have
+> since shipped (see the README phase status). Retained as the U5
+> retrieval-quality gate of record; the measured numbers are not re-run here.
+
 **Verdict of record: `pass`.** hypermnesic ≥ gbrain on both aggregate metrics
 (recall@10 **0.910 vs 0.818**, MRR **0.802 vs 0.769**, both beyond the near-tie
 band) with **0 catastrophic French misses**, on LLM-judged system-blind labels
