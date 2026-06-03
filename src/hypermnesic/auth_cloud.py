@@ -92,6 +92,12 @@ class CloudAuthProvider:
         self._refresh: dict[str, RefreshToken] = {}
         self._sibling: dict[str, str] = {}        # access<->refresh linkage (whole-grant revoke)
 
+    @property
+    def public_url(self) -> str:
+        """The externally-reachable base URL (RFC 8414 issuer). The consent form posts back to
+        ``<public_url>/consent`` — a root-absolute action would miss the Funnel's path mount."""
+        return self._public
+
     def _sweep(self) -> None:
         """Evict expired/over-cap state — bounds anonymous /authorize + DCR growth (DoS)."""
         now = self._now()

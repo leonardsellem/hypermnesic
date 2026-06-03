@@ -298,6 +298,22 @@ def test_consent_render_escapes_client_fields_and_hides_unknown_pending():
     assert status2 == 404 and "<script>evil()</script>" not in html2 and "evil()" not in html2
 
 
+def test_consent_form_posts_to_the_public_path_not_root():
+    # Regression (live "Cannot POST /consent"): the consent page is served at <public>/consent
+    # behind a Funnel that strips the /cloud mount, so a ROOT-absolute form action="/consent"
+    # makes the browser POST to the host root (a different app) → 404, and the OAuth grant dies
+    # ("connected, but not all permissions were granted"). The form must POST back to the public
+    # consent endpoint.
+    from hypermnesic import mcp_server
+    p = _provider()                              # public_url == https://homelab.taildabf2.ts.net/cloud
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params(scopes=("read", "write")))).split("pending=")[1]
+    html, status = mcp_server._render_consent(p, pending)
+    assert status == 200
+    assert 'action="https://homelab.taildabf2.ts.net/cloud/consent"' in html  # full public path
+    assert 'action="/consent"' not in html       # the root-absolute bug is gone
+
+
 def test_cloud_server_defaults_to_tighter_write_zone(make_corpus, fake_embedder):
     # residual: the public lane defaults writes to a dedicated review zone (captures/), not the
     # full vault — a cloud write to notes/ is refused.

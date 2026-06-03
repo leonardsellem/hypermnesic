@@ -325,7 +325,7 @@ approval token grants it the scopes below. Only you hold this token.</p>
 <ul><li><b>Client:</b> {client}</li><li><b>Redirect:</b> {redirect}</li>
 <li><b>Scopes:</b> {scopes}</li></ul>
 {error}
-<form method="post" action="/consent">
+<form method="post" action="{action}">
 <input type="hidden" name="pending" value="{pending}">
 <label>Approval token<br><input type="password" name="approval_token" autocomplete="off"
 style="width:100%;padding:.5rem"></label>
@@ -359,8 +359,11 @@ def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, in
     if details is None:
         return _CONSENT_ERROR_HTML, 404          # do not reflect an unknown/arbitrary id
     err = f'<p style="color:#b00">{_html.escape(error)}</p>' if error else ""
+    # the form must POST back to the PUBLIC consent path (<public>/consent), not a root-absolute
+    # "/consent" — behind the Funnel's /cloud mount the latter posts to the host root and 404s.
+    action = _html.escape(f"{provider.public_url}/consent")
     html = _CONSENT_HTML.format(
-        pending=_html.escape(pending_id),
+        action=action, pending=_html.escape(pending_id),
         client=_html.escape(str(details.get("client_name") or details["client_id"])),
         redirect=_html.escape(str(details["redirect_uri"])),
         scopes=_html.escape(" ".join(details["scopes"])), error=err)
