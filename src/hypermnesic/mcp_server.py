@@ -41,11 +41,12 @@ from typing_extensions import TypedDict
 
 from hypermnesic import audit_log as audit_mod
 from hypermnesic import commit_note as commit_note_mod
+from hypermnesic import config, retrieve
 from hypermnesic import converge as converge_mod
+from hypermnesic import folders as folders_mod
 from hypermnesic import frontmatter_gate as fg_mod
 from hypermnesic import graph as graph_mod
 from hypermnesic import index as index_mod
-from hypermnesic import retrieve
 from hypermnesic import serialize as serialize_mod
 from hypermnesic import think as think_mod
 
@@ -112,6 +113,22 @@ class CommitNoteOutput(TypedDict, total=False):
     new_sha: str
     diff: str
     refused: str                       # set (with committed=False) when a gate/guard refuses
+
+
+class FolderEntry(TypedDict):
+    path: str                          # repo-relative, trailing-slash (e.g. "projects/acme/")
+    writable: bool                     # a note can be written directly here (matches commit_note)
+    protected_reason: str | None       # why not writable (protected class / allowlist), else null
+    note_count: int                    # indexed notes at/under this folder (recursive)
+
+
+class ListFoldersOutput(TypedDict):
+    root: str                          # the normalized root the listing is under ("" = vault root)
+    depth: int                         # the (clamped) drill-down depth
+    folders: list[FolderEntry]
+    truncated: bool                    # the node cap was hit (drill deeper by narrowing root)
+    omitted: int                       # folders dropped by the cap
+    manual_reindex_recommended: bool   # convergence signal, surfaced like the other read tools
 # Loopback binds are exempt from the write_enabled⇒auth-required invariant (U2): a
 # localhost serve is reachable only by the local user — never the tailnet.
 _LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
@@ -124,6 +141,22 @@ DEFAULT_WRITE_ALLOWLIST = ("notes/", "sources/", "dashboards/", "captures/")
 # applies one scope list to ALL tools, so it cannot separate read clients from write clients
 # on a single endpoint. A read-scoped token that reaches commit_note is refused here.
 WRITE_SCOPE = "write"
+
+
+def _effective_write_surface(write_allowlist: list[str] | None) -> list[str] | None:
+    """The SOLE coercion of a caller's ``--allowlist`` into the effective write surface.
+
+    Consumed by BOTH the write path (``commit_note``'s ``allowlist``) and the read flag
+    (``list_folders``' writability), so the two can never disagree — they read the same
+    value (KTD: single coercion site). Phase A: ``None`` coerces to the 4-prefix
+    ``DEFAULT_WRITE_ALLOWLIST``; an explicit list passes through. U5 (Phase B) changes
+    ONLY this body so ``None`` passes through as ``None`` (blocklist — protected-path
+    refusal as the sole bound), flipping the write path and the discovery flag together
+    by construction.
+    """
+    if write_allowlist is None:
+        return list(DEFAULT_WRITE_ALLOWLIST)
+    return list(write_allowlist)
 
 
 class _Backend:
@@ -283,6 +316,10 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                   transport_security=transport_security,       # proxy-host trust (None = default)
                   token_verifier=token_verifier, auth=auth,   # U2 RS-only / no-auth …
                   auth_server_provider=auth_server_provider)  # … or the cloud AS+RS lane
+    # The single coercion site (KTD): the effective write surface is computed ONCE here and
+    # shared by the write path (commit_note's allowlist) and the read flag (list_folders'
+    # writability), so discovery can never advertise a path commit_note would refuse.
+    effective_surface = _effective_write_surface(write_allowlist)
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
@@ -331,6 +368,29 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         out["manual_reindex_recommended"] = cr.manual_reindex_recommended
         return out
 
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
+              description="Discover the vault's folder taxonomy + writable locations before "
+                          "placing a note: child folders under `root` (drill-down) to `depth` "
+                          "levels, each with its writability, protected reason, and recursive "
+                          "note count. Read-only; the `writable` flag matches what `commit_note` "
+                          "accepts. Narrow `root` to drill deeper when `truncated` is true.")
+    def list_folders(root: str = "", depth: int = 1) -> ListFoldersOutput:
+        cr = backend.converge()
+        try:
+            listing = folders_mod.derive_folders(
+                backend.idx.all_paths(), root=root, depth=depth,
+                effective_surface=effective_surface,
+                max_nodes=config.LIST_FOLDERS_MAX_NODES,
+                max_depth=config.LIST_FOLDERS_MAX_DEPTH)
+        except ValueError:
+            # an absolute / traversal root is rejected at the boundary — return an empty,
+            # leak-free listing (never out-of-vault paths) rather than an error to the client.
+            listing = {"root": "", "depth": 1, "folders": [], "truncated": False, "omitted": 0}
+        return {"root": listing["root"], "depth": listing["depth"],
+                "folders": listing["folders"], "truncated": listing["truncated"],
+                "omitted": listing["omitted"],
+                "manual_reindex_recommended": cr.manual_reindex_recommended}
+
     if write_enabled:
         # The one sanctioned write path, exposed over MCP only on a write-enabled
         # (master) server. Git-first: file → git commit → index follows. Reuses
@@ -338,8 +398,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         audit = audit_mod.AuditLog(
             backend.repo / index_mod.STATE_DIRNAME / "audit.jsonl",
             actor_fn=audit_actor_fn or audit_mod.tailscale_actor)   # actor is server-set (R17)
-        allowlist = (list(write_allowlist) if write_allowlist is not None
-                     else list(DEFAULT_WRITE_ALLOWLIST))
+        allowlist = effective_surface   # the single coercion site (shared with list_folders)
 
         @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False),
                   description="Git-first write: commit a single note on the master "
@@ -546,10 +605,12 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
         client_registration_options=ClientRegistrationOptions(
             enabled=True, valid_scopes=list(scopes_supported), default_scopes=["read"]),
         revocation_options=RevocationOptions(enabled=True))
-    # default the unified lane to the full master write surface (write-anywhere-under-guards,
-    # KD3/KD5) — not a captures/ quarantine; an explicit write_allowlist still narrows/widens it.
-    cloud_allowlist = list(write_allowlist) if write_allowlist is not None else list(
-        DEFAULT_WRITE_ALLOWLIST)
+    # Pass write_allowlist (including None) STRAIGHT THROUGH — no pre-coercion here. The single
+    # coercion site is build_server's _effective_write_surface, so the cloud default and the
+    # discovery flag are in sync by construction (KTD). Phase A: None → the 4-prefix default
+    # there (the full master surface, write-anywhere-under-guards — KD3/KD5); an explicit
+    # write_allowlist still narrows/widens it. An explicit empty --allowlist is still refused at
+    # build_server construction (write_enabled ⇒ non-empty allowlist).
     # the cloud serve always runs behind the Funnel (loopback bind, public Host) — trust the
     # public hostname(s) from the issuer + resource URLs so proxied /mcp calls don't 421.
     from urllib.parse import urlparse
@@ -559,12 +620,12 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
         if _nl and _nl not in public_hosts:
             public_hosts.append(_nl)
     mcp = build_server(index_db, host=host, port=port, path=path, repo=repo, embedder=embedder,
-                       write_enabled=True, write_allowlist=cloud_allowlist,
+                       write_enabled=True, write_allowlist=write_allowlist,
                        audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth,
                        public_hosts=public_hosts)
     _register_consent_route(mcp, provider)
     return mcp
 
 
-READ_TOOL_NAMES = {"search", "build_context", "think", "resolve"}
+READ_TOOL_NAMES = {"search", "build_context", "think", "resolve", "list_folders"}
 WRITE_TOOL_NAMES = {"commit_note"}            # registered only when write_enabled (U31)
