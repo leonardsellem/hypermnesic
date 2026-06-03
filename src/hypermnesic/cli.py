@@ -125,9 +125,11 @@ def _cmd_think(args) -> int:
     else:
         print(f"# thinking about: {r.topic}  (wrote={r.wrote})")
         for h in r.related:
-            print(f"  - {h['path']}: {h['heading']}")
-        for q in r.questions + r.tensions:
+            print(f"  - {h['path']}: {h['title']}")
+        for q in r.questions:
             print(f"  ? {q}")
+        for u in r.unlinked:
+            print(f"  ~ {u['a_title']} ↔ {u['b_title']}  (related, not yet linked)")
         if r.note:
             print(f"  ({r.note})")
     return 0

@@ -67,6 +67,20 @@ def test_think_converges_to_head_before_serving(make_corpus, fake_embedder, monk
     assert any(h["path"] == "topic.md" for h in out["related"])   # converged before thinking
 
 
+def test_think_human_output_runs_after_unlinked_rename(make_corpus, fake_embedder, monkeypatch,
+                                                       tmp_path, capsys):
+    # U45 regression: the non-JSON think path renders questions + unlinked pairs.
+    # Before the rename it concatenated r.questions + r.tensions; after the rename
+    # that attribute is gone, so this guards the cli.py consumer from AttributeError.
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"alpha.md": "# Alpha\n\nPAIRMARK shared.\n",
+                        "beta.md": "# Beta\n\nPAIRMARK shared.\n"})
+    index.build_index(repo, fake_embedder).close()
+    rc = cli.main(["think", str(repo), "PAIRMARK shared"])         # non-JSON path
+    assert rc == 0
+    assert "thinking about: PAIRMARK shared" in capsys.readouterr().out
+
+
 def test_retrieve_human_output_is_nonempty(make_corpus, fake_embedder, monkeypatch,
                                            tmp_path, capsys):
     _neutralize_key(monkeypatch, tmp_path)

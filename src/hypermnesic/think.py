@@ -57,7 +57,7 @@ class ThinkResult:
     related: list[dict]
     context: list[str]
     questions: list[str]
-    tensions: list[str]
+    unlinked: list[dict]        # related-but-not-yet-linked pairs (U45, was prose "tensions")
     degraded: bool
     note: str = ""
     _hits: list = field(default_factory=list, repr=False)
@@ -69,7 +69,7 @@ class ThinkResult:
             "related": self.related,
             "context": self.context,
             "questions": self.questions,
-            "tensions": self.tensions,
+            "unlinked": self.unlinked,
             "degraded_lexical_only": self.degraded,
             "note": self.note,
         }
@@ -91,22 +91,25 @@ def _socratic(topic: str, hits, title_of) -> list[str]:
     return qs
 
 
-def _tensions(graph, hits) -> list[str]:
-    """Name potential tensions: top hits that surface together for the topic but
-    are NOT linked in the graph — a candidate missing connection or a real
-    disagreement worth examining (a read-only seed; U22 formalises the proposal)."""
-    out: list[str] = []
+def _unlinked_pairs(graph, hits, title_of) -> list[dict]:
+    """Top hits that surface together for the topic but are NOT linked in the
+    graph — 'related, but you haven't linked these yet' (U45, replacing the old
+    prose "tensions"). Each entry carries both paths and resolved titles (U44) so
+    a client can render clickable navigation to either note. No conceptual-conflict
+    claim is made — it is a candidate missing connection the writer can verify.
+    Relevance gate = the already-relevance-ordered top-N hits (self-excluded
+    upstream by U42); a U18 proposal — never a write — is how a link is added."""
+    out: list[dict] = []
     if graph is None or len(hits) < 2:
         return out
     top = hits[:4]
     for i in range(len(top)):
         for j in range(i + 1, len(top)):
             a, b = top[i].path, top[j].path
-            linked = b in graph.neighbors(a)
-            if not linked:
-                out.append(
-                    f"'{top[i].heading}' and '{top[j].heading}' both surface here but "
-                    f"aren't linked — tension, or a missing connection?")
+            if a == b or b in graph.neighbors(a):
+                continue
+            out.append({"a_path": a, "a_title": title_of(a),
+                        "b_path": b, "b_title": title_of(b)})
     return out[:3]
 
 
@@ -144,9 +147,9 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
         context = graph_mod.build_context(graph, res.hits[0].path, depth=depth)
 
     questions = _socratic(topic, res.hits, title_of)
-    tensions = _tensions(graph, res.hits)
+    unlinked = _unlinked_pairs(graph, res.hits, title_of)
     note = "" if related else "nothing relevant yet — the index has no close match"
 
     return ThinkResult(topic=topic, wrote=False, related=related, context=context,
-                       questions=questions, tensions=tensions, degraded=res.degraded,
+                       questions=questions, unlinked=unlinked, degraded=res.degraded,
                        note=note, _hits=res.hits)
