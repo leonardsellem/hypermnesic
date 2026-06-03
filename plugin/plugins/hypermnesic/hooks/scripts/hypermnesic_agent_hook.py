@@ -1,24 +1,15 @@
 #!/usr/bin/env python3
-"""hypermnesic auto-query hook (Claude Code + Codex).
+"""hypermnesic auto-recall hook — proactive memory at prompt submit (Claude Code + Codex).
 
-Makes hypermnesic memory automatic: orients the agent at session start, surfaces
-relevant notes at prompt submit (relevance-gated, bounded, token-gated, silent on
-failure), and guards the dangerous engine ops. It calls **hypermnesic, never gbrain**.
+A single UserPromptSubmit hook: when a prompt looks memory-relevant, run ONE bounded,
+URL+token-gated search over the configured hypermnesic MCP endpoint and inject the top hits
+as additionalContext. It is silent and non-blocking on every other path — off-topic prompt,
+no endpoint/token configured, 401, timeout, no hits, malformed payload — so it can never
+block or pollute a turn it has nothing to add to.
 
-Protocol: reads the harness hook JSON on stdin, writes a hook JSON on stdout.
-- SessionStart      → additionalContext orienting the agent to hypermnesic.
-- UserPromptSubmit  → relevance gate → bounded hypermnesic search over the authenticated
-                      MCP endpoint → inject hits as additionalContext. Stays silent (no
-                      injection, never blocks) when the gate misses, the lookup times
-                      out / 401s, or no token is configured.
-- PreToolUse        → block a full in-place reindex (OOM scar) and gbrain daemon re-arm
-                      (`init`/`serve`/`sync --watch`/`--install-cron`/`autopilot --install`);
-                      `gbrain delete`/`export`/`stats` are NOT blocked (reconciliation/teardown).
-
-Token hygiene (V9): the bearer token is read from HYPERMNESIC_MCP_TOKEN and used only in
-the Authorization header — it is never written to stdout, stderr, or the injected context.
-A missing/empty token degrades exactly like a 401 (silent), so the U8 auth cutover can
-never turn the per-prompt hook into a turn-blocking 401 storm.
+User-neutral + distributable: no hardcoded endpoint (the URL comes from HYPERMNESIC_MCP_URL),
+and no project- or migration-specific content. The token (HYPERMNESIC_MCP_TOKEN) is used only
+in the Authorization header — never written to stdout, stderr, or the injected text (V9).
 """
 
 from __future__ import annotations
@@ -30,57 +21,13 @@ import re
 import sys
 from typing import Any
 
-ORIENTATION = (
-    "hypermnesic is your memory layer. Use its MCP tools — search / build_context / "
-    "think for recall, resolve for entity→wikilink — and the gated git-first commit_note "
-    "to write notes (allowlist notes/ sources/ dashboards/ captures/). Git is the source "
-    "of truth; the index is a rebuildable projection. Do NOT use gbrain (CLI or MCP): it "
-    "is being decommissioned — reach for hypermnesic instead."
-)
-
-# Relevance signals: memory-ish phrasing OR a multi-word proper noun (likely an entity).
+# Relevance signals: memory-ish phrasing OR a multi-word proper noun (a likely entity).
 RELEVANCE_TERMS = (
     "remember", "recall", "memory", "context", "notes on", "background on",
-    "what do we know", "who is", "project history", "durable", "knowledge",
-    "entity", "decision", "prior art", "earlier", "last time",
+    "what do we know", "who is", "project history", "prior art", "earlier",
+    "last time", "decision", "knowledge", "durable",
 )
 _PROPER_NOUN_RE = re.compile(r"\b[A-Z][A-Za-z0-9-]+(?:\s+[A-Z][A-Za-z0-9-]+)+\b")
-
-DEFAULT_MCP_URL = "https://homelab.taildabf2.ts.net/mcp"
-
-# Dangerous ops the PreToolUse hook blocks. A full in-place reindex is the OOM scar; the
-# gbrain patterns re-arm laptop daemons / rewrite the engine config / re-expose the MCP.
-# `gbrain delete`/`export`/`stats` are deliberately absent — U9/U10 reconciliation needs them.
-_REINDEX_RE = re.compile(r"\bhypermnesic\s+reindex\b")
-_GBRAIN_REARM = (
-    (re.compile(r"\bgbrain\s+init\b"),
-     "`gbrain init` can rewrite the active engine config."),
-    (re.compile(r"\bgbrain\s+serve\b"),
-     "`gbrain serve` re-exposes gbrain as MCP (being decommissioned)."),
-    (re.compile(r"\bgbrain\s+sync\b[^\n;|&]*--watch\b"),
-     "`gbrain sync --watch` starts a continuous sync worker."),
-    (re.compile(r"\bgbrain\s+sync\b[^\n;|&]*--install-cron\b"),
-     "`gbrain sync --install-cron` installs a recurring job."),
-    (re.compile(r"\bgbrain\s+autopilot\b[^\n;|&]*--install\b"),
-     "`gbrain autopilot --install` installs a maintenance daemon."),
-)
-
-
-def emit(obj: dict[str, Any]) -> int:
-    print(json.dumps(obj, separators=(",", ":")))
-    return 0
-
-
-def _event(payload: dict[str, Any], override: str | None) -> str:
-    return override or str(
-        payload.get("hook_event_name") or payload.get("hookEventName")
-        or payload.get("event") or payload.get("type") or ""
-    )
-
-
-def hook_context(event: str, text: str) -> dict[str, Any]:
-    return {"continue": True,
-            "hookSpecificOutput": {"hookEventName": event, "additionalContext": text}}
 
 
 def _prompt_from(payload: dict[str, Any]) -> str:
@@ -97,40 +44,15 @@ def _prompt_from(payload: dict[str, Any]) -> str:
     return ""
 
 
-def _command_from(value: Any) -> str:
-    if isinstance(value, str):
-        return value
-    if isinstance(value, dict):
-        for key in ("command", "cmd", "script", "input"):
-            c = value.get(key)
-            if isinstance(c, str):
-                return c
-        for c in value.values():
-            found = _command_from(c)
-            if found:
-                return found
-    if isinstance(value, list):
-        for c in value:
-            found = _command_from(c)
-            if found:
-                return found
-    return ""
-
-
 def relevant(prompt: str) -> bool:
     low = prompt.lower()
-    if any(term in low for term in RELEVANCE_TERMS):
-        return True
-    return bool(_PROPER_NOUN_RE.search(prompt))
+    return any(t in low for t in RELEVANCE_TERMS) or bool(_PROPER_NOUN_RE.search(prompt))
 
 
-def _search_hits(query: str, token: str) -> list[dict] | None:
-    """Return hypermnesic search hits, or None on any failure (timeout/401/down/parse).
-
-    A test fixture (HYPERMNESIC_HOOK_FIXTURE → a JSON file with {"hits":[…]} or
-    {"error":…}) injects behavior without network. Otherwise a single bounded JSON-RPC
-    tools/call is made over the authenticated streamable-http endpoint. The token is used
-    only in the Authorization header and is never logged."""
+def _search_hits(query: str, url: str, token: str) -> list[dict] | None:
+    """One bounded search over the MCP endpoint; None on ANY failure (timeout/401/down/parse).
+    A test fixture (HYPERMNESIC_HOOK_FIXTURE → a JSON file with {"hits":[…]} or {"error":…})
+    stands in for the network. The token is used only in the Authorization header."""
     fixture = os.environ.get("HYPERMNESIC_HOOK_FIXTURE")
     if fixture:
         try:
@@ -141,7 +63,6 @@ def _search_hits(query: str, token: str) -> list[dict] | None:
             return data["hits"]
         return None
     import urllib.request
-    url = os.environ.get("HYPERMNESIC_MCP_URL", DEFAULT_MCP_URL)
     body = json.dumps({
         "jsonrpc": "2.0", "id": 1, "method": "tools/call",
         "params": {"name": "search", "arguments": {"query": query, "k": 5}}}).encode()
@@ -159,22 +80,23 @@ def _search_hits(query: str, token: str) -> list[dict] | None:
     return hits if isinstance(hits, list) else None
 
 
-def bounded_lookup(prompt: str) -> str:
-    """Relevance-gated, token-gated, silent-on-failure hypermnesic lookup → injection text."""
-    if os.environ.get("HYPERMNESIC_HOOK_DISABLE_LOOKUP") == "1":
+def _flat(s: str) -> str:                       # one line per hit: neutralize injected newlines
+    return (s or "").replace("\n", " ").replace("\r", " ")
+
+
+def injection(prompt: str) -> str:
+    """Relevance- + URL- + token-gated recall → injection text. '' means stay silent."""
+    if os.environ.get("HYPERMNESIC_HOOK_DISABLE_LOOKUP") == "1" or not relevant(prompt):
         return ""
+    url = os.environ.get("HYPERMNESIC_MCP_URL", "")
     token = os.environ.get("HYPERMNESIC_MCP_TOKEN", "")
-    if not token:                                   # missing token == 401 path: silent
+    if not url or not token:                    # unconfigured == 401 path: silent, never blocks
         return ""
     query = " ".join(prompt.split())[:220]
-    if not query:
+    hits = _search_hits(query, url, token) if query else None
+    if not hits:                                # None (failure) or [] (no hits) → silent
         return ""
-    hits = _search_hits(query, token)
-    if not hits:                                    # None (failure) or [] (no hits) → silent
-        return ""
-    def _flat(s: str) -> str:                    # neutralize injected newlines (one line per hit)
-        return (s or "").replace("\n", " ").replace("\r", " ")
-    lines = ["", "", "hypermnesic memory hits (use these; do not call gbrain):"]
+    lines = ["hypermnesic memory hits:"]
     for h in hits[:5]:
         path = _flat(h.get("path", ""))
         heading = _flat(h.get("heading", ""))
@@ -183,45 +105,20 @@ def bounded_lookup(prompt: str) -> str:
     return "\n".join(lines)
 
 
-def _prompt_context(event: str, payload: dict[str, Any]) -> dict[str, Any]:
-    prompt = _prompt_from(payload)
-    if not relevant(prompt):
-        return {"continue": True}                   # no relevance → no noise
-    injection = bounded_lookup(prompt)
-    if not injection:
-        return {"continue": True}                   # lookup failed/empty → silent, non-blocking
-    return hook_context(event, injection.lstrip("\n"))
-
-
-def _dangerous_reason(command: str) -> str | None:
-    if _REINDEX_RE.search(command) and "--isolated" not in command:
-        return ("Blocked a full in-place `hypermnesic reindex` (OOM scar). Rely on read-time "
-                "convergence, or use `hypermnesic reindex --isolated` (worktree + atomic swap).")
-    for pattern, reason in _GBRAIN_REARM:
-        if pattern.search(command):
-            return (f"Blocked {reason} gbrain is being decommissioned; use hypermnesic. "
-                    "(Reconciliation `gbrain delete`/`export` is not blocked.)")
-    return None
-
-
-def _pre_tool(payload: dict[str, Any]) -> dict[str, Any]:
-    command = _command_from(payload.get("tool_input") or payload.get("toolInput") or payload)
-    reason = _dangerous_reason(command)
-    if reason:
-        return {"decision": "block", "reason": reason}
-    return {"continue": True}
-
-
 def handle(payload: dict[str, Any], host: str, event_override: str | None) -> dict[str, Any]:
-    event = _event(payload, event_override)
+    """Only UserPromptSubmit does anything; every other event is an inert continue."""
+    event = event_override or str(
+        payload.get("hook_event_name") or payload.get("hookEventName")
+        or payload.get("event") or payload.get("type") or "")
     canon = event.lower().replace("_", "").replace("-", "")
-    if canon in {"sessionstart", "instructionsloaded", "agentbootstrap"}:
-        return hook_context(event or "SessionStart", ORIENTATION)
-    if canon in {"userpromptsubmit", "messagepreprocessed", "messagereceived"}:
-        return _prompt_context(event or "UserPromptSubmit", payload)
-    if canon in {"pretooluse", "permissionrequest"}:
-        return _pre_tool(payload)
-    return {"continue": True}
+    if canon not in {"userpromptsubmit", "messagepreprocessed", "messagereceived", ""}:
+        return {"continue": True}
+    text = injection(_prompt_from(payload))
+    if not text:
+        return {"continue": True}
+    return {"continue": True,
+            "hookSpecificOutput": {"hookEventName": event or "UserPromptSubmit",
+                                   "additionalContext": text}}
 
 
 def main() -> int:
@@ -236,8 +133,10 @@ def main() -> int:
             raise ValueError("hook payload must be a JSON object")
     except Exception as exc:
         print(f"malformed hook JSON: {exc}", file=sys.stderr)
-        return emit({"continue": True})             # never block on a malformed payload
-    return emit(handle(payload, args.host, args.event))
+        print(json.dumps({"continue": True}))           # never block on a malformed payload
+        return 0
+    print(json.dumps(handle(payload, args.host, args.event), separators=(",", ":")))
+    return 0
 
 
 if __name__ == "__main__":

@@ -27,6 +27,14 @@ Gate-A criterion is GREEN; only the operator's explicit approval remains.**
   AS — U12); repointed to the hypermnesic origin, audience stays canonical `…/mcp`. Guard added.
 - **Cloud lane (separate workstream) DEPLOYED + verified** — see
   `docs/cloud-oauth-mcp-deploy-runbook.md` (banner) and `services/hypermnesic-cloud.md`.
+- **Hook slimmed + plugin neutralized for public distribution (operator-directed).** The U4 hook
+  was 3 events (SessionStart orientation + per-prompt recall + a PreToolUse Bash guard) carrying
+  gbrain/migration content + a hardcoded endpoint — too heavy for a per-prompt hook and not
+  distributable. Reduced to **one** `UserPromptSubmit` auto-recall hook: relevance- + URL- +
+  token-gated, silent on every failure, endpoint from `HYPERMNESIC_MCP_URL`, **zero gbrain**.
+  The SKILL + manifests + README + marketplace were neutralized too (no gbrain, no hardcoded
+  host). The migration steering ("don't use gbrain") now lives only in the operator's private
+  CLAUDE.md. Net: lighter context cost, fully public-distributable, criteria 8/10 still green.
 
 ## ✅ Homelab deploy EXECUTED (2026-06-02, operator-approved)
 
@@ -66,9 +74,9 @@ ephemeral-proven (the live `:8851` uses the same `StrictResourceTokenVerifier`).
 | 5 | AS round-trip from a **2nd tailnet peer (the Mac)** | ✅ PASS (operator evidence in) | Mac pasted: unauth `:8851`→401 (RFC 9728), authed `tools/list`→200 full toolset, authed `search`→ real hits. |
 | 6 | All **three identities** provisioned (homelab Claude, homelab Codex, Mac) | ✅ PASS | All three enrolled (secrets in chmod-600 env files, never echoed); the Mac minted + round-tripped a `write` token. |
 | 7 | Plugin installed on Claude + Codex (both hosts) | ✅ PASS (live) | After the load-defect fix (`69e0096`): homelab **Claude `✔ enabled`** + **Codex `installed, enabled`** (verified via `claude/codex plugin list`); Mac both (same fix). |
-| 8 | Auto-query hook injects on a relevant prompt, **silent on 401** | ✅ PASS (unit) | `test_plugin_hook`: relevant→inject, off-topic→silent, timeout/401/missing-token→silent-never-blocks. Token never echoed. |
+| 8 | Auto-query hook injects on a relevant prompt, **silent on 401** | ✅ PASS (unit) | Slimmed to ONE user-neutral `UserPromptSubmit` hook (operator-directed). `test_plugin_hook`: relevant→inject, off-topic/unconfigured/timeout/401/missing-token/missing-url→silent-never-blocks. Token never echoed; no hardcoded endpoint. |
 | 9 | SKILL loadable on both hosts | ✅ PASS (live) | The plugin loads enabled on both homelab hosts (so the bundled `hypermnesic-memory` SKILL loads); Mac confirmed. The duplicate-hooks defect that previously failed the whole load is fixed + guarded. |
-| 10 | The plugin path **never calls gbrain** | ✅ PASS | SKILL says "do NOT use gbrain"; no hook command invokes gbrain (`test_plugin_hook`); the daemon-re-arm guard blocks `gbrain serve/init/sync --watch/autopilot --install` (but not `gbrain delete`, needed by U9/U10). |
+| 10 | The plugin path **never calls gbrain** | ✅ PASS | The distributable plugin is now **fully user-neutral** — zero `gbrain` references anywhere in the tree (hook/SKILL/manifests/marketplace/README), enforced by `test_skill_is_user_neutral_and_teaches_disk_first` + `test_hook_source_is_user_neutral`. The migration steering moved to the operator's private CLAUDE.md (where it belongs); the plugin neither names nor calls gbrain. |
 
 **Verdict:** **all 11 criteria are GREEN** (0–10). Criterion 5 is satisfied by the operator's
 pasted Mac evidence; 7/9 are live-verified on both homelab hosts after the plugin load-defect

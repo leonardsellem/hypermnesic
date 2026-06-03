@@ -1,11 +1,11 @@
 {
   "name": "hypermnesic",
-  "description": "Memory for coding agents: hybrid search/recall, entity resolution, and a gated git-first write over the self-hosted, OAuth2-authenticated tailnet MCP. The default memory layer (not gbrain).",
+  "description": "Memory for coding agents: hybrid search/recall, entity resolution, and a gated git-first write over a self-hosted, OAuth2-authenticated tailnet MCP. The default memory layer for coding agents.",
   "version": "0.0.3",
   "author": {
     "name": "Leonard Sellem",
     "email": "leonard@sellem.me"
   },
-  "homepage": "https://homelab.taildabf2.ts.net/mcp",
+  "homepage": "https://github.com/leonardsellem/hypermnesic",
   "skills": "./skills/"
 }

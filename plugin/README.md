@@ -1,9 +1,8 @@
 # hypermnesic plugin (Claude Code + Codex)
 
 Makes **hypermnesic** the default memory layer for coding agents: a skillset that teaches
-agents when/how to use it, auto-query hooks that surface relevant context automatically, and
-the self-hosted, OAuth2-authenticated tailnet MCP wiring. It replaces gbrain — the plugin
-never calls gbrain.
+agents when/how to use it, a lightweight auto-recall hook that surfaces relevant context at
+prompt time, and the self-hosted, OAuth2-authenticated tailnet MCP wiring.
 
 ## What's inside
 
@@ -11,29 +10,43 @@ never calls gbrain.
 plugin/
   .claude-plugin/marketplace.json          # the marketplace listing
   plugins/hypermnesic/
-    .claude-plugin/plugin.json             # Claude manifest (skills + hooks [+ mcpServers])
+    .claude-plugin/plugin.json             # Claude manifest (skills auto-discovered; hooks/MCP auto-loaded)
     .codex-plugin/plugin.json              # Codex manifest (skills + interface)
     skills/hypermnesic-memory/SKILL.md     # the skillset (search/recall/resolve/commit_note, disk-first)
-    hooks/hooks.json                       # SessionStart + UserPromptSubmit + PreToolUse  (U4)
-    hooks/scripts/hypermnesic_agent_hook.py# the auto-query hook (Claude+Codex, --host)   (U4)
-    .mcp.json                              # self-hosted MCP wiring (OAuth2 client)        (U5)
+    hooks/hooks.json                       # one UserPromptSubmit auto-recall hook
+    hooks/scripts/hypermnesic_agent_hook.py# the auto-recall hook (Claude+Codex, --host)
+    .mcp.json                              # self-hosted MCP wiring (OAuth2 client)
 ```
 
-> Hooks (U4) and the MCP wiring (U5) are added by their respective units; this scaffold (U3)
-> is the marketplace + manifests + skillset.
+## How it surfaces memory
 
-## Reach & auth
+- **The SKILL** is the primary surface: its description is always discoverable, and the agent
+  reaches for `search` / `build_context` / `think` / `resolve` / `commit_note` when memory is
+  relevant. This is the lightweight, on-demand path — no per-turn cost.
+- **One auto-recall hook** (`UserPromptSubmit`) adds *optional* proactive recall: when a prompt
+  looks memory-relevant AND an endpoint + token are configured, it runs a single bounded search
+  and injects the top hits. It is **silent and non-blocking** otherwise (off-topic prompt,
+  unconfigured, 401, timeout, no hits) so it never pollutes or blocks a turn. There is no
+  SessionStart preamble and no Bash interception — the hook does exactly one thing.
 
-The MCP endpoint is **tailnet-only** at `homelab.taildabf2.ts.net/mcp`, fronted by OAuth2.
-Both hosts that run agents today — the homelab and the Mac — are on the tailnet. The plugin's
-MCP wiring carries the token; **no secret is ever inlined** into a plugin file or an MCP
-client config (the token is referenced by env var / obtained at connect time, never stored
-in this repo).
+## Configuration (per host)
+
+The auto-recall hook reads its endpoint and token from the environment, so the plugin is
+user-neutral and carries no hardcoded host:
+
+- `HYPERMNESIC_MCP_URL` — the MCP `search` endpoint (e.g. `https://<your-host>/mcp`).
+- `HYPERMNESIC_MCP_TOKEN` — the bearer token (provisioned out of band; **never** inlined or
+  committed). With either unset, the hook stays silent.
+
+The bundled `.mcp.json` wires the MCP server for the host's agents; the token is referenced by
+env var / obtained at connect time, never stored in this repo.
 
 ## Install (per host)
 
-- **Claude Code:** add this in-repo marketplace and install the `hypermnesic` plugin.
-- **Codex:** install via the `.codex-plugin` manifest (the skills directory is shared).
+- **Claude Code:** add this in-repo marketplace and install the `hypermnesic` plugin
+  (`claude plugin marketplace add <path>/plugin` → `claude plugin install hypermnesic@hypermnesic`).
+- **Codex:** add the marketplace and `codex plugin add hypermnesic@hypermnesic` (the skills
+  directory is shared).
 
-Each host's agent identity is provisioned with an OAuth2 client credential out of band (never
-committed). See the engine's install docs for the per-host steps and the Gate-A reach check.
+The manifest declares no `hooks`/`skills` paths — Claude Code auto-discovers `hooks/hooks.json`
+and `skills/`, so the plugin loads cleanly with no duplicate-load conflict.
