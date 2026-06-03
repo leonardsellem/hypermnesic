@@ -203,6 +203,53 @@ def _cmd_resolve(args) -> int:
     return 0
 
 
+def _cmd_list_folders(args) -> int:
+    """Folder discovery (read-only): the vault's writable folder taxonomy — the CLI twin of
+    the MCP ``list_folders`` tool (same output shape). Converges first (``--now`` forces a
+    non-debounced pass), then derives child folders under ``--root`` to ``--depth`` levels,
+    each with its writability, protected reason, and recursive note count. ``--allowlist``
+    previews writability under a narrowed surface; omit it for the engine default. Reads the
+    on-disk index with no OAuth (CLI-for-engine-host-local). Degrades to lexical if no key."""
+    from hypermnesic import converge as converge_mod
+    from hypermnesic import folders, index, mcp_server
+
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    idx = index.Index(db)
+    try:  # dense optional — same graceful degradation as `resolve` / the server
+        from hypermnesic import embed
+        embedder = embed.OpenAIEmbedder()
+    except Exception:
+        embedder = None
+    cr = converge_mod.converge(Path(args.repo), idx, embedder,
+                               debounce_seconds=(0 if args.now else None))
+    # Reuse the server's SOLE coercion so the CLI preview matches the live write surface (and
+    # flips with Phase B by construction): None → the engine default; an explicit --allowlist
+    # narrows the previewed surface (R7/R12/AE3).
+    effective_surface = mcp_server._effective_write_surface(args.allowlist)
+    try:
+        listing = folders.derive_folders(idx.all_paths(), root=args.root, depth=args.depth,
+                                         effective_surface=effective_surface)
+    except ValueError as exc:
+        idx.close()
+        print(f"list-folders failed: {exc}", file=sys.stderr)   # bad --root (absolute/..)
+        return 1
+    idx.close()
+    out = {**listing, "manual_reindex_recommended": cr.manual_reindex_recommended}
+    if args.json:
+        _print_json(out)
+    else:
+        header = out["root"] or "(vault root)"
+        print(f"# folders under {header}  (depth={out['depth']}"
+              f"{', truncated' if out['truncated'] else ''})")
+        for e in out["folders"]:
+            flag = "w" if e["writable"] else "-"
+            reason = "" if e["writable"] else f"  [{e['protected_reason']}]"
+            print(f"  [{flag}] {e['path']}  ({e['note_count']}){reason}")
+        if out["manual_reindex_recommended"]:
+            print("  (manual reindex recommended)")
+    return 0
+
+
 def _cmd_capture(args) -> int:
     """Frictionless capture: land raw text in sources/ immediately (free-append)."""
     from hypermnesic import capture, index
@@ -463,6 +510,23 @@ def build_parser() -> argparse.ArgumentParser:
                            help="force a non-debounced converge before resolving")
     p_resolve.add_argument("--json", action="store_true")
     p_resolve.set_defaults(func=_cmd_resolve)
+
+    p_lf = sub.add_parser(
+        "list-folders",
+        help="folder discovery (read-only): the vault's writable folder taxonomy")
+    p_lf.add_argument("repo", help="repo whose index to list folders from")
+    p_lf.add_argument("--root", default="",
+                      help="repo-relative prefix to drill into (default: vault root)")
+    p_lf.add_argument("--depth", type=int, default=1,
+                      help="levels to descend under root (default: 1)")
+    p_lf.add_argument("--index-db", default=None,
+                      help="index db (default: <repo>/.hypermnesic)")
+    p_lf.add_argument("--now", action="store_true",
+                      help="force a non-debounced converge before listing")
+    p_lf.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
+                      help="preview writability under a narrowed surface (default: engine surface)")
+    p_lf.add_argument("--json", action="store_true")
+    p_lf.set_defaults(func=_cmd_list_folders)
 
     p_capture = sub.add_parser("capture", help="frictionless capture: land raw text in sources/")
     p_capture.add_argument("repo", help="repo to capture into")
