@@ -469,6 +469,33 @@ def test_cloud_server_read_scoped_principal_is_denied_commit_note(make_corpus, f
     assert "insufficient_scope" in refused["refused"]              # write scope required
 
 
+def test_write_anywhere_still_refuses_protected_paths_inside_allowed_dirs(make_corpus,
+                                                                          fake_embedder):
+    # U6 (write-anywhere security re-review): widening the default allowlist to the master surface
+    # must NOT widen access to protected paths. The protected-path guard is allowlist-INDEPENDENT,
+    # so a write-scoped principal is still refused an agent-instruction file (or .git/CI/traversal)
+    # even when it is nested inside a now-allowed dir like notes/. This is the property that makes
+    # write-anywhere safe — the blast radius is the note zones, never the protected classes.
+    import subprocess
+
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more")
+    head = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                          capture_output=True, text=True).stdout.strip()
+    for protected in ("notes/AGENTS.md", "sources/.github/x.md"):     # inside the widened allowlist
+        out = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                             {"path": protected, "body": "# x\n\nbody.\n"})
+        assert out["committed"] is False and out["refused"]           # protected-path guard holds
+    after = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                           capture_output=True, text=True).stdout.strip()
+    assert head == after                                              # nothing committed
+
+
 def test_cloud_server_read_scoped_principal_reaches_read_tools(make_corpus, fake_embedder):
     # G1: on the one unified endpoint a read-scoped principal reaches the read tools (the read
     # half of the split that lets read + write clients share the endpoint).
