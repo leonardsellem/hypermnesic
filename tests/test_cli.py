@@ -314,31 +314,18 @@ def test_serve_no_auth_flags_unchanged(monkeypatch, tmp_path):
     assert captured.get("auth") is None and captured.get("token_verifier") is None
 
 
-# --- U12: AS enrollment writes the secret to a file, never stdout ------------
+# --- U7: the tailnet client_credentials AS (:8849) is retired ----------------
 
-def test_auth_add_client_writes_secret_to_file_not_stdout(tmp_path, capsys):
-    state = tmp_path / "as-state.json"
-    secret_out = tmp_path / "rs.env"
-    rc = cli.main(["auth-add-client", "--state", str(state), "--client-id", "hypermnesic-rs",
-                   "--rs", "--secret-out", str(secret_out),
-                   "--resource", "https://homelab.taildabf2.ts.net/mcp"])
-    assert rc == 0
-    out = capsys.readouterr().out
-    info = json.loads(out)
-    assert info["enrolled"] == "hypermnesic-rs" and info["is_rs"] is True
-    body = secret_out.read_text()
-    assert body.startswith("HYPERMNESIC_RS_CLIENT_SECRET=")
-    secret_value = body.split("=", 1)[1].strip()
-    assert secret_value and secret_value not in out          # the secret is never echoed (V9)
-    assert secret_value not in state.read_text()             # AS stores only a hash
-    import os
-    assert (os.stat(secret_out).st_mode & 0o777) == 0o600    # owner-only
+def test_retired_as_commands_are_gone():
+    # U7: the :8849 client_credentials AS (serve-auth + auth-add-client) folds into the unified
+    # endpoint and is removed. The subcommands no longer exist — a fresh deploy can't provision it.
+    import argparse
 
-
-def test_serve_auth_refuses_wildcard_bind(tmp_path, capsys):
-    rc = cli.main(["serve-auth", "--host", "0.0.0.0", "--port", "8849",
-                   "--public-url", "https://h/as", "--state", str(tmp_path / "s.json")])
-    assert rc == 1 and "wildcard" in capsys.readouterr().err.lower()
+    parser = cli.build_parser()
+    sub = next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction))
+    assert "serve-auth" not in sub.choices and "auth-add-client" not in sub.choices
+    # the unified write lane (serve-cloud) and the retained read lane (serve) remain
+    assert "serve-cloud" in sub.choices and "serve" in sub.choices and "setup" in sub.choices
 
 
 # --- cloud OAuth MCP: serve-cloud reads the approval token from env, never a flag ---

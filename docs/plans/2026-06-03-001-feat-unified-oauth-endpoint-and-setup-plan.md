@@ -532,12 +532,21 @@ security re-review, retiring `:8849`/`:8851`, and the homelab cutover.
 
 ## Open Questions
 
-**Resolve during implementation**
-- **Remote-client hook token access (R11, U5).** Can the hook script read Claude Code's stored OAuth
-  token? Resolved by the U5 spike; the tailnet read route is the fallback regardless. Sequencing
-  (serving-first) is **already resolved** (planning dialogue 2026-06-03).
-- **`auth.py` RS-verifier retention (U7).** Keep only if the unified lane retains an introspection
-  fallback; otherwise deletable with `:8849`.
+**Resolved during implementation**
+- **Remote-client hook token access (R11, U5).** RESOLVED (2026-06-03 spike, claude-code-guide):
+  Claude Code exposes **no** documented/stable way for a hook subprocess to reuse the stored MCP
+  OAuth token — the `UserPromptSubmit` payload carries no credential field and no env var exposes
+  it. So the remote-device hook path is the **retained tailnet read route** (`:8848`, auth-off): the
+  hook needs only the URL, token optional. Sequencing (serving-first) was already resolved.
+- **`auth.py` RS-verifier retention (U7).** RESOLVED: **retain** `auth.py` + the `serve --auth-*`
+  introspection-RS capability. It is generic (the verify backend is injectable / discovered from any
+  RFC 8414 issuer — not hardwired to `:8849`), self-contained, and still tested; deleting it would
+  cascade into ~10 tests for no functional gain. It is orphaned-but-valid after `:8849` retirement.
+  The `:8849` AS itself (`auth_server.py` + `serve-auth` + `auth-add-client`) IS deleted.
+- **`install --role master` (U7).** The standalone write-master unit (`:8851`) is **superseded** by
+  `hypermnesic setup` (the unified write lane). The `master`/`single`/`client` roles are retained as
+  valid non-unified capabilities (reversible, tested); a fresh unified deploy uses `setup` for the
+  write lane + a read-only `serve` for the retained `:8848` read companion.
 
 ---
 
