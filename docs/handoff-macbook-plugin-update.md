@@ -20,7 +20,10 @@ this Mac. Never print or commit any token or secret.
 
 2) REINSTALL ON CLAUDE (refresh the cached snapshot)
    claude plugin uninstall hypermnesic@hypermnesic 2>/dev/null || true
-   claude plugin marketplace update hypermnesic 2>/dev/null || claude plugin marketplace add "$PWD/plugin"
+   # canonical: GitHub-backed source (content-addressed, reused across sessions); falls back to the local plugin/ dir
+   claude plugin marketplace update hypermnesic 2>/dev/null \
+     || claude plugin marketplace add leonardsellem/hypermnesic 2>/dev/null \
+     || claude plugin marketplace add "$PWD/plugin"
    claude plugin install hypermnesic@hypermnesic
    claude plugin list | grep -A2 'hypermnesic@hypermnesic'      # MUST show: Status: ✔ enabled
 
