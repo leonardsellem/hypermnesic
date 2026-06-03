@@ -100,6 +100,7 @@ def _rrf(rank: int) -> float:
 def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50,
            rerank: Callable[[str, list[Hit]], list[Hit]] | None = None,
            collapse_duplicates: bool = True,
+           exclude_path: str | None = None,
            expand: int = 0,
            expander: Callable[[str, int], list[str]] | None = None,
            use_doc_lane: bool = True,
@@ -123,6 +124,11 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
     gbrain, which runs its own multi-query expansion). Graceful: an expander
     failure falls back to no expansion. Lexical runs on the original query only
     (phrase-matching paraphrases is noisy).
+
+    ``exclude_path`` (optional): drop every hit whose path equals it before
+    truncating to ``k`` — used by ``think`` to stop a note matching itself. The
+    ``candidate_k`` pool absorbs the drop, so a self-match does not shrink the
+    result below ``k`` when other matches exist.
     """
     fused: dict[int, float] = {}
     channels: dict[int, set[str]] = {}
@@ -175,6 +181,8 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
     seen_text: set[str] = set()
     for cid, score in ranked[:candidate_k]:
         ch = idx.get_chunk(cid)
+        if exclude_path is not None and ch["path"] == exclude_path:
+            continue                       # self-exclusion (U42); never its own match
         if collapse_duplicates:
             th = hashlib.sha256(ch["text"].encode("utf-8")).hexdigest()
             if th in seen_text:

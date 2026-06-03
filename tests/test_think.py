@@ -55,6 +55,18 @@ def test_think_returns_related_and_wrote_false_no_side_effects(make_corpus, fake
     idx.close()
 
 
+def test_think_excludes_active_note(make_corpus, fake_embedder):
+    # U42: the note being written must not match itself. With path set, the
+    # active note is absent from related (and therefore from questions/pairs,
+    # which derive from the same self-excluded hits).
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    r = think_mod.think(idx, "Hetzner homelab", embedder=fake_embedder, graph=g, path="hetzner.md")
+    assert r.wrote is False
+    assert r.related, "the other note should still surface"
+    assert all(h["path"] != "hetzner.md" for h in r.related)
+    idx.close()
+
+
 def test_think_surfaces_graph_context(make_corpus, fake_embedder):
     repo, idx, g = _built(make_corpus, fake_embedder)
     r = think_mod.think(idx, "Hetzner", embedder=fake_embedder, graph=g)

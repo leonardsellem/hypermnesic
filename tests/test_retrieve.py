@@ -221,6 +221,28 @@ def test_recency_uses_a_single_git_pass_not_one_per_hit(make_corpus, fake_embedd
     idx.close()
 
 
+def test_search_exclude_path_omits_note_and_preserves_k(make_corpus, fake_embedder):
+    # U42: self-exclusion. The active note must not appear in its own results,
+    # and excluding it must NOT shrink the result set below k — the candidate
+    # pool (candidate_k=50) absorbs the dropped path.
+    repo = make_corpus({
+        "a.md": "# A\n\nSHARED topic alpha.\n",
+        "b.md": "# B\n\nSHARED topic beta.\n",
+        "c.md": "# C\n\nSHARED topic gamma.\n",
+        "d.md": "# D\n\nSHARED topic delta.\n",
+        "e.md": "# E\n\nSHARED topic epsilon.\n",
+    })
+    idx = index.build_index(repo, fake_embedder)
+    res = retrieve.search(idx, "SHARED topic", embedder=fake_embedder, k=3, exclude_path="a.md")
+    paths = [h.path for h in res.hits]
+    assert "a.md" not in paths                 # active note excluded
+    assert len(res.hits) == 3                   # 5 matches − self = 4 ≥ k, so k preserved
+    # default (no exclusion) is byte-for-byte unchanged and can include a.md
+    res_all = retrieve.search(idx, "SHARED topic", embedder=fake_embedder, k=5)
+    assert "a.md" in [h.path for h in res_all.hits]
+    idx.close()
+
+
 def test_recency_resolves_non_ascii_path(make_corpus, fake_embedder):
     # The batched parse uses core.quotepath=false so non-ASCII paths in the log output match.
     repo = make_corpus({"a.md": "# A\n\nseed.\n"})
