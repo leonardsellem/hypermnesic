@@ -563,7 +563,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("--host", default="127.0.0.1",
                          help="local bind (the Funnel proxies the public hostname to it)")
     p_setup.add_argument("--port", type=int, default=8850)
-    p_setup.add_argument("--path", default="/mcp")
+    p_setup.add_argument("--path", default="/",
+                         help="internal serve path (default '/': the funnel maps the public "
+                              "/mcp mount to it, so /mcp/authorize etc. resolve)")
     p_setup.add_argument("--env-file", default=None,
                          help="owner-only env file for the consent secret "
                               "(default: ~/.config/hypermnesic-cloud/cloud.env)")
