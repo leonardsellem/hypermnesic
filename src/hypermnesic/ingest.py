@@ -109,6 +109,34 @@ def _chunk_body(body: str) -> Iterator[tuple[str, str]]:
 
 
 _FM_TITLE = re.compile(r"^title:\s*(.+?)\s*$", re.MULTILINE)
+# A level-1 ATX heading only: a single leading '#' followed by whitespace. '## x'
+# does not match (the second '#' breaks the `#\s` requirement), so a section label
+# is never mistaken for a note's identity.
+_H1_RE = re.compile(r"(?m)^\s{0,3}#\s+(.+)$")
+_LEADING_ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}[-_ ]?")
+
+
+def _stem_title(path: str) -> str:
+    """De-kebab a path stem into a fallback title: strip a leading ISO date, then
+    turn ``-``/``_`` runs into spaces (``2026-06-03-foo-bar`` → ``foo bar``)."""
+    stem = _LEADING_ISO_DATE.sub("", Path(path).stem)
+    return re.sub(r"[-_]+", " ", stem).strip()
+
+
+def note_title(raw: str, path: str = "") -> str:
+    """A note's display identity: frontmatter ``title:`` → first level-1 ``# ``
+    heading → de-kebabbed path-stem fallback. Level-specific by design: a note
+    that opens with ``## Section`` and has no H1 falls through to the stem rather
+    than returning the section label as identity (the U20→U44 dogfood defect)."""
+    fm = _FM_TITLE.search(raw[:600])
+    if fm:
+        title = fm.group(1).strip().strip('"').strip("'")
+        if title:
+            return title
+    m = _H1_RE.search(strip_frontmatter(raw))
+    if m and m.group(1).strip():
+        return m.group(1).strip()
+    return _stem_title(path)
 
 
 def doc_surface(raw: str, path: str = "") -> str:
