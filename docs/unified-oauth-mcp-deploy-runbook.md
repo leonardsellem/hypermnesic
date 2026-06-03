@@ -41,12 +41,14 @@ git -C <master-main-worktree> fetch && git -C <master-main-worktree> checkout --
 uv tool install --force <master-main-worktree>
 ```
 
-## The cutover decision (operator picks A or B)
+## The cutover decision — ✅ Option A SELECTED (operator, G4, 2026-06-03)
 
 The existing ChatGPT/Claude Cloud connectors are bound to `https://…/cloud/mcp` (audience
-`/cloud/mcp`). The unified endpoint's canonical audience is `/mcp`. Choose how to bridge:
+`/cloud/mcp`). The unified endpoint's canonical audience is `/mcp`. The operator chose **Option A**
+at G4 — one endpoint now, existing connectors re-authorize once. Option B is recorded as the
+not-taken alternative.
 
-### Option A — one endpoint now, existing connectors re-auth once (recommended end state)
+### Option A — one endpoint now, existing connectors re-auth once ✅ SELECTED
 
 Reconfigure the `:8850` service to the unified `/mcp` identity; route both `/mcp` and (transitional)
 `/cloud` to it. Existing connectors' `/cloud/mcp`-audience tokens stop validating → they rediscover
