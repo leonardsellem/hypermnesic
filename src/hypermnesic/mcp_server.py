@@ -377,10 +377,6 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     return mcp
 
 
-# The public cloud lane defaults writes to a dedicated, easily-reviewed quarantine zone —
-# NOT the full vault — so a prompt-injected cloud LLM's write is bounded + obvious (V19).
-CLOUD_WRITE_ALLOWLIST = ("captures/",)
-
 _CONSENT_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <title>hypermnesic — authorize</title></head>
 <body style="font-family:system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">
@@ -448,6 +444,32 @@ def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, in
     return html, (403 if error else 200)
 
 
+def _require_public_https_origin(url: str, label: str) -> None:
+    """Refuse a non-HTTPS or bare-IP ``url`` for the unified lane's issuer/resource (R2). A
+    standards-discoverable OAuth endpoint needs an HTTPS public-origin issuer + resource; a
+    bare-IP / plain-HTTP one is undiscoverable over the RFC 9728→8414 chain (the original reason
+    a separate public lane was bolted on). Raised at construction — never a half-open server."""
+    import ipaddress
+    from urllib.parse import urlparse
+
+    u = urlparse(str(url))
+    if u.scheme != "https":
+        raise ValueError(
+            f"refusing a non-HTTPS {label} {url!r}: the unified OAuth endpoint must advertise an "
+            "HTTPS public origin (R2). Use the Tailscale-funnel'd https:// hostname.")
+    host = (u.hostname or "")
+    try:
+        ipaddress.ip_address(host)                # a literal IP, not a DNS name
+        raise ValueError(
+            f"refusing a bare-IP {label} {url!r}: the unified OAuth endpoint must advertise a "
+            "public DNS hostname (R2), not a tailnet IP — that lane is undiscoverable over the "
+            "standard OAuth chain. Use the Tailscale-funnel'd hostname.")
+    except ValueError as exc:
+        if "refusing a bare-IP" in str(exc):
+            raise
+        # ip_address() raised ValueError → host is a DNS name (the wanted case): accept.
+
+
 def _register_consent_route(mcp: FastMCP, provider) -> None:
     """Add the operator-authenticated ``/consent`` route. ``provider.authorize`` routes the
     browser here; only the operator's approval token issues the code (the public-write gate).
@@ -489,11 +511,18 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
                        scopes_supported=("read", "write"), token_ttl_seconds: int = 3600,
                        write_allowlist: list[str] | None = None,
                        audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:
-    """Build the **public cloud** OAuth MCP (ChatGPT/Claude mobile lane): the SDK's
-    authorization_code + DCR + PKCE Authorization Server (``auth_cloud.CloudAuthProvider``)
-    wired into a write-enabled serve, plus the operator-authenticated ``/consent`` route. The
-    same read tools + the gated ``commit_note`` (per-tool write scope) as the tailnet serve.
-    Exposed publicly via Funnel; the operator's approval token gates every connection."""
+    """Build the **unified public** OAuth MCP — the sole network lane for every remote client
+    (ChatGPT/Claude mobile, the Claude Code plugin, Codex, Obsidian): the SDK's authorization_code
+    + DCR + PKCE Authorization Server (``auth_cloud.CloudAuthProvider``) wired into a write-enabled
+    serve, plus the operator-authenticated ``/consent`` route. The same read tools + the gated
+    ``commit_note`` (per-tool ``write`` scope, V14) on one endpoint — read clients reach the read
+    tools, a write-scoped principal reaches ``commit_note``. Exposed publicly via Funnel; the
+    operator's approval token gates every connection.
+
+    The write surface defaults to ``DEFAULT_WRITE_ALLOWLIST`` (the full master surface,
+    write-anywhere-under-guards — KD3/KD5), not a ``captures/`` quarantine; ``write_allowlist``
+    still lets ``setup``/CLI narrow or widen it. ``commit_note``'s guards (allowlist, protected-path
+    refusal, diff-or-die, audit log, git-revertability) remain the write bound."""
     from mcp.server.auth.settings import (
         AuthSettings,
         ClientRegistrationOptions,
@@ -501,6 +530,13 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
     )
 
     from hypermnesic import auth_cloud
+
+    # R2 (engine invariant): the unified lane must advertise an HTTPS public-origin issuer +
+    # resource — never a bare-IP / plain-HTTP one. A non-HTTPS or bare-IP issuer is exactly the
+    # defect that forced a separate public lane (the tailnet AS was bare-IP HTTP and undiscoverable
+    # over the standard chain). Refuse it at construction — fail loud, no half-open server.
+    _require_public_https_origin(public_url, "public_url")
+    _require_public_https_origin(resource, "resource")
 
     provider = auth_cloud.CloudAuthProvider(
         resource=resource, public_url=public_url, approval_token=approval_token,
@@ -510,9 +546,10 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
         client_registration_options=ClientRegistrationOptions(
             enabled=True, valid_scopes=list(scopes_supported), default_scopes=["read"]),
         revocation_options=RevocationOptions(enabled=True))
-    # default the public lane to the tighter cloud review zone (not the full vault allowlist)
+    # default the unified lane to the full master write surface (write-anywhere-under-guards,
+    # KD3/KD5) — not a captures/ quarantine; an explicit write_allowlist still narrows/widens it.
     cloud_allowlist = list(write_allowlist) if write_allowlist is not None else list(
-        CLOUD_WRITE_ALLOWLIST)
+        DEFAULT_WRITE_ALLOWLIST)
     # the cloud serve always runs behind the Funnel (loopback bind, public Host) — trust the
     # public hostname(s) from the issuer + resource URLs so proxied /mcp calls don't 421.
     from urllib.parse import urlparse
