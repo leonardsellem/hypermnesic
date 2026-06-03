@@ -36,6 +36,9 @@ from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
+# Pydantic (the SDK's schema generator) requires typing_extensions.TypedDict on Python < 3.12.
+from typing_extensions import TypedDict
+
 from hypermnesic import audit_log as audit_mod
 from hypermnesic import commit_note as commit_note_mod
 from hypermnesic import converge as converge_mod
@@ -48,6 +51,67 @@ from hypermnesic import think as think_mod
 
 DEFAULT_PORT = 8848
 DEFAULT_PATH = "/mcp"
+
+
+# --- MCP tool output schemas (U2/connector quality) -------------------------------------
+# Typed result shapes so the MCP server advertises an ``outputSchema`` per tool — clients
+# (ChatGPT/Claude connectors + agents) then understand a result's structure instead of an
+# opaque object. TypedDicts: the tool functions keep returning plain dicts (validated against
+# these), so this is schema-only — no behavior change.
+class SearchHit(TypedDict):
+    path: str
+    heading: str
+    score: float
+    channels: list[str]
+    snippet: str
+    recency: float | None
+
+
+class SearchOutput(TypedDict):
+    query: str
+    degraded_lexical_only: bool
+    manual_reindex_recommended: bool
+    hits: list[SearchHit]
+
+
+class BuildContextOutput(TypedDict):
+    start: str
+    depth: int
+    context: list[str]                 # page paths reachable via wikilinks (sorted)
+    manual_reindex_recommended: bool
+
+
+class ResolveOutput(TypedDict):
+    name: str
+    resolved: str | None               # the resolved page path, or null if ambiguous/missing
+    slug: str | None                   # the ``.md``-stripped wikilink target, or null
+    manual_reindex_recommended: bool
+
+
+class ThinkOutput(TypedDict):
+    topic: str
+    wrote: bool                        # always False — the observable no-write assertion
+    related: list[dict]
+    context: list[str]
+    questions: list[str]
+    tensions: list[str]
+    degraded_lexical_only: bool
+    note: str
+    manual_reindex_recommended: bool
+
+
+# total=False (all keys optional): the result is a union — a success carries
+# path/created/noop/new_sha/diff; a refusal carries refused — and only ``committed`` is on
+# both. (Per-field NotRequired can't be used here: ``from __future__ import annotations``
+# stringizes the annotations, which defeats TypedDict's required/optional key computation.)
+class CommitNoteOutput(TypedDict, total=False):
+    committed: bool                    # present on every path; the rest depend on the outcome
+    path: str
+    created: bool
+    noop: bool
+    new_sha: str
+    diff: str
+    refused: str                       # set (with committed=False) when a gate/guard refuses
 # Loopback binds are exempt from the write_enabled⇒auth-required invariant (U2): a
 # localhost serve is reachable only by the local user — never the tailnet.
 _LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
@@ -122,7 +186,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  token_verifier=None, auth=None, auth_server_provider=None,
                  write_scope: str = WRITE_SCOPE,
                  json_response: bool = True,
-                 stateless_http: bool = True) -> FastMCP:
+                 stateless_http: bool = True,
+                 public_hosts: list[str] | None = None) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
 
     Refuses ``0.0.0.0`` — the bind invariant is enforced at construction. Every
@@ -194,15 +259,34 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             "refusing a write-enabled serve with an empty --allowlist: it would permit "
             "no writes at all. Omit --allowlist for the default, or pass real prefixes (U1)."
         )
+    # Behind a TLS-terminating reverse proxy (Tailscale Funnel → loopback bind), the forwarded
+    # Host header is the PUBLIC hostname, not 127.0.0.1. FastMCP auto-enables DNS-rebinding
+    # protection on a loopback bind with a loopback-ONLY allowlist, so every proxied /mcp call
+    # 421s ("Invalid Host header"). When the caller declares its public host(s), trust them too —
+    # protection STAYS on (an arbitrary attacker Host is still rejected); we only widen the
+    # allowlist to the proxy's hostname. Direct-IP binds (the tailnet master) never hit this
+    # branch — FastMCP only auto-protects loopback — so they are unaffected.
+    transport_security = None
+    if public_hosts:
+        from mcp.server.transport_security import TransportSecuritySettings
+        allowed = ["127.0.0.1", "127.0.0.1:*", "localhost", "localhost:*", "[::1]", "[::1]:*"]
+        origins: list[str] = []
+        for h in public_hosts:
+            if h and h not in allowed:
+                allowed += [h, f"{h}:*"]
+                origins += [f"https://{h}", f"https://{h}:*"]
+        transport_security = TransportSecuritySettings(
+            enable_dns_rebinding_protection=True, allowed_hosts=allowed, allowed_origins=origins)
     backend = _Backend(index_db, embedder=embedder, repo=repo, authoring_host=authoring_host)
     mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
                   json_response=json_response, stateless_http=stateless_http,
+                  transport_security=transport_security,       # proxy-host trust (None = default)
                   token_verifier=token_verifier, auth=auth,   # U2 RS-only / no-auth …
                   auth_server_provider=auth_server_provider)  # … or the cloud AS+RS lane
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
-    def search(query: str, k: int = 10) -> dict:
+    def search(query: str, k: int = 10) -> SearchOutput:
         cr = backend.converge()
         res = retrieve.search(backend.idx, query, embedder=backend.embedder, k=k,
                               recency_fn=retrieve.git_commit_recency(backend.repo))
@@ -220,7 +304,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Pages reachable from a page via body wikilinks (in+out edges).")
-    def build_context(path: str, depth: int = 1) -> dict:
+    def build_context(path: str, depth: int = 1) -> BuildContextOutput:
         cr = backend.converge()
         reachable = graph_mod.build_context(backend.graph, path, depth=depth)
         return {"start": path, "depth": depth, "context": reachable,
@@ -230,7 +314,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
               description="Entity resolution: resolve a name to an existing page path "
                           "(gbrain's `get` role), or null if ambiguous/missing. The caller "
                           "strips `.md` (use `slug`) to form a wikilink target.")
-    def resolve(name: str) -> dict:
+    def resolve(name: str) -> ResolveOutput:
         cr = backend.converge()
         resolved = backend.graph.resolve(name)
         slug = resolved[:-3] if resolved and resolved.endswith(".md") else resolved
@@ -240,7 +324,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Thinking-mode: related notes + Socratic prompts + tensions. "
                           "Never writes (wrote: false) — a help-me-think surface, not a write.")
-    def think(topic: str, k: int = 8, depth: int = 1) -> dict:
+    def think(topic: str, k: int = 8, depth: int = 1) -> ThinkOutput:
         cr = backend.converge()
         out = think_mod.think(backend.idx, topic, embedder=backend.embedder,
                               graph=backend.graph, k=k, depth=depth).as_dict()
@@ -262,7 +346,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                               "(guard → diff-or-die gate → git commit → audit; never merges). "
                               "The index follows as a projection — a reindex never loses it.")
         def commit_note(path: str, body: str | None = None,
-                        set_fields: dict | None = None, summary: str | None = None) -> dict:
+                        set_fields: dict | None = None,
+                        summary: str | None = None) -> CommitNoteOutput:
             # V14 / security-review fix: when auth is on, the write tool self-enforces the
             # write scope — independent of the transport's (misconfigurable, global)
             # required_scopes. The HTTP auth middleware guarantees a principal for any
@@ -292,10 +377,6 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     return mcp
 
 
-# The public cloud lane defaults writes to a dedicated, easily-reviewed quarantine zone —
-# NOT the full vault — so a prompt-injected cloud LLM's write is bounded + obvious (V19).
-CLOUD_WRITE_ALLOWLIST = ("captures/",)
-
 _CONSENT_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <title>hypermnesic — authorize</title></head>
 <body style="font-family:system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">
@@ -305,7 +386,7 @@ approval token grants it the scopes below. Only you hold this token.</p>
 <ul><li><b>Client:</b> {client}</li><li><b>Redirect:</b> {redirect}</li>
 <li><b>Scopes:</b> {scopes}</li></ul>
 {error}
-<form method="post" action="/consent">
+<form method="post" action="{action}">
 <input type="hidden" name="pending" value="{pending}">
 <label>Approval token<br><input type="password" name="approval_token" autocomplete="off"
 style="width:100%;padding:.5rem"></label>
@@ -320,13 +401,26 @@ _CONSENT_ERROR_HTML = """<!doctype html><html><head><meta charset="utf-8">
 from your app.</p></body></html>"""
 
 # Anti-clickjacking + no-script CSP + no-store: the page where the operator types the token.
-_CONSENT_HEADERS = {
-    "X-Frame-Options": "DENY",
-    "Content-Security-Policy": (
-        "default-src 'none'; style-src 'unsafe-inline'; "
-        "form-action 'self'; frame-ancestors 'none'"),
-    "Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
-}
+def _consent_headers(redirect_uri: str = "") -> dict:
+    """CSP + anti-clickjacking headers for the consent page. The form posts to ``<public>/consent``
+    (self); on approval the AS **302-redirects to the OAuth client's registered redirect_uri** — a
+    cross-origin navigation. CSP ``form-action`` is enforced against redirect targets too, so a bare
+    ``form-action 'self'`` makes the browser silently drop that 302 (the grant is consumed but the
+    app never receives the code → "first Approve does nothing, retry says expired"). We therefore
+    allow ``'self'`` plus that single registered client origin. No scripts run (``default-src
+    'none'``) and the redirect carries only the authorization code (never the approval token)."""
+    from urllib.parse import urlsplit
+    extra = ""
+    sp = urlsplit(redirect_uri) if redirect_uri else None
+    if sp and sp.scheme and sp.netloc:
+        extra = f" {sp.scheme}://{sp.netloc}"          # e.g. https://chatgpt.com / https://claude.ai
+    return {
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": (
+            "default-src 'none'; style-src 'unsafe-inline'; "
+            f"form-action 'self'{extra}; frame-ancestors 'none'"),
+        "Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
+    }
 
 
 def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, int]:
@@ -339,12 +433,41 @@ def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, in
     if details is None:
         return _CONSENT_ERROR_HTML, 404          # do not reflect an unknown/arbitrary id
     err = f'<p style="color:#b00">{_html.escape(error)}</p>' if error else ""
+    # the form must POST back to the PUBLIC consent path (<public>/consent), not a root-absolute
+    # "/consent" — behind the Funnel's /cloud mount the latter posts to the host root and 404s.
+    action = _html.escape(f"{provider.public_url}/consent")
     html = _CONSENT_HTML.format(
-        pending=_html.escape(pending_id),
+        action=action, pending=_html.escape(pending_id),
         client=_html.escape(str(details.get("client_name") or details["client_id"])),
         redirect=_html.escape(str(details["redirect_uri"])),
         scopes=_html.escape(" ".join(details["scopes"])), error=err)
     return html, (403 if error else 200)
+
+
+def _require_public_https_origin(url: str, label: str) -> None:
+    """Refuse a non-HTTPS or bare-IP ``url`` for the unified lane's issuer/resource (R2). A
+    standards-discoverable OAuth endpoint needs an HTTPS public-origin issuer + resource; a
+    bare-IP / plain-HTTP one is undiscoverable over the RFC 9728→8414 chain (the original reason
+    a separate public lane was bolted on). Raised at construction — never a half-open server."""
+    import ipaddress
+    from urllib.parse import urlparse
+
+    u = urlparse(str(url))
+    if u.scheme != "https":
+        raise ValueError(
+            f"refusing a non-HTTPS {label} {url!r}: the unified OAuth endpoint must advertise an "
+            "HTTPS public origin (R2). Use the Tailscale-funnel'd https:// hostname.")
+    host = (u.hostname or "")
+    try:
+        ipaddress.ip_address(host)                # a literal IP, not a DNS name
+        raise ValueError(
+            f"refusing a bare-IP {label} {url!r}: the unified OAuth endpoint must advertise a "
+            "public DNS hostname (R2), not a tailnet IP — that lane is undiscoverable over the "
+            "standard OAuth chain. Use the Tailscale-funnel'd hostname.")
+    except ValueError as exc:
+        if "refusing a bare-IP" in str(exc):
+            raise
+        # ip_address() raised ValueError → host is a DNS name (the wanted case): accept.
 
 
 def _register_consent_route(mcp: FastMCP, provider) -> None:
@@ -356,20 +479,30 @@ def _register_consent_route(mcp: FastMCP, provider) -> None:
 
     from hypermnesic import auth_cloud
 
+    def _redirect_uri_of(pending_id: str) -> str:
+        d = provider.pending_details(pending_id)
+        return d["redirect_uri"] if d else ""
+
     @mcp.custom_route("/consent", methods=["GET", "POST"])
     async def consent(request: Request):
         if request.method == "GET":
-            html, status = _render_consent(provider, request.query_params.get("pending", ""))
-            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
+            pid = request.query_params.get("pending", "")
+            html, status = _render_consent(provider, pid)
+            # the GET page's CSP governs the form submit (incl. its 302 redirect to the client)
+            return HTMLResponse(html, status_code=status,
+                                headers=_consent_headers(_redirect_uri_of(pid)))
         form = await request.form()
         pending = str(form.get("pending", ""))
+        redirect_uri = _redirect_uri_of(pending)          # capture BEFORE finalize consumes it
         try:
             redirect = provider.finalize_consent(pending, approval_token=str(
                 form.get("approval_token", "")))
         except auth_cloud.ConsentError as exc:
             html, status = _render_consent(provider, pending, error=str(exc))
-            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
-        return RedirectResponse(redirect, status_code=302, headers=_CONSENT_HEADERS)
+            return HTMLResponse(html, status_code=status,
+                                headers=_consent_headers(redirect_uri))
+        return RedirectResponse(redirect, status_code=302,
+                                headers=_consent_headers(redirect_uri))
 
 
 def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
@@ -378,11 +511,18 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
                        scopes_supported=("read", "write"), token_ttl_seconds: int = 3600,
                        write_allowlist: list[str] | None = None,
                        audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:
-    """Build the **public cloud** OAuth MCP (ChatGPT/Claude mobile lane): the SDK's
-    authorization_code + DCR + PKCE Authorization Server (``auth_cloud.CloudAuthProvider``)
-    wired into a write-enabled serve, plus the operator-authenticated ``/consent`` route. The
-    same read tools + the gated ``commit_note`` (per-tool write scope) as the tailnet serve.
-    Exposed publicly via Funnel; the operator's approval token gates every connection."""
+    """Build the **unified public** OAuth MCP — the sole network lane for every remote client
+    (ChatGPT/Claude mobile, the Claude Code plugin, Codex, Obsidian): the SDK's authorization_code
+    + DCR + PKCE Authorization Server (``auth_cloud.CloudAuthProvider``) wired into a write-enabled
+    serve, plus the operator-authenticated ``/consent`` route. The same read tools + the gated
+    ``commit_note`` (per-tool ``write`` scope, V14) on one endpoint — read clients reach the read
+    tools, a write-scoped principal reaches ``commit_note``. Exposed publicly via Funnel; the
+    operator's approval token gates every connection.
+
+    The write surface defaults to ``DEFAULT_WRITE_ALLOWLIST`` (the full master surface,
+    write-anywhere-under-guards — KD3/KD5), not a ``captures/`` quarantine; ``write_allowlist``
+    still lets ``setup``/CLI narrow or widen it. ``commit_note``'s guards (allowlist, protected-path
+    refusal, diff-or-die, audit log, git-revertability) remain the write bound."""
     from mcp.server.auth.settings import (
         AuthSettings,
         ClientRegistrationOptions,
@@ -390,6 +530,13 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
     )
 
     from hypermnesic import auth_cloud
+
+    # R2 (engine invariant): the unified lane must advertise an HTTPS public-origin issuer +
+    # resource — never a bare-IP / plain-HTTP one. A non-HTTPS or bare-IP issuer is exactly the
+    # defect that forced a separate public lane (the tailnet AS was bare-IP HTTP and undiscoverable
+    # over the standard chain). Refuse it at construction — fail loud, no half-open server.
+    _require_public_https_origin(public_url, "public_url")
+    _require_public_https_origin(resource, "resource")
 
     provider = auth_cloud.CloudAuthProvider(
         resource=resource, public_url=public_url, approval_token=approval_token,
@@ -399,12 +546,22 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
         client_registration_options=ClientRegistrationOptions(
             enabled=True, valid_scopes=list(scopes_supported), default_scopes=["read"]),
         revocation_options=RevocationOptions(enabled=True))
-    # default the public lane to the tighter cloud review zone (not the full vault allowlist)
+    # default the unified lane to the full master write surface (write-anywhere-under-guards,
+    # KD3/KD5) — not a captures/ quarantine; an explicit write_allowlist still narrows/widens it.
     cloud_allowlist = list(write_allowlist) if write_allowlist is not None else list(
-        CLOUD_WRITE_ALLOWLIST)
+        DEFAULT_WRITE_ALLOWLIST)
+    # the cloud serve always runs behind the Funnel (loopback bind, public Host) — trust the
+    # public hostname(s) from the issuer + resource URLs so proxied /mcp calls don't 421.
+    from urllib.parse import urlparse
+    public_hosts: list[str] = []
+    for _u in (public_url, resource):
+        _nl = urlparse(str(_u)).netloc
+        if _nl and _nl not in public_hosts:
+            public_hosts.append(_nl)
     mcp = build_server(index_db, host=host, port=port, path=path, repo=repo, embedder=embedder,
                        write_enabled=True, write_allowlist=cloud_allowlist,
-                       audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth)
+                       audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth,
+                       public_hosts=public_hosts)
     _register_consent_route(mcp, provider)
     return mcp
 

@@ -328,47 +328,6 @@ def _cmd_install(args) -> int:
     return 0
 
 
-def _cmd_serve_auth(args) -> int:
-    """Run the minimal tailnet-internal Authorization Server (U12). Clients are pre-enrolled
-    via `auth-add-client`; DCR stays locked. Refuses a wildcard bind (tailnet/loopback only)."""
-    from hypermnesic import auth_server
-
-    if args.host in ("0.0.0.0", "::", ""):
-        print("serve-auth failed: refusing a wildcard bind (tailnet/loopback only)",
-              file=sys.stderr)
-        return 1
-    a = auth_server.MinimalAS(allowed_resources=args.resource or [],
-                              token_ttl_seconds=args.token_ttl, state_path=Path(args.state),
-                              public_url=args.public_url)
-    print(f"hypermnesic AS on {args.host}:{args.port} — clients: {a.client_ids()}",
-          file=sys.stderr)                          # ids only; never a secret
-    a.serve(args.host, args.port)
-    return 0
-
-
-def _cmd_auth_add_client(args) -> int:
-    """Enroll a static client identity in the AS state. The generated secret is written to a
-    chmod-600 env file — NEVER printed to stdout or committed (threat-model V9). The state
-    file stores only a salted hash of the secret."""
-    import secrets as _secrets
-
-    from hypermnesic import auth_server
-
-    a = auth_server.MinimalAS(allowed_resources=args.resource or [], state_path=Path(args.state))
-    secret = _secrets.token_urlsafe(32)
-    a.add_client(args.client_id, secret, scopes=(args.scope or []), is_rs=args.rs)
-    var = args.env_var or ("HYPERMNESIC_RS_CLIENT_SECRET" if args.rs
-                           else "HYPERMNESIC_AS_CLIENT_SECRET")
-    out = Path(args.secret_out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(f"{var}={secret}\n", encoding="utf-8")   # the ONLY place the secret lands
-    out.chmod(0o600)
-    _print_json({"enrolled": args.client_id, "is_rs": args.rs, "scopes": args.scope or [],
-                 "secret_written_to": str(out), "env_var": var,
-                 "note": "secret is in the owner-only env file only; never committed or echoed"})
-    return 0
-
-
 def _cmd_serve_cloud(args) -> int:
     """Run the PUBLIC cloud OAuth MCP (ChatGPT/Claude mobile lane): the SDK authorization_code
     + DCR + PKCE AS + the operator-authenticated /consent gate + a write-enabled serve. Exposed
@@ -400,6 +359,32 @@ def _cmd_serve_cloud(args) -> int:
         print(f"serve-cloud failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
         return 1
     srv.run(transport="streamable-http")
+    return 0
+
+
+def _cmd_setup(args) -> int:
+    """`hypermnesic setup`: one idempotent command to bring the unified public OAuth endpoint
+    online — render + start the cloud service, persist the operator consent secret, configure the
+    Tailscale funnel (MCP path + discovery well-knowns), verify the real HTTPS discovery chain, and
+    print the URL + login instructions. Fail-closed: any failure leaves no partial state."""
+    from hypermnesic import install
+
+    try:
+        res = install.setup(
+            Path(args.repo), public_url=args.public_url, resource=args.resource,
+            host=args.host, port=args.port, path=args.path,
+            env_file=(Path(args.env_file) if args.env_file else None),
+            allowlist=args.allowlist, token_ttl=args.token_ttl)
+    except (install.InstallError, FileNotFoundError) as exc:
+        print(f"setup failed: {exc}", file=sys.stderr)   # fail loud; nothing half-provisioned
+        return 1
+    if args.json:
+        _print_json(res)
+    else:
+        print(f"hypermnesic unified endpoint live: {res['public_url']}")
+        print(f"  service: {res['service']}  (consent secret: {res['env_file']})")
+        for step in res.get("next_steps", []):
+            print(f"  next: {step}")
     return 0
 
 
@@ -549,33 +534,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_install.add_argument("--json", action="store_true")
     p_install.set_defaults(func=_cmd_install)
 
-    p_authsrv = sub.add_parser("serve-auth",
-                               help="run the tailnet-internal OAuth2 Authorization Server (U12)")
-    p_authsrv.add_argument("--host", required=True, help="tailnet/loopback IP (not 0.0.0.0)")
-    p_authsrv.add_argument("--port", type=int, default=8849)
-    p_authsrv.add_argument("--public-url", required=True, help="the AS issuer URL (RFC 8414)")
-    p_authsrv.add_argument("--resource", action="append", default=None, metavar="URL",
-                           help="repeatable allowed RFC 8707 resource (the RS audience)")
-    p_authsrv.add_argument("--state", required=True, help="AS state file (clients + tokens)")
-    p_authsrv.add_argument("--token-ttl", type=int, default=3600,
-                           help="access-token lifetime ceiling (seconds)")
-    p_authsrv.set_defaults(func=_cmd_serve_auth)
-
-    p_addcli = sub.add_parser("auth-add-client",
-                              help="enroll a static AS client (secret → owner-only env file)")
-    p_addcli.add_argument("--state", required=True, help="AS state file to enroll into")
-    p_addcli.add_argument("--client-id", required=True)
-    p_addcli.add_argument("--scope", action="append", default=None, metavar="SCOPE",
-                          help="repeatable granted scope (e.g. write)")
-    p_addcli.add_argument("--resource", action="append", default=None, metavar="URL",
-                          help="allowed resource(s) for the AS (kept consistent with serve-auth)")
-    p_addcli.add_argument("--rs", action="store_true",
-                          help="this is the Resource Server's introspection client")
-    p_addcli.add_argument("--secret-out", required=True,
-                          help="owner-only env file the generated secret is written to")
-    p_addcli.add_argument("--env-var", default=None, help="env var name to write the secret under")
-    p_addcli.set_defaults(func=_cmd_auth_add_client)
-
     p_cloud = sub.add_parser("serve-cloud",
                              help="run the PUBLIC cloud OAuth MCP (ChatGPT/Claude mobile lane)")
     p_cloud.add_argument("--index-db", required=True, help="path to the index .db")
@@ -593,6 +551,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_cloud.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
                          help="writable path prefix (default: the engine allowlist)")
     p_cloud.set_defaults(func=_cmd_serve_cloud)
+
+    p_setup = sub.add_parser("setup",
+                             help="one-command bring-up of the unified public OAuth MCP endpoint")
+    p_setup.add_argument("repo", help="repo whose index the endpoint serves (engine host)")
+    p_setup.add_argument("--public-url", required=True,
+                         help="the public HTTPS issuer/MCP URL (e.g. https://<host>.ts.net/mcp)")
+    p_setup.add_argument("--resource", required=True,
+                         help="the public MCP resource identifier (RFC 8707 audience); "
+                              "usually the same as --public-url")
+    p_setup.add_argument("--host", default="127.0.0.1",
+                         help="local bind (the Funnel proxies the public hostname to it)")
+    p_setup.add_argument("--port", type=int, default=8850)
+    p_setup.add_argument("--path", default="/mcp")
+    p_setup.add_argument("--env-file", default=None,
+                         help="owner-only env file for the consent secret "
+                              "(default: ~/.config/hypermnesic-cloud/cloud.env)")
+    p_setup.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
+                         help="writable path prefix (default: the full master write surface)")
+    p_setup.add_argument("--token-ttl", type=int, default=3600)
+    p_setup.add_argument("--json", action="store_true")
+    p_setup.set_defaults(func=_cmd_setup)
     return parser
 
 

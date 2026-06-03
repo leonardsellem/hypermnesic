@@ -254,6 +254,117 @@ def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fak
     assert "/consent" in [r.path for r in srv._custom_starlette_routes]       # consent route added
 
 
+def test_cloud_server_trusts_public_host_behind_proxy(make_corpus, fake_embedder):
+    # Regression (live 421): behind the Funnel the forwarded Host is the PUBLIC hostname, not
+    # loopback. FastMCP auto-enables DNS-rebinding protection on a 127.0.0.1 bind with a
+    # loopback-only allowlist, so a proxied /mcp call returns 421 "Invalid Host header".
+    # build_cloud_server must trust the public host (from public_url/resource) so the mobile
+    # connector's calls pass — while protection stays ON (an arbitrary attacker Host is rejected).
+    from urllib.parse import urlparse
+
+    from mcp.server.transport_security import TransportSecurityMiddleware
+
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(
+        db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+        resource=RES, public_url=PUBLIC, approval_token="op-approval-token-24chars-or-more")
+    ts = srv.settings.transport_security
+    assert ts is not None and ts.enable_dns_rebinding_protection is True     # protection stays ON
+    mw = TransportSecurityMiddleware(ts)
+    assert mw._validate_host(urlparse(PUBLIC).netloc) is True       # Funnel Host passes
+    assert mw._validate_host("127.0.0.1:8850") is True              # loopback healthcheck ok
+    assert mw._validate_host("evil.attacker.example") is False      # rebinding still blocked
+
+
+# --- U2: discovery layout on the shared hostname (HTTPS public-origin, honcho-distinct) -------
+
+# the unified lane is scoped under /mcp on the shared hostname (mirrors the cloud lane's /cloud
+# and honcho's /honcho). issuer == resource == the public MCP URL the client points at.
+PUBLIC_U = "https://homelab.taildabf2.ts.net/mcp"
+RES_U = "https://homelab.taildabf2.ts.net/mcp"
+
+
+def _unified(make_corpus, fake_embedder, **kw):
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    return mcp_server.build_cloud_server(
+        db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+        resource=kw.pop("resource", RES_U), public_url=kw.pop("public_url", PUBLIC_U),
+        approval_token="op-approval-token-24chars-or-more", **kw)
+
+
+def test_unified_lane_refuses_bare_ip_or_plain_http_issuer(make_corpus, fake_embedder):
+    # R2: the unified endpoint must advertise an HTTPS public-origin issuer/resource, never a
+    # bare-IP / plain-HTTP one (the reason the separate cloud lane existed at all). Refuse it at
+    # construction — fail loud, no half-open server (mirrors the 0.0.0.0 / no-auth refusals).
+    import pytest
+
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})        # one corpus; the guard fires pre-index
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+
+    def _build(**kw):
+        return mcp_server.build_cloud_server(
+            db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+            resource=kw.get("resource", RES_U), public_url=kw.get("public_url", PUBLIC_U),
+            approval_token="op-approval-token-24chars-or-more")
+
+    for bad in ("http://homelab.taildabf2.ts.net/mcp",        # plain HTTP
+                "https://100.103.0.55:8850/mcp"):              # bare IP literal
+        with pytest.raises(ValueError):
+            _build(public_url=bad)
+        with pytest.raises(ValueError):
+            _build(resource=bad)
+    _build()                                                  # the good HTTPS config still builds
+
+
+def test_unified_lane_advertises_https_public_origin_metadata(make_corpus, fake_embedder):
+    # AS metadata (RFC 8414) + protected-resource metadata (RFC 9728) are all HTTPS public-origin
+    # URLs sharing one netloc — never a bare IP or http:// — and name the correct resource + AS.
+    from urllib.parse import urlparse
+
+    from mcp.server.auth.routes import build_resource_metadata_url
+    from mcp.shared.auth import AnyHttpUrl
+
+    from hypermnesic import auth_cloud
+    p = auth_cloud.CloudAuthProvider(
+        resource=RES_U, public_url=PUBLIC_U, approval_token="op-approval-token-24chars-or-more",
+        scopes_supported=["read", "write"])
+    meta = p.metadata()
+    netloc = urlparse(PUBLIC_U).netloc
+    for url in (meta["issuer"], meta["authorization_endpoint"], meta["token_endpoint"],
+                meta["registration_endpoint"], meta["revocation_endpoint"]):
+        u = urlparse(url)
+        assert u.scheme == "https" and u.netloc == netloc        # HTTPS, shared public origin
+        assert not u.hostname.replace(".", "").isdigit()         # not a bare IPv4 literal
+    # RFC 9728 protected-resource metadata URL (what WWW-Authenticate points at) is HTTPS + names
+    # our resource as the audience and our issuer as the AS.
+    prm = str(build_resource_metadata_url(AnyHttpUrl(RES_U)))
+    assert prm.startswith("https://") and netloc in prm
+    srv = _unified(make_corpus, fake_embedder)
+    assert str(srv.settings.auth.resource_server_url).rstrip("/") == RES_U.rstrip("/")
+    assert str(srv.settings.auth.issuer_url).rstrip("/") == PUBLIC_U.rstrip("/")
+
+
+def test_unified_discovery_path_is_hypermnesic_scoped_distinct_from_honcho():
+    # AE5: hypermnesic's protected-resource metadata path is scoped to its own segment (/mcp) and
+    # is distinct from honcho's (/honcho) — the two co-tenants never share a well-known route.
+    from mcp.server.auth.routes import build_resource_metadata_url
+    from mcp.shared.auth import AnyHttpUrl
+    hm = str(build_resource_metadata_url(AnyHttpUrl(RES_U)))
+    honcho = str(build_resource_metadata_url(
+        AnyHttpUrl("https://homelab.taildabf2.ts.net/honcho")))
+    assert hm.endswith("/oauth-protected-resource/mcp")          # hypermnesic-scoped
+    assert honcho.endswith("/oauth-protected-resource/honcho")   # honcho-scoped
+    assert hm != honcho                                          # no collision
+
+
 def test_consent_render_escapes_client_fields_and_hides_unknown_pending():
     # Critical (XSS): the consent page must HTML-escape attacker-controlled DCR fields, and
     # must NOT reflect an unknown/arbitrary pending id at all (the reflected-XSS sink).
@@ -273,14 +384,99 @@ def test_consent_render_escapes_client_fields_and_hides_unknown_pending():
     assert status2 == 404 and "<script>evil()</script>" not in html2 and "evil()" not in html2
 
 
-def test_cloud_server_defaults_to_tighter_write_zone(make_corpus, fake_embedder):
-    # residual: the public lane defaults writes to a dedicated review zone (captures/), not the
-    # full vault — a cloud write to notes/ is refused.
+def test_consent_form_posts_to_the_public_path_not_root():
+    # Regression (live "Cannot POST /consent"): the consent page is served at <public>/consent
+    # behind a Funnel that strips the /cloud mount, so a ROOT-absolute form action="/consent"
+    # makes the browser POST to the host root (a different app) → 404, and the OAuth grant dies
+    # ("connected, but not all permissions were granted"). The form must POST back to the public
+    # consent endpoint.
+    from hypermnesic import mcp_server
+    p = _provider()                              # public_url == https://homelab.taildabf2.ts.net/cloud
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params(scopes=("read", "write")))).split("pending=")[1]
+    html, status = mcp_server._render_consent(p, pending)
+    assert status == 200
+    assert 'action="https://homelab.taildabf2.ts.net/cloud/consent"' in html  # full public path
+    assert 'action="/consent"' not in html       # the root-absolute bug is gone
+
+
+def test_consent_csp_allows_the_oauth_client_redirect_origin():
+    # Regression (live "first Approve does nothing; second says expired"): CSP `form-action`
+    # applies to a form submission's REDIRECT targets too, so a bare `form-action 'self'` silently
+    # blocks the post-consent 302 to the OAuth client's cross-origin callback — the grant is
+    # consumed server-side but the browser never navigates, so the app never receives the code and
+    # the retry hits an already-consumed pending. The consent page's CSP must allow the client's
+    # registered redirect origin (in addition to 'self').
+    from hypermnesic import mcp_server
+    csp = mcp_server._consent_headers("https://chatgpt.com/connector/oauth/abc")["Content-Security-Policy"]
+    assert "form-action 'self' https://chatgpt.com" in csp     # the client origin is allowed
+    assert "frame-ancestors 'none'" in csp                     # clickjacking protection intact
+    assert "default-src 'none'" in csp                         # no-script baseline intact
+    # no redirect_uri (e.g. the unknown-pending error page, which has no form) → just 'self'
+    csp0 = mcp_server._consent_headers("")["Content-Security-Policy"]
+    assert "form-action 'self';" in csp0 and "https://" not in csp0
+
+
+def _cloud_call_as(srv, scopes, name, args):
+    """Invoke a tool on the unified cloud server under an authenticated principal carrying
+    ``scopes`` (mirrors the HTTP auth middleware setting the access-token context)."""
     import asyncio as _aio
 
     from mcp.server.auth.middleware.auth_context import auth_context_var
     from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
     from mcp.server.auth.provider import AccessToken
+
+    var = auth_context_var.set(AuthenticatedUser(AccessToken(
+        token="t", client_id="c", scopes=list(scopes), resource=RES, claims={"aud": RES})))
+    try:
+        out = _aio.run(srv.call_tool(name, args))
+        return out[1] if isinstance(out, tuple) else json.loads(out[0].text)
+    finally:
+        auth_context_var.reset(var)
+
+
+def test_cloud_server_defaults_to_write_anywhere_under_guards(make_corpus, fake_embedder):
+    # KD3/KD5 (unified lane): the promoted public endpoint defaults writes to the full master
+    # surface (DEFAULT_WRITE_ALLOWLIST), not the cloud lane's old captures/-only review zone.
+    # A write-scoped principal may commit to a non-captures/ path (e.g. notes/) bounded only by
+    # commit_note's existing guards. (Covers AE2 write half.)
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more")
+    ok = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                        {"path": "notes/x.md", "body": "# x\n\nbody.\n"})
+    assert ok["committed"] is True                                 # notes/ now in the default zone
+
+
+def test_cloud_server_read_scoped_principal_is_denied_commit_note(make_corpus, fake_embedder):
+    # AE2 read half / V14: a principal who only completed read consent reaches commit_note (the
+    # SDK applies one required-scopes list to all tools) but is refused by the per-tool write-scope
+    # guard before any write — read and write clients share the one endpoint safely.
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more")
+    refused = _cloud_call_as(srv, ["read"], "commit_note",
+                             {"path": "notes/x.md", "body": "# x\n\nbody.\n"})
+    assert refused["committed"] is False
+    assert "insufficient_scope" in refused["refused"]              # write scope required
+
+
+def test_write_anywhere_still_refuses_protected_paths_inside_allowed_dirs(make_corpus,
+                                                                          fake_embedder):
+    # U6 (write-anywhere security re-review): widening the default allowlist to the master surface
+    # must NOT widen access to protected paths. The protected-path guard is allowlist-INDEPENDENT,
+    # so a write-scoped principal is still refused an agent-instruction file (or .git/CI/traversal)
+    # even when it is nested inside a now-allowed dir like notes/. This is the property that makes
+    # write-anywhere safe — the blast radius is the note zones, never the protected classes.
+    import subprocess
 
     from hypermnesic import index, mcp_server
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
@@ -289,17 +485,45 @@ def test_cloud_server_defaults_to_tighter_write_zone(make_corpus, fake_embedder)
     srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
                                         resource=RES, public_url=PUBLIC,
                                         approval_token="op-approval-token-24chars-or-more")
+    head = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                          capture_output=True, text=True).stdout.strip()
+    for protected in ("notes/AGENTS.md", "sources/.github/x.md"):     # inside the widened allowlist
+        out = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                             {"path": protected, "body": "# x\n\nbody.\n"})
+        assert out["committed"] is False and out["refused"]           # protected-path guard holds
+    after = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                           capture_output=True, text=True).stdout.strip()
+    assert head == after                                              # nothing committed
 
-    def _call(name, args):
-        out = _aio.run(srv.call_tool(name, args))
-        return out[1] if isinstance(out, tuple) else json.loads(out[0].text)
 
-    var = auth_context_var.set(AuthenticatedUser(AccessToken(
-        token="t", client_id="c", scopes=["read", "write"], resource=RES, claims={"aud": RES})))
-    try:
-        refused = _call("commit_note", {"path": "notes/x.md", "body": "# x\n\nbody.\n"})
-        ok = _call("commit_note", {"path": "captures/x.md", "body": "# x\n\nbody.\n"})
-    finally:
-        auth_context_var.reset(var)
-    assert refused["committed"] is False and refused["refused"]    # notes/ outside the cloud zone
-    assert ok["committed"] is True                                 # captures/ = cloud zone
+def test_cloud_server_read_scoped_principal_reaches_read_tools(make_corpus, fake_embedder):
+    # G1: on the one unified endpoint a read-scoped principal reaches the read tools (the read
+    # half of the split that lets read + write clients share the endpoint).
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha is here.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more")
+    out = _cloud_call_as(srv, ["read"], "search", {"query": "alpha"})
+    assert "hits" in out and out["query"] == "alpha"               # read tool reached on read scope
+
+
+def test_cloud_server_honors_an_explicit_narrower_allowlist(make_corpus, fake_embedder):
+    # The default widens to the master surface, but setup/CLI can still narrow it: an explicit
+    # captures/-only allowlist refuses a notes/ write even for a write-scoped principal.
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more",
+                                        write_allowlist=["captures/"])
+    refused = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                             {"path": "notes/x.md", "body": "# x\n\nbody.\n"})
+    ok = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                        {"path": "captures/x.md", "body": "# x\n\nbody.\n"})
+    assert refused["committed"] is False and refused["refused"]    # notes/ outside the narrow zone
+    assert ok["committed"] is True                                 # captures/ honored

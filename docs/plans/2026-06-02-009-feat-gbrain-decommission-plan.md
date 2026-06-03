@@ -899,6 +899,15 @@ step; the revert path is proven to restore the gbrain lane for this job alone.
 
 ### U8. Atomic reach + auth repoint (the preserved hostname → hypermnesic)
 
+> **SUPERSEDED (2026-06-03) by the unified-OAuth-endpoint plan**
+> (`docs/plans/2026-06-03-001-feat-unified-oauth-endpoint-and-setup-plan.md`, its U8). The reach +
+> auth repoint of `homelab.taildabf2.ts.net/mcp` is now owned by that plan: `/mcp` points at the
+> single public OAuth endpoint (read+write by scope, write-anywhere-under-guards), not the tailnet
+> `:8848` backend this unit named. The `inet gbrain_watch` nft counter (this unit's zero-traffic
+> signal) is preserved across that cutover. Do **not** execute this unit's repoint — it is replaced.
+> Resume the decommission at **U13** (the consumer + docs sweep) against the unified endpoint per the
+> CLI-for-engine-host-local / MCP-for-remote split. See the unified plan's U9 handoff.
+
 **Goal:** Repoint `homelab.taildabf2.ts.net/mcp` from gbrain to the OAuth2-authenticated
 hypermnesic backend in one atomic, reversible flip — and start observing gbrain so a missed
 consumer becomes visible (zero-traffic proof), not silent.

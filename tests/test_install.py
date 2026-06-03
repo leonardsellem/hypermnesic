@@ -319,3 +319,153 @@ def test_rendered_unit_execstart_is_absolute_existing_path(make_corpus, monkeypa
     exe = execstart[len("ExecStart="):].split()[0]
     assert Path(exe).is_absolute(), f"ExecStart exe not absolute: {exe!r}"
     assert Path(exe).exists(), f"ExecStart exe missing: {exe!r}"
+
+
+# --- U3: `hypermnesic setup` — one-command bring-up of the unified endpoint ---
+#
+# These assert the offline, deterministic orchestration only: the rendered cloud unit,
+# consent-secret persistence + idempotence, the funnel-route computation, the fail-closed
+# Tailscale/discovery checks. The privileged/network side effects (funnel config, systemctl,
+# the real HTTPS discovery curl) are isolated behind the injectable `ops` seam, exercised live
+# in U8 — never from a unit test (mirrors install's manual-steps discipline).
+
+PUBLIC_U = "https://homelab.taildabf2.ts.net/mcp"
+RES_U = "https://homelab.taildabf2.ts.net/mcp"
+
+
+class _FakeSetupOps:
+    """Records the privileged/network calls `setup` would make, so the orchestration is
+    unit-testable without Tailscale / systemd / the network."""
+
+    def __init__(self, ready=True, verify_ok=True):
+        self._ready = ready
+        self._verify_ok = verify_ok
+        self.funnel_calls: list[tuple[str, str]] = []
+        self.service_calls: list[tuple[str, str]] = []
+        self.verify_calls: list[tuple[str, str]] = []
+
+    def tailscale_ready(self) -> bool:
+        return self._ready
+
+    def apply_funnel_route(self, mount: str, target: str) -> None:
+        self.funnel_calls.append((mount, target))
+
+    def install_and_start_service(self, unit_path, name: str) -> None:
+        self.service_calls.append((str(unit_path), name))
+
+    def verify_discovery(self, public_url: str, resource: str) -> dict:
+        self.verify_calls.append((public_url, resource))
+        return {"ok": self._verify_ok,
+                "checks": {"protected_resource": self._verify_ok,
+                           "as_metadata": self._verify_ok, "unauth_401": self._verify_ok}}
+
+
+def _setup(repo, env_file, ops, **kw):
+    return install.setup(
+        repo, public_url=kw.pop("public_url", PUBLIC_U),
+        resource=kw.pop("resource", RES_U), env_file=env_file, ops=ops, **kw)
+
+
+def test_setup_renders_secret_free_cloud_unit(make_corpus, monkeypatch, tmp_path):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ops = _FakeSetupOps()
+    res = _setup(repo, tmp_path / "cloud.env", ops)
+    unit = Path(res["unit_path"]).read_text()
+    assert "serve-cloud" in unit                                  # the unified public lane
+    assert PUBLIC_U in unit and RES_U in unit
+    assert "127.0.0.1" in unit                                    # loopback bind behind the Funnel
+    # the consent/approval token is referenced by EnvironmentFile, never inlined (V9)
+    assert "EnvironmentFile" in unit and "HYPERMNESIC_CLOUD_APPROVAL_TOKEN=" not in unit
+    assert install.CLOUD_APPROVAL_ENV not in unit or "=" not in unit.split(
+        install.CLOUD_APPROVAL_ENV)[1][:1]
+
+
+def test_setup_generates_consent_secret_chmod_600_when_absent(make_corpus, monkeypatch, tmp_path):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    env_file = tmp_path / "sub" / "cloud.env"
+    ops = _FakeSetupOps()
+    res = _setup(repo, env_file, ops)
+    assert res["secret_generated"] is True
+    assert env_file.exists()
+    assert (env_file.stat().st_mode & 0o777) == 0o600            # owner-only
+    body = env_file.read_text()
+    line = next(ln for ln in body.splitlines() if ln.startswith(install.CLOUD_APPROVAL_ENV + "="))
+    value = line.split("=", 1)[1]
+    from hypermnesic import auth_cloud
+    assert len(value) >= auth_cloud.MIN_APPROVAL_TOKEN_LEN       # entropy floor met
+
+
+def test_setup_is_idempotent_reuses_valid_secret(make_corpus, monkeypatch, tmp_path):
+    # AE4: two `setup` runs converge to one service, one still-valid consent secret (NOT
+    # regenerated), one funnel route set — the second run reports convergence, not a duplicate.
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    env_file = tmp_path / "cloud.env"
+    res1 = _setup(repo, env_file, _FakeSetupOps())
+    secret1 = env_file.read_text()
+    res2 = _setup(repo, env_file, _FakeSetupOps())
+    assert res1["secret_generated"] is True and res2["secret_generated"] is False
+    assert env_file.read_text() == secret1                       # byte-stable; not regenerated
+    assert res2["converged"] is True
+    # the route set is declarative — re-running set-path on the same mounts is a no-op convergence
+    assert res1["funnel_routes"] == res2["funnel_routes"]
+
+
+def test_setup_regenerates_a_weak_existing_secret(make_corpus, monkeypatch, tmp_path):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    env_file = tmp_path / "cloud.env"
+    env_file.write_text(f"{install.CLOUD_APPROVAL_ENV}=short\n")  # below the entropy floor
+    env_file.chmod(0o600)
+    res = _setup(repo, env_file, _FakeSetupOps())
+    assert res["secret_generated"] is True                       # weak secret replaced
+    from hypermnesic import auth_cloud
+    value = env_file.read_text().split("=", 1)[1].strip()
+    assert len(value) >= auth_cloud.MIN_APPROVAL_TOKEN_LEN
+
+
+def test_setup_fails_actionably_when_tailscale_not_ready(make_corpus, monkeypatch, tmp_path):
+    # R14: setup assumes Tailscale is installed + authenticated; if not it fails with an
+    # actionable message and leaves NO partial funnel/service state.
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ops = _FakeSetupOps(ready=False)
+    with pytest.raises(install.InstallError) as exc:
+        _setup(repo, tmp_path / "cloud.env", ops)
+    assert "tailscale" in str(exc.value).lower()
+    assert ops.funnel_calls == [] and ops.service_calls == []    # no partial state
+
+
+def test_setup_fails_when_discovery_does_not_resolve(make_corpus, monkeypatch, tmp_path):
+    # KTD6: parity = real discovery output, not an exit code. If a well-known does not resolve
+    # to hypermnesic, setup fails (guards the silent-404 RCA that 404'd the first cloud deploy).
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ops = _FakeSetupOps(verify_ok=False)
+    with pytest.raises(install.InstallError) as exc:
+        _setup(repo, tmp_path / "cloud.env", ops)
+    assert "discover" in str(exc.value).lower() or "well-known" in str(exc.value).lower()
+
+
+def test_setup_funnel_routes_cover_mcp_and_root_wellknowns(make_corpus, monkeypatch, tmp_path):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ops = _FakeSetupOps()
+    res = _setup(repo, tmp_path / "cloud.env", ops)
+    mounts = [m for m, _ in res["funnel_routes"]]
+    assert "/mcp" in mounts                                       # the MCP endpoint mount
+    # the two root well-knowns the discovery chain resolves at (the gap that 404'd the cloud deploy)
+    assert any("/.well-known/oauth-protected-resource" in m for m in mounts)
+    assert any("/.well-known/oauth-authorization-server" in m for m in mounts)
+    assert ops.funnel_calls == res["funnel_routes"]              # every route applied via ops
+
+
+def test_setup_uses_tailscale_funnel_never_serve(tmp_path):
+    # Live trap: `tailscale serve --set-path` silently clears AllowFunnel[:443] and drops /cloud.
+    # The real funnel-command builder must use `funnel`, never `serve`.
+    cmd = install._tailscale_funnel_cmd("/mcp", "http://127.0.0.1:8850")
+    assert cmd[:2] == ["tailscale", "funnel"]
+    assert "serve" not in cmd
+    assert "--set-path" in cmd and "/mcp" in cmd
