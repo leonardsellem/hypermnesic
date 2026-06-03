@@ -71,7 +71,22 @@ connectors (in-memory grants wiped on restart), U13 Mac consumer sweep + evidenc
 worktree services reversible by `systemctl --user stop`; cloud public reach off via
 `sudo tailscale funnel --https=443 --set-path /cloud off`; gbrain is fully alive (every consumer flips back).
 
-## RESUME HERE
-Finish **U8** (instrument gbrain → verify no-gap conditions → flip `/mcp`→`:8851`, reversible), then
-**U13** (homelab sweep + Mac evidence), then run **Gate B** and HALT for operator approval. Also verify
-the U7 content-distill Gate-B item (next scheduled run uses hypermnesic; restart the gateway if it cached).
+## ⚠ U8 SUPERSEDED (2026-06-03) — reach/auth now owned by the unified-OAuth plan
+The decommission's **U8 (reach + auth repoint) is superseded** by
+`docs/plans/2026-06-03-001-feat-unified-oauth-endpoint-and-setup-plan.md` (branch
+`claude/condescending-sutherland-4d9b29`, commits 91fe0e1→3f4fde9). That plan collapses the four
+hypermnesic serving lanes into **two** — one public OAuth `/mcp` endpoint (read+write by scope,
+write-anywhere, generalized from the `:8850` cloud server) + the retained `:8848` read companion —
+and its own U8 does the `/mcp` cutover (Option A: existing `/cloud` connectors re-auth once). The
+`:8849`/`:8851`/token lanes are retired there; the `inet gbrain_watch` counter is preserved. That
+plan is **paused at its G4** (live funnel flip) pending the operator's merge of the branch to `main`
+(the unified endpoint needs that engine) — PR opened.
+
+## RESUME HERE (after the unified cutover lands)
+Do **not** run the old U8 repoint. Once the unified `/mcp` endpoint is live (unified plan G4):
+resume the decommission at **U13** (homelab consumer + docs sweep) against the **unified endpoint**,
+per CLI-for-engine-host-local / MCP-for-remote — CLI for the homelab crons/hooks/agents on the
+engine host; the unified `/mcp` endpoint for remote apps. Then **Gate B** → HALT for operator
+approval. Still pending regardless: verify the U7 content-distill Gate-B item (next scheduled run
+uses hypermnesic; restart the Hermes gateway if it cached the old prompt). gbrain strangler rollback
+stays intact until Gate D.
