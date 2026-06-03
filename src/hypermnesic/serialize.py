@@ -26,15 +26,32 @@ from pathlib import Path, PurePosixPath
 # Agent-instruction files (privilege escalation if writable) — matched anywhere.
 _INSTRUCTION_FILES = {"claude.md", "agents.md", "gemini.md", ".cursorrules",
                       "copilot-instructions.md"}
-# Directory components that are off-limits anywhere in the path.
+# Directory components that are off-limits anywhere in the path. Matched case-INSENSITIVELY
+# (U5/Phase B): on a case-insensitive FS ``Scripts/`` lands in the protected ``scripts/`` dir on
+# disk, so a case-sensitive match would mis-report it writable (inert under the old allowlist,
+# reachable under the blocklist). Keep the set lowercase; compare ``part.lower()``.
 _PROTECTED_DIRS = {".git", ".github", ".obsidian", ".claude", ".codex", "views",
                    "scripts", "bin", "hooks", "skills", ".hypermnesic"}
 _NEVER_FILES = {".gitignore", ".gitattributes", ".gitmodules"}
+# Governance / code-exec / CI / build / credential file CLASSES (U5/Phase B fence). The blocklist
+# default removed the 4-prefix allowlist that blocked these only BY EXCLUSION; this positive
+# content-surface fence (operator decision: a governance-extension denylist) refuses them directly
+# — caller-independent, like the other rules — so ``commit_note``'s no-``.md``-suffix freedom can
+# never land a Dockerfile / CI yaml / lockfile / build config / credential file. Matched
+# case-insensitively. The exact list is enumerated + signed off in the blocklist security review.
+_GOVERNANCE_FILES = {"dockerfile", "makefile", "containerfile", "setup.py", "setup.cfg",
+                     "package.json", "package-lock.json", ".npmrc", ".netrc"}
+_GOVERNANCE_EXTS = (".yml", ".yaml", ".lock", ".toml")
 
 
 class WriteGuardError(Exception):
     """Raised when a write targets a protected path, escapes the repo, or is
     outside the per-repo allowlist."""
+
+
+# The single allowlist-miss reason. A sentinel so ``check`` can re-derive its exact
+# (path-interpolated) message while the predicate stays path-clean — see writable_reason.
+_NOT_IN_ALLOWLIST = "not in writable allowlist"
 
 
 def protected_reason(rel_path: str) -> str | None:
@@ -48,20 +65,53 @@ def protected_reason(rel_path: str) -> str | None:
     if p.name.lower() in _INSTRUCTION_FILES:
         return f"agent-instruction file ({p.name})"
     for part in parts[:-1]:
-        if part in _PROTECTED_DIRS:
+        if part.lower() in _PROTECTED_DIRS:          # case-folded (U5): Scripts/ == scripts/
             return f"protected dir ({part}/)"
-    if parts[0] in _PROTECTED_DIRS:
+    if parts[0].lower() in _PROTECTED_DIRS:
         return f"protected dir ({parts[0]}/)"
     if "workflows" in parts and ".github" in parts:
         return "CI workflow dir"
     if p.name.startswith("install-git-hooks"):
         return "git-hook installer"
+    # governance / code-exec / CI / build / credential file class (U5/Phase B fence) — refused
+    # everywhere, AFTER the dir checks so a protected-dir reason wins for e.g. .github/ci.yml.
+    name_lower = p.name.lower()
+    if (name_lower in _GOVERNANCE_FILES or name_lower == ".env"
+            or name_lower.startswith(".env.")):
+        return f"governance file ({p.name})"
+    if name_lower.endswith(_GOVERNANCE_EXTS):
+        return f"governance file class ({p.suffix})"
+    return None
+
+
+def writable_reason(rel_path: str, *, allowlist: list[str] | None = None) -> str | None:
+    """Why a write to ``rel_path`` would be refused, or None if it is writable.
+
+    The single source of truth for the "is this path writable" decision (U1): the
+    protected-path class refusal (allowlist-INDEPENDENT — the real bound) first, then
+    the optional allowlist narrowing. ``allowlist=None`` is blocklist mode (protected
+    classes are the sole bound). Pure and path-clean: the returned reason never
+    interpolates ``rel_path``, so the folder classifier (U2) can surface it verbatim
+    and ``check`` (which DOES interpolate) re-derives its message from the sentinel.
+    """
+    reason = protected_reason(rel_path)
+    if reason:
+        return reason
+    if allowlist is not None and not any(
+            rel_path == a or rel_path.startswith(a.rstrip("/") + "/") for a in allowlist):
+        return _NOT_IN_ALLOWLIST
     return None
 
 
 def check(repo, rel_path: str, *, allowlist: list[str] | None = None) -> str:
     """Validate a write to ``rel_path`` within ``repo``. Return the normalized
-    repo-relative posix path, or raise WriteGuardError."""
+    repo-relative posix path, or raise WriteGuardError.
+
+    The within-repo resolution + absolute/traversal checks stay HERE (they need repo
+    context, V6); the path-class + allowlist decision is delegated to
+    :func:`writable_reason` so discovery and the write path share one rule. Messages
+    are preserved exactly (protected-path vs allowlist), re-derived from the reason.
+    """
     repo_root = Path(repo).resolve()
     if PurePosixPath(rel_path).is_absolute() or Path(rel_path).is_absolute():
         raise WriteGuardError(f"absolute path not allowed: {rel_path}")
@@ -71,13 +121,11 @@ def check(repo, rel_path: str, *, allowlist: list[str] | None = None) -> str:
     except ValueError:
         raise WriteGuardError(f"path escapes repo root: {rel_path}") from None
     rel_posix = rel.as_posix()
-    reason = protected_reason(rel_posix)
+    reason = writable_reason(rel_posix, allowlist=allowlist)
+    if reason == _NOT_IN_ALLOWLIST:
+        raise WriteGuardError(f"path {rel_posix!r} not in writable allowlist")
     if reason:
         raise WriteGuardError(f"refused protected path {rel_posix!r}: {reason}")
-    if allowlist is not None:
-        if not any(rel_posix == a or rel_posix.startswith(a.rstrip("/") + "/")
-                   for a in allowlist):
-            raise WriteGuardError(f"path {rel_posix!r} not in writable allowlist")
     return rel_posix
 
 

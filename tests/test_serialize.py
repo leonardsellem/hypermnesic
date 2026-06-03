@@ -62,6 +62,93 @@ def test_rule_generalizes_to_unseen_repo(make_corpus):
             serialize.check(repo, bad)
 
 
+# --- U1: the extracted writable_reason predicate (single-sourced from check) ---
+# The folder-discovery tool (U2/U3) classifies a folder by probing a file UNDER it
+# with this predicate, so discovery can never disagree with what commit_note accepts.
+# check() now wraps this predicate; these pin the predicate independently.
+
+
+@pytest.mark.parametrize("ok", [
+    "notes/a.md",
+    "projects/x/y.md",          # blocklist permits the operator's content folders today
+    "people/bob.md",
+    "meetings/2026/standup.md",
+])
+def test_writable_reason_writable_classes_are_none(ok):
+    assert serialize.writable_reason(ok, allowlist=None) is None
+
+
+def test_writable_reason_protected_classes_return_reason():
+    # top-level protected dir, instruction file, and the NESTED-protected parity case
+    assert "skills/" in serialize.writable_reason("skills/s.md", allowlist=None)
+    assert serialize.writable_reason("skills/s.md", allowlist=None) is not None
+    assert "instruction" in serialize.writable_reason("notes/AGENTS.md", allowlist=None).lower()
+    # nested protected — projects/scripts/ is refused even though projects/ is writable:
+    # this is the parity-lie guard (commit_note refuses projects/scripts/n.md too)
+    nested = serialize.writable_reason("projects/scripts/n.md", allowlist=None)
+    assert nested is not None and "scripts/" in nested
+
+
+def test_governance_fence_refuses_code_exec_and_credential_classes(make_corpus):
+    # U5 / Phase B fence (operator decision: governance-extension denylist). The blocklist removed
+    # the 4-prefix allowlist that blocked these only BY EXCLUSION; protected_reason now refuses the
+    # code-exec / CI / build / credential classes directly, so commit_note's no-.md-suffix freedom
+    # cannot land a Dockerfile / CI yaml / lockfile / .env. (Supersedes the U1 pre-decision
+    # baseline, which pinned these as writable — relocate-don't-flip per the byte-preservation
+    # learning: the invariant moves from "documented gap" to "fenced".)
+    for governance in ("Dockerfile", "projects/Dockerfile", "Makefile", "Containerfile",
+                       ".gitlab-ci.yml", "projects/acme/ci.yml", ".pre-commit-config.yaml",
+                       "uv.lock", "package-lock.json", "pyproject.toml", "setup.py",
+                       ".env", "projects/.env", ".env.local", ".npmrc", ".netrc"):
+        assert serialize.writable_reason(governance, allowlist=None) is not None, governance
+    # case-insensitive filename match (Dockerfile on a case-insensitive FS)
+    assert serialize.writable_reason("DOCKERFILE", allowlist=None) is not None
+    assert serialize.writable_reason("dockerfile", allowlist=None) is not None
+    # allowlist-independent: a governance file inside an allowed prefix is still refused
+    assert serialize.writable_reason("notes/Dockerfile", allowlist=["notes/"]) is not None
+    # and check() raises for them too (the write path, not just the predicate)
+    repo = make_corpus({"a.md": "# A\n\nb\n"})
+    with pytest.raises(serialize.WriteGuardError):
+        serialize.check(repo, "Dockerfile")
+
+
+def test_governance_fence_leaves_content_classes_writable():
+    # The fence targets code-exec / CI / build / credential CLASSES — ordinary content stays
+    # writable (the blocklist's whole point: notes land anywhere non-protected). Note node_modules/
+    # files stay writable at the predicate level but are never DISCOVERED (the index skips them).
+    for ok in ("notes/a.md", "projects/x/y.md", "people/bob.md", "notes/diagram.canvas",
+               "sources/data.json", "captures/log.txt", "node_modules/x.md"):
+        assert serialize.writable_reason(ok, allowlist=None) is None, ok
+
+
+def test_protected_dir_match_is_case_insensitive():
+    # U5 / Phase B: on a case-insensitive FS (operator's macOS) Scripts/ lands in the protected
+    # scripts/ dir on disk — the dir-class refusal is now case-folded so it is refused, not
+    # mis-reported writable (inert under the old allowlist, reachable under the blocklist).
+    for bad in ("Scripts/evil.sh", "BIN/run", "projects/Scripts/x.md", ".GITHUB/workflows/ci.yml"):
+        assert serialize.writable_reason(bad, allowlist=None) is not None, bad
+
+
+def test_writable_reason_allowlist_mode():
+    assert serialize.writable_reason("notes/a.md", allowlist=["notes/"]) is None
+    outside = serialize.writable_reason("concepts/a.md", allowlist=["notes/"])
+    assert outside == "not in writable allowlist"
+    # protected-path refusal precedes the allowlist check (a protected dir inside an
+    # allowed prefix is still refused, with the protected reason — not the allowlist one)
+    assert "protected dir" in serialize.writable_reason("notes/.github/ci.yml",
+                                                        allowlist=["notes/"])
+
+
+def test_check_wraps_writable_reason_behavior_preserving(make_corpus):
+    # check() raises iff writable_reason is non-None, preserving its two distinct messages.
+    repo = make_corpus({"a.md": "# A\n\nb\n"})
+    assert serialize.check(repo, "notes/a.md") == "notes/a.md"          # writable → returns path
+    with pytest.raises(serialize.WriteGuardError, match="protected path"):
+        serialize.check(repo, "skills/s.md")                            # protected message kept
+    with pytest.raises(serialize.WriteGuardError, match="not in writable allowlist"):
+        serialize.check(repo, "concepts/a.md", allowlist=["notes/"])    # allowlist message kept
+
+
 # --- serialization (single-indexer lock, path locks, preflight) ---
 
 def test_index_write_lock_serializes(tmp_path):

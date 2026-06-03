@@ -189,6 +189,70 @@ def _verdict(d_recall: float, d_mrr: float, band: float,
     return "no_decision"          # within the near-tie band → not-passing
 
 
+# --- U6: entity-resolution parity + freshness (the content-distill cutover gate) --------
+def resolve_parity(graph, cases: list[dict],
+                   gbrain_resolved: dict[str, str | None] | None = None) -> dict:
+    """Score entity-resolution parity for content-distill's ``gbrain search "<name>"`` → slug
+    pattern (U6/AE4). Each case ``{"name", "expected"}`` — ``expected`` is the correct page slug
+    or ``None`` for an entity with no page. hypermnesic resolves via ``graph.resolve`` (gbrain's
+    ``get`` role); strip ``.md`` to the wikilink slug. An absent entity MUST resolve to ``None``
+    (never a false wikilink target). Compared to a frozen gbrain baseline (``name`` → slug/None).
+    ``resolution_ok`` (gates U7) is true only when hypermnesic is **≥ gbrain** on accuracy AND
+    invents **zero** false wikilink targets.
+    """
+    gb = gbrain_resolved or {}
+    per, hyp_correct, gb_correct, false_pos = [], 0, 0, 0
+    for c in cases:
+        name, expected = c["name"], c.get("expected")
+        raw = graph.resolve(name)
+        hyp_slug = raw[:-3] if raw and raw.endswith(".md") else raw
+        gb_slug = gb.get(name)
+        hyp_ok, gb_ok = hyp_slug == expected, gb_slug == expected
+        is_fp = expected is None and hyp_slug is not None       # invented a wikilink target
+        hyp_correct += hyp_ok
+        gb_correct += gb_ok
+        false_pos += is_fp
+        per.append({"name": name, "expected": expected, "hyp": hyp_slug, "gbrain": gb_slug,
+                    "hyp_ok": hyp_ok, "gbrain_ok": gb_ok, "false_positive": is_fp})
+    n = len(cases) or 1
+    hyp_acc, gb_acc = hyp_correct / n, gb_correct / n
+    return {"n": len(cases), "hyp_accuracy": hyp_acc, "gbrain_accuracy": gb_acc,
+            "false_positives": false_pos,
+            "resolution_ok": hyp_acc >= gb_acc and false_pos == 0, "per_case": per}
+
+
+def freshness_recall(repo, idx, embedder, *, query: str, expected_path: str,
+                     max_delta_files: int | None = None) -> dict:
+    """The no-index-step freshness U7 bets on (U6/R2/AE1): a just-committed content-distill delta
+    is recall-able via read-time convergence + retrieve, with **no** ``gbrain sync/extract/embed``.
+    The caller commits the delta first; this converges immediately (debounce off — the ``--now``
+    path) and retrieves. An oversized delta (> ``max_delta_files``) is surfaced (manual-reindex
+    signal), not silently missed.
+    """
+    from hypermnesic import converge as _cv
+    cr = _cv.converge(repo, idx, embedder, debounce_seconds=0, max_delta_files=max_delta_files)
+    res = retrieve.search(idx, query, embedder=embedder, k=10)
+    return {"recall_able": expected_path in doc_ranking(res.hits, 10),
+            "oversized_delta": cr.status == "oversized_delta", "replayed": cr.replayed,
+            "manual_reindex_recommended": cr.manual_reindex_recommended, "degraded": res.degraded}
+
+
+def safe_to_cut_over(retrieval: dict, resolve_result: dict, freshness: dict) -> dict:
+    """Combine U6's three signals into the U7 cutover gate (R2/R5). Safe only when retrieval
+    parity is a clean ``pass`` (not fail/no_decision/void), entity resolution is ≥ gbrain with no
+    false wikilink, and a fresh content-distill delta is recall-able without gbrain. Any failing
+    signal blocks the cutover with a reason — the verdict U7 reads before flipping the job.
+    """
+    reasons = []
+    if retrieval.get("verdict") != "pass":
+        reasons.append(f"retrieval parity verdict={retrieval.get('verdict')!r} (need 'pass')")
+    if not resolve_result.get("resolution_ok"):
+        reasons.append("entity resolution below gbrain or invents a false wikilink target")
+    if not freshness.get("recall_able"):
+        reasons.append("a fresh content-distill delta is not recall-able without gbrain")
+    return {"safe_to_cut_over": not reasons, "blocking_reasons": reasons}
+
+
 # --- cli -----------------------------------------------------------------
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="hypermnesic French/English parity harness")

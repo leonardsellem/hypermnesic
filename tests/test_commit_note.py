@@ -136,3 +136,168 @@ def test_frontmatter_edit_preserves_scalar_date(make_corpus, fake_embedder, tmp_
     assert "2026-05-02T" not in text
     assert not r.created and r.new_sha
     idx.close()
+
+
+# --- U11: shared-origin/main coordination (fetch+ff+preflight+push, retry) -----
+
+def _runq(repo, *a):
+    return subprocess.run(["git", "-C", str(repo), *a], capture_output=True, text=True,
+                          check=True)
+
+
+def _with_remote(repo, tmp_path):
+    """Wire a bare `origin` and push `main`, so commit_note's coordination engages."""
+    bare = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "--bare", "-b", "main", str(bare)],
+                   check=True, capture_output=True)
+    _runq(repo, "remote", "add", "origin", str(bare))
+    _runq(repo, "push", "-u", "origin", "main")
+    return bare
+
+
+def _other_clone(bare, tmp_path):
+    """A second checkout of the bare = 'another committer' (the gbrain fleet / Mac)."""
+    other = tmp_path / "other"
+    subprocess.run(["git", "clone", str(bare), str(other)], check=True, capture_output=True)
+    _runq(other, "config", "user.email", "o@o.o")
+    _runq(other, "config", "user.name", "other")
+    return other
+
+
+def _advance_origin(other, rel, body, msg="foreign"):
+    (other / rel).parent.mkdir(parents=True, exist_ok=True)
+    (other / rel).write_text(body, encoding="utf-8")
+    _runq(other, "add", "-A")
+    _runq(other, "commit", "-q", "-m", msg)
+    _runq(other, "push", "origin", "main")
+
+
+def test_coord_write_lands_on_origin_main(make_corpus, fake_embedder, tmp_path):
+    # Covers AE4 (happy): fetch + fast-forward + commit + push; the test origin/main
+    # carries the commit afterward (never a local-only commit that wedges --ff-only).
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    _with_remote(repo, tmp_path)
+    r = cn.commit_note(repo, "sources/canary.md", body="# C\n\nWIDGET body.\n",
+                       summary="canary", idx=idx, log=log, allowlist=["sources/"])
+    assert r.new_sha and not r.noop
+    assert _git(repo, "rev-parse", "origin/main") == r.new_sha   # reached the shared remote
+    assert log.entries()[-1]["new_sha"] == r.new_sha             # audited the pushed sha
+    idx.close()
+
+
+def test_coord_aborts_on_remote_drift(make_corpus, fake_embedder, tmp_path):
+    # Covers AE4 (error): the remote advanced under our base-read → fetch+ff exposes the
+    # drift, preflight(expected_head) aborts; clean tree, no partial commit, no audit.
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    bare = _with_remote(repo, tmp_path)
+    other = _other_clone(bare, tmp_path)
+    _advance_origin(other, "sources/foreign.md", "# F\n\nforeign.\n")   # origin moves ahead
+    n = len(log.entries())
+    with pytest.raises(serialize.HeadDriftError):
+        cn.commit_note(repo, "sources/mine.md", body="# M\n\nmine.\n",
+                       idx=idx, log=log, allowlist=["sources/"])
+    assert _git(repo, "status", "--porcelain") == ""             # tree clean (ff'd, no partial)
+    assert not (repo / "sources/mine.md").exists()               # our write never landed
+    assert len(log.entries()) == n                               # no audit entry
+    idx.close()
+
+
+def test_coord_nonff_exhaustion_aborts_clean(make_corpus, fake_embedder, tmp_path, monkeypatch):
+    # Edge: remote diverged non-ff at push time with a CONFLICTING change → bounded
+    # retry cannot converge → abort cleanly, leaving NO local-ahead commit.
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    bare = _with_remote(repo, tmp_path)
+    other = _other_clone(bare, tmp_path)
+    _advance_origin(other, "sources/canary.md", "# Foreign\n\nDIFFERENT body.\n")
+    # neutralize the pre-commit ff so we commit on a stale base and hit the push race
+    monkeypatch.setattr(cn, "_fetch_and_ff", lambda *a, **k: None)
+    monkeypatch.setattr(cn, "_PUSH_MAX_ATTEMPTS", 2)
+    n = len(log.entries())
+    with pytest.raises(cn.GitCoordinationError):
+        cn.commit_note(repo, "sources/canary.md", body="# Mine\n\nMINE body.\n",
+                       idx=idx, log=log, allowlist=["sources/"])
+    assert _git(repo, "rev-parse", "HEAD") == _git(repo, "rev-parse", "origin/main")  # not ahead
+    assert _git(repo, "status", "--porcelain") == ""
+    assert len(log.entries()) == n                               # no audit on a non-landed write
+    idx.close()
+
+
+def test_coord_push_rejected_raises_refusal_no_audit(make_corpus, fake_embedder, tmp_path):
+    # Error path: a push that fails for a non-ff reason (here a rejecting remote hook,
+    # standing in for auth/network) surfaces as a raised refusal — never a silent
+    # success — and drops the local-ahead commit (no --ff-only wedge), no audit.
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    bare = _with_remote(repo, tmp_path)
+    hook = bare / "hooks" / "pre-receive"
+    hook.write_text("#!/bin/sh\nexit 1\n")
+    hook.chmod(0o755)
+    origin_before = _git(repo, "rev-parse", "origin/main")
+    n = len(log.entries())
+    with pytest.raises(cn.GitCoordinationError):
+        cn.commit_note(repo, "sources/x.md", body="# X\n\nbody.\n",
+                       idx=idx, log=log, allowlist=["sources/"])
+    assert _git(repo, "rev-parse", "HEAD") == origin_before      # local-ahead commit dropped
+    assert _git(repo, "status", "--porcelain") == ""
+    assert len(log.entries()) == n                               # no silent-success audit entry
+    idx.close()
+
+
+def test_coord_two_sequential_writes_both_land(make_corpus, fake_embedder, tmp_path):
+    # Integration: two coordinated writes serialize and BOTH reach origin/main — the
+    # second fetch+ff incorporates the first's push (neither clobbers the other).
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    _with_remote(repo, tmp_path)
+    r1 = cn.commit_note(repo, "sources/a.md", body="# A\n\nAAA.\n",
+                        idx=idx, log=log, allowlist=["sources/"])
+    r2 = cn.commit_note(repo, "sources/b.md", body="# B\n\nBBB.\n",
+                        idx=idx, log=log, allowlist=["sources/"])
+    assert r1.new_sha and r2.new_sha and not r1.noop and not r2.noop
+    assert (repo / "sources/a.md").exists() and (repo / "sources/b.md").exists()
+    assert _git(repo, "rev-parse", "origin/main") == r2.new_sha  # b on top of a, both pushed
+    idx.close()
+
+
+def test_local_only_repo_still_commits_without_remote(make_corpus, fake_embedder, tmp_path):
+    # No remote (the portable / single-host case) → no fetch/push; commit_note behaves
+    # exactly as before. Guards the coexistence change against breaking solo use.
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    assert _git(repo, "remote") == ""                            # no origin
+    r = cn.commit_note(repo, "sources/solo.md", body="# S\n\nbody.\n",
+                       idx=idx, log=log, allowlist=["sources/"])
+    assert r.new_sha and not r.noop and (repo / "sources/solo.md").exists()
+    idx.close()
+
+
+def test_commit_note_is_path_scoped_no_sweep_of_foreign_staged(make_corpus, fake_embedder,
+                                                               tmp_path):
+    # Coexistence: another committer has work STAGED in the shared index when commit_note
+    # runs. commit_note must commit ONLY its own note — never sweep the foreign staged
+    # change into its commit (which a no-pathspec `git commit` would, then push it).
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    (repo / "sources").mkdir(exist_ok=True)
+    (repo / "sources/foreign.md").write_text("# foreign\n\nFOREIGNWORD staged elsewhere.\n",
+                                             encoding="utf-8")
+    _git(repo, "add", "--", "sources/foreign.md")               # a fleet committer staged this
+    r = cn.commit_note(repo, "sources/mine.md", body="# Mine\n\nMINEWORD body.\n",
+                       summary="mine", idx=idx, log=log, allowlist=["sources/"])
+    assert r.new_sha and not r.noop
+    committed = _git(repo, "show", "--name-only", "--format=", r.new_sha).split()
+    assert committed == ["sources/mine.md"]                     # ONLY the note — no sweep
+    assert "sources/foreign.md" in _git(repo, "diff", "--cached", "--name-only")  # still staged
+    idx.close()
+
+
+def test_commit_note_noop_detection_ignores_foreign_staged(make_corpus, fake_embedder, tmp_path):
+    # An idempotent edit while foreign changes are staged is still a no-op for OUR path
+    # (the path-scoped staged check must not be confused by the foreign staged change).
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    cn.commit_note(repo, "sources/x.md", body="# X\n\nbody.\n", idx=idx, log=log,
+                   allowlist=["sources/"])
+    (repo / "sources/foreign.md").write_text("# f\n\nstaged.\n", encoding="utf-8")
+    _git(repo, "add", "--", "sources/foreign.md")
+    head = _git(repo, "rev-parse", "HEAD")
+    r2 = cn.commit_note(repo, "sources/x.md", body="# X\n\nbody.\n", idx=idx, log=log,
+                        allowlist=["sources/"])               # identical content → no-op
+    assert r2.noop is True
+    assert _git(repo, "rev-parse", "HEAD") == head             # no commit despite foreign staged
+    idx.close()

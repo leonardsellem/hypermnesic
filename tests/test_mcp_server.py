@@ -79,12 +79,26 @@ def test_serve_returns_single_json_not_sse(built_index, fake_embedder):
     assert sse.settings.json_response is False
 
 
+def test_serve_is_stateless_for_handshakeless_clients(built_index, fake_embedder):
+    # The Obsidian companion (requestUrl) issues single-shot JSON-RPC POSTs with no
+    # initialize handshake and no Mcp-Session-Id. The SDK default is STATEFUL session
+    # mode, which 400s those calls ("Missing session ID"). We default stateless so a
+    # bare tools/call returns 200. This guard locks the contract: if a refactor drops
+    # stateless_http, FastMCP reverts to the stateful default and this test fails
+    # (the live transport proof is the bare-curl tools/call in the deploy VERIFY).
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
+    assert srv.settings.stateless_http is True
+    # opt-out remains available for a session-stateful client
+    stateful = mcp_server.build_server(built_index, host=TAILNET_IP, stateless_http=False)
+    assert stateful.settings.stateless_http is False
+
+
 def test_only_read_tools_no_write_tool(built_index, fake_embedder):
-    # U20 adds a third read tool (think); the invariant is "read-only, structural".
+    # U20 adds think; U1 adds resolve; U3 adds list_folders. Invariant: "read-only, structural".
     srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     tools = asyncio.run(srv.list_tools())
     names = {t.name for t in tools}
-    assert names == {"search", "build_context", "think"}
+    assert names == {"search", "build_context", "think", "resolve", "list_folders"}
     # read-only is structural: no write-ish tool exists
     assert not any(
         kw in n for t in tools for n in [t.name]
@@ -92,6 +106,26 @@ def test_only_read_tools_no_write_tool(built_index, fake_embedder):
     )
     for t in tools:
         assert t.annotations is not None and t.annotations.readOnlyHint is True
+
+
+def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
+    # connector quality (ChatGPT "OUTPUT SCHEMA RECOMMENDED"): each tool declares a typed result
+    # so clients understand its structure. Read tools + the write tool on a write-enabled master.
+    # loopback host so write_enabled is allowed without auth (the invariant exempts 127.0.0.1)
+    srv = mcp_server.build_server(built_index, host="127.0.0.1", embedder=fake_embedder,
+                                  write_enabled=True, repo=built_index.parent.parent)
+    schemas = {t.name: t.outputSchema for t in asyncio.run(srv.list_tools())}
+    assert set(schemas) == {"search", "build_context", "think", "resolve", "list_folders",
+                            "commit_note"}
+    for name, sch in schemas.items():
+        assert sch and sch.get("properties"), f"{name} has no outputSchema"
+    # spot-check the declared shapes match the real returns
+    assert "hits" in schemas["search"]["properties"]
+    assert "context" in schemas["build_context"]["properties"]
+    assert {"resolved", "slug"} <= set(schemas["resolve"]["properties"])
+    assert {"questions", "unlinked"} <= set(schemas["think"]["properties"])
+    assert {"folders", "truncated", "omitted"} <= set(schemas["list_folders"]["properties"])
+    assert {"committed", "refused"} <= set(schemas["commit_note"]["properties"])
 
 
 def test_search_tool_returns_hits(built_index, fake_embedder):
@@ -148,7 +182,8 @@ def test_each_read_tool_converges(make_corpus, fake_embedder, monkeypatch):
     _call(srv, "search", {"query": "Hetzner"})
     _call(srv, "build_context", {"path": "hetzner.md"})
     _call(srv, "think", {"topic": "Hetzner"})
-    assert len(calls) == 3              # convergence ran on each read tool path
+    _call(srv, "list_folders", {})
+    assert len(calls) == 4              # convergence ran on each read tool (incl. list_folders)
 
 
 def test_reads_degrade_to_lexical_when_embedder_down(make_corpus, fake_embedder):
@@ -180,6 +215,11 @@ _NONCANON = "---\nstatus:    active\ncreated: 2026-05-02\n---\nbody\n"
 def _write_server(repo, fake_embedder, **kw):
     index.build_index(repo, fake_embedder).close()
     db = index.state_dir_for(repo) / "index.db"
+    # U2 invariant: a write-enabled master runs auth-on. Inject a test verifier+settings
+    # (the in-process _call bypasses the HTTP auth middleware, so write-tool behavior is
+    # unchanged — this just satisfies write_enabled⇒auth-required at construction).
+    kw.setdefault("token_verifier", _verifier())
+    kw.setdefault("auth", _auth_settings())
     return mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
                                    write_enabled=True, **kw)
 
@@ -190,7 +230,8 @@ def test_write_enabled_lists_commit_note_read_only_excludes_it(make_corpus, fake
     db = index.state_dir_for(repo) / "index.db"
     ro = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
     rw = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
-                                 write_enabled=True)
+                                 write_enabled=True, token_verifier=_verifier(),
+                                 auth=_auth_settings())
     ro_names = {t.name for t in asyncio.run(ro.list_tools())}
     rw_names = {t.name for t in asyncio.run(rw.list_tools())}
     assert "commit_note" not in ro_names                       # read-only structurally excludes it
@@ -279,3 +320,363 @@ def test_search_surfaces_manual_reindex_signal(make_corpus, fake_embedder, monke
     monkeypatch.setattr(converge_mod, "converge", fake_converge)
     out = _call(srv, "search", {"query": "MARK"})
     assert out["manual_reindex_recommended"] is True          # signal surfaced, not dropped
+
+
+# --- U1: explicit allowlist plumb-through + empty-allowlist startup rejection ---
+
+def test_write_enabled_empty_allowlist_rejected_at_startup(built_index):
+    # An empty (or whitespace-only) allowlist on a write-enabled serve narrows writes
+    # to NOTHING — refuse at construction so there is no half-open server. (U1)
+    for bad in ([], [""], ["  "], ["", "  "]):
+        with pytest.raises(ValueError):
+            mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True,
+                                    write_allowlist=bad)
+
+
+def test_read_only_serve_ignores_allowlist(built_index, fake_embedder):
+    # Read-only: --allowlist is inert (no write tool), and an empty list does NOT
+    # trigger the write-path startup rejection.
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder,
+                                  write_allowlist=[])           # would reject if write_enabled
+    names = {t.name for t in asyncio.run(srv.list_tools())}
+    assert "commit_note" not in names and names == mcp_server.READ_TOOL_NAMES
+
+
+def test_explicit_allowlist_permits_only_listed_prefixes(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder, write_allowlist=["projects/"])
+    permitted = _call(srv, "commit_note", {"path": "projects/p.md", "body": "# P\n\nbody.\n"})
+    assert permitted["committed"] and permitted["created"]      # in the explicit list
+    refused = _call(srv, "commit_note", {"path": "sources/s.md", "body": "# S\n\nbody.\n"})
+    assert refused["committed"] is False and refused["refused"]  # default 'sources/' not listed
+    assert not (repo / "sources/s.md").exists()
+
+
+def test_write_tool_coordination_refusal_maps_to_refused(make_corpus, fake_embedder, tmp_path):
+    # U11 over MCP: a push that cannot reach the shared remote surfaces as
+    # {committed: False, refused}, not a silent success or an uncaught exception.
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    bare = tmp_path / "o.git"
+    subprocess.run(["git", "init", "--bare", "-b", "main", str(bare)], check=True,
+                   capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "remote", "add", "origin", str(bare)],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "push", "-u", "origin", "main"],
+                   check=True, capture_output=True)
+    hook = bare / "hooks" / "pre-receive"
+    hook.write_text("#!/bin/sh\nexit 1\n")
+    hook.chmod(0o755)
+    srv = _write_server(repo, fake_embedder, write_allowlist=["sources/"])
+    out = _call(srv, "commit_note", {"path": "sources/n.md", "body": "# N\n\nbody.\n"})
+    assert out["committed"] is False and out["refused"]         # refusal, not silent success
+    audit = repo / ".hypermnesic" / "audit.jsonl"
+    assert not audit.exists() or audit.read_text().strip() == ""   # no audit on a non-landed write
+
+
+# --- U1: resolve entity-resolution read tool --------------------------------
+
+def test_resolve_tool_returns_path_and_slug(make_corpus, fake_embedder):
+    repo = make_corpus({"infrastructure/hetzner.md": "# Hetzner\n\nThe homelab box.\n",
+                        "net.md": "# net\n\ntopology.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "resolve", {"name": "Hetzner"})
+    assert out["resolved"] == "infrastructure/hetzner.md"
+    assert out["slug"] == "infrastructure/hetzner"             # caller wikilinks the slug
+    assert "manual_reindex_recommended" in out                 # convergence signal surfaced
+
+
+def test_resolve_tool_ambiguous_and_missing_are_null(make_corpus, fake_embedder):
+    repo = make_corpus({"notes/dup.md": "# D1\n\n", "archive/dup.md": "# D2\n\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    assert _call(srv, "resolve", {"name": "dup"})["resolved"] is None      # ambiguous → null
+    assert _call(srv, "resolve", {"name": "ghost"})["resolved"] is None    # missing → null
+
+
+def test_resolve_is_read_tool_and_converges(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    tools = {t.name: t for t in asyncio.run(srv.list_tools())}
+    assert "resolve" in tools and "resolve" in mcp_server.READ_TOOL_NAMES
+    assert tools["resolve"].annotations.readOnlyHint is True
+    # a freshly committed entity page is resolvable after convergence
+    _commit(repo, "infrastructure/box.md", "# Box\n\nBOXMARKER body.\n", "add box")
+    out = _call(srv, "resolve", {"name": "box"})
+    assert out["resolved"] == "infrastructure/box.md"          # converged before resolving
+
+
+# --- U3: list_folders discovery read tool -----------------------------------
+
+def _folders_by_path(out):
+    return {e["path"]: e for e in out["folders"]}
+
+
+def test_list_folders_returns_taxonomy_and_schema_shape(make_corpus, fake_embedder):
+    # AE7: a typed, structured listing — path/writable/protected_reason/note_count per folder,
+    # plus truncated/omitted and the convergence signal. Phase-B blocklist default: both notes/
+    # and the operator's content folders (projects/) are writable (re-pointed from the Phase-A
+    # 4-prefix assertion per the byte-preservation learning — the flip genuinely changes this).
+    repo = make_corpus({"notes/n.md": "# N\n\nbody.\n", "projects/acme/a.md": "# A\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert set(out) >= {"root", "depth", "folders", "truncated", "omitted",
+                        "manual_reindex_recommended"}
+    by = _folders_by_path(out)
+    assert by["notes/"]["writable"] is True and by["notes/"]["protected_reason"] is None
+    assert by["notes/"]["note_count"] == 1
+    assert by["projects/"]["writable"] is True                 # Phase B: blocklist default
+    assert by["projects/"]["protected_reason"] is None
+
+
+def test_list_folders_is_read_tool_and_converges(make_corpus, fake_embedder):
+    repo = make_corpus({"notes/a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    tools = {t.name: t for t in asyncio.run(srv.list_tools())}
+    assert "list_folders" in tools and "list_folders" in mcp_server.READ_TOOL_NAMES
+    assert "list_folders" not in mcp_server.WRITE_TOOL_NAMES
+    assert tools["list_folders"].annotations.readOnlyHint is True
+    # a folder created by a fresh commit is discoverable after convergence
+    _commit(repo, "fresh/box.md", "# Box\n\nFRESHFOLDER body.\n", "add fresh folder")
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert "fresh/" in _folders_by_path(out)                   # converged before listing
+
+
+def test_list_folders_nested_protected_folder_is_non_writable(make_corpus, fake_embedder):
+    # AE4 over MCP: discovery never advertises a path commit_note would refuse. projects/ is
+    # writable but projects/scripts/ is NOT — probing a file UNDER the prefix makes the flag agree.
+    repo = make_corpus({"projects/scripts/x.md": "# x\n\nbody.\n",
+                        "projects/acme/a.md": "# A\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    by = _folders_by_path(_call(srv, "list_folders", {"root": "projects/", "depth": 1}))
+    assert by["projects/scripts/"]["writable"] is False
+    assert "scripts/" in by["projects/scripts/"]["protected_reason"]
+
+
+def test_discovery_and_commit_note_agree_on_nested_protected(make_corpus, fake_embedder):
+    # G4: the parity-lie guard, both sides in one test. With projects/ allowlisted, projects/acme/
+    # is writable but projects/scripts/ is NOT (the protected-dir rule beats the allowlist).
+    # list_folders reports projects/scripts/ non-writable AND commit_note refuses
+    # projects/scripts/*.md — discovery never advertises a path the write path would refuse.
+    repo = make_corpus({"projects/scripts/x.md": "# x\n\nbody.\n",
+                        "projects/acme/a.md": "# A\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host="127.0.0.1", embedder=fake_embedder, repo=repo,
+                                  write_enabled=True, write_allowlist=["projects/"])
+    by = _folders_by_path(_call(srv, "list_folders", {"root": "projects/", "depth": 1}))
+    assert by["projects/acme/"]["writable"] is True
+    assert by["projects/scripts/"]["writable"] is False        # discovery: non-writable
+    refused = _call(srv, "commit_note", {"path": "projects/scripts/n.md", "body": "# n\n\nx.\n"})
+    assert refused["committed"] is False and refused["refused"]    # commit_note refuses → agree
+    ok = _call(srv, "commit_note", {"path": "projects/acme/n.md", "body": "# n\n\nx.\n"})
+    assert ok["committed"] is True                             # the writable sibling commits
+
+
+def test_list_folders_rejects_traversal_root_without_leak(make_corpus, fake_embedder):
+    repo = make_corpus({"notes/n.md": "# N\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    for bad in ("../etc", "/etc/passwd"):
+        out = _call(srv, "list_folders", {"root": bad, "depth": 1})
+        assert out["folders"] == []                            # no out-of-vault leakage
+
+
+def test_list_folders_bounds_payload(make_corpus, fake_embedder, monkeypatch):
+    from hypermnesic import config
+    monkeypatch.setattr(config, "LIST_FOLDERS_MAX_NODES", 2)    # read at call time by the tool
+    repo = make_corpus({f"folder{i}/n.md": f"# F{i}\n\nbody {i}.\n" for i in range(3)})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert out["truncated"] is True and out["omitted"] == 1
+    assert [e["path"] for e in out["folders"]] == ["folder0/", "folder1/"]   # sorted, tail dropped
+
+
+# --- U2: OAuth2 Resource-Server wiring + write_enabled⇒auth-required invariant -
+
+_RES = "https://homelab.<tailnet-host>.ts.net/mcp"
+_ISS = "https://homelab.<tailnet-host>.ts.net/honcho/"
+
+
+def _auth_settings():
+    from hypermnesic import auth
+    return auth.make_auth_settings(issuer_url=_ISS, resource_server_url=_RES,
+                                   required_scopes=["write"])
+
+
+def _verifier():
+    from hypermnesic import auth
+    return auth.build_token_verifier(resource_server_url=_RES, verify_raw=lambda t: None)
+
+
+def test_build_server_no_auth_is_phase1_unauthenticated(built_index, fake_embedder):
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
+    assert srv.settings.auth is None              # no auth flags → Phase-1 unauthenticated build
+
+
+def test_build_server_with_auth_sets_resource_server(built_index, fake_embedder):
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder,
+                                  token_verifier=_verifier(), auth=_auth_settings())
+    assert srv.settings.auth is not None
+    assert str(srv.settings.auth.resource_server_url).rstrip("/") == _RES
+    assert srv.settings.auth.required_scopes == ["write"]
+
+
+def test_read_only_serve_with_auth_builds(built_index, fake_embedder):
+    # auth is opt-in/additive for a read-only serve too (no write tool)
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder,
+                                  token_verifier=_verifier(), auth=_auth_settings())
+    names = {t.name for t in asyncio.run(srv.list_tools())}
+    assert "commit_note" not in names
+
+
+def test_write_enabled_without_auth_refused(built_index):
+    # the engine invariant: a write-enabled TAILNET master must NOT start auth-off (mirrors 0.0.0.0)
+    with pytest.raises(ValueError, match="(?i)auth"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True)
+
+
+def test_write_enabled_localhost_without_auth_allowed(make_corpus, fake_embedder):
+    # loopback exemption: a single-user localhost write serve does not require auth (only
+    # the local user can reach it — the same boundary the CLI write path already has).
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host="127.0.0.1", embedder=fake_embedder, repo=repo,
+                                  write_enabled=True)
+    assert "commit_note" in {t.name for t in asyncio.run(srv.list_tools())}
+    assert srv.settings.auth is None
+
+
+def test_trust_tailnet_write_allows_auth_off_write_on_a_tailnet_ip(make_corpus, fake_embedder):
+    # Explicit operator opt-in: tailnet membership is the write boundary. With trust_tailnet_write,
+    # a write-enabled serve on a real Tailscale IP (100.64.0.0/10) may run auth-off — commit_note is
+    # registered and no AuthSettings are attached. (The default still refuses; this is opt-in only.)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
+                                  write_enabled=True, trust_tailnet_write=True)
+    assert "commit_note" in {t.name for t in asyncio.run(srv.list_tools())}
+    assert srv.settings.auth is None                       # tailnet-trust, no OAuth ceremony
+
+
+def test_trust_tailnet_write_default_off_still_refuses(built_index):
+    # safe-by-default: without the explicit opt-in, the write_enabled⇒auth-required invariant holds.
+    with pytest.raises(ValueError, match="(?i)auth"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True)
+
+
+def test_trust_tailnet_write_rejects_a_non_tailnet_ip(built_index):
+    # the opt-in is BOUNDED to the Tailscale CGNAT range — it must not enable an auth-off write on
+    # an arbitrary public/LAN IP (that would be a real public write hole, not a tailnet one).
+    with pytest.raises(ValueError, match="(?i)tailnet|100\\.64"):
+        mcp_server.build_server(built_index, host="203.0.113.5", write_enabled=True,
+                                trust_tailnet_write=True)
+
+
+def test_trust_tailnet_write_never_enables_wildcard(built_index):
+    # the wildcard refusal is absolute — trust_tailnet_write cannot open a 0.0.0.0 write.
+    with pytest.raises(ValueError, match="(?i)tailnet-only|0\\.0\\.0\\.0|wildcard|bind"):
+        mcp_server.build_server(built_index, host="0.0.0.0", write_enabled=True,
+                                trust_tailnet_write=True)
+
+
+def test_write_enabled_verifier_without_auth_settings_refused(built_index):
+    # both halves required: a verifier but no AuthSettings is a half-configured auth → refuse
+    with pytest.raises(ValueError, match="(?i)auth"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True,
+                                token_verifier=_verifier())
+
+
+def test_write_enabled_with_auth_starts_and_lists_commit_note(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
+                                  write_enabled=True, token_verifier=_verifier(),
+                                  auth=_auth_settings())
+    assert "commit_note" in {t.name for t in asyncio.run(srv.list_tools())}
+    assert srv.settings.auth is not None
+
+
+def test_build_server_accepts_auth_server_provider_cloud_lane(built_index):
+    # the cloud lane passes an auth_server_provider (AS+RS) instead of a token_verifier
+    from mcp.server.auth.settings import AuthSettings
+
+    from hypermnesic import auth_cloud
+    prov = auth_cloud.CloudAuthProvider(resource=_RES, public_url="https://h/cloud",
+                                        approval_token="x", scopes_supported=["read", "write"])
+    auth = AuthSettings(issuer_url="https://h/cloud", resource_server_url=_RES,
+                        required_scopes=None)
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, auth_server_provider=prov,
+                                  auth=auth)
+    assert srv.settings.auth is not None
+
+
+def test_build_server_rejects_both_verifier_and_provider(built_index):
+    from hypermnesic import auth_cloud
+    prov = auth_cloud.CloudAuthProvider(resource=_RES, public_url="https://h/cloud",
+                                        approval_token="x", scopes_supported=["read"])
+    with pytest.raises(ValueError, match="(?i)both|not both|provider"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, token_verifier=_verifier(),
+                                auth_server_provider=prov, auth=_auth_settings())
+
+
+def test_auth_with_wildcard_host_refused_bind_first(built_index):
+    # the bind invariant is checked FIRST: 0.0.0.0 is refused even with auth configured
+    with pytest.raises(ValueError, match="(?i)tailnet|0\\.0\\.0\\.0|bind"):
+        mcp_server.build_server(built_index, host="0.0.0.0",
+                                token_verifier=_verifier(), auth=_auth_settings())
+
+
+# --- U2 (security review): the write tool self-enforces the write scope ------
+
+def _set_principal(scopes):
+    """Set the authenticated principal in the SDK auth contextvar (what the HTTP auth
+    middleware does for a real request). Returns (var, token) so the test can reset it."""
+    from mcp.server.auth.middleware.auth_context import auth_context_var
+    from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
+    from mcp.server.auth.provider import AccessToken
+    at = AccessToken(token="t", client_id="agent", scopes=list(scopes), expires_at=None,
+                     resource=_RES, claims={"aud": _RES})
+    return auth_context_var, auth_context_var.set(AuthenticatedUser(at))
+
+
+def test_commit_note_rejects_read_scoped_principal(make_corpus, fake_embedder):
+    # the V14 inverted-failure case: a read-scoped token reaches the write tool (because the
+    # transport's global required_scopes can't separate read from write on one endpoint). The
+    # write tool MUST self-enforce the write scope and refuse.
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder)                  # auth-on
+    var, tok = _set_principal(["read"])                       # read-only principal
+    try:
+        out = _call(srv, "commit_note", {"path": "notes/n.md", "body": "# N\n\nbody.\n"})
+    finally:
+        var.reset(tok)
+    assert out["committed"] is False and "scope" in out["refused"].lower()
+    assert not (repo / "notes/n.md").exists()                 # nothing written
+
+
+def test_commit_note_allows_write_scoped_principal(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder)
+    var, tok = _set_principal(["read", "write"])
+    try:
+        out = _call(srv, "commit_note", {"path": "notes/n.md", "body": "# N\n\nbody.\n"})
+    finally:
+        var.reset(tok)
+    assert out["committed"] is True and out["created"]
