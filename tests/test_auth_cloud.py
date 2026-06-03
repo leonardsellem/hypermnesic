@@ -452,6 +452,33 @@ def test_cloud_server_defaults_to_write_anywhere_under_guards(make_corpus, fake_
     assert ok["committed"] is True                                 # notes/ now in the default zone
 
 
+def test_list_folders_writable_flag_matches_commit_note_acceptance(make_corpus, fake_embedder):
+    # G5 / single coercion site: build_cloud_server(write_allowlist=None) feeds ONE effective
+    # surface (build_server's _effective_write_surface) to BOTH the write path and the discovery
+    # flag, so list_folders' `writable` for a folder equals commit_note's acceptance for a file
+    # written directly into it. Phase A surface is the 4-prefix default: notes/ writable+accepted,
+    # projects/ non-writable+refused — they move together when U5 flips the one helper.
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"notes/a.md": "# A\n\nalpha.\n", "projects/p.md": "# P\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more")
+    by = {e["path"]: e for e in _cloud_call_as(srv, ["read"], "list_folders",
+                                               {"root": "", "depth": 1})["folders"]}
+    # parity for notes/: discovery flag writable AND commit_note accepts a note there
+    assert by["notes/"]["writable"] is True
+    ok = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                        {"path": "notes/x.md", "body": "# x\n\nbody.\n"})
+    assert ok["committed"] is True
+    # parity for projects/: discovery flag non-writable AND commit_note refuses a note there
+    assert by["projects/"]["writable"] is False
+    refused = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                             {"path": "projects/y.md", "body": "# y\n\nbody.\n"})
+    assert refused["committed"] is False and refused["refused"]
+
+
 def test_cloud_server_read_scoped_principal_is_denied_commit_note(make_corpus, fake_embedder):
     # AE2 read half / V14: a principal who only completed read consent reaches commit_note (the
     # SDK applies one required-scopes list to all tools) but is refused by the per-tool write-scope
