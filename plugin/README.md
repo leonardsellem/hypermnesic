@@ -53,10 +53,23 @@ that OAuth discovery.
 
 ## Install (per host)
 
-- **Claude Code:** add this in-repo marketplace and install the `hypermnesic` plugin
-  (`claude plugin marketplace add <path>/plugin` → `claude plugin install hypermnesic@hypermnesic`).
-- **Codex:** add the marketplace and `codex plugin add hypermnesic@hypermnesic` (the skills
-  directory is shared).
+- **Claude Code (recommended — straight from GitHub):** no local checkout needed —
+  `claude plugin marketplace add leonardsellem/hypermnesic` → `claude plugin install hypermnesic@hypermnesic`.
+  This resolves the repo-root [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json),
+  a git-backed source, so the plugin checkout is content-addressed and reused across sessions
+  (a local `directory` source re-materializes a fresh checkout every session).
+- **Local checkout / Codex:** add the in-repo `plugin/` directory as a marketplace
+  (`claude plugin marketplace add <path>/plugin`, `codex plugin marketplace add <path>/plugin`)
+  → `… plugin install hypermnesic@hypermnesic`. The skills directory is shared.
+
+> **Two marketplace manifests — intentional and drift-proofed.** Claude Code only discovers
+> `marketplace.json` at a checkout *root*, never in a subdirectory, so the repo carries one at
+> [`./.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json) (enables the GitHub
+> source above) **in addition to** this `plugin/.claude-plugin/marketplace.json` (the local
+> `plugin/`-directory source). The root manifest points its plugin `source` at
+> `./plugin/plugins/hypermnesic` and deliberately lists only `name`/`source` — `version` and
+> `description` live solely in `plugin/plugins/hypermnesic/.claude-plugin/plugin.json`, so a
+> version bump touches one file and the two manifests cannot drift.
 
 The manifest declares no `hooks`/`skills` paths — Claude Code auto-discovers `hooks/hooks.json`
 and `skills/`, so the plugin loads cleanly with no duplicate-load conflict.
