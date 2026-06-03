@@ -1,7 +1,7 @@
 ---
 title: "fix: think-surface quality — meaningful, navigable recall (exclude self, clean titles, structured unlinked pairs)"
 type: fix
-status: active
+status: completed
 created: 2026-06-03
 origin:
   - "docs/brainstorms/2026-06-02-obsidian-companion-plugin-redesign-requirements.md (R10–R12 thinking-mode)"
