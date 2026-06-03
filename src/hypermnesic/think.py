@@ -75,20 +75,22 @@ class ThinkResult:
         }
 
 
-def _socratic(topic: str, hits, title_of) -> list[str]:
-    """Heuristic thinking prompts from what's in hand — no LLM (use the kernel's
-    own signals, per the ideation's 'graph must earn its cost' restraint). Note
-    identities use resolved note titles (U44), never chunk section headings."""
-    if not hits:
+def _socratic(hits, title_of) -> list[str]:
+    """One note-grounded thinking prompt — no LLM, and no ungrounded boilerplate
+    (U47). The two generic '{topic}' templates were dropped: they reference nothing
+    the retrieval found and read as slop (the same unearned-prose defect as the old
+    tensions). The surviving prompt names two *distinct* related notes by resolved
+    title (U44) and fires only when there are ≥2 of them; otherwise it is empty —
+    think degrades gracefully rather than padding with generic questions."""
+    paths: list[str] = []
+    for h in hits:
+        if h.path not in paths:
+            paths.append(h.path)
+        if len(paths) == 2:
+            break
+    if len(paths) < 2:
         return []
-    qs = [
-        f"What would change your mind about {topic}?",
-        f"Where does {topic} break down — what's the strongest counter-case?",
-    ]
-    if len(hits) >= 2:
-        qs.append(f"How do '{title_of(hits[0].path)}' and '{title_of(hits[1].path)}' "
-                  "inform each other?")
-    return qs
+    return [f"How do '{title_of(paths[0])}' and '{title_of(paths[1])}' inform each other?"]
 
 
 def _unlinked_pairs(graph, hits, title_of) -> list[dict]:
@@ -146,7 +148,7 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
     if graph is not None and res.hits:
         context = graph_mod.build_context(graph, res.hits[0].path, depth=depth)
 
-    questions = _socratic(topic, res.hits, title_of)
+    questions = _socratic(res.hits, title_of)
     unlinked = _unlinked_pairs(graph, res.hits, title_of)
     note = "" if related else "nothing relevant yet — the index has no close match"
 
