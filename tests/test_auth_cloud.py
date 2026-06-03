@@ -456,8 +456,8 @@ def test_list_folders_writable_flag_matches_commit_note_acceptance(make_corpus, 
     # G5 / single coercion site: build_cloud_server(write_allowlist=None) feeds ONE effective
     # surface (build_server's _effective_write_surface) to BOTH the write path and the discovery
     # flag, so list_folders' `writable` for a folder equals commit_note's acceptance for a file
-    # written directly into it. Phase A surface is the 4-prefix default: notes/ writable+accepted,
-    # projects/ non-writable+refused — they move together when U5 flips the one helper.
+    # written directly into it. Phase-B blocklist default: notes/ AND projects/ are writable+
+    # accepted — they moved together when U5 flipped the one helper (re-pointed from Phase A).
     from hypermnesic import index, mcp_server
     repo = make_corpus({"notes/a.md": "# A\n\nalpha.\n", "projects/p.md": "# P\n\nbody.\n"})
     index.build_index(repo, fake_embedder).close()
@@ -472,11 +472,41 @@ def test_list_folders_writable_flag_matches_commit_note_acceptance(make_corpus, 
     ok = _cloud_call_as(srv, ["read", "write"], "commit_note",
                         {"path": "notes/x.md", "body": "# x\n\nbody.\n"})
     assert ok["committed"] is True
-    # parity for projects/: discovery flag non-writable AND commit_note refuses a note there
-    assert by["projects/"]["writable"] is False
-    refused = _cloud_call_as(srv, ["read", "write"], "commit_note",
-                             {"path": "projects/y.md", "body": "# y\n\nbody.\n"})
-    assert refused["committed"] is False and refused["refused"]
+    # parity for projects/ under the blocklist default: discovery writable AND commit_note accepts
+    assert by["projects/"]["writable"] is True
+    ok2 = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                         {"path": "projects/y.md", "body": "# y\n\nbody.\n"})
+    assert ok2["committed"] is True
+
+
+def test_cloud_blocklist_default_writes_content_folders_and_fences_governance(make_corpus,
+                                                                              fake_embedder):
+    # AE2 + U6 decision encoded: the Phase-B blocklist default lets a write-scoped principal commit
+    # into the operator's content folders (projects/, people/, meetings/) — bounded only by the
+    # protected-path guard + governance fence. The newly-exposed governance/CI/build/credential
+    # classes are REFUSED by the fence the operator chose; protected paths stay refused.
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+                                        resource=RES, public_url=PUBLIC,
+                                        approval_token="op-approval-token-24chars-or-more")
+    # content folders are writable under the blocklist default (AE2 write half, widened)
+    for p in ("projects/acme/note.md", "people/bob.md", "meetings/2026/standup.md"):
+        out = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                             {"path": p, "body": "# n\n\nx.\n"})
+        assert out["committed"] is True, p
+    # governance fence: code-exec / CI / build / credential classes are refused (U6 decision)
+    for governance in ("Dockerfile", "projects/acme/ci.yml", "uv.lock", ".env", "package.json"):
+        out = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                             {"path": governance, "body": "x\n"})
+        assert out["committed"] is False and out["refused"], governance
+    # protected classes stay refused regardless (allowlist-independent)
+    for protected in ("notes/AGENTS.md", "scripts/evil.sh", ".github/workflows/ci.yml"):
+        out = _cloud_call_as(srv, ["read", "write"], "commit_note",
+                             {"path": protected, "body": "x\n"})
+        assert out["committed"] is False and out["refused"], protected
 
 
 def test_cloud_server_read_scoped_principal_is_denied_commit_note(make_corpus, fake_embedder):

@@ -26,10 +26,22 @@ from pathlib import Path, PurePosixPath
 # Agent-instruction files (privilege escalation if writable) — matched anywhere.
 _INSTRUCTION_FILES = {"claude.md", "agents.md", "gemini.md", ".cursorrules",
                       "copilot-instructions.md"}
-# Directory components that are off-limits anywhere in the path.
+# Directory components that are off-limits anywhere in the path. Matched case-INSENSITIVELY
+# (U5/Phase B): on a case-insensitive FS ``Scripts/`` lands in the protected ``scripts/`` dir on
+# disk, so a case-sensitive match would mis-report it writable (inert under the old allowlist,
+# reachable under the blocklist). Keep the set lowercase; compare ``part.lower()``.
 _PROTECTED_DIRS = {".git", ".github", ".obsidian", ".claude", ".codex", "views",
                    "scripts", "bin", "hooks", "skills", ".hypermnesic"}
 _NEVER_FILES = {".gitignore", ".gitattributes", ".gitmodules"}
+# Governance / code-exec / CI / build / credential file CLASSES (U5/Phase B fence). The blocklist
+# default removed the 4-prefix allowlist that blocked these only BY EXCLUSION; this positive
+# content-surface fence (operator decision: a governance-extension denylist) refuses them directly
+# — caller-independent, like the other rules — so ``commit_note``'s no-``.md``-suffix freedom can
+# never land a Dockerfile / CI yaml / lockfile / build config / credential file. Matched
+# case-insensitively. The exact list is enumerated + signed off in the blocklist security review.
+_GOVERNANCE_FILES = {"dockerfile", "makefile", "containerfile", "setup.py", "setup.cfg",
+                     "package.json", "package-lock.json", ".npmrc", ".netrc"}
+_GOVERNANCE_EXTS = (".yml", ".yaml", ".lock", ".toml")
 
 
 class WriteGuardError(Exception):
@@ -53,14 +65,22 @@ def protected_reason(rel_path: str) -> str | None:
     if p.name.lower() in _INSTRUCTION_FILES:
         return f"agent-instruction file ({p.name})"
     for part in parts[:-1]:
-        if part in _PROTECTED_DIRS:
+        if part.lower() in _PROTECTED_DIRS:          # case-folded (U5): Scripts/ == scripts/
             return f"protected dir ({part}/)"
-    if parts[0] in _PROTECTED_DIRS:
+    if parts[0].lower() in _PROTECTED_DIRS:
         return f"protected dir ({parts[0]}/)"
     if "workflows" in parts and ".github" in parts:
         return "CI workflow dir"
     if p.name.startswith("install-git-hooks"):
         return "git-hook installer"
+    # governance / code-exec / CI / build / credential file class (U5/Phase B fence) — refused
+    # everywhere, AFTER the dir checks so a protected-dir reason wins for e.g. .github/ci.yml.
+    name_lower = p.name.lower()
+    if (name_lower in _GOVERNANCE_FILES or name_lower == ".env"
+            or name_lower.startswith(".env.")):
+        return f"governance file ({p.name})"
+    if name_lower.endswith(_GOVERNANCE_EXTS):
+        return f"governance file class ({p.suffix})"
     return None
 
 
