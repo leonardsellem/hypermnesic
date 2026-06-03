@@ -17,6 +17,7 @@ import json
 import shlex
 import shutil
 import stat
+import sys
 from pathlib import Path
 
 from hypermnesic import config
@@ -42,9 +43,21 @@ HOOK_NAMES = ("post-merge",)
 
 
 def _hypermnesic_exe() -> str:
-    """Absolute path to the installed console script when resolvable (so the hook is
-    robust regardless of the runtime PATH); falls back to the bare name otherwise."""
-    return shutil.which("hypermnesic") or "hypermnesic"
+    """Absolute path to the installed console script when resolvable (so the unit and
+    hook are robust regardless of the runtime PATH); falls back to the bare name.
+
+    ``systemctl --user`` runs the unit without the project venv on ``$PATH``, so
+    ``shutil.which`` misses and a bare ``hypermnesic`` ExecStart would fail to start
+    (U2). When PATH resolution misses, fall back to the console script installed
+    next to the running interpreter (``<venv>/bin/hypermnesic``) before the bare
+    name — that is the absolute path the service actually needs."""
+    found = shutil.which("hypermnesic")
+    if found:
+        return found
+    venv_exe = Path(sys.executable).parent / "hypermnesic"
+    if venv_exe.exists():
+        return str(venv_exe)
+    return "hypermnesic"
 
 
 def _managed_block(repo: Path) -> str:
@@ -136,10 +149,32 @@ def uninstall_hooks(repo) -> dict:
 # U34 — role-aware installer (single | master | client)
 # ---------------------------------------------------------------------------
 
-def render_systemd_unit(repo: Path, bind: str, port: int, path: str, exe: str) -> str:
+def _auth_execstart_flags(auth_issuer: str | None, auth_resource: str | None,
+                          required_scopes: list[str] | None) -> str:
+    """The OAuth2 RS flags for the master ExecStart (U2). Rendered only when both the
+    issuer and resource URLs are present; shlex-quoted so a URL with shell metacharacters
+    cannot break the unit. No secret is rendered — the RS introspection credentials are
+    read from the environment at runtime, never inlined (threat-model V9)."""
+    if not (auth_issuer and auth_resource):
+        return ""
+    flags = (f" --auth-issuer-url {shlex.quote(auth_issuer)}"
+             f" --auth-resource-url {shlex.quote(auth_resource)}")
+    for s in (required_scopes or []):
+        if s and s.strip():
+            flags += f" --required-scope {shlex.quote(s)}"
+    return flags
+
+
+def render_systemd_unit(repo: Path, bind: str, port: int, path: str, exe: str, *,
+                        auth_issuer: str | None = None, auth_resource: str | None = None,
+                        required_scopes: list[str] | None = None) -> str:
     """A portable user systemd unit running the write-enabled tailnet serve. The
-    OPENAI_API_KEY value is NEVER inlined — it is referenced via EnvironmentFile."""
+    OPENAI_API_KEY value is NEVER inlined — it is referenced via EnvironmentFile. When
+    auth is provided (U2), the OAuth2 RS flags are rendered on ExecStart so the
+    write-enabled master starts auth-on (the write_enabled⇒auth-required invariant); the
+    RS client credentials stay in the environment, never the unit."""
     state = index_mod.STATE_DIRNAME
+    auth = _auth_execstart_flags(auth_issuer, auth_resource, required_scopes)
     return f"""[Unit]
 Description=hypermnesic tailnet MCP server (master)
 After=network-online.target
@@ -148,10 +183,11 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory={repo}
-# OPENAI_API_KEY is read from the gitignored .env below — its VALUE is never inlined here.
+# OPENAI_API_KEY (and the OAuth2 RS introspection creds, if any) are read from the
+# gitignored .env / environment below — their VALUES are never inlined here.
 EnvironmentFile=-{repo}/.env
 ExecStart={exe} serve --index-db {repo}/{state}/index.db --host {bind} \
---port {port} --path {path} --enable-write
+--port {port} --path {path} --enable-write{auth}
 Restart=on-failure
 RestartSec=5
 
@@ -194,10 +230,39 @@ def _write_role_config(repo: Path, cfg: dict) -> Path:
     return p
 
 
+# The agent identity's bearer token is provided at runtime via this env var — never
+# inlined into a (plaintext, chezmoi-tracked) MCP client config (threat-model V9). The
+# emitted config only NAMES it; the value lives in the host's environment / secret store.
+CLIENT_TOKEN_ENV = "HYPERMNESIC_MCP_TOKEN"
+
+
+def _client_entry(master_url: str, *, auth_issuer_url: str | None,
+                  auth_resource_url: str | None, required_scope: list[str] | None) -> dict:
+    """The `mcpServers.hypermnesic` entry. Bare streamable-http when no auth (Phase-1
+    parity); OAuth2-aware (U5/R12) when an issuer/resource is given — carrying the
+    discovery reference + a *pointer* to the runtime token, never a secret value. The
+    exact per-host field names may be refined once U12 settles the AS; the invariant is
+    secret-free."""
+    entry: dict = {"type": "streamable-http", "url": master_url}
+    if auth_issuer_url or auth_resource_url:
+        scopes = [s for s in (required_scope or []) if s and s.strip()]
+        entry["auth"] = {
+            "type": "oauth2",
+            "issuer": auth_issuer_url,                       # AS discovery reference (no secret)
+            "resource": auth_resource_url or master_url,     # RFC 8707 audience
+            "required_scopes": scopes or None,
+            "token_env": CLIENT_TOKEN_ENV,                   # pointer to the runtime token
+        }
+    return entry
+
+
 def _install_client(master_url: str | None, mcp_config_path: str | None,
-                    *, server_name: str = "hypermnesic") -> dict:
+                    *, server_name: str = "hypermnesic", auth_issuer_url: str | None = None,
+                    auth_resource_url: str | None = None,
+                    required_scope: list[str] | None = None) -> dict:
     """Client = config only (no engine, no index). Write/patch an MCP client config
-    pointing at the master endpoint; preserve any other servers already present."""
+    pointing at the master endpoint; preserve any other servers already present. When
+    auth params are given the entry is OAuth2-aware and secret-free (U5)."""
     if not master_url:
         raise InstallError("role 'client' requires --master-url <https://master/mcp>")
     if not mcp_config_path:
@@ -214,23 +279,293 @@ def _install_client(master_url: str | None, mcp_config_path: str | None,
     servers = data.setdefault("mcpServers", {})
     if not isinstance(servers, dict):           # malformed existing config → reset the map
         servers = data["mcpServers"] = {}
-    servers[server_name] = {"type": "streamable-http", "url": master_url}   # idempotent upsert
+    servers[server_name] = _client_entry(master_url, auth_issuer_url=auth_issuer_url,
+                                          auth_resource_url=auth_resource_url,
+                                          required_scope=required_scope)   # idempotent upsert
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    authed = "auth" in servers[server_name]
     return {
         "role": "client",
         "artifacts": [str(path)],
-        "config": {"master_url": master_url},
+        "config": {"master_url": master_url, "oauth2": authed},
         "manual_steps": [
-            f"point your MCP client / Obsidian companion at {master_url} "
-            "(tailnet membership is the auth boundary — MVP)",
+            f"point your MCP client / Obsidian companion at {master_url}"
+            + (f" (OAuth2: provide the token via the {CLIENT_TOKEN_ENV} env var — never commit it)"
+               if authed else " (tailnet membership is the auth boundary — MVP)"),
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
+# U3 — `hypermnesic setup`: one-command bring-up of the unified public endpoint
+# ---------------------------------------------------------------------------
+
+CLOUD_SERVICE_NAME = "hypermnesic-cloud"
+CLOUD_APPROVAL_ENV = "HYPERMNESIC_CLOUD_APPROVAL_TOKEN"   # the operator consent secret (V9)
+DEFAULT_CLOUD_PORT = 8850
+_DEFAULT_CLOUD_ENV_FILE = "~/.config/hypermnesic-cloud/cloud.env"
+
+
+def render_cloud_systemd_unit(repo: Path, *, host: str, port: int, path: str,
+                              public_url: str, resource: str, exe: str, env_file: Path,
+                              allowlist: list[str] | None = None,
+                              token_ttl: int = 3600) -> str:
+    """A portable user systemd unit running the **unified public** OAuth serve (``serve-cloud``)
+    on a loopback bind behind the Tailscale Funnel. The operator consent secret
+    (``HYPERMNESIC_CLOUD_APPROVAL_TOKEN``) and OPENAI_API_KEY are referenced via EnvironmentFile —
+    their VALUES are never inlined here (V9)."""
+    state = index_mod.STATE_DIRNAME
+    allow = "".join(f" --allowlist {shlex.quote(a)}" for a in (allowlist or [])
+                    if a and a.strip())
+    return f"""[Unit]
+Description=hypermnesic unified public OAuth MCP (cloud)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={repo}
+# HYPERMNESIC_CLOUD_APPROVAL_TOKEN (the consent secret) + OPENAI_API_KEY are read from the
+# owner-only env files below — their VALUES are never inlined into this unit.
+EnvironmentFile=-{repo}/.env
+EnvironmentFile=-{env_file}
+ExecStart={exe} serve-cloud --index-db {repo}/{state}/index.db --host {host} \
+--port {port} --path {path} --public-url {shlex.quote(public_url)} \
+--resource {shlex.quote(resource)} --token-ttl {token_ttl}{allow}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+"""
+
+
+def ensure_consent_secret(env_file: Path, *, min_len: int,
+                          gen=None) -> tuple[Path, bool]:
+    """Reuse a still-valid consent secret or mint a fresh one into an owner-only (chmod-600)
+    env file. Returns ``(path, generated)``. Idempotent: a present secret at/above the entropy
+    floor is reused untouched; an absent/weak one is (re)generated. The secret lands ONLY in this
+    owner-only file — never echoed, never committed (V9; mirrors ``auth-add-client``)."""
+    import secrets as _secrets
+
+    env_file = Path(env_file)
+    existing = ""
+    if env_file.exists():
+        for ln in env_file.read_text(encoding="utf-8").splitlines():
+            if ln.startswith(CLOUD_APPROVAL_ENV + "="):
+                existing = ln.split("=", 1)[1].strip()
+                break
+    if existing and len(existing) >= min_len:
+        return env_file, False                       # still-valid → reuse, don't regenerate
+    secret = (gen or (lambda: _secrets.token_urlsafe(32)))()
+    env_file.parent.mkdir(parents=True, exist_ok=True)
+    env_file.write_text(f"{CLOUD_APPROVAL_ENV}={secret}\n", encoding="utf-8")
+    env_file.chmod(0o600)
+    return env_file, True
+
+
+def funnel_routes(public_url: str, resource: str, base_target: str) -> list[tuple[str, str]]:
+    """The Tailscale funnel mounts the unified endpoint needs, each with its OWN target (proven by
+    the U8 live cutover — one shared target does NOT work). ``base_target`` is the loopback origin
+    ``http://127.0.0.1:<port>`` of a server serving at root (``--path /``):
+
+    - ``<res_path>`` (e.g. ``/mcp``) → ``base_target`` (root): the funnel strips the mount, so
+      ``/mcp``→MCP and ``/mcp/authorize``→the AS endpoint at the server root. (Why the server serves
+      at ``/`` not ``/mcp``: otherwise ``/mcp/authorize`` would 404.)
+    - the two ROOT discovery well-knowns the chain resolves at, each → the server's matching path:
+      RFC 9728 protected-resource at ``…/oauth-protected-resource<res_path>`` and RFC 8414 AS meta
+      at the server's bare ``…/oauth-authorization-server``. Missing these is what 404'd the first
+      cloud deploy; the path suffixes keep them off honcho's routes."""
+    from urllib.parse import urlparse
+
+    base = base_target.rstrip("/")
+    res_path = urlparse(resource).path.rstrip("/") or "/mcp"
+    iss_path = urlparse(public_url).path.rstrip("/") or "/mcp"
+    routes = [
+        (res_path, base),                                            # MCP + AS endpoints (root)
+        (f"/.well-known/oauth-protected-resource{res_path}",
+         f"{base}/.well-known/oauth-protected-resource{res_path}"),  # RFC 9728 (the 401 target)
+        (f"/.well-known/oauth-authorization-server{iss_path}",
+         f"{base}/.well-known/oauth-authorization-server"),          # RFC 8414 (server-root path)
+    ]
+    seen: set = set()
+    uniq: list[tuple[str, str]] = []
+    for m, t in routes:
+        if m not in seen:                        # de-dup mounts (issuer==resource path collapses)
+            seen.add(m)
+            uniq.append((m, t))
+    return uniq
+
+
+def _tailscale_funnel_cmd(mount: str, target: str) -> list[str]:
+    """The `tailscale funnel --set-path` command for one mount. ALWAYS `funnel`, NEVER `serve`:
+    `serve --set-path` silently clears AllowFunnel[:443] and drops the public /cloud + /honcho
+    reach (a known live trap). Background + https=443 keep it persistent + public."""
+    return ["tailscale", "funnel", "--bg", "--https=443", "--set-path", mount, target]
+
+
+class SetupOps:
+    """The privileged/network side effects of ``setup``, isolated so the orchestration is
+    unit-testable without touching Tailscale, systemd, or the network. The real impl shells out
+    to ``tailscale funnel`` (never ``serve``) and curls the discovery chain; tests inject a fake."""
+
+    def tailscale_ready(self) -> bool:
+        """True iff Tailscale is installed AND this node is logged in (Funnel-capable). setup
+        never manages Tailscale's own lifecycle (R14) — it only checks, then fails actionably."""
+        import subprocess
+        if shutil.which("tailscale") is None:
+            return False
+        try:
+            r = subprocess.run(["tailscale", "status", "--json"], capture_output=True,
+                               text=True, timeout=10)
+        except (OSError, subprocess.SubprocessError):
+            return False
+        if r.returncode != 0:
+            return False
+        try:
+            return str(json.loads(r.stdout).get("BackendState", "")) == "Running"
+        except ValueError:
+            return False
+
+    def apply_funnel_route(self, mount: str, target: str) -> None:
+        import subprocess
+        cmd = _tailscale_funnel_cmd(mount, target)
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            raise InstallError(f"tailscale funnel failed for {mount}: {r.stderr.strip()}")
+
+    def install_and_start_service(self, unit_path, name: str) -> None:
+        import subprocess
+        dest = Path("~/.config/systemd/user").expanduser()
+        dest.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(str(unit_path), str(dest / f"{name}.service"))
+        subprocess.run(["systemctl", "--user", "daemon-reload"], check=False)
+        subprocess.run(["systemctl", "--user", "enable", "--now", name], check=False)
+
+    def verify_discovery(self, public_url: str, resource: str) -> dict:
+        """Curl the real discovery chain (KTD6): RFC 9728 protected-resource metadata → RFC 8414
+        AS metadata → an unauth tools/list (expect 401 + WWW-Authenticate). Verifies real output,
+        not an exit code. ``ok`` is False if any step does not resolve to hypermnesic."""
+        import urllib.request
+        from urllib.parse import urlparse
+
+        from mcp.server.auth.routes import build_resource_metadata_url
+        from mcp.shared.auth import AnyHttpUrl
+
+        def _get_json(url: str):
+            try:
+                with urllib.request.urlopen(url, timeout=8) as resp:
+                    return resp.status, json.loads(resp.read().decode())
+            except Exception:
+                return None, None
+
+        checks: dict = {}
+        prm_url = str(build_resource_metadata_url(AnyHttpUrl(resource)))
+        st, prm = _get_json(prm_url)
+        checks["protected_resource"] = bool(
+            st == 200 and prm and str(prm.get("resource", "")).rstrip("/") == resource.rstrip("/"))
+        as_servers = (prm or {}).get("authorization_servers") or []
+        as_url = (str(as_servers[0]) if as_servers else public_url).rstrip("/")
+        st2, asm = _get_json(as_url + "/.well-known/oauth-authorization-server")
+        if st2 != 200:
+            st2, asm = _get_json(
+                f"{urlparse(as_url).scheme}://{urlparse(as_url).netloc}"
+                f"/.well-known/oauth-authorization-server{urlparse(as_url).path}")
+        checks["as_metadata"] = bool(st2 == 200 and asm and asm.get("token_endpoint"))
+        # an unauth POST to the resource must be 401 with a WWW-Authenticate pointing at the PRM
+        req = urllib.request.Request(resource, data=b"{}", method="POST",
+                                     headers={"Content-Type": "application/json"})
+        try:
+            urllib.request.urlopen(req, timeout=8)
+            checks["unauth_401"] = False                 # a 2xx on an unauth write is a failure
+        except urllib.error.HTTPError as e:
+            checks["unauth_401"] = (e.code == 401)
+        except Exception:
+            checks["unauth_401"] = False
+        return {"ok": all(checks.values()), "checks": checks}
+
+
+def setup(repo, *, public_url: str, resource: str, host: str = _LOCALHOST,
+          port: int = DEFAULT_CLOUD_PORT, path: str = "/", env_file=None,
+          allowlist: list[str] | None = None, token_ttl: int = 3600,
+          ops=None, secret_factory=None) -> dict:
+    """Bring the unified public endpoint fully online in one idempotent command: render +
+    install the cloud service, persist the operator consent secret, configure the Tailscale
+    funnel (MCP path + discovery well-knowns), verify the real HTTPS discovery chain, and return
+    the public URL + login instructions. Re-running converges to the same state (AE4).
+
+    Fail-closed and ordered so a failure leaves no partial state: validate the public origin (R2)
+    and Tailscale readiness (R14) BEFORE any side effect; verify discovery (KTD6) AFTER the funnel,
+    failing the command if a well-known does not resolve. The consent secret + OPENAI_API_KEY stay
+    in owner-only env files, never inlined (V9). Privileged/network steps go through ``ops`` so the
+    orchestration is unit-testable; the CLI uses the real ``SetupOps``."""
+    from hypermnesic import auth_cloud
+    from hypermnesic.mcp_server import _require_public_https_origin
+
+    _require_public_https_origin(public_url, "public_url")     # R2 — fail before any artifact
+    _require_public_https_origin(resource, "resource")
+    repo = Path(repo).resolve()
+    if not (repo / ".git").exists():
+        raise InstallError(f"setup needs a git repo, but no .git found at {repo}")
+    try:
+        config.get_api_key()                                   # engine credential present?
+    except config.ConfigError as exc:
+        raise InstallError(f"setup needs OPENAI_API_KEY (env or gitignored .env): {exc}") from exc
+
+    ops = ops or SetupOps()
+    if not ops.tailscale_ready():                              # R14 — actionable, no partial state
+        raise InstallError(
+            "setup requires Tailscale installed and logged in (Funnel-capable). Install it and "
+            "run `tailscale up`, then re-run `hypermnesic setup`. setup never manages Tailscale "
+            "itself.")
+
+    env_file = Path(env_file).expanduser() if env_file else Path(
+        _DEFAULT_CLOUD_ENV_FILE).expanduser()
+    _, generated = ensure_consent_secret(
+        env_file, min_len=auth_cloud.MIN_APPROVAL_TOKEN_LEN, gen=secret_factory)
+
+    state = repo / index_mod.STATE_DIRNAME
+    state.mkdir(mode=0o700, parents=True, exist_ok=True)
+    exe = _hypermnesic_exe()
+    unit_path = state / f"{CLOUD_SERVICE_NAME}.service"
+    unit_path.write_text(render_cloud_systemd_unit(
+        repo, host=host, port=port, path=path, public_url=public_url, resource=resource,
+        exe=exe, env_file=env_file, allowlist=allowlist, token_ttl=token_ttl), encoding="utf-8")
+    ops.install_and_start_service(unit_path, CLOUD_SERVICE_NAME)
+
+    base_target = f"http://{host}:{port}"            # server is at root (--path /); pathless base
+    routes = funnel_routes(public_url, resource, base_target)
+    for mount, tgt in routes:
+        ops.apply_funnel_route(mount, tgt)
+
+    discovery = ops.verify_discovery(public_url, resource)
+    if not discovery.get("ok"):
+        raise InstallError(
+            "setup configured the service + funnel but the HTTPS discovery chain did not resolve "
+            "to hypermnesic (no exit-code parity — real output checked): "
+            f"{discovery.get('checks')}. Check the funnel well-known routes and the running "
+            "service, then re-run setup.")
+
+    return {
+        "service": CLOUD_SERVICE_NAME, "public_url": public_url, "resource": resource,
+        "unit_path": str(unit_path), "env_file": str(env_file),
+        "secret_generated": generated, "funnel_routes": routes, "discovery": discovery,
+        "converged": not generated,
+        "next_steps": [
+            f"add {public_url} to your apps (ChatGPT/Claude connector, Claude Code plugin, Codex, "
+            "Obsidian) as the hypermnesic MCP URL",
+            "on first connect each app opens a browser once to authorize (read by default); "
+            "approve write at the consent page to grant commit_note",
         ],
     }
 
 
 def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAULT_PORT,
             path: str = DEFAULT_PATH, service: str = "systemd",
-            master_url: str | None = None, mcp_config_path: str | None = None) -> dict:
+            master_url: str | None = None, mcp_config_path: str | None = None,
+            auth_issuer_url: str | None = None, auth_resource_url: str | None = None,
+            required_scope: list[str] | None = None) -> dict:
     """Provision a host into ``role``.
 
     Pure, offline, idempotent: it verifies the environment, renders the service
@@ -242,7 +577,8 @@ def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAUL
     if role not in ROLES:
         raise InstallError(f"unknown role {role!r}; choose from {ROLES}")
     if role == "client":
-        return _install_client(master_url, mcp_config_path)
+        return _install_client(master_url, mcp_config_path, auth_issuer_url=auth_issuer_url,
+                               auth_resource_url=auth_resource_url, required_scope=required_scope)
 
     # --- engine roles: master | single -------------------------------------
     if repo is None:
@@ -276,7 +612,10 @@ def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAUL
     exe = _hypermnesic_exe()
     if service == "systemd":
         up = state / "hypermnesic.service"
-        up.write_text(render_systemd_unit(repo, bind, port, path, exe), encoding="utf-8")
+        up.write_text(render_systemd_unit(repo, bind, port, path, exe,
+                                          auth_issuer=auth_issuer_url,
+                                          auth_resource=auth_resource_url,
+                                          required_scopes=required_scope), encoding="utf-8")
         artifacts.append(str(up))
     else:  # docker
         dockerfile, compose = render_docker(repo, bind, port, path)

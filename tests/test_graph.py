@@ -52,3 +52,50 @@ def test_cyclic_links_terminate_at_depth(make_corpus):
     g = graph.Graph.from_repo(repo)
     ctx = graph.build_context(g, "a.md", depth=5)  # a↔c cycle must terminate
     assert set(ctx) <= {"b.md", "c.md"}
+
+
+# --- U1: public name→page resolution (gbrain `get` role) ---------------------
+
+RESOLVE_PAGES = {
+    "infrastructure/hetzner.md": "# Hetzner\n\nThe homelab box on Hetzner.\n",
+    "people/léa.md": "# Léa\n\nA non-ascii entity name.\n",
+    "notes/dup.md": "# Dup one\n\nfirst duplicate stem.\n",
+    "archive/dup.md": "# Dup two\n\nsecond duplicate stem.\n",
+}
+
+
+def test_resolve_exact_path_and_md_suffix(make_corpus):
+    g = graph.Graph.from_repo(make_corpus(RESOLVE_PAGES))
+    # exact `.md`-stripped path and the `.md`-suffixed form both resolve to the page
+    assert g.resolve("infrastructure/hetzner") == "infrastructure/hetzner.md"
+    assert g.resolve("infrastructure/hetzner.md") == "infrastructure/hetzner.md"
+
+
+def test_resolve_unambiguous_stem_case_insensitive(make_corpus):
+    g = graph.Graph.from_repo(make_corpus(RESOLVE_PAGES))
+    # a bare entity name with one matching stem resolves (the wikilink target)
+    assert g.resolve("Hetzner") == "infrastructure/hetzner.md"
+
+
+def test_resolve_ambiguous_stem_returns_none_never_guesses(make_corpus):
+    g = graph.Graph.from_repo(make_corpus(RESOLVE_PAGES))
+    # two pages share the 'dup' stem → resolve to None, never a wrong guess
+    assert g.resolve("dup") is None
+
+
+def test_resolve_missing_is_none_not_error(make_corpus):
+    g = graph.Graph.from_repo(make_corpus(RESOLVE_PAGES))
+    assert g.resolve("nonexistent-entity") is None
+    assert g.resolve("") is None
+
+
+def test_resolve_non_ascii_name(make_corpus):
+    g = graph.Graph.from_repo(make_corpus(RESOLVE_PAGES))
+    assert g.resolve("Léa") == "people/léa.md"
+
+
+def test_resolve_strips_wikilink_display_and_anchor(make_corpus):
+    g = graph.Graph.from_repo(make_corpus(RESOLVE_PAGES))
+    # resolution matches body-wikilink semantics: display alias + anchor are stripped
+    assert g.resolve("Hetzner|the box") == "infrastructure/hetzner.md"
+    assert g.resolve("infrastructure/hetzner#Notes") == "infrastructure/hetzner.md"

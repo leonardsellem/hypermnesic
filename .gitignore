@@ -23,6 +23,16 @@ harness/gbrain_baseline.frozen.jsonl
 harness/results/
 harness/review*.md
 
+# LongMemEval harness — the downloaded dataset (referenced by hash, never
+# committed: ~GBs + contamination, R15) and all generated artifacts. The repo
+# ships only the tooling, the committed manifest, the synthetic smoke subset, and
+# aggregate/per-ability results in harness/BENCHMARKS.md.
+harness/longmemeval/longmemeval_*.json
+harness/longmemeval/corpus/
+harness/longmemeval/results/
+harness/longmemeval/*.frozen.jsonl
+harness/longmemeval/.embed_cache.sqlite
+
 # Local index / scratch artifacts
 *.db
 *.sqlite

@@ -1,14 +1,29 @@
 # Threat Model — the `commit_note` MCP write surface (pre-U7 gate)
 
-**Status:** mandatory gate artifact. Phase 1 (U7–U12, the write kernel) does not
-begin until this exists and is reviewed (plan Open Questions; the Phase-1 gate is
-*U5-passes AND this artifact exists*).
+**Status:** historical gate artifact — **signed off 2026-06-01** (see the footer).
+It was the mandatory pre-Phase-1 gate (Phase 1 could not begin until this existed
+and was reviewed: *U5-passes AND this artifact exists*). Phase 1 (U7–U12) and the
+gated `commit_note` MCP write tool (U31, registered only on a `write_enabled`
+master) have **since shipped**. This remains the threat model of record for the
+write surface; the mitigations below map to the live `frontmatter_gate.py` /
+`serialize.py` / `audit_log.py` / `commit_note.py` modules.
 
 **Scope.** The single sanctioned write path —
-`commit_note(path, body, frontmatter)` — exposed via the **tailnet-only** MCP
-server in Phase 1. Phase 0 is read-only and exposes **no** write tool, so this
-model governs net-new attack surface introduced at U7. Public/cloud reach
-(OAuth2.1/DCR gateway) is Phase 3 and explicitly out of scope here.
+`commit_note(path, body, frontmatter)` — exposed over the **tailnet-only** MCP
+server when serving write-enabled (Phase 0 was read-only and exposed **no** write
+tool, so this model governs the net-new attack surface introduced at U7 and now
+served via U31).
+
+> **Phase 2 amendment (R12 / U2, 2026-06-02 — supersedes the prior "OAuth is a
+> deferred seam, Phase 3 out of scope" posture).** OAuth 2.1 **authentication of the
+> MCP endpoint is now IN scope.** The engine is an OAuth 2.1 **Resource Server (RS)**;
+> a separate tailnet-internal **Authorization Server (AS, U12)** issues tokens, and a
+> **write-enabled master must run auth-on** (`write_enabled ⇒ auth-required` on any
+> non-loopback bind — an engine invariant mirroring the `0.0.0.0` refusal). The tailnet
+> is **no longer the sole boundary** for the write tool: a caller must additionally
+> present a valid, audience-bound (RFC 8707), in-scope token. What stays out of scope:
+> public/Funnel exposure and fine-grained per-user *authorization* beyond a single
+> required scope. The new RS attack surface is modeled in **V11–V14** below.
 
 ---
 
@@ -27,9 +42,15 @@ model governs net-new attack surface introduced at U7. Public/cloud reach
 ## 2. Trust boundary & actors
 
 - **Network boundary = the tailnet.** The MCP server binds a specific Tailscale
-  interface address at the socket level (KTD10), never `0.0.0.0`. There is **no
-  OAuth in Phase 1** — the tailnet *is* the authentication boundary. Anything
-  that can reach the socket can attempt a call.
+  interface address at the socket level (KTD10), never `0.0.0.0`. In Phase 1 the
+  tailnet *was* the sole authentication boundary.
+  **Phase 2 (R12/U2):** the tailnet remains the *network* boundary, but a
+  write-enabled master additionally requires a valid **OAuth 2.1 bearer token** —
+  per-identity, audience-bound, revocable. Reaching the socket is necessary but no
+  longer sufficient to write; an unauthenticated `tools/call` to `commit_note` is
+  rejected before any tool runs. **New actor:** the **Authorization Server (AS, U12)**
+  — a tailnet-internal token issuer, independent of gbrain's AS, on which every
+  authenticated call (and the per-prompt hook) depends (a recall SPOF — see V13).
 - **Actor identity is server-set** (U11): the verified Tailscale node identity
   (via the Tailscale local API), or a fixed server-process sentinel when
   unavailable — **never** a caller-supplied string.
@@ -52,8 +73,29 @@ unconditionally regardless of caller — `.git/`, any CI/workflow dir,
 executable/script dirs, and agent-instruction files *anywhere in the tree* — plus
 an optional **per-repo writable-path allowlist**. The denylist is a *rule* (file
 class), not a fixed list, so it holds when the engine drops into an arbitrary
-repo it has never seen. *Residual:* a missed governance-file class. Prefer a
+repo it has never seen. As implemented in `serialize.py` the current rule covers:
+protected dirs anywhere in the path (`.git`, `.github`, `.obsidian`, `.claude`,
+`.codex`, `views`, `scripts`, `bin`, `hooks`, `skills`, `.hypermnesic`),
+instruction files anywhere (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`,
+`copilot-instructions.md`), and never-files (`.gitignore`, `.gitattributes`,
+`.gitmodules`). *Residual:* a missed governance-file class. Prefer a
 deny-by-default / allowlist posture for content paths where feasible.
+
+*Phase-B update (2026-06-03 — allowlist→blocklist posture reversal):* the
+4-prefix content-path **allowlist is no longer the default** — `commit_note`'s
+default write surface is now a **blocklist** (`_effective_write_surface(None)
+→ None`) so the operator's content folders (`projects/`, `people/`,
+`companies/`, `meetings/`) are writable. This removes the "allowlist posture for
+content paths" backstop V1 leaned on, so the "missed governance-file class"
+residual is **closed directly**: `protected_reason()` now also refuses a
+**governance-extension class** (Dockerfile/Makefile/Containerfile, setup.py/
+setup.cfg, package.json/package-lock.json, `.npmrc`/`.netrc`/`.env`, and the
+`.yml`/`.yaml`/`.lock`/`.toml` extensions) and matches protected dirs
+**case-insensitively** (closing the `Scripts/`→`scripts/` hole on a
+case-insensitive FS). The full re-audit, the enumerated exposed classes, the
+fence decision, and the operator sign-off gate are in
+`docs/2026-06-03-blocklist-write-surface-security-review.md` (amends the unified
+write-anywhere review). The denylist remains a *rule* (file class), per V1.
 
 ### V2 — Prompt injection via ingested content (retrieval/index poisoning)
 *Threat:* an adversarial document (in the corpus or a U6 portability target)
@@ -119,6 +161,86 @@ index` sentinel test; audit log excludes credentials.
 the index self-heals via the SHA-checkpoint catch-up and the log via the
 reconciler back-fill; idempotency is keyed on the resulting tree SHA, so re-runs
 and crash-recovery do not conflict.
+
+### Phase 2 amendment — OAuth 2.1 Resource-Server vectors (R12 / U2)
+
+The RS auth surface inverts the usual posture: an auth bug does not merely deny — it can
+**open** the write tool. These four vectors are net-new with R12.
+
+### V11 — Token-validation bypass (auth-off / forged / replayed token)
+*Threat:* the write-enabled master serves `commit_note` with auth misconfigured-off, or
+accepts a forged/expired/replayed bearer token, exposing the write tool to any tailnet
+node.
+*Mitigation (U2):* the **`write_enabled ⇒ auth-required`** startup invariant (a write
+master on a non-loopback bind refuses to start without a verifier + AuthSettings, mirroring
+the `0.0.0.0` refusal) makes auth-off un-serveable; the SDK `BearerAuthBackend` rejects a
+missing/invalid token (401) before any tool runs; `StrictResourceTokenVerifier` rejects an
+expired token; tokens are opaque and validated against the AS (introspection), so a forged
+token fails validation. Gate A verifies an unauthenticated `commit_note` call is rejected.
+*Residual:* a leaked **live** token is a valid write credential until expiry/revocation —
+bounded by a token-lifetime ceiling + revocation (U12), not eliminated.
+
+### V12 — Audience / issuer confusion (cross-RS token replay)
+*Threat:* a token legitimately minted by the same AS for a **different** resource server on
+the tailnet (or a different audience) is replayed against hypermnesic's `/mcp` to gain write
+access it was never granted.
+*Mitigation (U2):* **RFC 8707 strict audience binding** in `verify_token` — a token whose
+`resource`/`aud` does not include this RS's `resource_server_url` is rejected, and a token
+with **no** audience is rejected (strict: absence cannot be bound). The AS is kept
+independent of gbrain's AS (no shared issuer/discovery), so cross-issuer confusion has no
+path. Gate A verifies a wrong-audience token is rejected.
+
+### V13 — AS-compromise / AS-availability blast radius
+*Threat:* the tailnet-internal AS is compromised (mints arbitrary write tokens) or
+unavailable (every authenticated call — including the per-prompt auto-query hook — fails;
+after gbrain teardown there is **no fallback** memory layer).
+*Mitigation (U2/U12/U11):* the AS runs tailnet-internal (no public reach); a token-lifetime
+ceiling + revocation bound a compromise; DCR is locked to the enrolled static clients after
+enrollment so an arbitrary tailnet node cannot self-issue; the auto-query hook degrades
+**silently** (no recall, never a turn-blocking 401 storm) when the AS/endpoint is down; U11
+adds standing AS-availability + token-verify-failure SPOF monitoring with a restart runbook.
+The **RS→AS introspection channel is loopback** (the RS master and the AS are co-located on
+the homelab; the master introspects over `127.0.0.1`), so a tailnet node cannot MITM token
+*validation* (security-review residual, 2026-06-02); only token *issuance* from a remote peer
+(the Mac) crosses the tailnet, and that authenticates the client to the AS.
+*Accepted risk:* the AS is a single point of failure for *recall availability* (not for git,
+the source of truth) — consciously accepted, monitored, not eliminated.
+
+### V14 — Auth bug *opens* the write surface (inverted failure mode)
+*Threat:* unlike V1–V10 where a bug denies, an RS auth bug (verifier returns a token on the
+None/exception path, scope check inverted, audience check skipped) **grants** write access —
+failing *open*.
+*Mitigation (U2):* the verifier **fails closed** — any raw-validation exception, a `None`
+result, an expired token, or a non-matching audience returns `None` (→ 401), never a
+default-allow; the verifier is covered by explicit valid/invalid/expired/wrong-/no-audience
+tests. **Write-scope is enforced per-tool, not only by the transport.** The SDK middleware
+applies one `required_scopes` list to *all* tools, so it cannot separate read clients from
+write clients on a single endpoint — a write-enabled master started without a write scope in
+`required_scopes` would otherwise expose `commit_note` to any valid (e.g. `read`-scoped)
+token (the realized V14 case, found in the 2026-06-02 security review). Fix: **`commit_note`
+self-enforces the `write` scope** from the authenticated principal (`get_access_token()`),
+independent of the transport scope list; a token lacking `write` is refused before any write
+(`tests/test_mcp_server.py::test_commit_note_rejects_read_scoped_principal`). *Residual:* a
+defect in the SDK's `BearerAuthBackend`/`RequireAuthMiddleware` is inherited; pinned + tracked.
+
+### V15 — Tailnet-trust write (the `--allow-tailnet-write` opt-out, 2026-06-03)
+*Context:* once the public OAuth `/mcp` lane carries all untrusted traffic, the operator may choose
+to treat **tailnet membership itself as the write boundary** for the tailnet read companion
+(`:8848`) — the original "MVP auth = tailnet membership" model — so a tailnet device's agent (and the
+CLI-equivalent) can `commit_note` without an OAuth ceremony the tailnet doesn't need.
+*Threat:* this re-opens an **auth-off write on a network bind** — exactly what the
+`write_enabled ⇒ auth-required` invariant (V11) closed. Anything that reaches the bind can write the
+vault; if the bind were ever a non-tailnet address, that would be a public write hole.
+*Mitigation:* the relaxation is **explicit and bounded**, never a silent default. It requires the
+operator to pass `--allow-tailnet-write` (engine `trust_tailnet_write=True`), and the engine permits
+it **only** when the bind is a literal Tailscale CGNAT address (`100.64.0.0/10`); a non-tailnet IP is
+refused with a distinct error, and the `0.0.0.0`/wildcard refusal still always fires first. The write
+itself remains bounded by every `commit_note` guard (allowlist, allowlist-independent protected-path
+refusal, diff-or-die, audit log, git-revertability). Default-off, so other deployments stay
+safe-by-default. Guards: `tests/test_mcp_server.py::test_trust_tailnet_write_*`.
+*Accepted residual:* anything with tailnet access to `:8848` can write the vault (no per-identity
+auth on that lane). The operator accepts tailnet membership as that boundary; OAuth `/mcp` remains the
+path for any client that should be individually authenticated/revocable.
 
 ## 4. Accepted risks (this phase)
 

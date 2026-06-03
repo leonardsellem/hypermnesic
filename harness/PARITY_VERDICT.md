@@ -1,4 +1,46 @@
+# U6 Cut-over Verdict — SAFE TO CUT OVER (2026-06-03)
+
+> **Phase-B gate for U7 (content-distill cutover).** U6 extends the U5 retrieval-parity gate
+> (below) with the two dimensions content-distill flips simultaneously: **entity resolution**
+> (the `gbrain search "<name>"` → slug pattern) and **index-freshness without gbrain** (no
+> `sync`/`extract`/`embed`). The combined verdict is computed by `parity_harness.safe_to_cut_over`
+> and is **test-enforced** (`tests/test_parity_harness.py`) so a regression halts the cutover.
+
+**Verdict: `safe_to_cut_over = true`** — all three signals green:
+
+1. **Retrieval parity (U5): `pass`** — hypermnesic ≥ gbrain (recall@10 0.910 vs 0.818, MRR 0.802
+   vs 0.769), 0 catastrophic French misses. (Verdict of record below; not re-run.)
+
+2. **Entity resolution (U6): parity, zero false wikilinks.** `parity_harness.resolve_parity` run
+   live against the vault graph (`/home/ubuntu/gbrain-brain/.hypermnesic/index.db`). The critical
+   safety property — **never a false wikilink target** — held across every sample:
+   **`false_positives = 0`**. Exact-path and clean unambiguous-stem entities resolved **100%**
+   (the content-distill `resolve <name>` → `[[slug]]` path); an absent entity correctly resolved
+   to `None`. One miss on an 8-case broad sample (87.5%): a `.brv` context-tree file with a
+   **`.abstract.md` double extension** — not a content-distill entity type, and a miss (None),
+   never a *wrong* link. Resolution is at parity for the cutover's actual usage.
+
+3. **Index freshness without gbrain (U6): recall-able.** `parity_harness.freshness_recall`
+   (unit-proven): a just-committed content-distill-sized delta is recall-able via read-time
+   convergence (`converge --now`) + retrieve with **no `gbrain sync`/`extract`/`embed`**.
+   Corroborated live by the Phase-1 canary (`sources/hypermnesic-canary-2026-06-02.md`), which is
+   recall-able through hypermnesic via convergence alone (homelab LOG, 2026-06-02). An
+   oversized delta (> `CONVERGE_MAX_DELTA_FILES`) is surfaced as a manual-reindex signal, not
+   silently dropped.
+
+**Gate behavior:** `safe_to_cut_over` returns `false` (blocking U7, with reasons) if retrieval
+parity is not `pass`, resolution drops below gbrain or invents a false wikilink, or a fresh delta
+is not recall-able — each path is asserted in `test_parity_harness.py`. The mechanism is the gate;
+this artifact is the dated evidence.
+
+---
+
 # U5 Parity Verdict — PASS (2026-06-01)
+
+> **Dated snapshot (2026-06-01).** The threat-model sign-off referenced below
+> landed the same day, and Phase 1 (U7–U12) plus Phases 2 and 2.5-Plan-1 have
+> since shipped (see the README phase status). Retained as the U5
+> retrieval-quality gate of record; the measured numbers are not re-run here.
 
 **Verdict of record: `pass`.** hypermnesic ≥ gbrain on both aggregate metrics
 (recall@10 **0.910 vs 0.818**, MRR **0.802 vs 0.769**, both beyond the near-tie
