@@ -1,6 +1,6 @@
 [project]
 name = "hypermnesic"
-version = "0.0.4"
+version = "0.0.5"
 description = "A markdown-native, git-as-source-of-truth memory layer: a disposable, rebuildable retrieval index over any repository, served over a tailnet-only MCP server (read tools always; a gated, git-first commit_note write tool on a write-enabled master)."
 requires-python = ">=3.11"
 license = { text = "Proprietary" }
