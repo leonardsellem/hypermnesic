@@ -23,7 +23,7 @@ the Phase-1 → 2.5 plans live in-repo under `docs/plans/`.
 
 ## U1 — scaffold (in progress)
 
-- Repo created at `/home/ubuntu/dev/hypermnesic`, `git init -b main`.
+- Repo created at `~/dev/hypermnesic`, `git init -b main`.
 - Deps declared: `sqlite-vec`, `openai`, `mcp`, `ruamel.yaml`; dev:
   `pytest`, `ruff`, `pip-licenses`.
 - `LICENSE`: proprietary/private placeholder. Plan allows no public LICENSE
@@ -69,7 +69,7 @@ they are never bundled — Obsidian provides them at runtime.
 
 ### Resolved blockers (U1)
 
-- **OPENAI_API_KEY**: operator populated `/home/ubuntu/dev/hypermnesic/.env`
+- **OPENAI_API_KEY**: operator populated `~/dev/hypermnesic/.env`
   (verified non-empty, `sk-` prefix, 164 chars; value never echoed). `.env` is
   gitignored. Key blocker cleared for U2/U5/U6 live gates.
 

@@ -20,8 +20,8 @@ from mcp.shared.auth import OAuthClientInformationFull
 
 from hypermnesic import auth_cloud
 
-RES = "https://homelab.taildabf2.ts.net/cloud/mcp"
-PUBLIC = "https://homelab.taildabf2.ts.net/cloud"
+RES = "https://example.ts.net/cloud/mcp"
+PUBLIC = "https://example.ts.net/cloud"
 REDIRECT = "https://chatgpt.com/connector_platform_oauth_redirect"
 
 
@@ -214,7 +214,7 @@ def test_access_token_audience_enforced_at_load():
     at = _run(p.load_access_token(tokens.access_token))
     assert str(at.resource).rstrip("/") == RES                   # bound to our single resource
     # tamper the stored resource → load rejects it
-    p._access[tokens.access_token].resource = "https://homelab.taildabf2.ts.net/other"
+    p._access[tokens.access_token].resource = "https://example.ts.net/other"
     assert _run(p.load_access_token(tokens.access_token)) is None
 
 
@@ -283,8 +283,8 @@ def test_cloud_server_trusts_public_host_behind_proxy(make_corpus, fake_embedder
 
 # the unified lane is scoped under /mcp on the shared hostname (mirrors the cloud lane's /cloud
 # and honcho's /honcho). issuer == resource == the public MCP URL the client points at.
-PUBLIC_U = "https://homelab.taildabf2.ts.net/mcp"
-RES_U = "https://homelab.taildabf2.ts.net/mcp"
+PUBLIC_U = "https://example.ts.net/mcp"
+RES_U = "https://example.ts.net/mcp"
 
 
 def _unified(make_corpus, fake_embedder, **kw):
@@ -315,8 +315,8 @@ def test_unified_lane_refuses_bare_ip_or_plain_http_issuer(make_corpus, fake_emb
             resource=kw.get("resource", RES_U), public_url=kw.get("public_url", PUBLIC_U),
             approval_token="op-approval-token-24chars-or-more")
 
-    for bad in ("http://homelab.taildabf2.ts.net/mcp",        # plain HTTP
-                "https://100.103.0.55:8850/mcp"):              # bare IP literal
+    for bad in ("http://example.ts.net/mcp",        # plain HTTP
+                "https://100.64.0.55:8850/mcp"):              # bare IP literal
         with pytest.raises(ValueError):
             _build(public_url=bad)
         with pytest.raises(ValueError):
@@ -359,7 +359,7 @@ def test_unified_discovery_path_is_hypermnesic_scoped_distinct_from_honcho():
     from mcp.shared.auth import AnyHttpUrl
     hm = str(build_resource_metadata_url(AnyHttpUrl(RES_U)))
     honcho = str(build_resource_metadata_url(
-        AnyHttpUrl("https://homelab.taildabf2.ts.net/honcho")))
+        AnyHttpUrl("https://example.ts.net/honcho")))
     assert hm.endswith("/oauth-protected-resource/mcp")          # hypermnesic-scoped
     assert honcho.endswith("/oauth-protected-resource/honcho")   # honcho-scoped
     assert hm != honcho                                          # no collision
@@ -391,12 +391,12 @@ def test_consent_form_posts_to_the_public_path_not_root():
     # ("connected, but not all permissions were granted"). The form must POST back to the public
     # consent endpoint.
     from hypermnesic import mcp_server
-    p = _provider()                              # public_url == https://homelab.taildabf2.ts.net/cloud
+    p = _provider()                              # public_url == https://example.ts.net/cloud
     _run(p.register_client(_client()))
     pending = _run(p.authorize(_client(), _params(scopes=("read", "write")))).split("pending=")[1]
     html, status = mcp_server._render_consent(p, pending)
     assert status == 200
-    assert 'action="https://homelab.taildabf2.ts.net/cloud/consent"' in html  # full public path
+    assert 'action="https://example.ts.net/cloud/consent"' in html  # full public path
     assert 'action="/consent"' not in html       # the root-absolute bug is gone
 
 

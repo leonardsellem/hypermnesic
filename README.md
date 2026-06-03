@@ -126,7 +126,7 @@ and the surfaces built on top:
 uv sync --extra dev
 uv run pytest
 uv run ruff check .
-uv run python scripts/license_scan.py   # zero AGPL/GPL/SSPL gate
+uv run python scripts/license_scan.py   # zero AGPL/GPL/SSPL *dependency* gate
 ```
 
 ## Credentials
@@ -137,5 +137,20 @@ an owner-only env file; tokens are never logged or committed.
 
 ## License
 
-Proprietary / private. See [LICENSE](LICENSE). Third-party dependencies are permissive and
-verified copyleft-free by `scripts/license_scan.py`.
+Proprietary / private (pre-release). See [LICENSE](LICENSE). The public open-source license is a
+staged, pre-public decision — the planned engine license is **AGPL-3.0** (the staged text + a
+one-PR flip runbook live in `docs/launch/`).
+
+The `scripts/license_scan.py` "zero AGPL/GPL/SSPL" gate is **dependency-scoped**: it governs
+hypermnesic's *third-party dependencies*, keeping the dependency tree copyleft-free. It does **not**
+govern — and is not contradicted by — the engine's own (planned-AGPL) license: the gate excludes the
+project's own distribution before classifying, so it stays green when the engine itself is licensed
+AGPL-3.0. Third-party dependencies are permissive and verified copyleft-free on every CI run.
+
+**Engine ↔ companion license boundary.** The Obsidian companion ships from a separate repository
+under **GPL-3.0**; the engine's planned license is **AGPL-3.0**. Neither is a derivative of the
+other — and that holds **because** they are separate processes that communicate only at arm's
+length over the MCP network protocol (`search` / `build_context` / `think`), with no shared or
+statically-linked code. The boundary stays true only while the **companion does not vendor,
+import, or statically link engine source** (the read-only-over-the-wire invariant). Keep that
+condition and the two licenses remain independent.
