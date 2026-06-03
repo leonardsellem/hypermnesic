@@ -165,6 +165,23 @@ def test_think_as_dict_has_unlinked_not_tensions(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_think_unlinked_pairs_dedup_by_note_not_chunk(make_corpus, fake_embedder):
+    # A note with two distinct chunks must not pair with another note twice —
+    # pairs are over distinct NOTES, not chunks (code-review regression).
+    repo = make_corpus({
+        "multi.md": "# Multi\n\n## S1\n\nDUPMARK alpha section content.\n"
+                    "\n## S2\n\nDUPMARK beta section content.\n",        # → two chunks
+        "solo.md": "# Solo\n\nDUPMARK gamma other content.\n",
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "DUPMARK", embedder=fake_embedder, graph=g, repo=repo)
+    pair_keys = [frozenset((u["a_path"], u["b_path"])) for u in r.unlinked]
+    assert len(pair_keys) == len(set(pair_keys)), f"duplicate pairs: {r.unlinked}"
+    assert frozenset(("multi.md", "solo.md")) in pair_keys
+    idx.close()
+
+
 def test_think_unlinked_empty_with_single_hit(make_corpus, fake_embedder):
     repo = make_corpus({"only.md": "# Only\n\nLONEMARKER unique.\n"})
     idx = index_mod.build_index(repo, fake_embedder)
