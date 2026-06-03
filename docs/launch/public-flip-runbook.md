@@ -127,7 +127,17 @@ project is public and forked. Rewriting is the only way to truly remove the valu
 doing it before the first public push is the cheapest it will ever be. Fall back to (B)
 only if a clean rewrite proves disruptive to in-flight branches.
 
-`decision:` _____   `signed_off:` _____
+`decision:` **(A) git-filter-repo rewrite** (replace `taildabf2==>example`,
+`100.103.0.55==>100.64.0.55`)   `signed_off:` 2026-06-03 (operator)
+
+> **Execution note.** A `git filter-repo` rewrite rewrites **every commit SHA across all
+> branches**, so it must run **once, on a fresh full mirror clone of the canonical repo**
+> (not from this agent worktree, and not before the docs PR is merged), then be
+> force-pushed to all refs — after which **every existing clone (MacBook, homelab) must
+> re-clone**. filter-repo also drops the `origin` remote as a safety measure; re-add it
+> before pushing. Sequence it as the dedicated history-rewrite step **after** this docs
+> work lands on `main` and **immediately before** the visibility flip (Step 8), so the
+> rewrite and the public push are one coordinated change.
 
 ### D2 — Contributor IP: DCO vs. CLA
 
@@ -141,7 +151,7 @@ not needed for an AGPL inbound=outbound project). Rationale: DCO is the cheapest
 provenance attestation and keeps the audit trail clean; it does not itself enable
 relicensing, which is consciously accepted as foreclosed under inbound=outbound AGPL.
 
-`decision:` DCO (CLA deferred)   `signed_off:` _____
+`decision:` DCO (CLA deferred)   `signed_off:` 2026-06-03 (operator)
 
 ### D3 — AGPL §13 ↔ GPL-3.0 companion legal sanity-check
 
