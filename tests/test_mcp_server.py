@@ -463,6 +463,40 @@ def test_write_enabled_localhost_without_auth_allowed(make_corpus, fake_embedder
     assert srv.settings.auth is None
 
 
+def test_trust_tailnet_write_allows_auth_off_write_on_a_tailnet_ip(make_corpus, fake_embedder):
+    # Explicit operator opt-in: tailnet membership is the write boundary. With trust_tailnet_write,
+    # a write-enabled serve on a real Tailscale IP (100.64.0.0/10) may run auth-off — commit_note is
+    # registered and no AuthSettings are attached. (The default still refuses; this is opt-in only.)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo,
+                                  write_enabled=True, trust_tailnet_write=True)
+    assert "commit_note" in {t.name for t in asyncio.run(srv.list_tools())}
+    assert srv.settings.auth is None                       # tailnet-trust, no OAuth ceremony
+
+
+def test_trust_tailnet_write_default_off_still_refuses(built_index):
+    # safe-by-default: without the explicit opt-in, the write_enabled⇒auth-required invariant holds.
+    with pytest.raises(ValueError, match="(?i)auth"):
+        mcp_server.build_server(built_index, host=TAILNET_IP, write_enabled=True)
+
+
+def test_trust_tailnet_write_rejects_a_non_tailnet_ip(built_index):
+    # the opt-in is BOUNDED to the Tailscale CGNAT range — it must not enable an auth-off write on
+    # an arbitrary public/LAN IP (that would be a real public write hole, not a tailnet one).
+    with pytest.raises(ValueError, match="(?i)tailnet|100\\.64"):
+        mcp_server.build_server(built_index, host="203.0.113.5", write_enabled=True,
+                                trust_tailnet_write=True)
+
+
+def test_trust_tailnet_write_never_enables_wildcard(built_index):
+    # the wildcard refusal is absolute — trust_tailnet_write cannot open a 0.0.0.0 write.
+    with pytest.raises(ValueError, match="(?i)tailnet-only|0\\.0\\.0\\.0|wildcard|bind"):
+        mcp_server.build_server(built_index, host="0.0.0.0", write_enabled=True,
+                                trust_tailnet_write=True)
+
+
 def test_write_enabled_verifier_without_auth_settings_refused(built_index):
     # both halves required: a verifier but no AuthSettings is a half-configured auth → refuse
     with pytest.raises(ValueError, match="(?i)auth"):

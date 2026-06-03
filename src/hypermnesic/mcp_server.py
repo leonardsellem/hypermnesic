@@ -115,6 +115,20 @@ class CommitNoteOutput(TypedDict, total=False):
 # Loopback binds are exempt from the write_enabled⇒auth-required invariant (U2): a
 # localhost serve is reachable only by the local user — never the tailnet.
 _LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
+# Tailscale's CGNAT range. With the explicit `trust_tailnet_write` opt-in, a bind inside this
+# range may serve a write-enabled, auth-off `commit_note` (tailnet membership IS the write
+# boundary) — but ONLY inside this range, so the opt-in can never open an auth-off write on an
+# arbitrary public/LAN IP.
+_TAILNET_CIDR = "100.64.0.0/10"
+
+
+def _is_tailnet_ip(host: str) -> bool:
+    """True iff ``host`` is a literal Tailscale CGNAT address (100.64.0.0/10)."""
+    import ipaddress
+    try:
+        return ipaddress.ip_address(host) in ipaddress.ip_network(_TAILNET_CIDR)
+    except ValueError:
+        return False
 # The write tool's explicit allowlist (KTD4). The protected-path guard refuses the
 # dangerous classes regardless; this further bounds *where* an agent write may land.
 # Overridable per install (U34 role config); tune to the vault's writable zones.
@@ -187,7 +201,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  write_scope: str = WRITE_SCOPE,
                  json_response: bool = True,
                  stateless_http: bool = True,
-                 public_hosts: list[str] | None = None) -> FastMCP:
+                 public_hosts: list[str] | None = None,
+                 trust_tailnet_write: bool = False) -> FastMCP:
     """Build the tailnet MCP server bound to ``host`` (a Tailscale IP).
 
     Refuses ``0.0.0.0`` — the bind invariant is enforced at construction. Every
@@ -242,13 +257,28 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     # exempt: it is reachable only by the local user (the same trust boundary the CLI write
     # path already has), preserving the Phase-1 single-user localhost drop-in. (The live
     # master binds the tailnet IP directly, so it is always covered.)
+    #
+    # ``trust_tailnet_write`` is the operator's EXPLICIT opt-out: tailnet membership IS the write
+    # boundary (the "MVP auth = tailnet membership" model — valid once the public OAuth lane carries
+    # all untrusted traffic). It is BOUNDED to the Tailscale CGNAT range, so it can never relax the
+    # invariant on an arbitrary public/LAN IP — and the 0.0.0.0 refusal above still always fires.
     if write_enabled and auth is None and host not in _LOCALHOST_BINDS:
-        raise ValueError(
-            "refusing a write-enabled tailnet serve without auth configured: "
-            "write_enabled ⇒ auth-required on a non-loopback bind (R12 engine invariant, "
-            "mirroring the 0.0.0.0 refusal). Pass --auth-issuer-url + --auth-resource-url "
-            "(+ --required-scope), serve read-only, or bind 127.0.0.1 for a local drop-in."
-        )
+        if trust_tailnet_write and _is_tailnet_ip(host):
+            pass                                   # explicit, tailnet-IP-bounded opt-in
+        elif trust_tailnet_write:
+            raise ValueError(
+                "trust_tailnet_write only relaxes the auth requirement for a Tailscale IP "
+                f"({_TAILNET_CIDR}); {host!r} is not in that range. Refusing an auth-off write "
+                "on a non-tailnet bind — that would be a public write hole, not a tailnet one."
+            )
+        else:
+            raise ValueError(
+                "refusing a write-enabled tailnet serve without auth configured: "
+                "write_enabled ⇒ auth-required on a non-loopback bind (R12 engine invariant, "
+                "mirroring the 0.0.0.0 refusal). Pass --auth-issuer-url + --auth-resource-url "
+                "(+ --required-scope), serve read-only, bind 127.0.0.1 for a local drop-in, or "
+                "— to accept tailnet membership AS the write boundary — pass --allow-tailnet-write."
+            )
     # An explicit but effectively-empty allowlist on a write-enabled serve would narrow
     # writes to NOTHING — a silent brick. Refuse at construction (no half-open server),
     # before any disk/backend touch. Omitting write_allowlist (None) keeps the default.

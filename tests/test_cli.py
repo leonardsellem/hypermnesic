@@ -168,6 +168,21 @@ def test_serve_plumbs_repeatable_allowlist_repo_and_write(monkeypatch, tmp_path)
     assert str(captured["repo"]) == str(tmp_path)                    # repo plumbed
 
 
+def test_serve_allow_tailnet_write_plumbs_trust_flag(monkeypatch, tmp_path):
+    captured, srv = _capture_build(monkeypatch)
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
+                   "--enable-write", "--allow-tailnet-write"])
+    assert rc == 0 and srv.ran
+    assert captured["trust_tailnet_write"] is True       # opt-in plumbed through
+    assert captured["write_enabled"] is True
+
+
+def test_serve_default_does_not_trust_tailnet_write(monkeypatch, tmp_path):
+    captured, _ = _capture_build(monkeypatch)
+    rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1"])
+    assert rc == 0 and captured["trust_tailnet_write"] is False   # safe-by-default
+
+
 def test_serve_no_allowlist_passes_none_for_default(monkeypatch, tmp_path):
     captured, _ = _capture_build(monkeypatch)
     rc = cli.main(["serve", "--index-db", str(tmp_path / "i.db"), "--host", "100.64.0.1",
