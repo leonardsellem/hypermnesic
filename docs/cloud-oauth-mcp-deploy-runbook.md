@@ -1,5 +1,10 @@
 # Cloud OAuth MCP — go-live runbook (ChatGPT/Claude mobile, read+write)
 
+> **SUPERSEDED (2026-06-03) by `docs/unified-oauth-mcp-deploy-runbook.md`.** The `/cloud`→`:8850`
+> lane documented here is promoted to the sole public `/mcp` endpoint by the unified-OAuth plan
+> (`docs/plans/2026-06-03-001-feat-unified-oauth-endpoint-and-setup-plan.md`). Use the unified
+> runbook for the cutover; this file is kept as the historical `/cloud` deploy record.
+
 > ## ✅ DEPLOYED 2026-06-02 (homelab steps 1-3, 5 executed; verified live end-to-end through the Funnel)
 > Triggered by the operator's failed ChatGPT/Claude connector attempts. RCA: the lane had never
 > been deployed (`hypermnesic-cloud.service` absent, no `/cloud` Funnel route → discovery 404 →
