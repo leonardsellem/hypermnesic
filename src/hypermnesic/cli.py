@@ -117,7 +117,8 @@ def _cmd_think(args) -> int:
         embedder = None
     converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
     g = graph_mod.Graph.from_index(idx)                     # graph after convergence
-    r = think.think(idx, args.topic, embedder=embedder, graph=g, k=args.k, path=args.path)
+    r = think.think(idx, args.topic, embedder=embedder, graph=g, k=args.k,
+                    path=args.path, repo=Path(args.repo))
     idx.close()
     if args.json:
         _print_json(r.as_dict())

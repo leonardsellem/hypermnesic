@@ -17,11 +17,30 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from hypermnesic import graph as graph_mod
+from hypermnesic import ingest as ingest_mod
 from hypermnesic import retrieve
 
 _ATX_LEADING = re.compile(r"^\s*#{1,6}\s+")
+
+
+def _resolve_title(repo, path: str, cache: dict[str, str]) -> str:
+    """Resolve a note's display title (U44) — the note's H1, never the matched
+    chunk's section heading. Reads the note file (files are the source of truth)
+    via ``ingest.note_title``; falls back to the de-kebabbed stem when ``repo`` is
+    unknown or the file is unreadable. Memoised per ``think`` call."""
+    if path in cache:
+        return cache[path]
+    raw = ""
+    if repo is not None:
+        try:
+            raw = (Path(repo) / path).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            raw = ""
+    cache[path] = title = ingest_mod.note_title(raw, path)
+    return title
 
 
 def _normalize_topic(topic: str) -> str:
@@ -56,9 +75,10 @@ class ThinkResult:
         }
 
 
-def _socratic(topic: str, hits) -> list[str]:
+def _socratic(topic: str, hits, title_of) -> list[str]:
     """Heuristic thinking prompts from what's in hand — no LLM (use the kernel's
-    own signals, per the ideation's 'graph must earn its cost' restraint)."""
+    own signals, per the ideation's 'graph must earn its cost' restraint). Note
+    identities use resolved note titles (U44), never chunk section headings."""
     if not hits:
         return []
     qs = [
@@ -66,7 +86,8 @@ def _socratic(topic: str, hits) -> list[str]:
         f"Where does {topic} break down — what's the strongest counter-case?",
     ]
     if len(hits) >= 2:
-        qs.append(f"How do '{hits[0].heading}' and '{hits[1].heading}' inform each other?")
+        qs.append(f"How do '{title_of(hits[0].path)}' and '{title_of(hits[1].path)}' "
+                  "inform each other?")
     return qs
 
 
@@ -90,7 +111,7 @@ def _tensions(graph, hits) -> list[str]:
 
 
 def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int = 1,
-          path: str | None = None) -> ThinkResult:
+          path: str | None = None, repo=None) -> ThinkResult:
     """Surface a thinking-partner view of ``topic`` over the read-only index.
 
     Never writes. Returns related notes (hybrid search), one-hop graph context
@@ -101,19 +122,28 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
     ``path`` (optional): the active note's repo-relative path. When set, that note
     is excluded from its own results (U42) — a note never matches itself, so the
     related list, prompts, and pairs are about *other* notes.
+
+    ``repo`` (optional): the repo root, used to resolve each note's display title
+    from its H1 (U44). When absent, titles fall back to the de-kebabbed path stem.
     """
     topic = _normalize_topic(topic)        # U43: no stray '# ' in topic or prompts
     res = retrieve.search(idx, topic, embedder=embedder, k=k, exclude_path=path)
+    title_cache: dict[str, str] = {}
+
+    def title_of(p: str) -> str:           # U44: note identity, not chunk heading
+        return _resolve_title(repo, p, title_cache)
+
     related = [
-        {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
-         "channels": sorted(h.channels), "snippet": h.text[:280]}
+        {"path": h.path, "heading": h.heading, "title": title_of(h.path),
+         "score": round(h.score, 6), "channels": sorted(h.channels),
+         "snippet": h.text[:280]}
         for h in res.hits
     ]
     context: list[str] = []
     if graph is not None and res.hits:
         context = graph_mod.build_context(graph, res.hits[0].path, depth=depth)
 
-    questions = _socratic(topic, res.hits)
+    questions = _socratic(topic, res.hits, title_of)
     tensions = _tensions(graph, res.hits)
     note = "" if related else "nothing relevant yet — the index has no close match"
 

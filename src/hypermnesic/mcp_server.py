@@ -163,7 +163,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     def think(topic: str, k: int = 8, depth: int = 1, path: str | None = None) -> dict:
         cr = backend.converge()
         out = think_mod.think(backend.idx, topic, embedder=backend.embedder,
-                              graph=backend.graph, k=k, depth=depth, path=path).as_dict()
+                              graph=backend.graph, k=k, depth=depth, path=path,
+                              repo=backend.repo).as_dict()
         out["manual_reindex_recommended"] = cr.manual_reindex_recommended
         return out
 

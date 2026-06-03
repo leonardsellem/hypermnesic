@@ -99,6 +99,35 @@ def test_think_topic_normalization_is_idempotent_and_keeps_inline_hash(make_corp
     idx.close()
 
 
+# --- U44: note-title resolution (H1-level, not the chunk section heading) -----
+
+def test_think_title_is_h1_not_section_heading(make_corpus, fake_embedder):
+    # A structural note that opens with an H2 (no H1) must NOT surface its section
+    # label ("Now") as its identity — it falls through to the de-kebabbed stem.
+    repo = make_corpus({
+        "backlog.md": "## Now\n\nGRDN urban project working set.\n",   # H2-first, no H1
+        "seed.md": "# Seed note\n\nGRDN other material.\n",            # real H1
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "GRDN urban", embedder=fake_embedder, graph=g, repo=repo)
+    titles = {h["path"]: h["title"] for h in r.related}
+    assert titles.get("backlog.md") == "backlog"        # stem fallback, NOT "Now"
+    assert titles.get("seed.md") == "Seed note"         # real level-1 H1
+    assert all(h["title"] for h in r.related)           # every related entry has a title
+    idx.close()
+
+
+def test_think_title_stem_fallback_strips_leading_date(make_corpus, fake_embedder):
+    repo = make_corpus({"2026-06-03-foo-bar.md": "## Section\n\nZQX content only.\n"})  # no H1
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "ZQX content", embedder=fake_embedder, graph=g, repo=repo)
+    titles = {h["path"]: h["title"] for h in r.related}
+    assert titles.get("2026-06-03-foo-bar.md") == "foo bar"   # date stripped, de-kebabbed
+    idx.close()
+
+
 # --- KTD7: structurally incapable of writing ----------------------------------
 
 def test_think_module_has_no_write_surface():
