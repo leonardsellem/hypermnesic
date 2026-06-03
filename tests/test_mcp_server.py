@@ -123,7 +123,7 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     assert "hits" in schemas["search"]["properties"]
     assert "context" in schemas["build_context"]["properties"]
     assert {"resolved", "slug"} <= set(schemas["resolve"]["properties"])
-    assert {"questions", "tensions"} <= set(schemas["think"]["properties"])
+    assert {"questions", "unlinked"} <= set(schemas["think"]["properties"])
     assert {"folders", "truncated", "omitted"} <= set(schemas["list_folders"]["properties"])
     assert {"committed", "refused"} <= set(schemas["commit_note"]["properties"])
 
