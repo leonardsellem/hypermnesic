@@ -35,6 +35,10 @@ is recall-able without a manual reindex.
 - **`resolve(name)`** — entity resolution: resolve a name to an existing page path, or `null` if
   ambiguous/missing — **never a wrong guess**. The result carries `slug` (the `.md`-stripped
   path); wikilink the slug, e.g. `[[infrastructure/hetzner]]`.
+- **`list_folders(root="", depth=1)`** — discover the vault's folder taxonomy + writable
+  locations before placing a note: child folders under `root` (drill-down to `depth` levels), each
+  with its `writable` flag (matching exactly what `commit_note` accepts), `protected_reason`, and
+  recursive `note_count`. Read-only. Narrow `root` to drill deeper when `truncated` is true.
 
 ## Writing a note — `commit_note` (git-first, gated)
 
@@ -42,11 +46,16 @@ is recall-able without a manual reindex.
 **git-first**: it writes the file, commits it, and pushes — the index follows as a projection.
 You never merge; the engine coordinates. It is gated:
 
-- **Writable allowlist:** writes must land under a configured set of prefixes (commonly `notes/`,
-  `sources/`, `dashboards/`, `captures/`). A path outside the allowlist is **refused**, not
-  silently dropped.
-- **Protected-path refusal:** governance/execution files — `CLAUDE.md`/`AGENTS.md` anywhere,
-  `.github/`, `.git/`, hooks, scripts, `.obsidian/` — are refused unconditionally.
+- **Blocklist write surface (write-anywhere-under-guards):** by default a note may land
+  **anywhere** in the vault *except* the protected classes below — there is no allowlist by
+  default. An operator can still pass an explicit allowlist (e.g. `notes/`, `sources/`,
+  `dashboards/`, `captures/`) to **narrow** where writes may land; omitted, the protected-path +
+  governance fence is the sole bound. A refused path is **refused**, never silently dropped.
+- **Protected-path + governance refusal (caller-independent):** governance/execution files and
+  dirs — `CLAUDE.md`/`AGENTS.md` anywhere, `.git/`, `.github/` (incl. CI workflows), `.obsidian/`,
+  `scripts/`, `bin/`, `hooks/`, `skills/`, plus build/CI/credential file classes (`Dockerfile`,
+  `Makefile`, `*.yml`/`*.yaml`/`*.lock`/`*.toml`, `.env*`, `package.json`) — are refused
+  unconditionally, regardless of any allowlist.
 - **Diff-or-die frontmatter gate:** an unintended frontmatter change aborts the write and
   surfaces the diff (no silent reserialization).
 - A refusal returns `{committed: false, refused: "<reason>"}` — never a silent success.
@@ -59,8 +68,9 @@ For frictionless raw capture, prefer landing text under the free-append zone (co
   rebuildable projection. There is no separate database of record.
 - **Reads are convergent.** The index catches up to `HEAD` before each read, so your own
   just-committed note is recall-able on the next query.
-- **Writes are auditable and bounded.** `commit_note` is allowlisted, protected-path-guarded,
-  frontmatter-stable, and audit-logged (summaries only, never bodies, never credentials).
+- **Writes are auditable and bounded.** `commit_note` is blocklist-bounded (write-anywhere
+  except protected classes; an allowlist can narrow it), protected-path-guarded, frontmatter-stable,
+  and audit-logged (summaries only, never bodies, never credentials).
 
 ## Auth
 

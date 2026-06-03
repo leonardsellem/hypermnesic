@@ -88,11 +88,22 @@ and the surfaces built on top:
      used by every remote client the same way;
   2. a **tailnet read companion** (`:8848`, auth-off) for the Obsidian companion and the
      proactive per-prompt hook on tailnet devices.
+
+  By default a **write-enabled** serve requires OAuth (`write_enabled ⇒ auth-required`). The
+  advanced `--allow-tailnet-write` opt-in accepts **tailnet membership itself as the write
+  boundary** — permitting an auth-off, write-enabled serve, but **only** on a Tailscale CGNAT
+  address (`100.64.0.0/10`). A non-tailnet bind is still refused (it would be a public write hole),
+  and every `commit_note` guard (the blocklist write surface, protected-path refusal, diff-or-die
+  gate, audit log) still applies. Use it only when the tailnet is your trust boundary and the
+  public OAuth lane carries all untrusted traffic.
 - **Write path** — `commit_note` takes a caller-supplied repo-relative path and commits it
-  to git through a diff-or-die frontmatter gate, an allowlist + protected-path write guard
-  (`.git`, agent-instruction files, etc. are refused regardless of the allowlist), single-writer
-  locks, and an append-only audit log. The index follows as a projection — a reindex never
-  loses a write. Write requires auth (`write_enabled ⇒ auth-required`).
+  to git through a diff-or-die frontmatter gate and a **blocklist write guard**
+  (write-anywhere-under-guards: a note may land anywhere in the vault *except* the protected
+  classes — `.git/`, `.github/`, agent-instruction files like `CLAUDE.md`/`AGENTS.md`,
+  `scripts/`/`hooks/`/`skills/`, and build/CI/credential files — which are refused regardless of
+  any allowlist), single-writer locks, and an append-only audit log. An explicit allowlist is an
+  opt-in way to *narrow* the surface, not the default guard. The index follows as a projection — a
+  reindex never loses a write. Write requires auth (`write_enabled ⇒ auth-required`).
 - **Security** — operator-consent gates the `write` scope at login; audience-bound tokens
   (RFC 8707); refresh rotation + whole-grant revoke; a per-request consent CSP. See
   `docs/2026-06-03-unified-write-anywhere-security-review.md`.
