@@ -4,7 +4,8 @@ type: security-review
 title: "Write-anywhere re-review for the unified public OAuth endpoint (U6)"
 plan: docs/plans/2026-06-03-001-feat-unified-oauth-endpoint-and-setup-plan.md
 supersedes_review: docs/brainstorms/2026-06-02-cloud-oauth-mcp-mobile-requirements.md
-status: awaiting-operator-sign-off
+status: signed-off
+signed_off: 2026-06-03 (operator approved write-anywhere at G3; R-1/R-2 accepted)
 ---
 
 # Write-anywhere re-review — unified public OAuth endpoint (U6)
@@ -120,5 +121,6 @@ operator-consent write gate keep the protected classes and unapproved clients ou
 closes the bare-IP/plain-HTTP issuer gap. Residuals R-1 and R-2 are accepted with the mitigations
 above.
 
-**G3 sign-off required:** operator approval of the widened public write surface (R-1) before the
-U7–U8 cutover.
+**G3 sign-off:** ✅ operator approved the widened public write surface (R-1) on 2026-06-03;
+R-1 and R-2 accepted as above. Cutover (U7–U8) cleared to proceed, halting again at G4 before the
+live production funnel flip.
