@@ -365,24 +365,34 @@ def ensure_consent_secret(env_file: Path, *, min_len: int,
     return env_file, True
 
 
-def funnel_routes(public_url: str, resource: str, target: str) -> list[tuple[str, str]]:
-    """The Tailscale funnel mounts the unified endpoint needs on the shared hostname: the MCP
-    path itself plus the two ROOT discovery well-knowns the OAuth chain resolves at (RFC 9728
-    protected-resource + RFC 8414 AS metadata). Missing the root well-knowns is exactly what
-    404'd the first cloud deploy — they are scoped by the resource/issuer path so they never
-    collide with honcho's. The exact set is live-verified in U8 (KTD6)."""
+def funnel_routes(public_url: str, resource: str, base_target: str) -> list[tuple[str, str]]:
+    """The Tailscale funnel mounts the unified endpoint needs, each with its OWN target (proven by
+    the U8 live cutover — one shared target does NOT work). ``base_target`` is the loopback origin
+    ``http://127.0.0.1:<port>`` of a server serving at root (``--path /``):
+
+    - ``<res_path>`` (e.g. ``/mcp``) → ``base_target`` (root): the funnel strips the mount, so
+      ``/mcp``→MCP and ``/mcp/authorize``→the AS endpoint at the server root. (Why the server serves
+      at ``/`` not ``/mcp``: otherwise ``/mcp/authorize`` would 404.)
+    - the two ROOT discovery well-knowns the chain resolves at, each → the server's matching path:
+      RFC 9728 protected-resource at ``…/oauth-protected-resource<res_path>`` and RFC 8414 AS meta
+      at the server's bare ``…/oauth-authorization-server``. Missing these is what 404'd the first
+      cloud deploy; the path suffixes keep them off honcho's routes."""
     from urllib.parse import urlparse
 
-    res_path = urlparse(resource).path.rstrip("/") or ""
-    iss_path = urlparse(public_url).path.rstrip("/") or ""
-    routes = [(res_path or "/mcp", target)]          # the MCP endpoint mount (+ AS endpoints)
-    routes.append((f"/.well-known/oauth-protected-resource{res_path}", target))
-    routes.append((f"/.well-known/oauth-authorization-server{iss_path}", target))
-    # de-dup while preserving order (issuer == resource path collapses the two suffixes)
+    base = base_target.rstrip("/")
+    res_path = urlparse(resource).path.rstrip("/") or "/mcp"
+    iss_path = urlparse(public_url).path.rstrip("/") or "/mcp"
+    routes = [
+        (res_path, base),                                            # MCP + AS endpoints (root)
+        (f"/.well-known/oauth-protected-resource{res_path}",
+         f"{base}/.well-known/oauth-protected-resource{res_path}"),  # RFC 9728 (the 401 target)
+        (f"/.well-known/oauth-authorization-server{iss_path}",
+         f"{base}/.well-known/oauth-authorization-server"),          # RFC 8414 (server-root path)
+    ]
     seen: set = set()
     uniq: list[tuple[str, str]] = []
     for m, t in routes:
-        if m not in seen:
+        if m not in seen:                        # de-dup mounts (issuer==resource path collapses)
             seen.add(m)
             uniq.append((m, t))
     return uniq
@@ -477,7 +487,7 @@ class SetupOps:
 
 
 def setup(repo, *, public_url: str, resource: str, host: str = _LOCALHOST,
-          port: int = DEFAULT_CLOUD_PORT, path: str = DEFAULT_PATH, env_file=None,
+          port: int = DEFAULT_CLOUD_PORT, path: str = "/", env_file=None,
           allowlist: list[str] | None = None, token_ttl: int = 3600,
           ops=None, secret_factory=None) -> dict:
     """Bring the unified public endpoint fully online in one idempotent command: render +
@@ -524,8 +534,8 @@ def setup(repo, *, public_url: str, resource: str, host: str = _LOCALHOST,
         exe=exe, env_file=env_file, allowlist=allowlist, token_ttl=token_ttl), encoding="utf-8")
     ops.install_and_start_service(unit_path, CLOUD_SERVICE_NAME)
 
-    target = f"http://{host}:{port}{path}"
-    routes = funnel_routes(public_url, resource, target)
+    base_target = f"http://{host}:{port}"            # server is at root (--path /); pathless base
+    routes = funnel_routes(public_url, resource, base_target)
     for mount, tgt in routes:
         ops.apply_funnel_route(mount, tgt)
 
