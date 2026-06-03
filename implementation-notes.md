@@ -441,3 +441,12 @@ Privacy: the default MCP URL is empty (`src/types.ts`), so a manual install
 transmits nothing off-device until configured; a provisioned `--role=client`
 install (Plan 1 U34) pre-fills the endpoint. The read-only guarantee stays
 statically verified by `tests/test_obsidian_plugin.py`.
+
+---
+
+> **System of record (as of 2026-06-03).** This file is a **historical narrative**
+> of build decisions and deviations through Phase 2.5; it is not a per-release
+> changelog and no longer asserts a "current" range. The durable, user-facing release
+> record is now [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog). New decision records
+> live under `docs/solutions/`. Add release entries to the changelog; keep this log for
+> the narrative "why" behind a change.

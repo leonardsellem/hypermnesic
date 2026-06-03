@@ -1,0 +1,103 @@
+# Changelog
+
+All notable changes to **hypermnesic** (the engine) are recorded here. The format
+follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project is
+pre-1.0, so it uses `0.0.x` semantics — minor and patch are not yet distinguished,
+and any release may carry breaking changes while the kernel stabilizes.
+
+`pyproject.toml` `[project].version` is the single source of truth for the version;
+the plugin manifests and `src/hypermnesic/__init__.__version__` are kept in lockstep
+by the CI version-consistency gate (`scripts/check_version_consistency.py`).
+
+The Obsidian companion (`obsidian-plugin/`, shipped as a separate repository) carries
+its own changelog and version.
+
+## [Unreleased]
+
+First-class documentation & public-launch readiness — **documentation only, no engine
+or product behavior change**. Adds the community-health and technical-reference
+documents (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, ARCHITECTURE, references, guides,
+glossary, GitHub templates), reconciles doc↔code drift from the 0.0.5 PR set, and
+stages the AGPL-3.0 license + public-flip runbook under `docs/launch/` without
+flipping the live license or repository visibility.
+
+## [0.0.5] — 2026-06-03
+
+The serving-topology and write-surface release.
+
+### Changed
+- **Serving topology collapsed from four lanes to two:** a single **public OAuth
+  `/mcp`** endpoint (Tailscale-funnel'd HTTPS; OAuth 2.1 with DCR + PKCE; read tools
+  always, the gated `commit_note` write tool by scope) used by every remote client,
+  plus a **tailnet read companion** (`:8848`, auth-off) for the Obsidian companion and
+  the per-prompt recall hook.
+- **Default write surface flipped from a 4-prefix allowlist to a blocklist**
+  ("write-anywhere-under-guards"): a note may land anywhere in the vault except the
+  protected classes; an explicit allowlist is now an opt-in way to *narrow* the
+  surface. Gated on a signed blocklist write-surface security review.
+- Engine bumped `0.0.4 → 0.0.5`; `__init__.__version__` synced to the authority.
+
+### Added
+- **`list_folders`** MCP read tool + **`list-folders`** CLI subcommand: discover the
+  vault's folder taxonomy and writable locations (the `writable` flag matches exactly
+  what `commit_note` accepts), via a single shared write-surface coercion.
+- **`--allow-tailnet-write`**: a bounded opt-in that accepts tailnet membership as the
+  write boundary (auth-off write-enabled serve), permitted **only** on a Tailscale
+  CGNAT bind; all `commit_note` guards still apply.
+- Governance-extension fence in `serialize.py` (refuses `Dockerfile`/`Makefile`/CI
+  YAML/lockfiles/`.env*`/`package.json` everywhere) and case-folded protected-dir
+  matching, so the blocklist default cannot land an executable/governance file.
+- Per-tool MCP `outputSchema` declarations so connectors understand result shapes.
+
+### Removed
+- The `:8849` client-credentials Authorization Server lane and its `serve-auth` /
+  `auth-add-client` subcommands — folded into the unified public OAuth endpoint.
+
+### Fixed
+- The convergence `manual_reindex_recommended` / degraded signal is surfaced in the
+  read-tool responses (previously dropped).
+- Test fixtures use a CGNAT documentation IP range instead of a real homelab IP.
+
+## [0.0.4] — 2026-06-03
+
+The one-command bring-up and distribution-generic plugin release.
+
+### Added
+- **`hypermnesic setup`**: one idempotent command brings the unified public OAuth
+  endpoint online — render + start the service, persist the operator consent secret,
+  configure the Tailscale funnel, and verify the live HTTPS discovery chain before
+  reporting success.
+
+### Changed
+- The Claude Code / Codex plugin is now **distribution-generic** — it carries no
+  operator hostname and no token; point it at your endpoint with `HYPERMNESIC_MCP_URL`.
+- Slimmed to a single neutral `UserPromptSubmit` auto-recall hook.
+- README reworked into a first-class quick start for the unified OAuth endpoint + CLI.
+
+## [0.0.3 and earlier] — 2026-06-01 … 2026-06-02
+
+Phase 0 → Phase 2.5 foundation (pre-public, internal milestones).
+
+### Added
+- **Hybrid retrieval core:** SQLite FTS5 (lexical) fused with sqlite-vec KNN (dense;
+  OpenAI `text-embedding-3-large` @ 1536 dims) via RRF, degrading to lexical-only when
+  embeddings are unavailable; entity-resolution and wikilink graph context.
+- **Read-only MCP server** binding a specific Tailscale interface (refuses `0.0.0.0`).
+- **Git-first `commit_note` write kernel:** diff-or-die frontmatter gate,
+  protected-path write guard, append-only audit log, single-writer locks,
+  worktree-isolated reindex — the index is always a rebuildable projection of the git
+  tree (a reindex never loses a committed write).
+- **Read-time convergence:** every read catches the index up to `HEAD` and closes a
+  bounded dense slice, so a just-committed note is recall-able without a manual reindex.
+- **Role-aware installer** (`single` | `master` | `client`) + an opt-in post-merge
+  convergence hook.
+- **Human/product surfaces:** thinking-mode, salience + spaced-review digest,
+  serendipity connections, always-organized navigation, frictionless capture, and
+  multi-format sidecar extraction (PDF/DOCX/XLSX/PPTX/PNG) via permissive extractors.
+- **Obsidian companion** (`obsidian-plugin/`): a strictly read-only recall surface.
+- **LongMemEval benchmark harness** (`harness/`) and a French/English retrieval-parity
+  harness.
+
+[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/leonardsellem/hypermnesic/releases/tag/v0.0.5
+[0.0.4]: https://github.com/leonardsellem/hypermnesic/releases/tag/v0.0.4
