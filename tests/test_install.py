@@ -462,6 +462,20 @@ def test_setup_funnel_routes_cover_mcp_and_root_wellknowns(make_corpus, monkeypa
     assert ops.funnel_calls == res["funnel_routes"]              # every route applied via ops
 
 
+def test_funnel_routes_emit_per_mount_targets_for_a_root_served_endpoint():
+    # Regression (proven by the U8 live cutover): each funnel mount needs its OWN target, not one
+    # shared target. The /mcp mount points at the server ROOT (so /mcp/authorize → the AS endpoint),
+    # the protected-resource well-known at its own path, the AS well-known at the server's bare
+    # /.well-known/oauth-authorization-server (no suffix).
+    routes = dict(install.funnel_routes(
+        "https://h.ts.net/mcp", "https://h.ts.net/mcp", "http://127.0.0.1:8850"))
+    assert routes["/mcp"] == "http://127.0.0.1:8850"                          # root target
+    assert routes["/.well-known/oauth-protected-resource/mcp"] == \
+        "http://127.0.0.1:8850/.well-known/oauth-protected-resource/mcp"
+    assert routes["/.well-known/oauth-authorization-server/mcp"] == \
+        "http://127.0.0.1:8850/.well-known/oauth-authorization-server"       # server-root path
+
+
 def test_setup_uses_tailscale_funnel_never_serve(tmp_path):
     # Live trap: `tailscale serve --set-path` silently clears AllowFunnel[:443] and drops /cloud.
     # The real funnel-command builder must use `funnel`, never `serve`.
