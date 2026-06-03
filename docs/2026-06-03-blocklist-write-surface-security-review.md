@@ -4,8 +4,8 @@ type: security-review
 title: "Blocklist write-surface re-review (Phase B — allowlist→blocklist flip)"
 plan: docs/plans/2026-06-03-002-feat-vault-folder-discovery-blocklist-write-plan.md
 amends: docs/2026-06-03-unified-write-anywhere-security-review.md
-status: pending-sign-off
-signed_off: PENDING
+status: signed-off
+signed_off: 2026-06-03 (operator approved the blocklist surface; governance-extension fence + case-fold approved; R-1/R-3/R-4 accepted)
 ---
 
 # Blocklist write-surface re-review (Phase B)
@@ -183,9 +183,11 @@ attestation (e.g. `signed_off: 2026-06-03 (operator approved the blocklist surfa
 accepted)`). `tests/test_blocklist_write_gate.py` fails while the flip is live and this value is
 absent/`PENDING`, blocking the merge.
 
-- [ ] Governance-extension denylist reviewed (Part B exact list) and approved
-- [ ] Case-fold protected-dir decision (Part C) approved
-- [ ] Residuals R-1, R-3, R-4 accepted
-- [ ] Phase-A intermediate-state cost (writable flag pre-flip) accepted
+- [x] Governance-extension denylist reviewed (Part B exact list) and approved
+- [x] Case-fold protected-dir decision (Part C) approved
+- [x] Residuals R-1, R-3, R-4 accepted
+- [x] Phase-A intermediate-state cost (writable flag pre-flip) accepted
 
-**Sign-off:** _pending operator_
+**Sign-off:** ✅ operator approved the blocklist write surface on 2026-06-03 — governance-extension
+fence (Part B) and case-fold protected-dir match (Part C) approved; residuals R-1, R-3, R-4 accepted;
+the Phase-A intermediate-state cost accepted. The U5 flip is cleared to merge/enable.
