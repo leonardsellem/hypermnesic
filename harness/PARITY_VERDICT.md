@@ -12,7 +12,7 @@
    vs 0.769), 0 catastrophic French misses. (Verdict of record below; not re-run.)
 
 2. **Entity resolution (U6): parity, zero false wikilinks.** `parity_harness.resolve_parity` run
-   live against the vault graph (`<home>/gbrain-brain/.hypermnesic/index.db`). The critical
+   live against the vault graph (`~/gbrain-brain/.hypermnesic/index.db`). The critical
    safety property — **never a false wikilink target** — held across every sample:
    **`false_positives = 0`**. Exact-path and clean unambiguous-stem entities resolved **100%**
    (the content-distill `resolve <name>` → `[[slug]]` path); an absent entity correctly resolved

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/leonardsellem/hypermnesic/security/advisories/new
+    about: Do NOT open a public issue for security problems. Report privately — see SECURITY.md.
+  - name: Question / discussion
+    url: https://github.com/leonardsellem/hypermnesic/discussions
+    about: For questions and open-ended discussion rather than a specific bug or feature.

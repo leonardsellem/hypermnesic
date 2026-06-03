@@ -1,0 +1,25 @@
+# Code owners — review routing. The owner is requested for review on any change to
+# these paths. Security-sensitive surfaces (auth, the MCP server, the write path, the
+# protected-path/governance guard) and the security/license docs route here.
+
+# Default owner for everything.
+*                                   @leonardsellem
+
+# Security-sensitive engine surfaces.
+/src/hypermnesic/auth.py            @leonardsellem
+/src/hypermnesic/auth_cloud.py      @leonardsellem
+/src/hypermnesic/mcp_server.py      @leonardsellem
+/src/hypermnesic/commit_note.py     @leonardsellem
+/src/hypermnesic/serialize.py       @leonardsellem
+/src/hypermnesic/frontmatter_gate.py @leonardsellem
+/src/hypermnesic/audit_log.py       @leonardsellem
+
+# Security, license, and contribution policy.
+/SECURITY.md                        @leonardsellem
+/LICENSE                            @leonardsellem
+/CONTRIBUTING.md                    @leonardsellem
+/docs/threat-model-commit-note.md   @leonardsellem
+/docs/launch/                       @leonardsellem
+/scripts/license_scan.py            @leonardsellem
+/scripts/preflight_public_scan.py   @leonardsellem
+/.github/                           @leonardsellem
