@@ -16,6 +16,13 @@ related_to:
 
 # Hypermnesic — Deployment Topology, Roles, and the Git-First Write Tool
 
+> **ARCHIVED (2026-06-03).** An early topology/write-model brainstorm. The write model
+> it describes (tailnet-membership auth, the note-zone allowlist) has since been
+> superseded: the engine now serves one **public OAuth `/mcp`** endpoint + a tailnet read
+> companion, and the default write surface is a **blocklist** (write-anywhere-under-guards),
+> not a 4-prefix allowlist. Read [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md) and
+> [`../../SECURITY.md`](../../SECURITY.md) for the current model. Kept as history.
+
 ## Summary
 
 A single installer provisions one of three roles — **single** (everything on one host; zero-infra solo), **master** (the always-on canonical engine + index + `serve` MCP, e.g. the homelab; owns the write path and convergence), and **client** (configuration only — an MCP client such as the read-only Obsidian companion or a write-capable agent, pointed at a master). Agents write through a **gated, git-first `commit_note` MCP tool** on the master — a single write target, so the index stays a rebuildable projection and no reconciliation cron is reintroduced. The MVP auth boundary is tailnet membership for both read and write; a later **MCP OAuth** upgrade (to reach mobile AI apps beyond the tailnet) raises auth for both and is the trigger point for the full write-surface threat model. The Obsidian companion stays strictly read-only and follows Obsidian's official plugin rules (`requestUrl`, native protocol-handler OAuth, no off-device send without opt-in).

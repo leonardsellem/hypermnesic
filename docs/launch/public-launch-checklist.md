@@ -23,8 +23,10 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
       runbooks, dated security reviews, threat model, gbrain-decommission state), which
       the default gate defers. **These still contain the operator hostname/IP today**
       (the default gate reports the deferred count). Resolve them before the flip:
-  - [ ] Scrub or prune the operator hostname/IP from the process-exhaust docs, **or**
-        move them to `docs/archive/` (excluded) with pointers (see U21).
+  - [ ] Scrub or prune the operator hostname/IP from the process-exhaust docs. Note
+        `--strict` scans `docs/archive/` too, so archiving a doc (U21) tidies the IA but
+        does **not** clear the gate — decide scrub-vs-consciously-accept for each,
+        mirroring the git-history decision (D1).
   - [ ] Re-run `--strict` → exit 0.
 - [ ] **Git history** decision (D1 in the runbook) is signed off and executed
       (filter-repo rewrite) or consciously accepted-as-residual. Audit with

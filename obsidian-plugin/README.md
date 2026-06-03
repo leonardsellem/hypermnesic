@@ -1,8 +1,11 @@
 # Hypermnesic Companion — moved
 
-The Obsidian companion plugin now lives in its own public repository:
+The Obsidian companion plugin now lives in its own repository:
 
 > **https://github.com/leonardsellem/hypermnesic-companion**
+>
+> _The repository is **private until the companion's first community-directory release**;
+> this link becomes public when that ships._
 
 This monorepo no longer carries the plugin source or its read-only proof. The
 plugin builds, runs its tests — including the static **read-only invariant** scan

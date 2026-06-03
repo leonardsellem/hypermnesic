@@ -11,9 +11,10 @@ Scope:
   - Scans git-TRACKED files (the to-be-public set; gitignored corpus/private data is
     excluded by construction).
   - Always EXCLUDES ``docs/launch/`` (the staging area — it documents the very
-    secrets/decisions being prepared) and ``docs/archive/`` (frozen history). Also
-    excludes the gate's own script + test (they necessarily reference the deny
-    patterns, so scanning them would self-trip).
+    secrets/decisions being prepared) and the gate's own script + test (they
+    necessarily reference the deny patterns, so scanning them would self-trip).
+    ``docs/archive/`` is NOT always-excluded: it is deferred in default mode but
+    scanned by ``--strict``, so archiving a doc never hides a leak from the flip gate.
   - **Default mode** (the now / CI gate) additionally DEFERS the inherited
     *process-exhaust* docs (handoffs, gate-artifacts, brainstorms, plans, deploy
     runbooks, dated security reviews, threat model, gbrain-decommission state). These
@@ -63,11 +64,16 @@ _DENY: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("operator-home-path", re.compile(r"/home/[a-z][a-z0-9_-]*/")),
 )
 
-# Always excluded: the staging area (documents the secrets), frozen archive, and the
-# gate's own files (which necessarily reference the deny patterns).
+# Always excluded — both default and --strict:
+#  - docs/launch/ is the staging area; it documents the very secrets/decisions being
+#    prepared (the flip runbook names the operator IP/host for the git-history decision),
+#    so scanning it is wrong by construction.
+#  - the gate's own script + test necessarily reference the deny patterns.
+# NOTE: docs/archive/ is deliberately NOT here. Archived docs are deferred in default
+# mode (historical) but ARE scanned by --strict, so archiving a doc never hides a leak
+# from the flip-time gate (no false comfort — U21 ↔ U8 coordination).
 _EXCLUDE_ALWAYS = (
     "docs/launch/",
-    "docs/archive/",
     "scripts/preflight_public_scan.py",
     "tests/test_preflight_public_scan.py",
 )

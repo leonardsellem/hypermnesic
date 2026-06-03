@@ -89,10 +89,16 @@ def test_empty_token_placeholder_not_flagged():
     assert pf.scan_text("OPENAI_API_KEY=") == []
 
 
-def test_scope_excludes_launch_and_archive():
+def test_scope_always_excludes_launch():
+    # docs/launch/ is the staging area (documents the secrets by design) — never scanned.
     assert pf.in_scope("docs/launch/LICENSE-AGPL-3.0.txt", strict=False) is False
     assert pf.in_scope("docs/launch/public-flip-runbook.md", strict=True) is False
-    assert pf.in_scope("docs/archive/old.md", strict=True) is False
+
+
+def test_archive_deferred_in_default_but_scanned_in_strict():
+    # Archiving a doc must NOT hide a leak from the flip-time gate (no false comfort).
+    assert pf.in_scope("docs/archive/old.md", strict=False) is False   # historical, deferred
+    assert pf.in_scope("docs/archive/old.md", strict=True) is True       # flip gate scans it
 
 
 def test_scope_defers_process_docs_in_default_includes_in_strict():
