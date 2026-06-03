@@ -13,7 +13,7 @@ plugin/
   plugins/hypermnesic/
     .claude-plugin/plugin.json             # Claude manifest (skills auto-discovered; hooks/MCP auto-loaded)
     .codex-plugin/plugin.json              # Codex manifest (skills + interface)
-    skills/hypermnesic-memory/SKILL.md     # the skillset (search/recall/resolve/commit_note, disk-first)
+    skills/hypermnesic-memory/SKILL.md     # the skillset (search/build_context/think/resolve/list_folders/commit_note, disk-first)
     hooks/hooks.json                       # one UserPromptSubmit auto-recall hook
     hooks/scripts/hypermnesic_agent_hook.py# the auto-recall hook (Claude+Codex, --host)
     .mcp.json                              # OAuth-discovery MCP wiring (env-templated URL, no host, no token)
@@ -22,8 +22,8 @@ plugin/
 ## How it surfaces memory
 
 - **The SKILL** is the primary surface: its description is always discoverable, and the agent
-  reaches for `search` / `build_context` / `think` / `resolve` / `commit_note` when memory is
-  relevant. This is the lightweight, on-demand path — no per-turn cost.
+  reaches for `search` / `build_context` / `think` / `resolve` / `list_folders` / `commit_note`
+  when memory is relevant. This is the lightweight, on-demand path — no per-turn cost.
 - **One auto-recall hook** (`UserPromptSubmit`) adds *optional* proactive recall: when a prompt
   looks memory-relevant AND an endpoint + token are configured, it runs a single bounded search
   and injects the top hits. It is **silent and non-blocking** otherwise (off-topic prompt,

@@ -16,7 +16,11 @@ jobs:
         run: uv sync --extra dev
       - name: Ruff
         run: uv run ruff check .
+      - name: Version consistency (pyproject ↔ manifests ↔ __init__)
+        run: uv run python scripts/check_version_consistency.py
       - name: Tests
         run: uv run pytest
       - name: License gate (zero AGPL/GPL/SSPL)
         run: uv run python scripts/license_scan.py
+      - name: Preflight public scan (no operator secret/host in the to-be-public surface)
+        run: uv run python scripts/preflight_public_scan.py

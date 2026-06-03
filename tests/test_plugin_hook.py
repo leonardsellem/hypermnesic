@@ -73,7 +73,7 @@ def test_hook_source_is_user_neutral():
     # distributable through a public repo: no migration framing, no operator-specific endpoint
     src = _HOOK.read_text(encoding="utf-8").lower()
     assert "gbrain" not in src                            # no migration steering
-    assert "taildabf2" not in src and "homelab.tail" not in src   # no hardcoded endpoint
+    assert ".ts.net" not in src and "homelab.tail" not in src   # no hardcoded operator endpoint
     assert "hypermnesic_mcp_url" in src                   # endpoint comes from the environment
 
 

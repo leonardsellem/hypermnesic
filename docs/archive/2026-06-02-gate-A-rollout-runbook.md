@@ -1,5 +1,12 @@
 # Gate-A → Phase-B rollout runbook (ready to execute on operator approval)
 
+> **ARCHIVED (2026-06-03).** A completed, homelab-specific rollout runbook. Kept as a
+> historical record only. The current deploy reference is
+> [`../unified-oauth-mcp-deploy-runbook.md`](../unified-oauth-mcp-deploy-runbook.md); the
+> current architecture is [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md). This file
+> carries operator-specific homelab values and is a flip-time scrub target (see
+> [`../launch/public-launch-checklist.md`](../launch/public-launch-checklist.md)).
+
 The exact **reversible** homelab steps to make Phase A live, in dependency order, each with its
 rollback inverse and homelab-mirror note. **None of this has run** — it executes only after you
 approve Gate A. The live `:8848` master, honcho, gbrain, and the vault are currently untouched.

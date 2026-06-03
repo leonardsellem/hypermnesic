@@ -362,8 +362,8 @@ def test_list_folders_cli_human_output_is_nonempty(make_corpus, fake_embedder,
 
 # --- U2: serve OAuth2 flags plumb a verifier + AuthSettings into build_server --
 
-_ISS = "https://homelab.taildabf2.ts.net/honcho/"
-_RES = "https://homelab.taildabf2.ts.net/mcp"
+_ISS = "https://example.ts.net/honcho/"
+_RES = "https://example.ts.net/mcp"
 
 
 def test_serve_auth_flags_plumb_verifier_and_settings(monkeypatch, tmp_path):

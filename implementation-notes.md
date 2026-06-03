@@ -23,7 +23,7 @@ the Phase-1 → 2.5 plans live in-repo under `docs/plans/`.
 
 ## U1 — scaffold (in progress)
 
-- Repo created at `/home/ubuntu/dev/hypermnesic`, `git init -b main`.
+- Repo created at `~/dev/hypermnesic`, `git init -b main`.
 - Deps declared: `sqlite-vec`, `openai`, `mcp`, `ruamel.yaml`; dev:
   `pytest`, `ruff`, `pip-licenses`.
 - `LICENSE`: proprietary/private placeholder. Plan allows no public LICENSE
@@ -69,7 +69,7 @@ they are never bundled — Obsidian provides them at runtime.
 
 ### Resolved blockers (U1)
 
-- **OPENAI_API_KEY**: operator populated `/home/ubuntu/dev/hypermnesic/.env`
+- **OPENAI_API_KEY**: operator populated `~/dev/hypermnesic/.env`
   (verified non-empty, `sk-` prefix, 164 chars; value never echoed). `.env` is
   gitignored. Key blocker cleared for U2/U5/U6 live gates.
 
@@ -441,3 +441,12 @@ Privacy: the default MCP URL is empty (`src/types.ts`), so a manual install
 transmits nothing off-device until configured; a provisioned `--role=client`
 install (Plan 1 U34) pre-fills the endpoint. The read-only guarantee stays
 statically verified by `tests/test_obsidian_plugin.py`.
+
+---
+
+> **System of record (as of 2026-06-03).** This file is a **historical narrative**
+> of build decisions and deviations through Phase 2.5; it is not a per-release
+> changelog and no longer asserts a "current" range. The durable, user-facing release
+> record is now [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog). New decision records
+> live under `docs/solutions/`. Add release entries to the changelog; keep this log for
+> the narrative "why" behind a change.

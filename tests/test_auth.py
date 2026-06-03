@@ -18,8 +18,8 @@ from mcp.server.auth.settings import AuthSettings
 
 from hypermnesic import auth
 
-RES = "https://homelab.taildabf2.ts.net/mcp"
-ISS = "https://homelab.taildabf2.ts.net/honcho/"
+RES = "https://example.ts.net/mcp"
+ISS = "https://example.ts.net/honcho/"
 
 
 def _tok(**kw) -> AccessToken:
@@ -83,7 +83,7 @@ def test_verify_raw_exception_fails_closed():
 # --- RFC 8707 strict audience binding ---------------------------------------
 
 def test_wrong_audience_rejected_rfc8707():
-    other = "https://homelab.taildabf2.ts.net/other"
+    other = "https://example.ts.net/other"
     bad = _tok(resource=other, claims={"aud": other})
     v = auth.build_token_verifier(resource_server_url=RES, verify_raw=lambda t: bad)
     assert _verify(v, "crossrs") is None     # token minted for a different RS → rejected
@@ -154,7 +154,7 @@ def test_introspection_inactive_is_none():
 def test_introspection_end_to_end_through_verifier_enforces_audience():
     # an active-but-wrong-audience introspection result is still rejected by the verifier
     def wrong_aud_post(url, *, data, auth):
-        return {"active": True, "scope": "write", "aud": "https://homelab.taildabf2.ts.net/other",
+        return {"active": True, "scope": "write", "aud": "https://example.ts.net/other",
                 "client_id": "c", "exp": int(time.time()) + 60}
     raw = auth.introspection_verify_raw(introspection_url="https://as/introspect",
                                         client_id="rs", client_secret="shh", post_fn=wrong_aud_post)
