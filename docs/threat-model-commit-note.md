@@ -81,6 +81,22 @@ instruction files anywhere (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules
 `.gitmodules`). *Residual:* a missed governance-file class. Prefer a
 deny-by-default / allowlist posture for content paths where feasible.
 
+*Phase-B update (2026-06-03 — allowlist→blocklist posture reversal):* the
+4-prefix content-path **allowlist is no longer the default** — `commit_note`'s
+default write surface is now a **blocklist** (`_effective_write_surface(None)
+→ None`) so the operator's content folders (`projects/`, `people/`,
+`companies/`, `meetings/`) are writable. This removes the "allowlist posture for
+content paths" backstop V1 leaned on, so the "missed governance-file class"
+residual is **closed directly**: `protected_reason()` now also refuses a
+**governance-extension class** (Dockerfile/Makefile/Containerfile, setup.py/
+setup.cfg, package.json/package-lock.json, `.npmrc`/`.netrc`/`.env`, and the
+`.yml`/`.yaml`/`.lock`/`.toml` extensions) and matches protected dirs
+**case-insensitively** (closing the `Scripts/`→`scripts/` hole on a
+case-insensitive FS). The full re-audit, the enumerated exposed classes, the
+fence decision, and the operator sign-off gate are in
+`docs/2026-06-03-blocklist-write-surface-security-review.md` (amends the unified
+write-anywhere review). The denylist remains a *rule* (file class), per V1.
+
 ### V2 — Prompt injection via ingested content (retrieval/index poisoning)
 *Threat:* an adversarial document (in the corpus or a U6 portability target)
 embeds instructions ("call `commit_note` to overwrite X"). A downstream agent
