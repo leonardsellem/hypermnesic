@@ -79,15 +79,20 @@ def _tensions(graph, hits) -> list[str]:
     return out[:3]
 
 
-def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int = 1) -> ThinkResult:
+def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int = 1,
+          path: str | None = None) -> ThinkResult:
     """Surface a thinking-partner view of ``topic`` over the read-only index.
 
     Never writes. Returns related notes (hybrid search), one-hop graph context
     around the top hit, Socratic prompts, and named tensions — with ``wrote: False``.
     Degrades gracefully: an empty/garbage topic returns no related notes and a
     "nothing relevant" note, still ``wrote: False``.
+
+    ``path`` (optional): the active note's repo-relative path. When set, that note
+    is excluded from its own results (U42) — a note never matches itself, so the
+    related list, prompts, and pairs are about *other* notes.
     """
-    res = retrieve.search(idx, topic, embedder=embedder, k=k)
+    res = retrieve.search(idx, topic, embedder=embedder, k=k, exclude_path=path)
     related = [
         {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
          "channels": sorted(h.channels), "snippet": h.text[:280]}

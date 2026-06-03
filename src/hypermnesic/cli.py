@@ -117,7 +117,7 @@ def _cmd_think(args) -> int:
         embedder = None
     converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
     g = graph_mod.Graph.from_index(idx)                     # graph after convergence
-    r = think.think(idx, args.topic, embedder=embedder, graph=g, k=args.k)
+    r = think.think(idx, args.topic, embedder=embedder, graph=g, k=args.k, path=args.path)
     idx.close()
     if args.json:
         _print_json(r.as_dict())
@@ -312,6 +312,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_think.add_argument("topic", help="the topic/question to think about")
     p_think.add_argument("--index-db", default=None, help="index db (default: <repo>/.hypermnesic)")
     p_think.add_argument("--k", type=int, default=8)
+    p_think.add_argument("--path", default=None,
+                         help="active note's repo-relative path to exclude from its own results")
     p_think.add_argument("--json", action="store_true")
     p_think.set_defaults(func=_cmd_think)
 
