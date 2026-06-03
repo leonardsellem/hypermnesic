@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "hypermnesic",
   "metadata": {
-    "description": "hypermnesic — the git-native memory layer. A skillset + auto-query hooks + the self-hosted tailnet MCP, so agents reach hypermnesic by default (and never gbrain)."
+    "description": "hypermnesic — the git-native memory layer. A skillset + a lightweight auto-recall hook + a self-hosted tailnet MCP, so coding agents reach durable memory by default."
   },
   "owner": {
     "name": "Leonard Sellem",
@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "hypermnesic",
-      "description": "Memory for coding agents: hybrid search/recall, entity resolution, and a gated git-first write — over the self-hosted, OAuth2-authenticated tailnet MCP. Replaces gbrain as the single memory layer.",
+      "description": "Memory for coding agents: hybrid search/recall, entity resolution, and a gated git-first write — over a self-hosted, OAuth2-authenticated tailnet MCP. A single, durable memory layer.",
       "version": "0.0.3",
       "author": {
         "name": "Leonard Sellem",

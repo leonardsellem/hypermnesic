@@ -86,10 +86,13 @@ def test_skill_frontmatter_parses_and_names_only_real_tools():
         assert fake not in text, f"SKILL references nonexistent tool {fake!r}"
 
 
-def test_skill_teaches_disk_first_and_no_gbrain():
+def test_skill_is_user_neutral_and_teaches_disk_first():
+    # the plugin is distributed through a public repo, so the SKILL must be user-neutral: no
+    # migration steering (gbrain) and no operator-specific hardcoded endpoint. It must still
+    # teach the disk-first model.
     text = _SKILL.read_text(encoding="utf-8").lower()
-    assert "gbrain" in text                                 # explicitly addresses gbrain…
-    assert "not" in text and "gbrain" in text               # …telling agents not to reach for it
+    assert "gbrain" not in text                             # no migration steering
+    assert "<tailnet-host>" not in text and "homelab.tail" not in text   # no hardcoded endpoint
     assert "git" in text and "source of truth" in text      # the disk-first model is taught
 
 
