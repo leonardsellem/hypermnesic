@@ -32,6 +32,13 @@ CONVERGE_EMBED_BUDGET = 128       # max stale chunks embedded per converging rea
 CONVERGE_DEBOUNCE_SECONDS = 5.0   # skip re-convergence within this window
 CONVERGE_MAX_DELTA_FILES = 200    # over this many changed md files → signal manual reindex
 
+# --- list_folders discovery bounds (U2) ----------------------------------------
+# Mirror the CONVERGE_MAX_DELTA_FILES "cap + emit a signal" precedent: a large vault
+# returns a bounded folder payload (sorted before the cap → a deterministic tail is
+# dropped) with a ``truncated`` flag + omitted count; drill deeper by narrowing ``root``.
+LIST_FOLDERS_MAX_NODES = 200      # max folder entries returned before truncation
+LIST_FOLDERS_MAX_DEPTH = 6        # ceiling on the requested drill-down depth (clamped)
+
 # U18 proposal zone tiers — an explicit path-prefix list, NOT a heuristic.
 # Immutable free-append zones accept a NEW file directly (no proposal friction in
 # the moment — U24 capture depends on this); they never accept an overwrite.

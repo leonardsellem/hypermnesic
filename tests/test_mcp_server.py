@@ -94,11 +94,11 @@ def test_serve_is_stateless_for_handshakeless_clients(built_index, fake_embedder
 
 
 def test_only_read_tools_no_write_tool(built_index, fake_embedder):
-    # U20 adds think; U1 adds resolve. The invariant is "read-only, structural".
+    # U20 adds think; U1 adds resolve; U3 adds list_folders. Invariant: "read-only, structural".
     srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     tools = asyncio.run(srv.list_tools())
     names = {t.name for t in tools}
-    assert names == {"search", "build_context", "think", "resolve"}
+    assert names == {"search", "build_context", "think", "resolve", "list_folders"}
     # read-only is structural: no write-ish tool exists
     assert not any(
         kw in n for t in tools for n in [t.name]
@@ -115,7 +115,8 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     srv = mcp_server.build_server(built_index, host="127.0.0.1", embedder=fake_embedder,
                                   write_enabled=True, repo=built_index.parent.parent)
     schemas = {t.name: t.outputSchema for t in asyncio.run(srv.list_tools())}
-    assert set(schemas) == {"search", "build_context", "think", "resolve", "commit_note"}
+    assert set(schemas) == {"search", "build_context", "think", "resolve", "list_folders",
+                            "commit_note"}
     for name, sch in schemas.items():
         assert sch and sch.get("properties"), f"{name} has no outputSchema"
     # spot-check the declared shapes match the real returns
@@ -123,6 +124,7 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     assert "context" in schemas["build_context"]["properties"]
     assert {"resolved", "slug"} <= set(schemas["resolve"]["properties"])
     assert {"questions", "tensions"} <= set(schemas["think"]["properties"])
+    assert {"folders", "truncated", "omitted"} <= set(schemas["list_folders"]["properties"])
     assert {"committed", "refused"} <= set(schemas["commit_note"]["properties"])
 
 
@@ -180,7 +182,8 @@ def test_each_read_tool_converges(make_corpus, fake_embedder, monkeypatch):
     _call(srv, "search", {"query": "Hetzner"})
     _call(srv, "build_context", {"path": "hetzner.md"})
     _call(srv, "think", {"topic": "Hetzner"})
-    assert len(calls) == 3              # convergence ran on each read tool path
+    _call(srv, "list_folders", {})
+    assert len(calls) == 4              # convergence ran on each read tool (incl. list_folders)
 
 
 def test_reads_degrade_to_lexical_when_embedder_down(make_corpus, fake_embedder):
@@ -405,6 +408,100 @@ def test_resolve_is_read_tool_and_converges(make_corpus, fake_embedder):
     _commit(repo, "infrastructure/box.md", "# Box\n\nBOXMARKER body.\n", "add box")
     out = _call(srv, "resolve", {"name": "box"})
     assert out["resolved"] == "infrastructure/box.md"          # converged before resolving
+
+
+# --- U3: list_folders discovery read tool -----------------------------------
+
+def _folders_by_path(out):
+    return {e["path"]: e for e in out["folders"]}
+
+
+def test_list_folders_returns_taxonomy_and_schema_shape(make_corpus, fake_embedder):
+    # AE7: a typed, structured listing — path/writable/protected_reason/note_count per folder,
+    # plus truncated/omitted and the convergence signal. Phase A surface = the 4-prefix default,
+    # so notes/ is writable while projects/ is honestly non-writable until the Phase-B flip.
+    repo = make_corpus({"notes/n.md": "# N\n\nbody.\n", "projects/acme/a.md": "# A\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert set(out) >= {"root", "depth", "folders", "truncated", "omitted",
+                        "manual_reindex_recommended"}
+    by = _folders_by_path(out)
+    assert by["notes/"]["writable"] is True and by["notes/"]["protected_reason"] is None
+    assert by["notes/"]["note_count"] == 1
+    assert by["projects/"]["writable"] is False                # Phase A: 4-prefix default
+    assert by["projects/"]["protected_reason"] == "not in writable allowlist"
+
+
+def test_list_folders_is_read_tool_and_converges(make_corpus, fake_embedder):
+    repo = make_corpus({"notes/a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    tools = {t.name: t for t in asyncio.run(srv.list_tools())}
+    assert "list_folders" in tools and "list_folders" in mcp_server.READ_TOOL_NAMES
+    assert "list_folders" not in mcp_server.WRITE_TOOL_NAMES
+    assert tools["list_folders"].annotations.readOnlyHint is True
+    # a folder created by a fresh commit is discoverable after convergence
+    _commit(repo, "fresh/box.md", "# Box\n\nFRESHFOLDER body.\n", "add fresh folder")
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert "fresh/" in _folders_by_path(out)                   # converged before listing
+
+
+def test_list_folders_nested_protected_folder_is_non_writable(make_corpus, fake_embedder):
+    # AE4 over MCP: discovery never advertises a path commit_note would refuse. projects/ is
+    # writable but projects/scripts/ is NOT — probing a file UNDER the prefix makes the flag agree.
+    repo = make_corpus({"projects/scripts/x.md": "# x\n\nbody.\n",
+                        "projects/acme/a.md": "# A\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    by = _folders_by_path(_call(srv, "list_folders", {"root": "projects/", "depth": 1}))
+    assert by["projects/scripts/"]["writable"] is False
+    assert "scripts/" in by["projects/scripts/"]["protected_reason"]
+
+
+def test_discovery_and_commit_note_agree_on_nested_protected(make_corpus, fake_embedder):
+    # G4: the parity-lie guard, both sides in one test. With projects/ allowlisted, projects/acme/
+    # is writable but projects/scripts/ is NOT (the protected-dir rule beats the allowlist).
+    # list_folders reports projects/scripts/ non-writable AND commit_note refuses
+    # projects/scripts/*.md — discovery never advertises a path the write path would refuse.
+    repo = make_corpus({"projects/scripts/x.md": "# x\n\nbody.\n",
+                        "projects/acme/a.md": "# A\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host="127.0.0.1", embedder=fake_embedder, repo=repo,
+                                  write_enabled=True, write_allowlist=["projects/"])
+    by = _folders_by_path(_call(srv, "list_folders", {"root": "projects/", "depth": 1}))
+    assert by["projects/acme/"]["writable"] is True
+    assert by["projects/scripts/"]["writable"] is False        # discovery: non-writable
+    refused = _call(srv, "commit_note", {"path": "projects/scripts/n.md", "body": "# n\n\nx.\n"})
+    assert refused["committed"] is False and refused["refused"]    # commit_note refuses → agree
+    ok = _call(srv, "commit_note", {"path": "projects/acme/n.md", "body": "# n\n\nx.\n"})
+    assert ok["committed"] is True                             # the writable sibling commits
+
+
+def test_list_folders_rejects_traversal_root_without_leak(make_corpus, fake_embedder):
+    repo = make_corpus({"notes/n.md": "# N\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    for bad in ("../etc", "/etc/passwd"):
+        out = _call(srv, "list_folders", {"root": bad, "depth": 1})
+        assert out["folders"] == []                            # no out-of-vault leakage
+
+
+def test_list_folders_bounds_payload(make_corpus, fake_embedder, monkeypatch):
+    from hypermnesic import config
+    monkeypatch.setattr(config, "LIST_FOLDERS_MAX_NODES", 2)    # read at call time by the tool
+    repo = make_corpus({f"folder{i}/n.md": f"# F{i}\n\nbody {i}.\n" for i in range(3)})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert out["truncated"] is True and out["omitted"] == 1
+    assert [e["path"] for e in out["folders"]] == ["folder0/", "folder1/"]   # sorted, tail dropped
 
 
 # --- U2: OAuth2 Resource-Server wiring + write_enabled⇒auth-required invariant -

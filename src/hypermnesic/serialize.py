@@ -37,6 +37,11 @@ class WriteGuardError(Exception):
     outside the per-repo allowlist."""
 
 
+# The single allowlist-miss reason. A sentinel so ``check`` can re-derive its exact
+# (path-interpolated) message while the predicate stays path-clean — see writable_reason.
+_NOT_IN_ALLOWLIST = "not in writable allowlist"
+
+
 def protected_reason(rel_path: str) -> str | None:
     """Return why ``rel_path`` is protected, or None if it is a writable class."""
     p = PurePosixPath(rel_path)
@@ -59,9 +64,34 @@ def protected_reason(rel_path: str) -> str | None:
     return None
 
 
+def writable_reason(rel_path: str, *, allowlist: list[str] | None = None) -> str | None:
+    """Why a write to ``rel_path`` would be refused, or None if it is writable.
+
+    The single source of truth for the "is this path writable" decision (U1): the
+    protected-path class refusal (allowlist-INDEPENDENT — the real bound) first, then
+    the optional allowlist narrowing. ``allowlist=None`` is blocklist mode (protected
+    classes are the sole bound). Pure and path-clean: the returned reason never
+    interpolates ``rel_path``, so the folder classifier (U2) can surface it verbatim
+    and ``check`` (which DOES interpolate) re-derives its message from the sentinel.
+    """
+    reason = protected_reason(rel_path)
+    if reason:
+        return reason
+    if allowlist is not None and not any(
+            rel_path == a or rel_path.startswith(a.rstrip("/") + "/") for a in allowlist):
+        return _NOT_IN_ALLOWLIST
+    return None
+
+
 def check(repo, rel_path: str, *, allowlist: list[str] | None = None) -> str:
     """Validate a write to ``rel_path`` within ``repo``. Return the normalized
-    repo-relative posix path, or raise WriteGuardError."""
+    repo-relative posix path, or raise WriteGuardError.
+
+    The within-repo resolution + absolute/traversal checks stay HERE (they need repo
+    context, V6); the path-class + allowlist decision is delegated to
+    :func:`writable_reason` so discovery and the write path share one rule. Messages
+    are preserved exactly (protected-path vs allowlist), re-derived from the reason.
+    """
     repo_root = Path(repo).resolve()
     if PurePosixPath(rel_path).is_absolute() or Path(rel_path).is_absolute():
         raise WriteGuardError(f"absolute path not allowed: {rel_path}")
@@ -71,13 +101,11 @@ def check(repo, rel_path: str, *, allowlist: list[str] | None = None) -> str:
     except ValueError:
         raise WriteGuardError(f"path escapes repo root: {rel_path}") from None
     rel_posix = rel.as_posix()
-    reason = protected_reason(rel_posix)
+    reason = writable_reason(rel_posix, allowlist=allowlist)
+    if reason == _NOT_IN_ALLOWLIST:
+        raise WriteGuardError(f"path {rel_posix!r} not in writable allowlist")
     if reason:
         raise WriteGuardError(f"refused protected path {rel_posix!r}: {reason}")
-    if allowlist is not None:
-        if not any(rel_posix == a or rel_posix.startswith(a.rstrip("/") + "/")
-                   for a in allowlist):
-            raise WriteGuardError(f"path {rel_posix!r} not in writable allowlist")
     return rel_posix
 
 
