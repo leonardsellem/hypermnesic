@@ -2,7 +2,8 @@
 
 Makes **hypermnesic** the default memory layer for coding agents: a skillset that teaches
 agents when/how to use it, a lightweight auto-recall hook that surfaces relevant context at
-prompt time, and the self-hosted, OAuth2-authenticated tailnet MCP wiring.
+prompt time, and OAuth-discovery MCP wiring (point it at your endpoint, log in once in a
+browser, then silent refresh).
 
 ## What's inside
 
@@ -15,7 +16,7 @@ plugin/
     skills/hypermnesic-memory/SKILL.md     # the skillset (search/recall/resolve/commit_note, disk-first)
     hooks/hooks.json                       # one UserPromptSubmit auto-recall hook
     hooks/scripts/hypermnesic_agent_hook.py# the auto-recall hook (Claude+Codex, --host)
-    .mcp.json                              # self-hosted MCP wiring (OAuth2 client)
+    .mcp.json                              # OAuth-discovery MCP wiring (env-templated URL, no host, no token)
 ```
 
 ## How it surfaces memory
@@ -31,15 +32,24 @@ plugin/
 
 ## Configuration (per host)
 
-The auto-recall hook reads its endpoint and token from the environment, so the plugin is
-user-neutral and carries no hardcoded host:
+The plugin is **distribution-generic** — it carries no operator hostname and no token. Point it
+at your own endpoint with one environment variable:
 
-- `HYPERMNESIC_MCP_URL` — the MCP `search` endpoint (e.g. `https://<your-host>/mcp`).
-- `HYPERMNESIC_MCP_TOKEN` — the bearer token (provisioned out of band; **never** inlined or
-  committed). With either unset, the hook stays silent.
+- `HYPERMNESIC_MCP_URL` — your hypermnesic MCP endpoint (e.g. `https://<your-host>/mcp`). The
+  bundled `.mcp.json` templates the URL from this var (`${HYPERMNESIC_MCP_URL:-…}`).
 
-The bundled `.mcp.json` wires the MCP server for the host's agents; the token is referenced by
-env var / obtained at connect time, never stored in this repo.
+### First connect (one browser login)
+
+The `.mcp.json` is **OAuth-discovery-only**: there is no `auth` block and no static token. On the
+first connect the agent host (Claude Code / Codex / a cloud connector) discovers the OAuth
+Authorization Server from `{type, url}` alone, opens a browser once for you to authorize (read by
+default; approve **write** at the consent page to enable `commit_note`), then stores and silently
+refreshes the token. A static `Authorization` header is deliberately omitted — it would suppress
+that OAuth discovery.
+
+> The auto-recall hook (below) is the one exception: on a remote device it reads
+> `HYPERMNESIC_MCP_TOKEN` for its bounded read, or rides the tailnet read route — see the hook
+> section. The MCP tool wiring itself needs no token.
 
 ## Install (per host)
 

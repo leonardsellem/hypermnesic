@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """hypermnesic auto-recall hook — proactive memory at prompt submit (Claude Code + Codex).
 
-A single UserPromptSubmit hook: when a prompt looks memory-relevant, run ONE bounded,
-URL+token-gated search over the configured hypermnesic MCP endpoint and inject the top hits
-as additionalContext. It is silent and non-blocking on every other path — off-topic prompt,
-no endpoint/token configured, 401, timeout, no hits, malformed payload — so it can never
-block or pollute a turn it has nothing to add to.
+A single UserPromptSubmit hook: when a prompt looks memory-relevant, run ONE bounded search
+over the configured hypermnesic MCP endpoint and inject the top hits as additionalContext. It
+is silent and non-blocking on every other path — off-topic prompt, no endpoint configured, 401,
+timeout, no hits, malformed payload — so it can never block or pollute a turn it has nothing to
+add to.
+
+Remote-device recall (U5/R11): Claude Code exposes no stored MCP OAuth token to hook subprocesses
+(confirmed against the hooks docs — the UserPromptSubmit payload carries no credential), so the
+hook cannot reuse the app's OAuth login. Its working remote path is the RETAINED tailnet read
+route (an auth-off read companion reachable on any tailnet device): the hook needs only the URL.
+The token (HYPERMNESIC_MCP_TOKEN) is therefore OPTIONAL — supplied for an authed read route, used
+ONLY in the Authorization header, never written to stdout, stderr, or the injected text (V9).
 
 User-neutral + distributable: no hardcoded endpoint (the URL comes from HYPERMNESIC_MCP_URL),
-and no project- or migration-specific content. The token (HYPERMNESIC_MCP_TOKEN) is used only
-in the Authorization header — never written to stdout, stderr, or the injected text (V9).
+and no project- or migration-specific content.
 """
 
 from __future__ import annotations
@@ -66,9 +72,10 @@ def _search_hits(query: str, url: str, token: str) -> list[dict] | None:
     body = json.dumps({
         "jsonrpc": "2.0", "id": 1, "method": "tools/call",
         "params": {"name": "search", "arguments": {"query": query, "k": 5}}}).encode()
-    req = urllib.request.Request(url, data=body, method="POST", headers={
-        "Content-Type": "application/json", "Accept": "application/json",
-        "Authorization": f"Bearer {token}"})
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    if token:                                       # authed path; omit entirely on the read route
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(url, data=body, method="POST", headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=2.5) as resp:   # bounded; 401 → HTTPError → None
             payload = json.loads(resp.read().decode())
@@ -85,12 +92,14 @@ def _flat(s: str) -> str:                       # one line per hit: neutralize i
 
 
 def injection(prompt: str) -> str:
-    """Relevance- + URL- + token-gated recall → injection text. '' means stay silent."""
+    """Relevance- + URL-gated recall → injection text. '' means stay silent. The URL is required
+    (no endpoint configured → silent); the token is OPTIONAL (the auth-off tailnet read route
+    needs none — U5/R11)."""
     if os.environ.get("HYPERMNESIC_HOOK_DISABLE_LOOKUP") == "1" or not relevant(prompt):
         return ""
     url = os.environ.get("HYPERMNESIC_MCP_URL", "")
     token = os.environ.get("HYPERMNESIC_MCP_TOKEN", "")
-    if not url or not token:                    # unconfigured == 401 path: silent, never blocks
+    if not url:                                 # no endpoint configured → silent, never blocks
         return ""
     query = " ".join(prompt.split())[:220]
     hits = _search_hits(query, url, token) if query else None

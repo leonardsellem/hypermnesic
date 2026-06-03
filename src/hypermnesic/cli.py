@@ -403,6 +403,32 @@ def _cmd_serve_cloud(args) -> int:
     return 0
 
 
+def _cmd_setup(args) -> int:
+    """`hypermnesic setup`: one idempotent command to bring the unified public OAuth endpoint
+    online — render + start the cloud service, persist the operator consent secret, configure the
+    Tailscale funnel (MCP path + discovery well-knowns), verify the real HTTPS discovery chain, and
+    print the URL + login instructions. Fail-closed: any failure leaves no partial state."""
+    from hypermnesic import install
+
+    try:
+        res = install.setup(
+            Path(args.repo), public_url=args.public_url, resource=args.resource,
+            host=args.host, port=args.port, path=args.path,
+            env_file=(Path(args.env_file) if args.env_file else None),
+            allowlist=args.allowlist, token_ttl=args.token_ttl)
+    except (install.InstallError, FileNotFoundError) as exc:
+        print(f"setup failed: {exc}", file=sys.stderr)   # fail loud; nothing half-provisioned
+        return 1
+    if args.json:
+        _print_json(res)
+    else:
+        print(f"hypermnesic unified endpoint live: {res['public_url']}")
+        print(f"  service: {res['service']}  (consent secret: {res['env_file']})")
+        for step in res.get("next_steps", []):
+            print(f"  next: {step}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hypermnesic", description="hypermnesic CLI")
     parser.add_argument("--version", action="version", version=f"hypermnesic {__version__}")
@@ -593,6 +619,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_cloud.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
                          help="writable path prefix (default: the engine allowlist)")
     p_cloud.set_defaults(func=_cmd_serve_cloud)
+
+    p_setup = sub.add_parser("setup",
+                             help="one-command bring-up of the unified public OAuth MCP endpoint")
+    p_setup.add_argument("repo", help="repo whose index the endpoint serves (engine host)")
+    p_setup.add_argument("--public-url", required=True,
+                         help="the public HTTPS issuer/MCP URL (e.g. https://<host>.ts.net/mcp)")
+    p_setup.add_argument("--resource", required=True,
+                         help="the public MCP resource identifier (RFC 8707 audience); "
+                              "usually the same as --public-url")
+    p_setup.add_argument("--host", default="127.0.0.1",
+                         help="local bind (the Funnel proxies the public hostname to it)")
+    p_setup.add_argument("--port", type=int, default=8850)
+    p_setup.add_argument("--path", default="/mcp")
+    p_setup.add_argument("--env-file", default=None,
+                         help="owner-only env file for the consent secret "
+                              "(default: ~/.config/hypermnesic-cloud/cloud.env)")
+    p_setup.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
+                         help="writable path prefix (default: the full master write surface)")
+    p_setup.add_argument("--token-ttl", type=int, default=3600)
+    p_setup.add_argument("--json", action="store_true")
+    p_setup.set_defaults(func=_cmd_setup)
     return parser
 
 

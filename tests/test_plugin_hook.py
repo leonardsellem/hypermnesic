@@ -109,11 +109,48 @@ def test_lookup_failure_is_silent_never_blocks(hook, tmp_path, monkeypatch):
     assert out["continue"] is True and _ctx(out) == ""   # relevant, but failure → silent
 
 
-def test_missing_token_is_silent(hook, monkeypatch):
-    monkeypatch.setenv("HYPERMNESIC_MCP_URL", "https://memory.example/mcp")  # url but no token
+def test_read_route_without_token_injects_on_tailnet(hook, tmp_path, monkeypatch):
+    # R11 spike outcome (U5): Claude Code exposes no stored OAuth token to hook subprocesses, so
+    # the remote-device path is the RETAINED tailnet read route (:8848, auth-off, reachable on any
+    # tailnet device). The hook needs only the URL — no token — and still injects context.
+    fixture = tmp_path / "hits.json"
+    fixture.write_text(json.dumps({"hits": [
+        {"path": "infra/hetzner.md", "heading": "Hetzner", "snippet": "the homelab box"}]}))
+    monkeypatch.setenv("HYPERMNESIC_MCP_URL", "http://100.64.0.1:8848/mcp")  # tailnet read route
+    monkeypatch.setenv("HYPERMNESIC_HOOK_FIXTURE", str(fixture))             # NO token set
     out = hook.handle({"hook_event_name": "UserPromptSubmit",
-                       "prompt": "background on Hetzner Cloud"}, "claude", None)
-    assert out["continue"] is True and _ctx(out) == ""   # no token == 401 path: silent
+                       "prompt": "what do we know about Hetzner"}, "claude", None)
+    assert out["continue"] is True
+    assert "hetzner" in _ctx(out).lower()                # read route works token-free
+
+
+def test_search_hits_authorization_header_only_when_token_present(hook, monkeypatch):
+    # the token is OPTIONAL (read route) but, when present, is used ONLY in the Authorization
+    # header — never in the body, never echoed. No token → no Authorization header at all.
+    import urllib.request
+
+    captured: dict = {}
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return json.dumps({"result": {"structuredContent": {"hits": []}}}).encode()
+
+    def fake_urlopen(req, timeout=None):
+        captured["headers"] = dict(req.headers)
+        return _Resp()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    hook._search_hits("q", "http://100.64.0.1:8848/mcp", "TOKVALUE")
+    assert any(k.lower() == "authorization" for k in captured["headers"])     # authed path
+    captured.clear()
+    hook._search_hits("q", "http://100.64.0.1:8848/mcp", "")
+    assert not any(k.lower() == "authorization" for k in captured["headers"])  # read route: none
 
 
 def test_missing_url_is_silent(hook, monkeypatch):
