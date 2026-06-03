@@ -128,6 +128,52 @@ def test_think_title_stem_fallback_strips_leading_date(make_corpus, fake_embedde
     idx.close()
 
 
+# --- U45: structured "related but not yet linked" pairs (replacing tensions) --
+
+def test_think_unlinked_pairs_are_structured_and_navigable(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "alpha.md": "# Alpha\n\nWIDGET shared topic, alpha facet.\n",   # not linked to beta
+        "beta.md": "# Beta\n\nWIDGET shared topic, beta facet.\n",      # distinct body (no dedup)
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "WIDGET shared topic", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.unlinked, "two relevant, unlinked notes should produce a pair"
+    pair = r.unlinked[0]
+    assert set(pair) == {"a_path", "a_title", "b_path", "b_title"}
+    assert {pair["a_path"], pair["b_path"]} == {"alpha.md", "beta.md"}
+    assert {pair["a_title"], pair["b_title"]} == {"Alpha", "Beta"}      # titles, not headings
+    idx.close()
+
+
+def test_think_graph_linked_pair_is_not_unlinked(make_corpus, fake_embedder):
+    # hetzner.md and net.md are mutually wikilinked → they are NOT a missing
+    # connection, so they produce no unlinked entry.
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    r = think_mod.think(idx, "Hetzner net", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.unlinked == []
+    idx.close()
+
+
+def test_think_as_dict_has_unlinked_not_tensions(make_corpus, fake_embedder):
+    repo = make_corpus({"alpha.md": "# Alpha\n\nWIDGET.\n", "beta.md": "# Beta\n\nWIDGET.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    d = think_mod.think(idx, "WIDGET", embedder=fake_embedder, graph=g, repo=repo).as_dict()
+    assert "unlinked" in d and "tensions" not in d
+    json.dumps(d)                                        # still JSON-serialisable
+    idx.close()
+
+
+def test_think_unlinked_empty_with_single_hit(make_corpus, fake_embedder):
+    repo = make_corpus({"only.md": "# Only\n\nLONEMARKER unique.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "LONEMARKER", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.unlinked == [] and r.wrote is False
+    idx.close()
+
+
 # --- KTD7: structurally incapable of writing ----------------------------------
 
 def test_think_module_has_no_write_surface():
@@ -154,9 +200,10 @@ def test_think_no_match_degrades_gracefully(make_corpus, fake_embedder):
 
 def test_think_as_dict_round_trips():
     r = think_mod.ThinkResult(topic="t", wrote=False, related=[], context=[],
-                              questions=["q?"], tensions=[], degraded=False, note="")
+                              questions=["q?"], unlinked=[], degraded=False, note="")
     d = r.as_dict()
     assert d["wrote"] is False and d["topic"] == "t" and d["questions"] == ["q?"]
+    assert d["unlinked"] == [] and "tensions" not in d
     json.dumps(d)                                        # must be JSON-serialisable
 
 
