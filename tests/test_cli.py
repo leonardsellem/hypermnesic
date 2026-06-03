@@ -379,3 +379,41 @@ def test_serve_cloud_refuses_weak_approval_token(tmp_path, capsys, monkeypatch):
     assert rc == 1
     err = capsys.readouterr().err.lower()
     assert "approval" in err and ("24" in err or "characters" in err or "weak" in err)
+
+
+# --- U3: `hypermnesic setup` — one-command bring-up plumbs to install.setup ---
+
+def test_setup_cli_plumbs_to_install_setup(tmp_path, capsys, monkeypatch):
+    captured: dict = {}
+
+    def fake_setup(repo, **kw):
+        captured["repo"] = repo
+        captured.update(kw)
+        return {"service": "hypermnesic-cloud", "public_url": kw["public_url"],
+                "resource": kw["resource"], "unit_path": "/x/u.service",
+                "env_file": "/x/cloud.env", "secret_generated": True,
+                "funnel_routes": [("/mcp", "http://127.0.0.1:8850")],
+                "discovery": {"ok": True, "checks": {}}, "converged": False,
+                "next_steps": ["add https://h/mcp to your apps", "log in once"]}
+
+    from hypermnesic import install
+    monkeypatch.setattr(install, "setup", fake_setup)
+    rc = cli.main(["setup", str(tmp_path), "--public-url", "https://h/mcp",
+                   "--resource", "https://h/mcp", "--port", "8850"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert captured["public_url"] == "https://h/mcp" and captured["resource"] == "https://h/mcp"
+    assert "https://h/mcp" in out                                 # the URL is printed
+    assert "log in" in out.lower() or "authorize" in out.lower()  # login instructions printed
+
+
+def test_setup_cli_fails_loud_on_install_error(tmp_path, capsys, monkeypatch):
+    from hypermnesic import install
+
+    def boom(repo, **kw):
+        raise install.InstallError("Tailscale not logged in")
+
+    monkeypatch.setattr(install, "setup", boom)
+    rc = cli.main(["setup", str(tmp_path), "--public-url", "https://h/mcp",
+                   "--resource", "https://h/mcp"])
+    assert rc == 1 and "tailscale" in capsys.readouterr().err.lower()

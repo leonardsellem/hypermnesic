@@ -480,7 +480,7 @@ def test_cloud_server_read_scoped_principal_reaches_read_tools(make_corpus, fake
                                         resource=RES, public_url=PUBLIC,
                                         approval_token="op-approval-token-24chars-or-more")
     out = _cloud_call_as(srv, ["read"], "search", {"query": "alpha"})
-    assert "hits" in out and out["query"] == "alpha"               # read tool reachable on read scope
+    assert "hits" in out and out["query"] == "alpha"               # read tool reached on read scope
 
 
 def test_cloud_server_honors_an_explicit_narrower_allowlist(make_corpus, fake_embedder):

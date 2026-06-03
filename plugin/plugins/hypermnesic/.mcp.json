@@ -2,14 +2,7 @@
   "mcpServers": {
     "hypermnesic": {
       "type": "streamable-http",
-      "url": "https://homelab.<tailnet-host>.ts.net/mcp",
-      "auth": {
-        "type": "oauth2",
-        "issuer": "https://homelab.<tailnet-host>.ts.net",
-        "resource": "https://homelab.<tailnet-host>.ts.net/mcp",
-        "required_scopes": ["write"],
-        "token_env": "HYPERMNESIC_MCP_TOKEN"
-      }
+      "url": "${HYPERMNESIC_MCP_URL:-https://YOUR-HYPERMNESIC-HOST/mcp}"
     }
   }
 }
