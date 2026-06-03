@@ -293,7 +293,8 @@ def _cmd_serve(args) -> int:
             Path(args.index_db), host=args.host, port=args.port, path=args.path,
             repo=(Path(args.repo) if args.repo else None),
             write_enabled=args.enable_write, write_allowlist=args.allowlist,
-            token_verifier=token_verifier, auth=auth_settings)
+            token_verifier=token_verifier, auth=auth_settings,
+            trust_tailnet_write=args.allow_tailnet_write)
     except ValueError as exc:
         print(f"serve failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
         return 1
@@ -497,6 +498,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_serve.add_argument("--path", default="/mcp")
     p_serve.add_argument("--enable-write", action="store_true",
                          help="register the git-first commit_note write tool (master role)")
+    p_serve.add_argument("--allow-tailnet-write", action="store_true",
+                         help="accept tailnet membership AS the write boundary: permit a "
+                              "write-enabled auth-off serve on a Tailscale IP (100.64.0.0/10). "
+                              "Explicit opt-out of write⇒auth-required; bounded to the tailnet.")
     p_serve.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
                          help="repeatable writable path prefix (write-enabled serve). "
                               "Omit for the default; an empty value is refused at startup")
