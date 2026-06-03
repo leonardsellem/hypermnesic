@@ -120,7 +120,8 @@ def _stem_title(path: str) -> str:
     """De-kebab a path stem into a fallback title: strip a leading ISO date, then
     turn ``-``/``_`` runs into spaces (``2026-06-03-foo-bar`` → ``foo bar``)."""
     stem = _LEADING_ISO_DATE.sub("", Path(path).stem)
-    return re.sub(r"[-_]+", " ", stem).strip()
+    cleaned = re.sub(r"[-_]+", " ", stem).strip()
+    return cleaned or Path(path).stem or path   # never blank (e.g. a date-only filename)
 
 
 def note_title(raw: str, path: str = "") -> str:

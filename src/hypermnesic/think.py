@@ -75,6 +75,20 @@ class ThinkResult:
         }
 
 
+def _distinct_paths(hits, limit: int) -> list[str]:
+    """The first ``limit`` distinct note paths from relevance-ordered hits — one
+    entry per note, not per chunk. Both the Socratic prompt and the unlinked pairs
+    reason over notes; without collapsing chunks, a note with two matching chunks
+    double-counts (and emits a duplicate pair)."""
+    paths: list[str] = []
+    for h in hits:
+        if h.path not in paths:
+            paths.append(h.path)
+            if len(paths) == limit:
+                break
+    return paths
+
+
 def _socratic(hits, title_of) -> list[str]:
     """One note-grounded thinking prompt — no LLM, and no ungrounded boilerplate
     (U47). The two generic '{topic}' templates were dropped: they reference nothing
@@ -82,12 +96,7 @@ def _socratic(hits, title_of) -> list[str]:
     tensions). The surviving prompt names two *distinct* related notes by resolved
     title (U44) and fires only when there are ≥2 of them; otherwise it is empty —
     think degrades gracefully rather than padding with generic questions."""
-    paths: list[str] = []
-    for h in hits:
-        if h.path not in paths:
-            paths.append(h.path)
-        if len(paths) == 2:
-            break
+    paths = _distinct_paths(hits, 2)
     if len(paths) < 2:
         return []
     return [f"How do '{title_of(paths[0])}' and '{title_of(paths[1])}' inform each other?"]
@@ -102,13 +111,13 @@ def _unlinked_pairs(graph, hits, title_of) -> list[dict]:
     Relevance gate = the already-relevance-ordered top-N hits (self-excluded
     upstream by U42); a U18 proposal — never a write — is how a link is added."""
     out: list[dict] = []
-    if graph is None or len(hits) < 2:
+    if graph is None:
         return out
-    top = hits[:4]
-    for i in range(len(top)):
-        for j in range(i + 1, len(top)):
-            a, b = top[i].path, top[j].path
-            if a == b or b in graph.neighbors(a):
+    notes = _distinct_paths(hits, 4)       # distinct notes, not chunks (no dup pairs)
+    for i in range(len(notes)):
+        for j in range(i + 1, len(notes)):
+            a, b = notes[i], notes[j]
+            if b in graph.neighbors(a):
                 continue
             out.append({"a_path": a, "a_title": title_of(a),
                         "b_path": b, "b_title": title_of(b)})
@@ -120,7 +129,8 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
     """Surface a thinking-partner view of ``topic`` over the read-only index.
 
     Never writes. Returns related notes (hybrid search), one-hop graph context
-    around the top hit, Socratic prompts, and named tensions — with ``wrote: False``.
+    around the top hit, a note-grounded Socratic prompt, and related-but-not-yet-
+    linked pairs (``unlinked``) — with ``wrote: False``.
     Degrades gracefully: an empty/garbage topic returns no related notes and a
     "nothing relevant" note, still ``wrote: False``.
 
