@@ -55,6 +55,18 @@ def test_think_returns_related_and_wrote_false_no_side_effects(make_corpus, fake
     idx.close()
 
 
+def test_think_excludes_active_note(make_corpus, fake_embedder):
+    # U42: the note being written must not match itself. With path set, the
+    # active note is absent from related (and therefore from questions/pairs,
+    # which derive from the same self-excluded hits).
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    r = think_mod.think(idx, "Hetzner homelab", embedder=fake_embedder, graph=g, path="hetzner.md")
+    assert r.wrote is False
+    assert r.related, "the other note should still surface"
+    assert all(h["path"] != "hetzner.md" for h in r.related)
+    idx.close()
+
+
 def test_think_surfaces_graph_context(make_corpus, fake_embedder):
     repo, idx, g = _built(make_corpus, fake_embedder)
     r = think_mod.think(idx, "Hetzner", embedder=fake_embedder, graph=g)
@@ -62,6 +74,162 @@ def test_think_surfaces_graph_context(make_corpus, fake_embedder):
     top = r.related[0]["path"]
     neighbour = "net.md" if top == "hetzner.md" else "hetzner.md"
     assert neighbour in r.context
+    idx.close()
+
+
+# --- U43: topic normalization (strip a leading ATX heading marker) ------------
+
+def test_think_strips_leading_atx_marker_from_topic(make_corpus, fake_embedder):
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    r = think_mod.think(idx, "# Hetzner homelab", embedder=fake_embedder, graph=g)
+    assert r.topic == "Hetzner homelab"                       # the '# ' never leaks
+    assert all("#" not in q for q in r.questions)             # nor into any prompt
+    # deeper markers strip too
+    assert think_mod.think(idx, "###  Hetzner", embedder=fake_embedder, graph=g).topic == "Hetzner"
+    idx.close()
+
+
+def test_think_topic_normalization_is_idempotent_and_keeps_inline_hash(make_corpus, fake_embedder):
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    # a clean topic is unchanged (preserves the CLI-shape / round-trip contract)
+    assert think_mod.think(idx, "Hetzner", embedder=fake_embedder, graph=g).topic == "Hetzner"
+    # only a LEADING heading marker is stripped; an inline #tag survives
+    assert think_mod.think(idx, "see #homelab", embedder=fake_embedder,
+                           graph=g).topic == "see #homelab"
+    idx.close()
+
+
+# --- U44: note-title resolution (H1-level, not the chunk section heading) -----
+
+def test_think_title_is_h1_not_section_heading(make_corpus, fake_embedder):
+    # A structural note that opens with an H2 (no H1) must NOT surface its section
+    # label ("Now") as its identity — it falls through to the de-kebabbed stem.
+    repo = make_corpus({
+        "backlog.md": "## Now\n\nGRDN urban project working set.\n",   # H2-first, no H1
+        "seed.md": "# Seed note\n\nGRDN other material.\n",            # real H1
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "GRDN urban", embedder=fake_embedder, graph=g, repo=repo)
+    titles = {h["path"]: h["title"] for h in r.related}
+    assert titles.get("backlog.md") == "backlog"        # stem fallback, NOT "Now"
+    assert titles.get("seed.md") == "Seed note"         # real level-1 H1
+    assert all(h["title"] for h in r.related)           # every related entry has a title
+    idx.close()
+
+
+def test_think_title_stem_fallback_strips_leading_date(make_corpus, fake_embedder):
+    repo = make_corpus({"2026-06-03-foo-bar.md": "## Section\n\nZQX content only.\n"})  # no H1
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "ZQX content", embedder=fake_embedder, graph=g, repo=repo)
+    titles = {h["path"]: h["title"] for h in r.related}
+    assert titles.get("2026-06-03-foo-bar.md") == "foo bar"   # date stripped, de-kebabbed
+    idx.close()
+
+
+# --- U45: structured "related but not yet linked" pairs (replacing tensions) --
+
+def test_think_unlinked_pairs_are_structured_and_navigable(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "alpha.md": "# Alpha\n\nWIDGET shared topic, alpha facet.\n",   # not linked to beta
+        "beta.md": "# Beta\n\nWIDGET shared topic, beta facet.\n",      # distinct body (no dedup)
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "WIDGET shared topic", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.unlinked, "two relevant, unlinked notes should produce a pair"
+    pair = r.unlinked[0]
+    assert set(pair) == {"a_path", "a_title", "b_path", "b_title"}
+    assert {pair["a_path"], pair["b_path"]} == {"alpha.md", "beta.md"}
+    assert {pair["a_title"], pair["b_title"]} == {"Alpha", "Beta"}      # titles, not headings
+    idx.close()
+
+
+def test_think_graph_linked_pair_is_not_unlinked(make_corpus, fake_embedder):
+    # hetzner.md and net.md are mutually wikilinked → they are NOT a missing
+    # connection, so they produce no unlinked entry.
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    r = think_mod.think(idx, "Hetzner net", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.unlinked == []
+    idx.close()
+
+
+def test_think_as_dict_has_unlinked_not_tensions(make_corpus, fake_embedder):
+    repo = make_corpus({"alpha.md": "# Alpha\n\nWIDGET.\n", "beta.md": "# Beta\n\nWIDGET.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    d = think_mod.think(idx, "WIDGET", embedder=fake_embedder, graph=g, repo=repo).as_dict()
+    assert "unlinked" in d and "tensions" not in d
+    json.dumps(d)                                        # still JSON-serialisable
+    idx.close()
+
+
+def test_think_unlinked_pairs_dedup_by_note_not_chunk(make_corpus, fake_embedder):
+    # A note with two distinct chunks must not pair with another note twice —
+    # pairs are over distinct NOTES, not chunks (code-review regression).
+    repo = make_corpus({
+        "multi.md": "# Multi\n\n## S1\n\nDUPMARK alpha section content.\n"
+                    "\n## S2\n\nDUPMARK beta section content.\n",        # → two chunks
+        "solo.md": "# Solo\n\nDUPMARK gamma other content.\n",
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "DUPMARK", embedder=fake_embedder, graph=g, repo=repo)
+    pair_keys = [frozenset((u["a_path"], u["b_path"])) for u in r.unlinked]
+    assert len(pair_keys) == len(set(pair_keys)), f"duplicate pairs: {r.unlinked}"
+    assert frozenset(("multi.md", "solo.md")) in pair_keys
+    idx.close()
+
+
+def test_think_unlinked_empty_with_single_hit(make_corpus, fake_embedder):
+    repo = make_corpus({"only.md": "# Only\n\nLONEMARKER unique.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "LONEMARKER", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.unlinked == [] and r.wrote is False
+    idx.close()
+
+
+# --- U47: gate the Socratic questions to note-grounded prompts ----------------
+
+def test_think_questions_are_gated_to_one_grounded_prompt(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "alpha.md": "# Alpha\n\nGATEMARK shared, alpha facet.\n",
+        "beta.md": "# Beta\n\nGATEMARK shared, beta facet.\n",
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "GATEMARK shared", embedder=fake_embedder, graph=g, repo=repo)
+    assert len(r.questions) == 1
+    q = r.questions[0]
+    assert "inform each other" in q
+    assert "Alpha" in q and "Beta" in q                       # resolved titles, not headings
+    # the two ungrounded generic templates are gone
+    assert all("change your mind" not in qq and "break down" not in qq for qq in r.questions)
+    idx.close()
+
+
+def test_think_questions_empty_with_single_related_note(make_corpus, fake_embedder):
+    repo = make_corpus({"only.md": "# Only\n\nSOLOMARK unique content.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "SOLOMARK", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.questions == []                                  # no ungrounded boilerplate
+    idx.close()
+
+
+def test_think_questions_exclude_active_note(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "active.md": "# Active\n\nCROSSMARK topic seed.\n",
+        "alpha.md": "# Alpha\n\nCROSSMARK alpha facet.\n",
+        "beta.md": "# Beta\n\nCROSSMARK beta facet.\n",
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "CROSSMARK topic", embedder=fake_embedder, graph=g,
+                        repo=repo, path="active.md")
+    assert r.questions and "Active" not in r.questions[0]     # grounded on OTHER notes
     idx.close()
 
 
@@ -91,9 +259,10 @@ def test_think_no_match_degrades_gracefully(make_corpus, fake_embedder):
 
 def test_think_as_dict_round_trips():
     r = think_mod.ThinkResult(topic="t", wrote=False, related=[], context=[],
-                              questions=["q?"], tensions=[], degraded=False, note="")
+                              questions=["q?"], unlinked=[], degraded=False, note="")
     d = r.as_dict()
     assert d["wrote"] is False and d["topic"] == "t" and d["questions"] == ["q?"]
+    assert d["unlinked"] == [] and "tensions" not in d
     json.dumps(d)                                        # must be JSON-serialisable
 
 

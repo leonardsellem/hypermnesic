@@ -92,10 +92,10 @@ class ResolveOutput(TypedDict):
 class ThinkOutput(TypedDict):
     topic: str
     wrote: bool                        # always False — the observable no-write assertion
-    related: list[dict]
+    related: list[dict]                # each: {path, heading, title, score, channels, snippet}
     context: list[str]
     questions: list[str]
-    tensions: list[str]
+    unlinked: list[dict]               # not-yet-linked pairs: {a_path, a_title, b_path, b_title}
     degraded_lexical_only: bool
     note: str
     manual_reindex_recommended: bool
@@ -396,12 +396,14 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 "manual_reindex_recommended": cr.manual_reindex_recommended}
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
-              description="Thinking-mode: related notes + Socratic prompts + tensions. "
-                          "Never writes (wrote: false) — a help-me-think surface, not a write.")
-    def think(topic: str, k: int = 8, depth: int = 1) -> ThinkOutput:
+              description="Thinking-mode: related notes + Socratic prompts + "
+                          "related-but-not-yet-linked pairs. Pass the active note's `path` to "
+                          "exclude it from its own results. Never writes (wrote: false).")
+    def think(topic: str, k: int = 8, depth: int = 1, path: str | None = None) -> ThinkOutput:
         cr = backend.converge()
         out = think_mod.think(backend.idx, topic, embedder=backend.embedder,
-                              graph=backend.graph, k=k, depth=depth).as_dict()
+                              graph=backend.graph, k=k, depth=depth, path=path,
+                              repo=backend.repo).as_dict()
         out["manual_reindex_recommended"] = cr.manual_reindex_recommended
         return out
 
