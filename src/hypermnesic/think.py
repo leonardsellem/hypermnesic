@@ -15,10 +15,20 @@ implied behavioural difference).
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from hypermnesic import graph as graph_mod
 from hypermnesic import retrieve
+
+_ATX_LEADING = re.compile(r"^\s*#{1,6}\s+")
+
+
+def _normalize_topic(topic: str) -> str:
+    """Strip a leading Markdown ATX heading marker so the echoed topic and the
+    generated prompts never carry a stray ``# `` (U43). Only a *leading* heading
+    marker is removed — an inline ``#tag`` is left intact."""
+    return _ATX_LEADING.sub("", topic, count=1).strip()
 
 
 @dataclass
@@ -92,6 +102,7 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
     is excluded from its own results (U42) — a note never matches itself, so the
     related list, prompts, and pairs are about *other* notes.
     """
+    topic = _normalize_topic(topic)        # U43: no stray '# ' in topic or prompts
     res = retrieve.search(idx, topic, embedder=embedder, k=k, exclude_path=path)
     related = [
         {"path": h.path, "heading": h.heading, "score": round(h.score, 6),

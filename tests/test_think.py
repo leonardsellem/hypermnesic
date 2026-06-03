@@ -77,6 +77,28 @@ def test_think_surfaces_graph_context(make_corpus, fake_embedder):
     idx.close()
 
 
+# --- U43: topic normalization (strip a leading ATX heading marker) ------------
+
+def test_think_strips_leading_atx_marker_from_topic(make_corpus, fake_embedder):
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    r = think_mod.think(idx, "# Hetzner homelab", embedder=fake_embedder, graph=g)
+    assert r.topic == "Hetzner homelab"                       # the '# ' never leaks
+    assert all("#" not in q for q in r.questions)             # nor into any prompt
+    # deeper markers strip too
+    assert think_mod.think(idx, "###  Hetzner", embedder=fake_embedder, graph=g).topic == "Hetzner"
+    idx.close()
+
+
+def test_think_topic_normalization_is_idempotent_and_keeps_inline_hash(make_corpus, fake_embedder):
+    repo, idx, g = _built(make_corpus, fake_embedder)
+    # a clean topic is unchanged (preserves the CLI-shape / round-trip contract)
+    assert think_mod.think(idx, "Hetzner", embedder=fake_embedder, graph=g).topic == "Hetzner"
+    # only a LEADING heading marker is stripped; an inline #tag survives
+    assert think_mod.think(idx, "see #homelab", embedder=fake_embedder,
+                           graph=g).topic == "see #homelab"
+    idx.close()
+
+
 # --- KTD7: structurally incapable of writing ----------------------------------
 
 def test_think_module_has_no_write_surface():
