@@ -207,6 +207,25 @@ independent of the transport scope list; a token lacking `write` is refused befo
 (`tests/test_mcp_server.py::test_commit_note_rejects_read_scoped_principal`). *Residual:* a
 defect in the SDK's `BearerAuthBackend`/`RequireAuthMiddleware` is inherited; pinned + tracked.
 
+### V15 — Tailnet-trust write (the `--allow-tailnet-write` opt-out, 2026-06-03)
+*Context:* once the public OAuth `/mcp` lane carries all untrusted traffic, the operator may choose
+to treat **tailnet membership itself as the write boundary** for the tailnet read companion
+(`:8848`) — the original "MVP auth = tailnet membership" model — so a tailnet device's agent (and the
+CLI-equivalent) can `commit_note` without an OAuth ceremony the tailnet doesn't need.
+*Threat:* this re-opens an **auth-off write on a network bind** — exactly what the
+`write_enabled ⇒ auth-required` invariant (V11) closed. Anything that reaches the bind can write the
+vault; if the bind were ever a non-tailnet address, that would be a public write hole.
+*Mitigation:* the relaxation is **explicit and bounded**, never a silent default. It requires the
+operator to pass `--allow-tailnet-write` (engine `trust_tailnet_write=True`), and the engine permits
+it **only** when the bind is a literal Tailscale CGNAT address (`100.64.0.0/10`); a non-tailnet IP is
+refused with a distinct error, and the `0.0.0.0`/wildcard refusal still always fires first. The write
+itself remains bounded by every `commit_note` guard (allowlist, allowlist-independent protected-path
+refusal, diff-or-die, audit log, git-revertability). Default-off, so other deployments stay
+safe-by-default. Guards: `tests/test_mcp_server.py::test_trust_tailnet_write_*`.
+*Accepted residual:* anything with tailnet access to `:8848` can write the vault (no per-identity
+auth on that lane). The operator accepts tailnet membership as that boundary; OAuth `/mcp` remains the
+path for any client that should be individually authenticated/revocable.
+
 ## 4. Accepted risks (this phase)
 
 - No content sanitization for prompt injection (V2) — bounded by V1 + operator-
