@@ -89,15 +89,44 @@ def test_writable_reason_protected_classes_return_reason():
     assert nested is not None and "scripts/" in nested
 
 
-def test_writable_reason_pins_blocklist_governance_baseline():
-    # DOCUMENTED BASELINE for the U6 governance-fence decision: in blocklist mode
-    # (allowlist=None) protected_reason does NOT refuse these governance/CI/non-.md
-    # classes — they are writable at the predicate level today. The 4-prefix allowlist
-    # only blocked them by exclusion (the server coercion). The U6 delta decides whether
-    # to add a positive content-surface fence; this asserts the pre-decision baseline.
-    for governance in ("Dockerfile", "Makefile", "node_modules/x.md", ".gitlab-ci.yml",
-                       ".pre-commit-config.yaml", "uv.lock"):
-        assert serialize.writable_reason(governance, allowlist=None) is None, governance
+def test_governance_fence_refuses_code_exec_and_credential_classes(make_corpus):
+    # U5 / Phase B fence (operator decision: governance-extension denylist). The blocklist removed
+    # the 4-prefix allowlist that blocked these only BY EXCLUSION; protected_reason now refuses the
+    # code-exec / CI / build / credential classes directly, so commit_note's no-.md-suffix freedom
+    # cannot land a Dockerfile / CI yaml / lockfile / .env. (Supersedes the U1 pre-decision
+    # baseline, which pinned these as writable — relocate-don't-flip per the byte-preservation
+    # learning: the invariant moves from "documented gap" to "fenced".)
+    for governance in ("Dockerfile", "projects/Dockerfile", "Makefile", "Containerfile",
+                       ".gitlab-ci.yml", "projects/acme/ci.yml", ".pre-commit-config.yaml",
+                       "uv.lock", "package-lock.json", "pyproject.toml", "setup.py",
+                       ".env", "projects/.env", ".env.local", ".npmrc", ".netrc"):
+        assert serialize.writable_reason(governance, allowlist=None) is not None, governance
+    # case-insensitive filename match (Dockerfile on a case-insensitive FS)
+    assert serialize.writable_reason("DOCKERFILE", allowlist=None) is not None
+    assert serialize.writable_reason("dockerfile", allowlist=None) is not None
+    # allowlist-independent: a governance file inside an allowed prefix is still refused
+    assert serialize.writable_reason("notes/Dockerfile", allowlist=["notes/"]) is not None
+    # and check() raises for them too (the write path, not just the predicate)
+    repo = make_corpus({"a.md": "# A\n\nb\n"})
+    with pytest.raises(serialize.WriteGuardError):
+        serialize.check(repo, "Dockerfile")
+
+
+def test_governance_fence_leaves_content_classes_writable():
+    # The fence targets code-exec / CI / build / credential CLASSES — ordinary content stays
+    # writable (the blocklist's whole point: notes land anywhere non-protected). Note node_modules/
+    # files stay writable at the predicate level but are never DISCOVERED (the index skips them).
+    for ok in ("notes/a.md", "projects/x/y.md", "people/bob.md", "notes/diagram.canvas",
+               "sources/data.json", "captures/log.txt", "node_modules/x.md"):
+        assert serialize.writable_reason(ok, allowlist=None) is None, ok
+
+
+def test_protected_dir_match_is_case_insensitive():
+    # U5 / Phase B: on a case-insensitive FS (operator's macOS) Scripts/ lands in the protected
+    # scripts/ dir on disk — the dir-class refusal is now case-folded so it is refused, not
+    # mis-reported writable (inert under the old allowlist, reachable under the blocklist).
+    for bad in ("Scripts/evil.sh", "BIN/run", "projects/Scripts/x.md", ".GITHUB/workflows/ci.yml"):
+        assert serialize.writable_reason(bad, allowlist=None) is not None, bad
 
 
 def test_writable_reason_allowlist_mode():
