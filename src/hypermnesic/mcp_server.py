@@ -36,6 +36,9 @@ from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
+# Pydantic (the SDK's schema generator) requires typing_extensions.TypedDict on Python < 3.12.
+from typing_extensions import TypedDict
+
 from hypermnesic import audit_log as audit_mod
 from hypermnesic import commit_note as commit_note_mod
 from hypermnesic import converge as converge_mod
@@ -48,6 +51,67 @@ from hypermnesic import think as think_mod
 
 DEFAULT_PORT = 8848
 DEFAULT_PATH = "/mcp"
+
+
+# --- MCP tool output schemas (U2/connector quality) -------------------------------------
+# Typed result shapes so the MCP server advertises an ``outputSchema`` per tool — clients
+# (ChatGPT/Claude connectors + agents) then understand a result's structure instead of an
+# opaque object. TypedDicts: the tool functions keep returning plain dicts (validated against
+# these), so this is schema-only — no behavior change.
+class SearchHit(TypedDict):
+    path: str
+    heading: str
+    score: float
+    channels: list[str]
+    snippet: str
+    recency: float | None
+
+
+class SearchOutput(TypedDict):
+    query: str
+    degraded_lexical_only: bool
+    manual_reindex_recommended: bool
+    hits: list[SearchHit]
+
+
+class BuildContextOutput(TypedDict):
+    start: str
+    depth: int
+    context: list[str]                 # page paths reachable via wikilinks (sorted)
+    manual_reindex_recommended: bool
+
+
+class ResolveOutput(TypedDict):
+    name: str
+    resolved: str | None               # the resolved page path, or null if ambiguous/missing
+    slug: str | None                   # the ``.md``-stripped wikilink target, or null
+    manual_reindex_recommended: bool
+
+
+class ThinkOutput(TypedDict):
+    topic: str
+    wrote: bool                        # always False — the observable no-write assertion
+    related: list[dict]
+    context: list[str]
+    questions: list[str]
+    tensions: list[str]
+    degraded_lexical_only: bool
+    note: str
+    manual_reindex_recommended: bool
+
+
+# total=False (all keys optional): the result is a union — a success carries
+# path/created/noop/new_sha/diff; a refusal carries refused — and only ``committed`` is on
+# both. (Per-field NotRequired can't be used here: ``from __future__ import annotations``
+# stringizes the annotations, which defeats TypedDict's required/optional key computation.)
+class CommitNoteOutput(TypedDict, total=False):
+    committed: bool                    # present on every path; the rest depend on the outcome
+    path: str
+    created: bool
+    noop: bool
+    new_sha: str
+    diff: str
+    refused: str                       # set (with committed=False) when a gate/guard refuses
 # Loopback binds are exempt from the write_enabled⇒auth-required invariant (U2): a
 # localhost serve is reachable only by the local user — never the tailnet.
 _LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
@@ -222,7 +286,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Hybrid (lexical + dense) search over the read-only index.")
-    def search(query: str, k: int = 10) -> dict:
+    def search(query: str, k: int = 10) -> SearchOutput:
         cr = backend.converge()
         res = retrieve.search(backend.idx, query, embedder=backend.embedder, k=k,
                               recency_fn=retrieve.git_commit_recency(backend.repo))
@@ -240,7 +304,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Pages reachable from a page via body wikilinks (in+out edges).")
-    def build_context(path: str, depth: int = 1) -> dict:
+    def build_context(path: str, depth: int = 1) -> BuildContextOutput:
         cr = backend.converge()
         reachable = graph_mod.build_context(backend.graph, path, depth=depth)
         return {"start": path, "depth": depth, "context": reachable,
@@ -250,7 +314,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
               description="Entity resolution: resolve a name to an existing page path "
                           "(gbrain's `get` role), or null if ambiguous/missing. The caller "
                           "strips `.md` (use `slug`) to form a wikilink target.")
-    def resolve(name: str) -> dict:
+    def resolve(name: str) -> ResolveOutput:
         cr = backend.converge()
         resolved = backend.graph.resolve(name)
         slug = resolved[:-3] if resolved and resolved.endswith(".md") else resolved
@@ -260,7 +324,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Thinking-mode: related notes + Socratic prompts + tensions. "
                           "Never writes (wrote: false) — a help-me-think surface, not a write.")
-    def think(topic: str, k: int = 8, depth: int = 1) -> dict:
+    def think(topic: str, k: int = 8, depth: int = 1) -> ThinkOutput:
         cr = backend.converge()
         out = think_mod.think(backend.idx, topic, embedder=backend.embedder,
                               graph=backend.graph, k=k, depth=depth).as_dict()
@@ -282,7 +346,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                               "(guard → diff-or-die gate → git commit → audit; never merges). "
                               "The index follows as a projection — a reindex never loses it.")
         def commit_note(path: str, body: str | None = None,
-                        set_fields: dict | None = None, summary: str | None = None) -> dict:
+                        set_fields: dict | None = None,
+                        summary: str | None = None) -> CommitNoteOutput:
             # V14 / security-review fix: when auth is on, the write tool self-enforces the
             # write scope — independent of the transport's (misconfigurable, global)
             # required_scopes. The HTTP auth middleware guarantees a principal for any

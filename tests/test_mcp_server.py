@@ -108,6 +108,24 @@ def test_only_read_tools_no_write_tool(built_index, fake_embedder):
         assert t.annotations is not None and t.annotations.readOnlyHint is True
 
 
+def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
+    # connector quality (ChatGPT "OUTPUT SCHEMA RECOMMENDED"): each tool declares a typed result
+    # so clients understand its structure. Read tools + the write tool on a write-enabled master.
+    # loopback host so write_enabled is allowed without auth (the invariant exempts 127.0.0.1)
+    srv = mcp_server.build_server(built_index, host="127.0.0.1", embedder=fake_embedder,
+                                  write_enabled=True, repo=built_index.parent.parent)
+    schemas = {t.name: t.outputSchema for t in asyncio.run(srv.list_tools())}
+    assert set(schemas) == {"search", "build_context", "think", "resolve", "commit_note"}
+    for name, sch in schemas.items():
+        assert sch and sch.get("properties"), f"{name} has no outputSchema"
+    # spot-check the declared shapes match the real returns
+    assert "hits" in schemas["search"]["properties"]
+    assert "context" in schemas["build_context"]["properties"]
+    assert {"resolved", "slug"} <= set(schemas["resolve"]["properties"])
+    assert {"questions", "tensions"} <= set(schemas["think"]["properties"])
+    assert {"committed", "refused"} <= set(schemas["commit_note"]["properties"])
+
+
 def test_search_tool_returns_hits(built_index, fake_embedder):
     assert mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     backend = mcp_server._Backend(built_index, embedder=fake_embedder)
