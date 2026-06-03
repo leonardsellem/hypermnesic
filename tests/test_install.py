@@ -52,14 +52,14 @@ def test_master_systemd_renders_auth_flags_when_provided(make_corpus, monkeypatc
     _with_key(monkeypatch)
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     install.install("master", repo=repo, bind=TAILNET_IP, service="systemd",
-                    auth_issuer_url="https://homelab.<tailnet-host>.ts.net/honcho/",
-                    auth_resource_url="https://homelab.<tailnet-host>.ts.net/mcp",
+                    auth_issuer_url="https://example.ts.net/honcho/",
+                    auth_resource_url="https://example.ts.net/mcp",
                     required_scope=["write"])
     unit = (repo / ".hypermnesic" / "hypermnesic.service").read_text()
     execstart = next(ln for ln in unit.splitlines() if ln.startswith("ExecStart="))
     assert "--enable-write" in execstart
-    assert "--auth-issuer-url https://homelab.<tailnet-host>.ts.net/honcho/" in execstart
-    assert "--auth-resource-url https://homelab.<tailnet-host>.ts.net/mcp" in execstart
+    assert "--auth-issuer-url https://example.ts.net/honcho/" in execstart
+    assert "--auth-resource-url https://example.ts.net/mcp" in execstart
     assert "--required-scope write" in execstart
 
 
@@ -118,9 +118,9 @@ def test_client_patch_preserves_existing_servers(monkeypatch, tmp_path):
 
 def test_install_client_emits_oauth2_aware_config_no_secret(tmp_path):
     cfg = tmp_path / "clients.json"
-    url = "https://homelab.<tailnet-host>.ts.net/mcp"
+    url = "https://example.ts.net/mcp"
     install.install("client", master_url=url, mcp_config_path=str(cfg),
-                    auth_issuer_url="https://homelab.<tailnet-host>.ts.net/honcho/",
+                    auth_issuer_url="https://example.ts.net/honcho/",
                     auth_resource_url=url, required_scope=["write"])
     entry = json.loads(cfg.read_text())["mcpServers"]["hypermnesic"]
     assert entry["type"] == "streamable-http" and entry["url"] == url
@@ -329,8 +329,8 @@ def test_rendered_unit_execstart_is_absolute_existing_path(make_corpus, monkeypa
 # the real HTTPS discovery curl) are isolated behind the injectable `ops` seam, exercised live
 # in U8 — never from a unit test (mirrors install's manual-steps discipline).
 
-PUBLIC_U = "https://homelab.<tailnet-host>.ts.net/mcp"
-RES_U = "https://homelab.<tailnet-host>.ts.net/mcp"
+PUBLIC_U = "https://example.ts.net/mcp"
+RES_U = "https://example.ts.net/mcp"
 
 
 class _FakeSetupOps:

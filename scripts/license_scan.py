@@ -10,6 +10,14 @@ human can still eyeball weak-copyleft deps.
 This *verifies* the "permissive" claim rather than asserting it. CI runs it and
 fails the build on any deny-set entry.
 
+**Dependency-scoped (R9 / U6).** The gate governs *third-party dependencies*, NOT
+hypermnesic's own license. ``uv sync`` installs the root project into the env, so
+its own distribution shows up in the scan; it is excluded BEFORE classification
+(keyed on ``[project].name`` from ``pyproject.toml``). Without this, flipping the
+engine's own license to AGPL-3.0 (the planned public license) would make the gate
+reject the project itself — a false failure. The self-exclusion keys on the project
+name only, so it never weakens the dependency gate.
+
 Usage::
 
     uv run python scripts/license_scan.py
@@ -23,7 +31,11 @@ import json
 import re
 import subprocess
 import sys
+import tomllib
 from importlib import metadata as importlib_metadata
+from pathlib import Path
+
+PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
 
 # Deny set: strong copyleft. Matched against the human license string.
 _SSPL_RE = re.compile(r"SSPL|Server Side Public License", re.IGNORECASE)
@@ -83,14 +95,41 @@ def _licenses_via_importlib() -> list[dict]:
     return rows
 
 
-def scan() -> dict:
-    rows = _licenses_via_pip_licenses()
-    source = "pip-licenses"
+def project_name(path: Path = PYPROJECT) -> str:
+    """The project's own distribution name (``[project].name``) — excluded from the
+    dependency gate so the scan never rejects hypermnesic's OWN license."""
+    data = tomllib.loads(Path(path).read_text(encoding="utf-8"))
+    return data["project"]["name"]
+
+
+def _normalize(name: str) -> str:
+    """PEP 503 name normalization so 'hypermnesic' / 'Hypermnesic' / 'hyper_mnesic'
+    all match the authority name — a stable key, not a brittle exact string."""
+    return re.sub(r"[-_.]+", "-", (name or "").strip()).lower()
+
+
+def scan(rows: list[dict] | None = None, self_name: str | None = None) -> dict:
+    source = "injected"
     if rows is None:
-        rows = _licenses_via_importlib()
-        source = "importlib.metadata"
-    denied, lgpl, ok = [], [], []
+        rows = _licenses_via_pip_licenses()
+        source = "pip-licenses"
+        if rows is None:
+            rows = _licenses_via_importlib()
+            source = "importlib.metadata"
+    if self_name is None:
+        try:
+            self_name = project_name()
+        except (OSError, KeyError):
+            self_name = None
+    self_norm = _normalize(self_name) if self_name else None
+    denied, lgpl, ok, self_excluded = [], [], [], []
     for r in rows:
+        # The gate scopes to THIRD-PARTY deps. Exclude the project's own dist BEFORE
+        # classifying (keyed on the normalized [project].name), so flipping
+        # hypermnesic's own license to AGPL-3.0 does not trip the gate (R9 / U6).
+        if self_norm and _normalize(r["name"]) == self_norm:
+            self_excluded.append(r)
+            continue
         reason = classify(r["license"])
         if reason:
             denied.append({**r, "reason": reason})
@@ -98,8 +137,8 @@ def scan() -> dict:
             lgpl.append(r)
         else:
             ok.append(r)
-    return {"source": source, "total": len(rows), "denied": denied,
-            "lgpl_informational": lgpl, "ok_count": len(ok),
+    return {"source": source, "total": len(rows), "self_excluded": self_excluded,
+            "denied": denied, "lgpl_informational": lgpl, "ok_count": len(ok),
             "passed": len(denied) == 0}
 
 
@@ -113,7 +152,10 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(f"License scan via {result['source']}: {result['total']} packages, "
               f"{len(result['denied'])} copyleft (deny-set), "
-              f"{len(result['lgpl_informational'])} LGPL (informational).")
+              f"{len(result['lgpl_informational'])} LGPL (informational), "
+              f"{len(result['self_excluded'])} self (dependency-scoped, excluded).")
+        for s in result["self_excluded"]:
+            print(f"  self [excluded] {s['name']} {s['version']} :: {s['license']}")
         for d in result["denied"]:
             print(f"  DENY [{d['reason']}] {d['name']} {d['version']} :: {d['license']}")
         for d in result["lgpl_informational"]:

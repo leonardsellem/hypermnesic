@@ -92,7 +92,7 @@ def test_skill_is_user_neutral_and_teaches_disk_first():
     # teach the disk-first model.
     text = _SKILL.read_text(encoding="utf-8").lower()
     assert "gbrain" not in text                             # no migration steering
-    assert "<tailnet-host>" not in text and "homelab.tail" not in text   # no hardcoded endpoint
+    assert ".ts.net" not in text and "homelab.tail" not in text   # no hardcoded operator endpoint
     assert "git" in text and "source of truth" in text      # the disk-first model is taught
 
 
@@ -130,7 +130,7 @@ def test_plugin_mcp_json_is_discovery_only_and_distribution_generic():
     assert "auth" not in entry                                    # OAuth via discovery, no block
     assert "token_env" not in raw                                 # no token pointer
     assert "Authorization" not in raw and "Bearer" not in raw     # no static header (kills OAuth)
-    assert "<tailnet-host>" not in raw and "homelab" not in raw.lower()  # no operator hostname
+    assert ".ts.net" not in raw and "homelab" not in raw.lower()  # no hardcoded operator hostname
     assert "HYPERMNESIC_MCP_TOKEN=" not in raw                    # secret-free
 
 
@@ -139,7 +139,7 @@ def test_plugin_tree_carries_no_operator_specific_values():
     # tailnet IP, absolute home path, chezmoi reference, or device name. Author/identity metadata
     # in manifests (name/email/homepage) is permitted and is NOT scanned for here.
     op_pat = re.compile(
-        r"(<tailnet-host>|homelab\.tail|\b100\.103\.|\b100\.64\.|/home/[a-z]|chezmoi)", re.IGNORECASE)
+        r"(\.ts\.net|homelab\.tail|\b100\.103\.|\b100\.64\.|/home/[a-z]|chezmoi)", re.IGNORECASE)
     for p in _all_plugin_files():
         if p.suffix == ".pyc":
             continue

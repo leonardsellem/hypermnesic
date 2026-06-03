@@ -577,7 +577,7 @@ def build_parser() -> argparse.ArgumentParser:
                          help="OAuth2 AS issuer URL (enables RS auth; needs --auth-resource-url)")
     p_serve.add_argument("--auth-resource-url", default=None,
                          help="this RS's resource identifier (RFC 8707 audience); "
-                              "e.g. https://homelab.<tailnet-host>.ts.net/mcp")
+                              "e.g. https://example.ts.net/mcp")
     p_serve.add_argument("--required-scope", action="append", default=None, metavar="SCOPE",
                          help="repeatable required OAuth2 scope (e.g. write)")
     p_serve.set_defaults(func=_cmd_serve)

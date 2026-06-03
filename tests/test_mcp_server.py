@@ -507,8 +507,8 @@ def test_list_folders_bounds_payload(make_corpus, fake_embedder, monkeypatch):
 
 # --- U2: OAuth2 Resource-Server wiring + write_enabled⇒auth-required invariant -
 
-_RES = "https://homelab.<tailnet-host>.ts.net/mcp"
-_ISS = "https://homelab.<tailnet-host>.ts.net/honcho/"
+_RES = "https://example.ts.net/mcp"
+_ISS = "https://example.ts.net/honcho/"
 
 
 def _auth_settings():
