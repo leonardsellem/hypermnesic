@@ -174,6 +174,48 @@ def test_think_unlinked_empty_with_single_hit(make_corpus, fake_embedder):
     idx.close()
 
 
+# --- U47: gate the Socratic questions to note-grounded prompts ----------------
+
+def test_think_questions_are_gated_to_one_grounded_prompt(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "alpha.md": "# Alpha\n\nGATEMARK shared, alpha facet.\n",
+        "beta.md": "# Beta\n\nGATEMARK shared, beta facet.\n",
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "GATEMARK shared", embedder=fake_embedder, graph=g, repo=repo)
+    assert len(r.questions) == 1
+    q = r.questions[0]
+    assert "inform each other" in q
+    assert "Alpha" in q and "Beta" in q                       # resolved titles, not headings
+    # the two ungrounded generic templates are gone
+    assert all("change your mind" not in qq and "break down" not in qq for qq in r.questions)
+    idx.close()
+
+
+def test_think_questions_empty_with_single_related_note(make_corpus, fake_embedder):
+    repo = make_corpus({"only.md": "# Only\n\nSOLOMARK unique content.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "SOLOMARK", embedder=fake_embedder, graph=g, repo=repo)
+    assert r.questions == []                                  # no ungrounded boilerplate
+    idx.close()
+
+
+def test_think_questions_exclude_active_note(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "active.md": "# Active\n\nCROSSMARK topic seed.\n",
+        "alpha.md": "# Alpha\n\nCROSSMARK alpha facet.\n",
+        "beta.md": "# Beta\n\nCROSSMARK beta facet.\n",
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    r = think_mod.think(idx, "CROSSMARK topic", embedder=fake_embedder, graph=g,
+                        repo=repo, path="active.md")
+    assert r.questions and "Active" not in r.questions[0]     # grounded on OTHER notes
+    idx.close()
+
+
 # --- KTD7: structurally incapable of writing ----------------------------------
 
 def test_think_module_has_no_write_surface():
