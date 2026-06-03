@@ -25,6 +25,31 @@ served via U31).
 > public/Funnel exposure and fine-grained per-user *authorization* beyond a single
 > required scope. The new RS attack surface is modeled in **V11–V14** below.
 
+> **Phase B amendment (topology correction, 2026-06-03 — does not alter the signed-off
+> scope above; corrects its now-stale framing).** The "tailnet-only MCP server" wording
+> in the Scope line predates the unified-endpoint work. The **current** serving topology
+> is two lanes: a single **public OAuth `/mcp`** endpoint (Tailscale-funnel'd HTTPS;
+> OAuth 2.1 with DCR + PKCE; RFC 8707 audience-bound tokens; read tools always, the
+> gated `commit_note` write tool by the `write` scope), used by every remote client,
+> **plus** a **tailnet read companion** (`:8848`, auth-off, read-only). The retired
+> `:8849` client-credentials AS lane is gone. The write surface is now
+> **blocklist-by-default** (write-anywhere-under-guards: a protected-path refusal + a
+> governance-file fence), with the legacy 4-prefix allowlist available only as an opt-in
+> narrowing. The V1–V14 vectors and their mitigations are unchanged in substance — the
+> write boundary moved from "tailnet membership" to "a valid OAuth token on the public
+> lane (or tailnet membership on the read-only lane)". These changes are reviewed and
+> signed off in the dated deltas indexed below.
+>
+> **Security deltas (chronological).** This threat model is the living root; each dated
+> review is an immutable delta (`amends:` / `signed_off:` frontmatter):
+> - `docs/2026-06-03-unified-write-anywhere-security-review.md` — write-anywhere
+>   re-review for the unified public OAuth endpoint (U6).
+> - `docs/2026-06-03-blocklist-write-surface-security-review.md` — allowlist → blocklist
+>   flip (governance-extension fence + case-fold); amends the unified review.
+> - `docs/oauth-as-finding.md` — native-primitive evaluation of the OAuth AS.
+>
+> The root [`SECURITY.md`](../SECURITY.md) is the front door (reporting policy + this index).
+
 ---
 
 ## 1. Assets
