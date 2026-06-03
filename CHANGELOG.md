@@ -21,6 +21,20 @@ glossary, GitHub templates), reconciles doc↔code drift from the 0.0.5 PR set, 
 stages the AGPL-3.0 license + public-flip runbook under `docs/launch/` without
 flipping the live license or repository visibility.
 
+## [0.0.6] — 2026-06-03
+
+The think-surface quality release.
+
+### Fixed
+- **Thinking-mode (`think`) surface quality (U42–U47):** exclude the active note from
+  its own results; resolve note titles by their H1 rather than the chunk section
+  heading; strip a leading ATX marker from the topic; gate Socratic questions to
+  note-grounded prompts; replace prose "tensions" with structured `unlinked` pairs
+  (deduped by note).
+
+### Changed
+- Engine bumped `0.0.5 → 0.0.6` to force a clean redeploy.
+
 ## [0.0.5] — 2026-06-03
 
 The serving-topology and write-surface release.

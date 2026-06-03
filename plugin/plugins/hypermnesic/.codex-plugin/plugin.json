@@ -1,7 +1,7 @@
 {
   "name": "hypermnesic",
   "description": "Memory for coding agents over a self-hosted, OAuth2-authenticated tailnet MCP: hybrid search/recall, entity resolution, and a gated git-first write.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": {
     "name": "Leonard Sellem",
     "email": "leonard@sellem.me"
