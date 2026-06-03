@@ -316,8 +316,9 @@ def _cmd_serve(args) -> int:
     from hypermnesic import mcp_server
 
     # repo defaults to None → build_server derives it from the index-db grandparent.
-    # write_allowlist is None when --allowlist is omitted → build_server applies its
-    # DEFAULT_WRITE_ALLOWLIST; an explicit empty allowlist is refused at startup (U1).
+    # write_allowlist is None when --allowlist is omitted → build_server applies the blocklist
+    # default (protected-path + governance fence only); an explicit empty allowlist is refused
+    # at startup (U1); pass prefixes to narrow the surface (e.g. the legacy note-zones).
     # audit_actor_fn is left to default to the verified Tailscale node identity.
     #
     # U2: --auth-* enables OAuth2 RS mode. Enabling auth requires BOTH issuer + resource
@@ -562,8 +563,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_serve.add_argument("--enable-write", action="store_true",
                          help="register the git-first commit_note write tool (master role)")
     p_serve.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
-                         help="repeatable writable path prefix (write-enabled serve). "
-                              "Omit for the default; an empty value is refused at startup")
+                         help="repeatable writable path prefix to NARROW the write surface "
+                              "(write-enabled serve). Omit for the blocklist default "
+                              "(protected-path + governance fence only); empty refused at startup")
     p_serve.add_argument("--repo", default=None,
                          help="git repo the index projects (default: index-db grandparent)")
     p_serve.add_argument("--auth-issuer-url", default=None,
@@ -613,7 +615,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_cloud.add_argument("--token-ttl", type=int, default=3600,
                          help="access-token lifetime ceiling (seconds)")
     p_cloud.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
-                         help="writable path prefix (default: the engine allowlist)")
+                         help="writable path prefix to narrow the write surface "
+                              "(default: blocklist — protected-path + governance fence only)")
     p_cloud.set_defaults(func=_cmd_serve_cloud)
 
     p_setup = sub.add_parser("setup",
@@ -634,7 +637,8 @@ def build_parser() -> argparse.ArgumentParser:
                          help="owner-only env file for the consent secret "
                               "(default: ~/.config/hypermnesic-cloud/cloud.env)")
     p_setup.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
-                         help="writable path prefix (default: the full master write surface)")
+                         help="writable path prefix to narrow the write surface "
+                              "(default: blocklist — protected-path + governance fence only)")
     p_setup.add_argument("--token-ttl", type=int, default=3600)
     p_setup.add_argument("--json", action="store_true")
     p_setup.set_defaults(func=_cmd_setup)

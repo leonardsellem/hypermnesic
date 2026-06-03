@@ -418,8 +418,9 @@ def _folders_by_path(out):
 
 def test_list_folders_returns_taxonomy_and_schema_shape(make_corpus, fake_embedder):
     # AE7: a typed, structured listing — path/writable/protected_reason/note_count per folder,
-    # plus truncated/omitted and the convergence signal. Phase A surface = the 4-prefix default,
-    # so notes/ is writable while projects/ is honestly non-writable until the Phase-B flip.
+    # plus truncated/omitted and the convergence signal. Phase-B blocklist default: both notes/
+    # and the operator's content folders (projects/) are writable (re-pointed from the Phase-A
+    # 4-prefix assertion per the byte-preservation learning — the flip genuinely changes this).
     repo = make_corpus({"notes/n.md": "# N\n\nbody.\n", "projects/acme/a.md": "# A\n\nbody.\n"})
     index.build_index(repo, fake_embedder).close()
     db = index.state_dir_for(repo) / "index.db"
@@ -430,8 +431,8 @@ def test_list_folders_returns_taxonomy_and_schema_shape(make_corpus, fake_embedd
     by = _folders_by_path(out)
     assert by["notes/"]["writable"] is True and by["notes/"]["protected_reason"] is None
     assert by["notes/"]["note_count"] == 1
-    assert by["projects/"]["writable"] is False                # Phase A: 4-prefix default
-    assert by["projects/"]["protected_reason"] == "not in writable allowlist"
+    assert by["projects/"]["writable"] is True                 # Phase B: blocklist default
+    assert by["projects/"]["protected_reason"] is None
 
 
 def test_list_folders_is_read_tool_and_converges(make_corpus, fake_embedder):
