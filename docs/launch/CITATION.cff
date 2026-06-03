@@ -1,0 +1,45 @@
+# STAGED — copied to repo-root CITATION.cff by the public-flip PR (docs/launch/).
+# It carries the AGPL-3.0 license field, which presumes the public license, so it
+# stays staged until the flip. Set `date-released` to the public-release date then.
+cff-version: 1.2.0
+message: "If you use hypermnesic in your research or work, please cite it as below."
+title: hypermnesic
+abstract: >-
+  A git-native memory layer for AI agents: a markdown vault as the single source of
+  truth with a disposable, rebuildable hybrid retrieval index (SQLite FTS5 + sqlite-vec
+  KNN fused with reciprocal rank fusion), read-time convergence, a gated git-first write
+  path, and one OAuth-secured MCP endpoint every client shares. On LongMemEval V1 (the
+  500-question _s set), end-to-end QA accuracy is 88.6% overall / 89.7% task-averaged
+  with a GPT-4.1 reader (83.2 / 86.6 with a GPT-4o reader), both graded by the canonical
+  gpt-4o-2024-08-06 judge; session-level retrieval recall@10 is 0.949.
+type: software
+authors:
+  - family-names: Sellem
+    given-names: Leonard
+    email: leonard@sellem.me
+license: AGPL-3.0-only
+version: 0.0.5
+repository-code: "https://github.com/leonardsellem/hypermnesic"
+url: "https://github.com/leonardsellem/hypermnesic"
+keywords:
+  - agent memory
+  - retrieval-augmented generation
+  - model context protocol
+  - markdown
+  - git
+  - LongMemEval
+references:
+  - type: article
+    title: "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory"
+    authors:
+      - name: "Wu, Di and colleagues"
+    year: 2024
+    notes: "arXiv:2410.10813 — the benchmark hypermnesic is evaluated on (V1, _s)."
+    url: "https://arxiv.org/abs/2410.10813"
+  - type: article
+    title: "Zep: A Temporal Knowledge Graph Architecture for Agent Memory"
+    authors:
+      - name: "Rasmussen, Preston and colleagues"
+    year: 2025
+    notes: "arXiv:2501.13956 — source of the GPT-4o-judge comparability anchors (Zep 71.2, full-context 60.2)."
+    url: "https://arxiv.org/abs/2501.13956"
