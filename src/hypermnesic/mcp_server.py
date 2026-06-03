@@ -146,9 +146,11 @@ def _is_tailnet_ip(host: str) -> bool:
         return ipaddress.ip_address(host) in ipaddress.ip_network(_TAILNET_CIDR)
     except ValueError:
         return False
-# The write tool's explicit allowlist (KTD4). The protected-path guard refuses the
-# dangerous classes regardless; this further bounds *where* an agent write may land.
-# Overridable per install (U34 role config); tune to the vault's writable zones.
+# The legacy 4-prefix note-zone surface (KTD4). As of the Phase-B blocklist flip this is NO
+# LONGER the default (``_effective_write_surface(None)`` returns ``None`` = blocklist); it is
+# kept as a NAMED escape-hatch an operator can pass via ``--allowlist`` to restore the old
+# note-zone-only write surface. The protected-path guard + governance fence refuse the
+# dangerous classes regardless; an explicit allowlist further bounds *where* a write may land.
 DEFAULT_WRITE_ALLOWLIST = ("notes/", "sources/", "dashboards/", "captures/")
 # The OAuth scope the write tool requires of its caller (U2/V14). Enforced PER-TOOL inside
 # commit_note, independent of the transport's global required_scopes — the SDK middleware
@@ -162,14 +164,19 @@ def _effective_write_surface(write_allowlist: list[str] | None) -> list[str] | N
 
     Consumed by BOTH the write path (``commit_note``'s ``allowlist``) and the read flag
     (``list_folders``' writability), so the two can never disagree — they read the same
-    value (KTD: single coercion site). Phase A: ``None`` coerces to the 4-prefix
-    ``DEFAULT_WRITE_ALLOWLIST``; an explicit list passes through. U5 (Phase B) changes
-    ONLY this body so ``None`` passes through as ``None`` (blocklist — protected-path
-    refusal as the sole bound), flipping the write path and the discovery flag together
-    by construction.
+    value (KTD: single coercion site).
+
+    **Phase B (U5) — blocklist default:** ``None`` (no ``--allowlist``) passes through as
+    ``None``, i.e. blocklist mode — the protected-path refusal + governance fence in
+    ``serialize`` are the sole bound, so the operator's content folders (``projects/``,
+    ``people/``, ``companies/``, ``meetings/``, …) are writable and the discovery flag flips
+    with the write path by construction. An explicit list still narrows (the named
+    ``DEFAULT_WRITE_ALLOWLIST`` remains an escape-hatch an operator can pass to restore the
+    old note-zone-only surface). This flip is gated on the signed blocklist security-review
+    delta (tests/test_blocklist_write_gate.py / G6) — it must not merge/enable unsigned.
     """
     if write_allowlist is None:
-        return list(DEFAULT_WRITE_ALLOWLIST)
+        return None
     return list(write_allowlist)
 
 
