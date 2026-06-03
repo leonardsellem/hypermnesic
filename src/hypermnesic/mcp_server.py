@@ -340,13 +340,26 @@ _CONSENT_ERROR_HTML = """<!doctype html><html><head><meta charset="utf-8">
 from your app.</p></body></html>"""
 
 # Anti-clickjacking + no-script CSP + no-store: the page where the operator types the token.
-_CONSENT_HEADERS = {
-    "X-Frame-Options": "DENY",
-    "Content-Security-Policy": (
-        "default-src 'none'; style-src 'unsafe-inline'; "
-        "form-action 'self'; frame-ancestors 'none'"),
-    "Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
-}
+def _consent_headers(redirect_uri: str = "") -> dict:
+    """CSP + anti-clickjacking headers for the consent page. The form posts to ``<public>/consent``
+    (self); on approval the AS **302-redirects to the OAuth client's registered redirect_uri** — a
+    cross-origin navigation. CSP ``form-action`` is enforced against redirect targets too, so a bare
+    ``form-action 'self'`` makes the browser silently drop that 302 (the grant is consumed but the
+    app never receives the code → "first Approve does nothing, retry says expired"). We therefore
+    allow ``'self'`` plus that single registered client origin. No scripts run (``default-src
+    'none'``) and the redirect carries only the authorization code (never the approval token)."""
+    from urllib.parse import urlsplit
+    extra = ""
+    sp = urlsplit(redirect_uri) if redirect_uri else None
+    if sp and sp.scheme and sp.netloc:
+        extra = f" {sp.scheme}://{sp.netloc}"          # e.g. https://chatgpt.com / https://claude.ai
+    return {
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": (
+            "default-src 'none'; style-src 'unsafe-inline'; "
+            f"form-action 'self'{extra}; frame-ancestors 'none'"),
+        "Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
+    }
 
 
 def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, int]:
@@ -379,20 +392,30 @@ def _register_consent_route(mcp: FastMCP, provider) -> None:
 
     from hypermnesic import auth_cloud
 
+    def _redirect_uri_of(pending_id: str) -> str:
+        d = provider.pending_details(pending_id)
+        return d["redirect_uri"] if d else ""
+
     @mcp.custom_route("/consent", methods=["GET", "POST"])
     async def consent(request: Request):
         if request.method == "GET":
-            html, status = _render_consent(provider, request.query_params.get("pending", ""))
-            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
+            pid = request.query_params.get("pending", "")
+            html, status = _render_consent(provider, pid)
+            # the GET page's CSP governs the form submit (incl. its 302 redirect to the client)
+            return HTMLResponse(html, status_code=status,
+                                headers=_consent_headers(_redirect_uri_of(pid)))
         form = await request.form()
         pending = str(form.get("pending", ""))
+        redirect_uri = _redirect_uri_of(pending)          # capture BEFORE finalize consumes it
         try:
             redirect = provider.finalize_consent(pending, approval_token=str(
                 form.get("approval_token", "")))
         except auth_cloud.ConsentError as exc:
             html, status = _render_consent(provider, pending, error=str(exc))
-            return HTMLResponse(html, status_code=status, headers=_CONSENT_HEADERS)
-        return RedirectResponse(redirect, status_code=302, headers=_CONSENT_HEADERS)
+            return HTMLResponse(html, status_code=status,
+                                headers=_consent_headers(redirect_uri))
+        return RedirectResponse(redirect, status_code=302,
+                                headers=_consent_headers(redirect_uri))
 
 
 def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,

@@ -314,6 +314,23 @@ def test_consent_form_posts_to_the_public_path_not_root():
     assert 'action="/consent"' not in html       # the root-absolute bug is gone
 
 
+def test_consent_csp_allows_the_oauth_client_redirect_origin():
+    # Regression (live "first Approve does nothing; second says expired"): CSP `form-action`
+    # applies to a form submission's REDIRECT targets too, so a bare `form-action 'self'` silently
+    # blocks the post-consent 302 to the OAuth client's cross-origin callback — the grant is
+    # consumed server-side but the browser never navigates, so the app never receives the code and
+    # the retry hits an already-consumed pending. The consent page's CSP must allow the client's
+    # registered redirect origin (in addition to 'self').
+    from hypermnesic import mcp_server
+    csp = mcp_server._consent_headers("https://chatgpt.com/connector/oauth/abc")["Content-Security-Policy"]
+    assert "form-action 'self' https://chatgpt.com" in csp     # the client origin is allowed
+    assert "frame-ancestors 'none'" in csp                     # clickjacking protection intact
+    assert "default-src 'none'" in csp                         # no-script baseline intact
+    # no redirect_uri (e.g. the unknown-pending error page, which has no form) → just 'self'
+    csp0 = mcp_server._consent_headers("")["Content-Security-Policy"]
+    assert "form-action 'self';" in csp0 and "https://" not in csp0
+
+
 def test_cloud_server_defaults_to_tighter_write_zone(make_corpus, fake_embedder):
     # residual: the public lane defaults writes to a dedicated review zone (captures/), not the
     # full vault — a cloud write to notes/ is refused.
