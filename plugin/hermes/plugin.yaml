@@ -1,0 +1,9 @@
+name: hypermnesic
+version: "0.0.6"
+description: "Hermes Agent plugin for hypermnesic CLI memory recall and skills."
+provides_hooks:
+  - pre_llm_call
+requires_env:
+  - name: HYPERMNESIC_REPO
+    description: "Local path to the git-tracked markdown vault or repository."
+    secret: false

@@ -21,6 +21,12 @@ glossary, GitHub templates), reconciles doc↔code drift from the 0.0.5 PR set, 
 stages the AGPL-3.0 license + public-flip runbook under `docs/launch/` without
 flipping the live license or repository visibility.
 
+### Added
+- **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
+  that registers a namespaced hypermnesic memory skill, includes an optional flat skill
+  export, and can opt into bounded `pre_llm_call` recall through the local
+  `hypermnesic` CLI. This is distinct from the Claude Code / Codex MCP plugin pack.
+
 ## [0.0.6] — 2026-06-03
 
 The think-surface quality release.
