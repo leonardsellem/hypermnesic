@@ -26,6 +26,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   a natural-language question with the repo-relative source path, explains lexical-only
   degradation in product language, and shows a `commit_note` dry-run diff without creating
   a write commit.
+- **`hypermnesic doctor` / `hypermnesic status`**: non-mutating setup diagnostics for local
+  index health, remote reach, OAuth discovery, auth challenge, write availability, and
+  client-specific next actions, with JSON output for agents and CI.
 - **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local
@@ -34,6 +37,8 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 ### Changed
 - README and getting-started onboarding now lead with the local proof milestone before
   endpoint setup or remote-client connection.
+- `hypermnesic setup --resource` now defaults to `--public-url` for the common endpoint
+  shape, while preserving explicit resource overrides for advanced deployments.
 
 ## [0.0.6] — 2026-06-03
 

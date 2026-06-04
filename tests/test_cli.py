@@ -571,6 +571,32 @@ def test_setup_cli_plumbs_to_install_setup(tmp_path, capsys, monkeypatch):
     assert "log in" in out.lower() or "authorize" in out.lower()  # login instructions printed
 
 
+def test_setup_cli_defaults_resource_to_public_url(tmp_path, capsys, monkeypatch):
+    captured: dict = {}
+
+    def fake_setup(repo, **kw):
+        captured["repo"] = repo
+        captured.update(kw)
+        return {"service": "hypermnesic-cloud", "public_url": kw["public_url"],
+                "resource": kw["resource"], "unit_path": "state/u.service",
+                "env_file": "state/cloud.env", "secret_generated": False,
+                "funnel_routes": [], "discovery": {"ok": True, "checks": {}},
+                "converged": True, "milestones": [],
+                "what_this_means": "Remote setup is ready.",
+                "client_next_actions": {"remote_mcp": {"summary": "Add the endpoint."}},
+                "next_steps": ["add https://h/mcp to your apps"]}
+
+    from hypermnesic import install
+    monkeypatch.setattr(install, "setup", fake_setup)
+    rc = cli.main(["setup", str(tmp_path), "--public-url", "https://h/mcp", "--json"])
+
+    assert rc == 0
+    assert captured["resource"] == "https://h/mcp"
+    out = json.loads(capsys.readouterr().out)
+    assert out["resource"] == "https://h/mcp"
+    assert out["what_this_means"] == "Remote setup is ready."
+
+
 def test_setup_cli_fails_loud_on_install_error(tmp_path, capsys, monkeypatch):
     from hypermnesic import install
 

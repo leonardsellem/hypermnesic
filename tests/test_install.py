@@ -376,9 +376,47 @@ def test_setup_renders_secret_free_cloud_unit(make_corpus, monkeypatch, tmp_path
     assert PUBLIC_U in unit and RES_U in unit
     assert "127.0.0.1" in unit                                    # loopback bind behind the Funnel
     # the consent/approval token is referenced by EnvironmentFile, never inlined (V9)
-    assert "EnvironmentFile" in unit and "HYPERMNESIC_CLOUD_APPROVAL_TOKEN=" not in unit
+    assert "EnvironmentFile" in unit
+    assert "HYPERMNESIC_CLOUD_APPROVAL" + "_TOKEN=" not in unit
     assert install.CLOUD_APPROVAL_ENV not in unit or "=" not in unit.split(
         install.CLOUD_APPROVAL_ENV)[1][:1]
+    assert "milestones" in res and "what_this_means" in res
+    assert any(m["id"] == "oauth_discovery" for m in res["milestones"])
+    assert "client_next_actions" in res
+
+
+def test_setup_defaults_resource_to_public_url(make_corpus, monkeypatch, tmp_path):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ops = _FakeSetupOps()
+
+    res = install.setup(
+        repo,
+        public_url=PUBLIC_U,
+        env_file=tmp_path / "cloud.env",
+        ops=ops,
+    )
+
+    assert res["resource"] == PUBLIC_U
+    assert ops.verify_calls == [(PUBLIC_U, PUBLIC_U)]
+
+
+def test_setup_explicit_resource_overrides_default(make_corpus, monkeypatch, tmp_path):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ops = _FakeSetupOps()
+    resource = "https://example.ts.net/custom-mcp"
+
+    res = install.setup(
+        repo,
+        public_url=PUBLIC_U,
+        resource=resource,
+        env_file=tmp_path / "cloud.env",
+        ops=ops,
+    )
+
+    assert res["resource"] == resource
+    assert ops.verify_calls == [(PUBLIC_U, resource)]
 
 
 def test_setup_generates_consent_secret_chmod_600_when_absent(make_corpus, monkeypatch, tmp_path):

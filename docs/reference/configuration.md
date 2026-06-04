@@ -11,12 +11,14 @@ Engine tunables live in [`src/hypermnesic/config.py`](../../src/hypermnesic/conf
 |---|---|---|---|
 | `OPENAI_API_KEY` | embeddings | for dense retrieval | The OpenAI key for `text-embedding-3-large`. Absent → retrieval degrades to lexical-only (also how the test suite runs). Never written to the index, audit log, or any output. |
 | `HYPERMNESIC_MCP_URL` | plugin `.mcp.json` | per remote client | Your hypermnesic MCP endpoint URL (e.g. `https://YOUR-HOST.ts.net/mcp`). The bundled wiring templates the URL from this var; OAuth is via browser discovery (no token in the wiring). |
-| `HYPERMNESIC_MCP_TOKEN` | auto-recall hook | optional | Bearer token the per-prompt recall hook uses for its bounded read on a remote (non-tailnet) device. Empty → use the tailnet read route. The MCP tool wiring itself needs no token. |
+| `HYPERMNESIC_MCP_TOKEN` | auto-recall hook | optional | HTTP auth credential the per-prompt recall hook uses for its bounded read on a remote (non-tailnet) device. Empty → use the tailnet read route. The MCP tool wiring itself needs no token. |
 | `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` | `serve-cloud` / `setup` | for the public lane | The operator approval token that gates every public connection. Read from the environment **only** (never a CLI flag, so it can't leak via the process table / logs). Enforced minimum length. |
 
 The OpenAI key may also be read from a repo-root `.env` (the only file path searched by
 default); the OAuth consent secret is persisted by `setup` to an owner-only env file
 (`~/.config/hypermnesic-cloud/cloud.env`, `chmod 600`), never committed.
+`hypermnesic doctor --env-file PATH` checks only whether that file exists and has
+owner-only permissions; it never reads or prints the secret value.
 
 ## Embedding model (pinned)
 

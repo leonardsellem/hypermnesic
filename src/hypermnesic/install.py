@@ -486,7 +486,7 @@ class SetupOps:
         return {"ok": all(checks.values()), "checks": checks}
 
 
-def setup(repo, *, public_url: str, resource: str, host: str = _LOCALHOST,
+def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LOCALHOST,
           port: int = DEFAULT_CLOUD_PORT, path: str = "/", env_file=None,
           allowlist: list[str] | None = None, token_ttl: int = 3600,
           ops=None, secret_factory=None) -> dict:
@@ -500,9 +500,10 @@ def setup(repo, *, public_url: str, resource: str, host: str = _LOCALHOST,
     failing the command if a well-known does not resolve. The consent secret + OPENAI_API_KEY stay
     in owner-only env files, never inlined (V9). Privileged/network steps go through ``ops`` so the
     orchestration is unit-testable; the CLI uses the real ``SetupOps``."""
-    from hypermnesic import auth_cloud
+    from hypermnesic import auth_cloud, client_guidance, doctor
     from hypermnesic.mcp_server import _require_public_https_origin
 
+    resource = resource or public_url
     _require_public_https_origin(public_url, "public_url")     # R2 — fail before any artifact
     _require_public_https_origin(resource, "resource")
     repo = Path(repo).resolve()
@@ -552,6 +553,12 @@ def setup(repo, *, public_url: str, resource: str, host: str = _LOCALHOST,
         "unit_path": str(unit_path), "env_file": str(env_file),
         "secret_generated": generated, "funnel_routes": routes, "discovery": discovery,
         "converged": not generated,
+        "milestones": doctor.setup_milestones(public_url, resource, discovery),
+        "what_this_means": (
+            "Remote setup is ready: the service, public route, OAuth discovery, and write "
+            "challenge checks completed."
+        ),
+        "client_next_actions": client_guidance.client_next_action_map(public_url),
         "next_steps": [
             f"add {public_url} to your apps (ChatGPT/Claude connector, Claude Code plugin, Codex, "
             "Obsidian) as the hypermnesic MCP URL",

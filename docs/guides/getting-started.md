@@ -65,15 +65,22 @@ After the local proof succeeds:
 
 ```sh
 hypermnesic setup /path/to/your/vault \
-  --public-url https://<your-host>.ts.net/mcp \
-  --resource   https://<your-host>.ts.net/mcp
+  --public-url https://<your-host>.ts.net/mcp
+
+hypermnesic doctor /path/to/your/vault \
+  --public-url https://<your-host>.ts.net/mcp
 ```
 
 `setup` is idempotent: it renders + starts the cloud service, generates an owner-only
 **consent secret** (`~/.config/hypermnesic-cloud/cloud.env`, `chmod 600`), configures the
 Tailscale funnel (the `/mcp` mount + the OAuth discovery well-knowns), then **verifies the
 live HTTPS discovery chain** before reporting success. Re-running converges to the same
-state.
+state. `--resource` defaults to `--public-url`; pass it only when the OAuth resource
+identifier differs.
+
+`doctor` and its alias `status` are non-mutating. They do not start services, rewrite
+configuration, create tokens, change funnel routes, modify the vault, or create git commits.
+Use `--json` when an agent or CI check needs the structured status contract.
 
 **Verify the discovery chain** (what `setup` checks, and what a client needs):
 
@@ -87,14 +94,21 @@ failure modes below.
 
 ### Failure modes (B)
 
-- **`setup` fails / leaves nothing provisioned.** It is fail-closed: any failure leaves
-  no partial state. Re-run after fixing the cause (commonly: Tailscale not logged in, or
-  the funnel not permitted for your tailnet).
-- **Discovery well-knowns 404.** The funnel mount is wrong or the service isn't running;
-  re-run `setup` (it re-converges) and check `tailscale funnel status`.
-- **Writes refused with an auth error.** A write-enabled serve requires OAuth
-  (`write_enabled ⇒ auth-required`); connect via the OAuth lane, or for a local-only box
-  use the CLI (path C).
+| Doctor/status code | What it means | Next action |
+|---|---|---|
+| `initialize_git` | The vault path is not a git repo. | Run `git init`, commit markdown notes, then rerun local proof. |
+| `initialize_index` | The disposable `.hypermnesic/index.db` projection is missing or stale. | Run `hypermnesic local-proof /path/to/vault` or `hypermnesic init /path/to/vault`. |
+| `configure_key` | Dense retrieval is not configured. Lexical recall still works. | Set `OPENAI_API_KEY` when you want dense ranking and fuzzier recall. |
+| `authenticate_tailscale` | Tailscale is missing or not logged in. | Install Tailscale and run `tailscale up`; setup does not manage Tailscale lifecycle. |
+| `rerun_setup` | The cloud service unit or consent-secret file is missing. | Re-run `hypermnesic setup /path/to/vault --public-url https://<your-host>.ts.net/mcp`. |
+| `repair_funnel` | OAuth well-known metadata did not resolve. | Check `tailscale funnel status`, then rerun setup. |
+| `repair_auth` | The endpoint did not challenge unauthenticated requests. | Confirm the public URL points at the OAuth `serve-cloud` lane, then rerun setup. |
+| `request_write_scope` | Remote write could not be verified or the client lacks write. | Reconnect the client and approve write scope after discovery is healthy. |
+| `provide_public_url` | Only local checks ran. | Add `--public-url https://<your-host>.ts.net/mcp` to run remote checks. |
+
+`setup` is fail-closed: preflight failures leave no service/funnel/secret side effects. If
+`setup` fails after applying routes because discovery does not resolve, fix the route or
+service cause and rerun; setup converges the same declarative route set.
 
 ## C. Connect a client (any remote app)
 
