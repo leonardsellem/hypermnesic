@@ -11,7 +11,7 @@ hypermnesic --version
 hypermnesic <subcommand> [args] [flags]
 ```
 
-There are **21 subcommands**, grouped below by role.
+There are **22 subcommands**, grouped below by role.
 
 ## Local proof
 
@@ -97,6 +97,14 @@ Flags: `--json`.
 
 Capture is for raw evidence. Preserve raw captures or cite their source paths before writing
 generated summaries.
+
+### `daily-review <repo>`
+Generate a review-gated daily workflow dashboard proposal under
+`dashboards/daily-review.md`. The surface composes capture backlog, recent writes,
+generated navigation/salience/connection links, recall-mode reminders, degraded/offline
+state, and cleanup next actions. It does not move, delete, or rewrite source notes.
+Flags: `--index-db PATH`, `--audit-log PATH`, `--nav-rel PATH`, `--digest-rel PATH`,
+`--connections-rel PATH`, `--json`.
 
 ## Memory control
 

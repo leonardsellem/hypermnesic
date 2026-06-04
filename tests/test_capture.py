@@ -95,3 +95,55 @@ def test_cli_capture_is_immediate(make_corpus, fake_embedder, capsys):
     out = json.loads(capsys.readouterr().out)
     assert out["fast_path"] is True
     assert out["files"][0].startswith("sources/")
+
+
+# --- sprint 007: capture backlog and triage workflow -------------------------
+
+def test_capture_backlog_lists_raw_sources_without_mutating(make_corpus, fake_embedder):
+    repo = make_corpus({"topics/widgets.md": "# Widgets\n\nwidgets.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    cap = capture.capture(repo, "capture now, triage later", idx=idx,
+                          now="20260604T000000")
+    captured_rel = cap.files[0]
+    before = (repo / captured_rel).read_bytes()
+
+    backlog = capture.backlog(repo)
+
+    assert backlog["count"] == 1
+    assert backlog["captures"][0]["path"] == captured_rel
+    assert backlog["captures"][0]["stage"] == "pending_triage"
+    assert backlog["captures"][0]["snippet"] == "capture now, triage later"
+    assert (repo / captured_rel).read_bytes() == before
+    idx.close()
+
+
+def test_triage_missing_capture_returns_not_found_without_proposal(make_corpus, fake_embedder):
+    repo = make_corpus({"topics/widgets.md": "# Widgets\n\nwidgets.\n"})
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    branches_before = _branches(repo)
+
+    res = capture.triage(repo, idx, g, "sources/captures/missing.md", gh_create=None)
+
+    assert res["status"] == "not_found"
+    assert res["path"] == "sources/captures/missing.md"
+    assert _branches(repo) == branches_before
+    idx.close()
+
+
+def test_triage_without_close_neighbours_marks_undetermined(make_corpus, fake_embedder):
+    repo = make_corpus({"topics/widgets.md": "# Widgets\n\nwidgets gadgets.\n"})
+    idx0 = index_mod.build_index(repo, fake_embedder)
+    cap = capture.capture(repo, "unrelated pineapple note", idx=idx0,
+                          now="20260604T000000")
+    captured_rel = cap.files[0]
+    idx0.close()
+
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+    res = capture.triage(repo, idx, g, captured_rel, gh_create=None)
+    note = _git(repo, "show", f"{res.branch}:{res.files[0]}")
+
+    assert "undetermined" in note.lower()
+    assert (repo / captured_rel).read_text(encoding="utf-8") == "unrelated pineapple note\n"
+    idx.close()

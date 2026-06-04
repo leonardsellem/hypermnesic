@@ -24,7 +24,9 @@ _SKILL = _PLUGIN_DIR / "skills" / "hypermnesic-memory" / "SKILL.md"
 _README = _PLUGIN / "README.md"
 _DOCS = _REPO / "docs"
 _TAXONOMY = _DOCS / "guides" / "memory-taxonomy.md"
+_DAILY_WORKFLOWS = _DOCS / "guides" / "daily-workflows.md"
 _GLOSSARY = _REPO / "GLOSSARY.md"
+_OBSIDIAN_README = _REPO / "obsidian-plugin" / "README.md"
 
 # Real engine tool names (mcp_server.READ_TOOL_NAMES + the write tool). The SKILL must
 # only teach these — a nonexistent tool name in the skill is a broken instruction.
@@ -201,3 +203,35 @@ def test_memory_taxonomy_docs_and_glossary_define_routing_examples():
         "adjacent behavioural memory layer",
     ):
         assert required in glossary
+
+
+def test_daily_workflow_docs_skill_and_obsidian_boundary_cover_full_loop():
+    guide = _DAILY_WORKFLOWS.read_text(encoding="utf-8").lower()
+    for required in (
+        "capture -> triage -> recall -> write -> review -> clean up",
+        "capture now, triage later",
+        "hypermnesic capture",
+        "hypermnesic daily-review",
+        "hypermnesic memory forget",
+        "hypermnesic memory revert",
+        "search",
+        "build_context",
+        "think",
+        "resolve",
+        "degraded",
+        "offline",
+        "obsidian",
+        "read-only",
+    ):
+        assert required in guide
+    assert guide.count("recipe:") >= 6
+
+    skill = _SKILL.read_text(encoding="utf-8").lower()
+    for required in ("capture", "triage", "daily-review", "search", "build_context",
+                     "think", "resolve"):
+        assert required in skill
+
+    obsidian = _OBSIDIAN_README.read_text(encoding="utf-8").lower()
+    assert "read-only" in obsidian
+    assert "daily loop" in obsidian
+    assert "write" in obsidian and "cli" in obsidian

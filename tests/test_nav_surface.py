@@ -103,6 +103,18 @@ def test_generated_base_is_valid_bases_yaml(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_nav_moc_can_link_daily_review_surface(make_corpus, fake_embedder):
+    repo = make_corpus({"alpha.md": "# Alpha\n\nfirst.\n"})
+    idx, g = _build(repo, fake_embedder)
+    res = nav_surface.nav_proposal(
+        repo, idx, g, gh_create=None, daily_review_rel="dashboards/daily-review.md",
+        now="2026-06-04T00:00:00+00:00")
+    moc = _git(repo, "show", f"{res.branch}:{nav_surface.MOC_REL}")
+    assert "Daily review" in moc
+    assert "[[dashboards/daily-review.md]]" in moc
+    idx.close()
+
+
 # --- KD7: hand-authored notes are never overwritten ---------------------------
 
 def test_hand_authored_notes_untouched(make_corpus, fake_embedder):

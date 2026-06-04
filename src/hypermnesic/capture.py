@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import posixpath
+from pathlib import Path
 
 from hypermnesic import generated
 from hypermnesic import propose as propose_mod
@@ -43,13 +44,35 @@ def _suggest_placement(related: list[str]) -> str:
     return f"`{folder}/`" if folder else "(vault root)"
 
 
+def backlog(repo) -> dict:
+    """List raw captures under ``sources/`` without mutating them."""
+    root = Path(repo)
+    captures = []
+    for path in sorted((root / "sources").rglob("*.md")) if (root / "sources").exists() else []:
+        rel = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8", errors="replace")
+        first = " ".join(text.split())[:200]
+        triage_slug = propose_mod.safe_slug(rel)
+        proposed = (root / "dashboards" / f"triage-{triage_slug}.md").exists()
+        captures.append({
+            "path": rel,
+            "stage": "triage_proposed" if proposed else "pending_triage",
+            "snippet": first,
+            "bytes": path.stat().st_size,
+        })
+    return {"count": len(captures), "captures": captures}
+
+
 def triage(repo, idx, graph, captured_rel: str, *, embedder=None, log=None,
            gh_create=None, now: str | None = None):
     """Propose a placement + connections + grapple prompt for a captured note —
     analysed via the read-only ``think`` path, emitted as a U18 proposal, never
     auto-moving the note. The returned result carries ``thought_wrote`` (the
     observable proof the analysis step wrote nothing)."""
-    text = (repo / captured_rel).read_text(encoding="utf-8")
+    captured_path = repo / captured_rel
+    if not captured_path.exists():
+        return {"status": "not_found", "path": captured_rel, "proposed": False}
+    text = captured_path.read_text(encoding="utf-8")
     thought = think_mod.think(idx, text.strip(), embedder=embedder, graph=graph)
     related = [h["path"] for h in thought.related if h["path"] != captured_rel][:5]
     grapple = thought.questions[0] if thought.questions else \

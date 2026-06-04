@@ -40,6 +40,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   non-secret outcome status out-of-band, supports host-specific disable controls, and ships a
   helper script for `status` and bounded `test-recall` diagnosis without exposing prompts,
   endpoint URLs, tokens, headers, or raw large snippets.
+- **`hypermnesic daily-review`**: a review-gated daily workflow dashboard proposal that composes
+  capture backlog, recent writes, generated surfaces, recall guidance, degraded/offline notes, and
+  cleanup next actions without moving, deleting, or rewriting source notes.
 - **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local
@@ -55,6 +58,8 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - README, getting-started, plugin skills, glossary, and references now teach the memory taxonomy:
   Hypermnesic is durable project memory, while behavioural preferences and session state route to
   Honcho or an equivalent adjacent layer by default.
+- Daily workflow docs now teach capture -> triage -> recall -> write -> review -> clean up,
+  including recipes and the Obsidian companion's read-only role.
 
 ## [0.0.6] — 2026-06-03
 

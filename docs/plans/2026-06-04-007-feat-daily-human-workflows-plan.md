@@ -1,7 +1,7 @@
 ---
 title: "feat: Daily Human Workflows"
 type: feat
-status: active
+status: completed
 date: 2026-06-04
 origin: docs/brainstorms/2026-06-04-first-class-product-requirements.md
 sprint_unit: U7

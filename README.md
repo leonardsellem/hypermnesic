@@ -127,6 +127,19 @@ Before writing, preserve raw evidence or cite source paths. If the destination i
 writable locations first (`list_folders` / `hypermnesic list-folders`). See the
 [memory taxonomy guide](docs/guides/memory-taxonomy.md).
 
+### F. Run the daily loop
+
+For daily work, use the loop **capture -> triage -> recall -> write -> review -> clean up**.
+
+```sh
+hypermnesic capture /path/to/your/vault "raw observation"
+hypermnesic daily-review /path/to/your/vault
+```
+
+The daily review is a generated, review-gated dashboard proposal that shows capture backlog,
+recent writes, generated surfaces, recall-mode reminders, degraded/offline state, and cleanup next
+actions. See [daily workflows](docs/guides/daily-workflows.md).
+
 ---
 
 ## How it works
