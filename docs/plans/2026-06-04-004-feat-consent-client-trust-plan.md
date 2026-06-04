@@ -400,6 +400,34 @@ confusing way.
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. U1-U3 product
+proofs must remain green.
+
+- **AE4 consent gate:** a new write-capable client request must show a consent page where the owner
+  can tell what write permits, what path scope applies, which client is requesting access, and how
+  to reject safely or approve intentionally.
+- **Reject/cancel safety gate:** reject, browser close, timeout, malformed request, and cancelled
+  authorization must leave no usable grant, no refresh token, no partial client trust record, and a
+  clear final state for the human and client.
+- **Grant inventory gate:** approved clients must be listable with client identity, granted scopes,
+  write availability, issue/update time, and revocation affordance. The listing must not expose raw
+  bearer tokens, refresh tokens, consent secrets, or credential file bodies.
+- **Revoke gate:** revocation must invalidate the whole grant path used by the client, including
+  refresh behavior where applicable. Tests must prove a revoked client cannot write and receives
+  actionable insufficient-scope/revoked-state language.
+- **Write-scope refusal gate:** write attempts without the required scope must fail closed before
+  commit_note mutation, include the exact missing capability and next trust action, and avoid
+  implying that local files or index state are at fault.
+- **Security regression gate:** OAuth discovery, token audience/resource handling, refresh rotation,
+  consent CSP, and existing write-gate tests must remain green for changed surfaces.
+- **Cumulative product gate:** U1-U4 must compose: a reviewer can prove local value, diagnose remote
+  setup, inspect/control memory, approve a client, revoke it, and verify write refusal afterward.
+- **Regression gate:** at minimum run targeted auth/OAuth/MCP/write-scope tests, `git diff --check`,
+  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)

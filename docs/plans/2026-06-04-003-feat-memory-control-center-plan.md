@@ -439,6 +439,34 @@ provenance metadata.
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. U1 and U2 proof
+flows must remain green.
+
+- **AE3 control gate:** given an agent-written memory fixture, the owner can list it, inspect where
+  it lives, see when it changed, see available writer/audit metadata, export it, preview deletion,
+  apply forget/delete through the git-backed path, and verify the result from the same surface.
+- **No manual-git escape gate:** docs and CLI output must present memory control as first-class
+  product verbs. "Use git manually" can be an advanced recovery note, never the primary path.
+- **Preview-before-mutation gate:** forget, delete, and revert actions must have a dry-run/preview
+  mode that shows target path, proposed diff or commit effect, guard decision, and irreversible
+  consequences before apply.
+- **Git-first audit gate:** every mutating control action must create or reference a reviewable git
+  commit and append/read audit evidence where the existing architecture requires it. Tests must
+  prove index rebuild cannot be the source of truth for deletion state.
+- **Guard preservation gate:** protected paths, governance files, scripts/hooks/skills, credential
+  files, and blocklisted destinations must remain refused. Tests must cover refusal language and
+  absence of partial writes.
+- **Export gate:** export must be bounded, deterministic, source-grounded, and free of hidden
+  credential material. Tests must cover filtered exports and empty-result exports.
+- **Cumulative product gate:** U1 local proof, U2 doctor/status, and U3 memory control must compose:
+  a reviewer can create or fixture a memory, diagnose health, remove/revert it, and verify recall no
+  longer returns the removed memory.
+- **Regression gate:** at minimum run targeted audit/write-guard/control tests, `git diff --check`,
+  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)

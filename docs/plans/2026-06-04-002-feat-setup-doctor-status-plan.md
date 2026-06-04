@@ -368,6 +368,33 @@ operator-specific hosts.
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. The U1 local
+value proof must still pass after these changes.
+
+- **AE2 diagnostic gate:** from a partially configured endpoint fixture, doctor/status output must
+  clearly separate local index health, remote service reachability, Funnel/public URL state, OAuth
+  discovery, auth state, write availability, and next corrective action.
+- **Non-mutating gate:** `status` and `doctor` must never start services, rewrite config, create
+  tokens, modify the vault, or create git commits. Tests must assert no filesystem/config/git side
+  effects for representative healthy, partial, and broken states.
+- **Secret hygiene gate:** diagnostic output, JSON, logs, and test snapshots must not print tokens,
+  secrets, private operator hosts, private IPs, `.env` contents, or credential file bodies. Include
+  targeted `rg` checks over changed files and fixtures.
+- **Actionability gate:** every failing diagnostic item must include a severity, human explanation,
+  exact next command or doc pointer, and a machine-readable code. No generic "check configuration"
+  failures are acceptable.
+- **Setup default gate:** the setup flow must avoid requiring redundant `--resource` input when it
+  equals the public URL. Tests must cover defaulting, explicit override, and invalid mismatch cases.
+- **Client path gate:** doctor/status must provide distinct next steps for local-only use, Claude or
+  Codex plugin use, Obsidian companion use, and generic remote MCP client use.
+- **Cumulative product gate:** rerun U1 local proof plus the new doctor/status tests. A user must be
+  able to progress from local proof to setup diagnosis without source-code inspection.
+- **Regression gate:** at minimum run targeted setup/install/CLI tests, `git diff --check`,
+  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)

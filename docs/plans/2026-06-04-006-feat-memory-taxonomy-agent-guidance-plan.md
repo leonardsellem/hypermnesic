@@ -328,6 +328,36 @@ inferences that should be reviewed before implementation proceeds.*
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. U1-U5 product
+proofs must remain green.
+
+- **AE6 routing gate:** given examples such as "the user likes terse replies", temporary session
+  state, behavioural preference, durable project fact, decision rationale, source evidence, and
+  cleanup instruction, bundled guidance must route each to Hypermnesic, Honcho, session context, or
+  no write with no ambiguity.
+- **Negative-example gate:** tests or documented fixtures must include at least three "do not write
+  to Hypermnesic" cases and at least three "write to Hypermnesic" cases. Behavioural/preference
+  memory must not be routed to Hypermnesic by default.
+- **Skill invocation gate:** the bundled skill must instruct agents to query Hypermnesic first for
+  durable project/entity/topic history, query Honcho for behavioural/preference/session context
+  when available, and preserve evidence before summarizing.
+- **Evidence preservation gate:** guidance must require raw captures/source episodes to remain
+  traceable and must distinguish cleanup/triage from silent rewriting or source deletion.
+- **Glossary/docs coherence gate:** README, getting-started docs, skill docs, glossary, and
+  docs index must use the same names for durable memory, behavioural memory, session memory, raw
+  capture, triage, recall, write, and cleanup.
+- **Agent regression gate:** if a skill invocation or lint fixture exists, it must prove positive
+  routing, negative routing, and no accidental preference-memory write path. Otherwise the plan must
+  require adding one before implementation completes.
+- **Cumulative product gate:** U1-U6 must compose: a reviewer can prove value, diagnose setup,
+  control memory, trust/revoke clients, diagnose hooks, and explain what belongs in each memory
+  layer without reading source code.
+- **Regression gate:** at minimum run targeted docs/skill tests or checks, `git diff --check`,
+  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)
