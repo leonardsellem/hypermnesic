@@ -16,6 +16,17 @@ The numbers themselves are produced by running the harness (below). Both phases 
 now been run on the full `_s` set (2026-06-02) and their aggregates transcribed; the
 re-runnable harness + pinned manifest let a third party reproduce them.
 
+## Product operability proof
+
+LongMemEval measures retrieval quality. It does not prove setup, consent, memory control,
+plugin observability, daily workflows, or remote-client operability. Benchmark scores are not a substitute for product readiness.
+
+Product readiness is gated separately by `scripts/product_smoke.py`, offline remote-contract tests
+in `tests/test_product_remote_smoke.py`, the
+[`docs/guides/remote-client-smoke-checklist.md`](../docs/guides/remote-client-smoke-checklist.md),
+and the
+[`docs/launch/first-class-product-readiness-checklist.md`](../docs/launch/first-class-product-readiness-checklist.md).
+
 ---
 
 ## What this number is, and is not (comparability envelope)
