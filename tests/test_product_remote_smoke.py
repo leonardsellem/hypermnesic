@@ -21,6 +21,8 @@ def _call(srv, name, args):
     out = asyncio.run(srv.call_tool(name, args))
     if isinstance(out, tuple):
         return out[1]
+    if getattr(out, "structuredContent", None) is not None:
+        return out.structuredContent
     return json.loads(out[0].text)
 
 

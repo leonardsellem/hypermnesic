@@ -7,6 +7,7 @@ import json
 import subprocess
 
 import pytest
+from starlette.testclient import TestClient
 
 from hypermnesic import config, index, mcp_server
 from hypermnesic import embed as embed_mod
@@ -32,6 +33,8 @@ def _call(srv, name, args):
     out = asyncio.run(srv.call_tool(name, args))
     if isinstance(out, tuple):          # (content_blocks, structured_result)
         return out[1]
+    if getattr(out, "structuredContent", None) is not None:
+        return out.structuredContent
     return json.loads(out[0].text)
 
 
@@ -278,6 +281,42 @@ def test_write_tool_protected_path_refused(make_corpus, fake_embedder):
     assert out["committed"] is False and out["refused"]
     assert not (repo / "CLAUDE.md").exists()
     assert _git(repo, "rev-parse", "HEAD") == head_before      # nothing committed
+
+
+def test_write_tool_protected_path_refusal_survives_http_output_validation(make_corpus,
+                                                                           fake_embedder):
+    # Regression from the live remote-client smoke: the in-process tool returned a refusal dict,
+    # but FastMCP's HTTP structured-output validation expanded optional TypedDict fields to null
+    # and rejected them against the generated string/boolean schema. Remote clients must receive
+    # the clean refusal payload, not "Output validation error".
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    srv = mcp_server.build_server(index.state_dir_for(repo) / "index.db", host="127.0.0.1",
+                                  repo=repo, embedder=fake_embedder, write_enabled=True,
+                                  public_hosts=["testserver"])
+    head_before = _git(repo, "rev-parse", "HEAD")
+    with TestClient(srv.streamable_http_app()) as client:
+        resp = client.post(
+            "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {
+                    "name": "commit_note",
+                    "arguments": {"path": "AGENTS.md", "body": "# pwned\n"},
+                },
+            },
+            headers={"Accept": "application/json, text/event-stream"},
+        )
+    assert resp.status_code == 200
+    payload = resp.json()["result"]
+    assert payload.get("isError") is not True
+    structured = payload["structuredContent"]
+    assert structured["committed"] is False
+    assert "protected path" in structured["refused"]
+    assert "Output validation error" not in payload["content"][0]["text"]
+    assert _git(repo, "rev-parse", "HEAD") == head_before
 
 
 def test_write_tool_rejects_path_outside_allowlist(make_corpus, fake_embedder):

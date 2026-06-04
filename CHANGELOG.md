@@ -68,6 +68,11 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - Daily workflow docs now teach capture -> triage -> recall -> write -> review -> clean up,
   including recipes and the Obsidian companion's read-only role.
 
+### Fixed
+- `commit_note` protected-path and write-scope refusals now survive Streamable HTTP structured-output
+  validation, so remote clients receive a clean `{committed:false, refused:"..."}` payload instead
+  of an MCP output validation error.
+
 ## [0.0.6] — 2026-06-03
 
 The think-surface quality release.
