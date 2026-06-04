@@ -452,6 +452,10 @@ flows must remain green.
 - **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
   matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
   cannot be marked complete until the plan or implementation is corrected.
+- **Contract preservation gate:** every CLI command, JSON field, documented flow, security invariant,
+  and public-facing artifact created or changed by this sprint must have an explicit regression
+  assertion. Later sprints must rerun these assertions or document an intentional, reviewed contract
+  change with matching docs and changelog updates.
 - **Proof shape gate:** validation must include at least one owner happy path, one destructive
   preview-only path, one applied git-backed mutation, one protected/refused path, one recall-after-
   change verification, one JSON contract check, one audit/body-redaction check, and one docs/current-

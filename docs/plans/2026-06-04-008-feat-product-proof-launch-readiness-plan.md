@@ -384,6 +384,10 @@ release-blocking proof for the whole U1-U8 sequence.
 - **Blocking standard:** these gates are release-blocking, not advisory. If any row in the U1-U8
   evidence chain is missing, stale, flaky, ambiguous, or dependent on unrecorded private operator
   infrastructure, Hypermnesic cannot claim first-class readiness.
+- **Contract preservation gate:** every CLI command, JSON field, documented flow, security invariant,
+  and public-facing artifact created or changed across U1-U8 must have explicit regression evidence
+  in the first-class checklist. Any intentional contract change must be reviewed, dated, and reflected
+  in README, reference docs, changelog, and the relevant sprint evidence matrix.
 - **Proof shape gate:** validation must include automated local smoke, simulated remote-client
   contract tests where possible, separately labeled manual external-client evidence, consent
   approval/rejection/revoke evidence, write refusal/success evidence, memory removal/recovery

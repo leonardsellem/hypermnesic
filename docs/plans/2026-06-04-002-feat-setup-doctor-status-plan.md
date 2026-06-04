@@ -381,6 +381,10 @@ value proof must still pass after these changes.
 - **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
   matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
   cannot be marked complete until the plan or implementation is corrected.
+- **Contract preservation gate:** every CLI command, JSON field, documented flow, security invariant,
+  and public-facing artifact created or changed by this sprint must have an explicit regression
+  assertion. Later sprints must rerun these assertions or document an intentional, reviewed contract
+  change with matching docs and changelog updates.
 - **Proof shape gate:** validation must include at least one healthy path, one partial/broken setup
   path, one non-mutating side-effect check, one JSON contract check, one secret-hygiene check, and
   one docs/current-truth consistency check.
