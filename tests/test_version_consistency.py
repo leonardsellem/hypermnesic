@@ -36,12 +36,13 @@ def test_main_exits_zero_on_the_real_tree():
     assert cvc.main([]) == 0
 
 
-def test_collect_covers_init_and_all_three_manifests():
+def test_collect_covers_init_and_all_distributed_manifests():
     labels = {label for label, _ in cvc.collect()}
     assert "src/hypermnesic/__init__.py" in labels
     assert "plugin/.claude-plugin/marketplace.json" in labels
     assert "plugin/plugins/hypermnesic/.claude-plugin/plugin.json" in labels
     assert "plugin/plugins/hypermnesic/.codex-plugin/plugin.json" in labels
+    assert "plugin/hermes/plugin.yaml" in labels
 
 
 def test_diverging_manifest_is_flagged_with_file_and_both_versions():
