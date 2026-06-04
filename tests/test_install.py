@@ -385,6 +385,16 @@ def test_setup_renders_secret_free_cloud_unit(make_corpus, monkeypatch, tmp_path
     assert "client_next_actions" in res
 
 
+def test_setup_renders_default_client_scopes_when_configured(make_corpus, monkeypatch, tmp_path):
+    _with_key(monkeypatch)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ops = _FakeSetupOps()
+    res = _setup(repo, tmp_path / "cloud.env", ops, default_client_scopes=["read", "write"])
+    unit = Path(res["unit_path"]).read_text()
+    assert "--default-client-scopes read write" in unit
+    assert res["default_client_scopes"] == ["read", "write"]
+
+
 def test_setup_defaults_resource_to_public_url(make_corpus, monkeypatch, tmp_path):
     _with_key(monkeypatch)
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})

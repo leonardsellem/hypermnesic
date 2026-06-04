@@ -26,12 +26,12 @@ REDIRECT = "https://chatgpt.com/connector_platform_oauth_redirect"
 
 
 def _provider(now=None, token_ttl=3600, code_ttl=300, refresh_ttl=30 * 24 * 3600,
-              grant_store_path=None):
+              grant_store_path=None, default_scopes=None):
     return auth_cloud.CloudAuthProvider(
         resource=RES, public_url=PUBLIC, approval_token="op-approval-secret",
         scopes_supported=["read", "write"], token_ttl_seconds=token_ttl,
         code_ttl_seconds=code_ttl, refresh_ttl_seconds=refresh_ttl, now=now,
-        grant_store_path=grant_store_path)
+        grant_store_path=grant_store_path, default_scopes=default_scopes)
 
 
 def _client(scope="read write") -> OAuthClientInformationFull:
@@ -118,6 +118,26 @@ def test_finalize_consent_result_includes_confirmation_state():
     assert result["confirmation"]["scopes"] == ["read", "write"]
     assert result["confirmation"]["write_enabled"] is True
     assert "commit_note" in result["confirmation"]["message"]
+
+
+def test_authorize_uses_read_only_default_when_client_omits_scope():
+    p = _provider()
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params(scopes=()))).split("pending=")[1]
+    details = p.pending_details(pending)
+    assert details is not None
+    assert details["scopes"] == ["read"]
+
+
+def test_authorize_uses_configured_default_scopes_when_client_omits_scope():
+    p = _provider(default_scopes=["read", "write"])
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params(scopes=()))).split("pending=")[1]
+    details = p.pending_details(pending)
+    assert details is not None
+    assert details["scopes"] == ["read", "write"]
+    result = p.finalize_consent_result(pending, approval_token="op-approval-secret")
+    assert result["confirmation"]["write_enabled"] is True
 
 
 def test_consent_token_never_compared_in_plaintext_storage():
@@ -338,10 +358,23 @@ def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fak
     assert srv.settings.auth is not None
     assert str(srv.settings.auth.resource_server_url).rstrip("/") == RES
     assert srv.settings.auth.client_registration_options.enabled is True      # DCR wired
+    assert srv.settings.auth.client_registration_options.default_scopes == ["read"]
     assert srv.settings.auth.revocation_options.enabled is True               # revocation wired
     names = {t.name for t in _aio.run(srv.list_tools())}
     assert "commit_note" in names and {"search", "resolve"} <= names          # read + write
     assert "/consent" in [r.path for r in srv._custom_starlette_routes]       # consent route added
+
+
+def test_build_cloud_server_wires_configured_default_client_scopes(make_corpus, fake_embedder):
+    from hypermnesic import index, mcp_server
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(
+        db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+        resource=RES, public_url=PUBLIC, approval_token="op-secret",
+        default_client_scopes=["read", "write"])
+    assert srv.settings.auth.client_registration_options.default_scopes == ["read", "write"]
 
 
 def test_cloud_server_trusts_public_host_behind_proxy(make_corpus, fake_embedder):

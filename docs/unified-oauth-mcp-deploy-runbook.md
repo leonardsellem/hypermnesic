@@ -58,8 +58,10 @@ and re-authorize **once** → `/mcp`-audience tokens. New clients use `/mcp` dir
 # 1. reconfigure + restart the service to the unified identity (write-anywhere, new engine)
 #    ExecStart=hypermnesic serve-cloud --index-db <repo>/.hypermnesic/index.db --host 127.0.0.1 \
 #      --port 8850 --public-url https://homelab.taildabf2.ts.net/mcp \
-#      --resource https://homelab.taildabf2.ts.net/mcp --repo <repo>
-#    (or: hypermnesic setup <repo> --public-url …/mcp --resource …/mcp  — renders+starts+funnels+verifies)
+#      --resource https://homelab.taildabf2.ts.net/mcp --repo <repo> \
+#      --default-client-scopes read write
+#    (or: hypermnesic setup <repo> --public-url …/mcp --resource …/mcp \
+#      --default-client-scopes read write  — renders+starts+funnels+verifies)
 systemctl --user restart hypermnesic-cloud
 
 # 2. claim /mcp + the two /mcp root well-knowns for the unified endpoint (funnel, NOT serve)

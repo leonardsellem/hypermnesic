@@ -75,13 +75,24 @@ class CloudAuthProvider:
     """MCP SDK ``OAuthAuthorizationServerProvider`` for the public cloud lane."""
 
     def __init__(self, *, resource: str, public_url: str, approval_token: str,
-                 scopes_supported: list[str], token_ttl_seconds: int = 3600,
+                 scopes_supported: list[str], default_scopes: list[str] | None = None,
+                 token_ttl_seconds: int = 3600,
                  code_ttl_seconds: int = 300, refresh_ttl_seconds: int = 30 * 24 * 3600,
                  now=None, grant_store_path: Path | None = None) -> None:
         self._resource = str(resource).rstrip("/")
         self._public = str(public_url).rstrip("/")
         self._approval_hash = _hash(approval_token)        # the operator credential, hashed
         self._scopes_supported = tuple(scopes_supported)
+        self._default_scopes = tuple(default_scopes or [
+            s for s in self._scopes_supported if s == "read"
+        ])
+        if not self._default_scopes:
+            raise ValueError("default_scopes must include at least one supported scope")
+        invalid = [s for s in self._default_scopes if s not in self._scopes_supported]
+        if invalid:
+            raise ValueError(
+                "default_scopes must be a subset of scopes_supported; "
+                f"invalid: {', '.join(invalid)}")
         self._token_ttl = int(token_ttl_seconds)
         self._code_ttl = int(code_ttl_seconds)
         self._refresh_ttl = int(refresh_ttl_seconds)
@@ -183,7 +194,7 @@ class CloudAuthProvider:
     # --- authorize → operator consent --------------------------------------
     def _grantable(self, requested: list[str] | None) -> tuple[str, ...]:
         req = [s for s in (requested or []) if s in self._scopes_supported]
-        return tuple(req or [s for s in self._scopes_supported if s == "read"])  # default: read
+        return tuple(req or self._default_scopes)
 
     async def authorize(self, client: OAuthClientInformationFull,
                         params: AuthorizationParams) -> str:

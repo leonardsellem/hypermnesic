@@ -14,9 +14,23 @@ from pathlib import Path
 
 from hypermnesic import __version__
 
+DEFAULT_CLIENT_SCOPES_ENV = "HYPERMNESIC_DEFAULT_CLIENT_SCOPES"
+
 
 def _print_json(obj) -> None:
     print(json.dumps(obj, ensure_ascii=False, indent=2))
+
+
+def _default_client_scopes(args_value) -> list[str] | None:
+    import os
+    raw = args_value if args_value is not None else os.environ.get(DEFAULT_CLIENT_SCOPES_ENV)
+    if raw is None:
+        return None
+    items = raw if isinstance(raw, list) else [raw]
+    scopes: list[str] = []
+    for item in items:
+        scopes.extend(str(item).replace(",", " ").split())
+    return scopes or None
 
 
 def _cmd_index(args) -> int:
@@ -486,7 +500,9 @@ def _cmd_serve_cloud(args) -> int:
             Path(args.index_db), host=args.host, port=args.port, path=args.path,
             repo=(Path(args.repo) if args.repo else None),
             resource=args.resource, public_url=args.public_url, approval_token=approval,
-            token_ttl_seconds=args.token_ttl, write_allowlist=args.allowlist)
+            token_ttl_seconds=args.token_ttl,
+            default_client_scopes=_default_client_scopes(args.default_client_scopes),
+            write_allowlist=args.allowlist)
     except ValueError as exc:
         print(f"serve-cloud failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
         return 1
@@ -507,7 +523,8 @@ def _cmd_setup(args) -> int:
             resource=(args.resource or args.public_url),
             host=args.host, port=args.port, path=args.path,
             env_file=(Path(args.env_file) if args.env_file else None),
-            allowlist=args.allowlist, token_ttl=args.token_ttl)
+            allowlist=args.allowlist, token_ttl=args.token_ttl,
+            default_client_scopes=_default_client_scopes(args.default_client_scopes))
     except (install.InstallError, FileNotFoundError) as exc:
         print(f"setup failed: {exc}", file=sys.stderr)   # fail loud; nothing half-provisioned
         return 1
@@ -919,6 +936,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_cloud.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
                          help="writable path prefix to narrow the write surface "
                               "(default: blocklist — protected-path + governance fence only)")
+    p_cloud.add_argument("--default-client-scopes", nargs="+", default=None, metavar="SCOPE",
+                         help="OAuth scopes requested by default when a dynamically registered "
+                              "client omits scope (default: read; env: "
+                              "HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write)")
     p_cloud.set_defaults(func=_cmd_serve_cloud)
 
     p_setup = sub.add_parser("setup",
@@ -941,6 +962,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
                          help="writable path prefix to narrow the write surface "
                               "(default: blocklist — protected-path + governance fence only)")
+    p_setup.add_argument("--default-client-scopes", nargs="+", default=None, metavar="SCOPE",
+                         help="OAuth scopes requested by default when a dynamically registered "
+                              "client omits scope (default: read; env: "
+                              "HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write)")
     p_setup.add_argument("--token-ttl", type=int, default=3600)
     p_setup.add_argument("--json", action="store_true")
     p_setup.set_defaults(func=_cmd_setup)

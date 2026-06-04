@@ -54,7 +54,9 @@ Required result: read succeeds; write refusal without write scope is explicit an
 
 This is the write-scoped client gate.
 
-1. Reconnect and approve write scope on the consent page.
+1. Reconnect and approve write scope on the consent page. If the endpoint was started with
+   `--default-client-scopes read write` or `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`, a
+   client that omits `scope` should show both scopes on the first consent screen.
 2. Write one low-risk test note using `commit_note` into an ordinary writable folder.
 3. Confirm a git commit exists, audit metadata exists, and a follow-up `search` can recall the new
    note after convergence.

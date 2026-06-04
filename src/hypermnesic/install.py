@@ -303,6 +303,7 @@ def _install_client(master_url: str | None, mcp_config_path: str | None,
 
 CLOUD_SERVICE_NAME = "hypermnesic-cloud"
 CLOUD_APPROVAL_ENV = "HYPERMNESIC_CLOUD_APPROVAL_TOKEN"   # the operator consent secret (V9)
+DEFAULT_CLIENT_SCOPES_ENV = "HYPERMNESIC_DEFAULT_CLIENT_SCOPES"
 DEFAULT_CLOUD_PORT = 8850
 _DEFAULT_CLOUD_ENV_FILE = "~/.config/hypermnesic-cloud/cloud.env"
 
@@ -310,7 +311,8 @@ _DEFAULT_CLOUD_ENV_FILE = "~/.config/hypermnesic-cloud/cloud.env"
 def render_cloud_systemd_unit(repo: Path, *, host: str, port: int, path: str,
                               public_url: str, resource: str, exe: str, env_file: Path,
                               allowlist: list[str] | None = None,
-                              token_ttl: int = 3600) -> str:
+                              token_ttl: int = 3600,
+                              default_client_scopes: list[str] | None = None) -> str:
     """A portable user systemd unit running the **unified public** OAuth serve (``serve-cloud``)
     on a loopback bind behind the Tailscale Funnel. The operator consent secret
     (``HYPERMNESIC_CLOUD_APPROVAL_TOKEN``) and OPENAI_API_KEY are referenced via EnvironmentFile —
@@ -318,6 +320,10 @@ def render_cloud_systemd_unit(repo: Path, *, host: str, port: int, path: str,
     state = index_mod.STATE_DIRNAME
     allow = "".join(f" --allowlist {shlex.quote(a)}" for a in (allowlist or [])
                     if a and a.strip())
+    default_scope_args = ""
+    if default_client_scopes:
+        default_scope_args = " --default-client-scopes" + "".join(
+            f" {shlex.quote(scope)}" for scope in default_client_scopes)
     return f"""[Unit]
 Description=hypermnesic unified public OAuth MCP (cloud)
 After=network-online.target
@@ -332,7 +338,7 @@ EnvironmentFile=-{repo}/.env
 EnvironmentFile=-{env_file}
 ExecStart={exe} serve-cloud --index-db {repo}/{state}/index.db --host {host} \
 --port {port} --path {path} --public-url {shlex.quote(public_url)} \
---resource {shlex.quote(resource)} --token-ttl {token_ttl}{allow}
+--resource {shlex.quote(resource)} --token-ttl {token_ttl}{default_scope_args}{allow}
 Restart=on-failure
 RestartSec=5
 
@@ -489,6 +495,7 @@ class SetupOps:
 def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LOCALHOST,
           port: int = DEFAULT_CLOUD_PORT, path: str = "/", env_file=None,
           allowlist: list[str] | None = None, token_ttl: int = 3600,
+          default_client_scopes: list[str] | None = None,
           ops=None, secret_factory=None) -> dict:
     """Bring the unified public endpoint fully online in one idempotent command: render +
     install the cloud service, persist the operator consent secret, configure the Tailscale
@@ -501,11 +508,12 @@ def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LO
     in owner-only env files, never inlined (V9). Privileged/network steps go through ``ops`` so the
     orchestration is unit-testable; the CLI uses the real ``SetupOps``."""
     from hypermnesic import auth_cloud, client_guidance, doctor
-    from hypermnesic.mcp_server import _require_public_https_origin
+    from hypermnesic.mcp_server import _require_public_https_origin, normalize_default_client_scopes
 
     resource = resource or public_url
     _require_public_https_origin(public_url, "public_url")     # R2 — fail before any artifact
     _require_public_https_origin(resource, "resource")
+    normalized_default_scopes = normalize_default_client_scopes(default_client_scopes)
     repo = Path(repo).resolve()
     if not (repo / ".git").exists():
         raise InstallError(f"setup needs a git repo, but no .git found at {repo}")
@@ -532,7 +540,10 @@ def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LO
     unit_path = state / f"{CLOUD_SERVICE_NAME}.service"
     unit_path.write_text(render_cloud_systemd_unit(
         repo, host=host, port=port, path=path, public_url=public_url, resource=resource,
-        exe=exe, env_file=env_file, allowlist=allowlist, token_ttl=token_ttl), encoding="utf-8")
+        exe=exe, env_file=env_file, allowlist=allowlist, token_ttl=token_ttl,
+        default_client_scopes=(
+            normalized_default_scopes if default_client_scopes is not None else None
+        )), encoding="utf-8")
     ops.install_and_start_service(unit_path, CLOUD_SERVICE_NAME)
 
     base_target = f"http://{host}:{port}"            # server is at root (--path /); pathless base
@@ -551,6 +562,7 @@ def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LO
     return {
         "service": CLOUD_SERVICE_NAME, "public_url": public_url, "resource": resource,
         "unit_path": str(unit_path), "env_file": str(env_file),
+        "default_client_scopes": normalized_default_scopes,
         "secret_generated": generated, "funnel_routes": routes, "discovery": discovery,
         "converged": not generated,
         "milestones": doctor.setup_milestones(public_url, resource, discovery),
@@ -562,8 +574,9 @@ def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LO
         "next_steps": [
             f"add {public_url} to your apps (ChatGPT/Claude connector, Claude Code plugin, Codex, "
             "Obsidian) as the hypermnesic MCP URL",
-            "on first connect each app opens a browser once to authorize (read by default); "
-            "approve write at the consent page to grant commit_note",
+            "on first connect each app opens a browser once to authorize "
+            f"({'read+write' if 'write' in normalized_default_scopes else 'read'} by default); "
+            "the consent page still requires the operator approval credential",
         ],
     }
 
