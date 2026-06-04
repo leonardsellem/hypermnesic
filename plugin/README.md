@@ -51,6 +51,21 @@ plugin/
   degraded state. It never stores the full prompt, endpoint URL, token, Authorization header, or
   raw large snippets.
 
+## What belongs in Hypermnesic
+
+Hypermnesic is durable project memory: semantic facts, episodic/source memory,
+procedural/policy memory, generated summaries that cite source paths, raw captures, and
+current-state mirrors that should survive the session as markdown/git truth.
+
+Do not write behavioural preferences or temporary session state to Hypermnesic by default. For
+example, "user likes terse replies" belongs in Honcho or an equivalent adjacent behavioural memory
+layer, not in durable project memory. Do not write secrets, credentials, private keys, bearer
+tokens, or unreviewed sensitive material.
+
+When an agent writes, it should preserve raw evidence, cite source paths when consolidating, call
+`list_folders` when the destination is unclear, and treat write refusals as control signals rather
+than bypass targets. See [`docs/guides/memory-taxonomy.md`](../docs/guides/memory-taxonomy.md).
+
 ## Configuration (per host)
 
 The plugin is **distribution-generic** — it carries no operator hostname and no token. Point it

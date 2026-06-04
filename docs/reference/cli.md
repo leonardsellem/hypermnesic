@@ -76,6 +76,10 @@ Flags: `--root PREFIX` (default vault root), `--depth N` (default 1), `--index-d
 `--now`, `--allowlist PREFIX` (repeatable; preview writability under a narrowed surface),
 `--json`.
 
+Use this before writes when the destination is unclear. Durable project memory belongs in
+Hypermnesic; behavioural preference/session memory belongs in Honcho or an equivalent adjacent
+layer by default.
+
 ## Writing
 
 ### `commit-note <repo> <path>`
@@ -83,9 +87,16 @@ Preview what a `commit_note` write would do — **dry-run, read-only** (guard + 
 zero side effects; prints the diff).
 Flags: `--body TEXT`, `--body-file PATH`, `--summary TEXT`, `--json`.
 
+Use this only for durable project memory. Do not write temporary session state, behavioural
+preferences such as "user likes terse replies", secrets, credentials, or unreviewed sensitive
+material. Treat refusal output as a control signal, not something to route around.
+
 ### `capture <repo> <text>`
 Frictionless capture: land raw text in `sources/` immediately (free-append zone).
 Flags: `--json`.
+
+Capture is for raw evidence. Preserve raw captures or cite their source paths before writing
+generated summaries.
 
 ## Memory control
 

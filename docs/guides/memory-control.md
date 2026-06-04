@@ -42,6 +42,11 @@ Source types are evidence-based:
 Unknown or missing evidence is shown as `unknown`; the control surface does not invent
 provenance.
 
+Preserve raw evidence before consolidation. A generated summary should cite source paths
+or wikilinks to the raw capture/source episode it summarizes. Do not replace a raw capture
+with a cleaned summary unless the owner intentionally applies a control action that leaves
+git and audit evidence.
+
 ## Answer what an agent may write
 
 Before granting or debugging writes, ask the control surface what the effective write
@@ -96,6 +101,7 @@ It does **not** mean:
 - rewriting git history;
 - deleting old chat contexts outside the vault;
 - proving the memory never existed.
+- silently rewriting raw evidence into a generated summary.
 
 Protected paths and dirty working trees are refused before mutation. Refusals leave no
 partial file, index, or audit side effect.

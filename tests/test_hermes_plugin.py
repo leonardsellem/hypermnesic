@@ -172,3 +172,15 @@ def test_hermes_readme_and_plugin_readme_explain_surface_split():
     plugin_readme = _PLUGIN_README.read_text(encoding="utf-8")
     assert "Hermes" in plugin_readme and "plugin/hermes" in plugin_readme
     assert "Claude Code + Codex" in plugin_readme
+
+
+def test_hermes_skills_route_memory_taxonomy_without_preference_overreach():
+    for path in (_SKILL, _FLAT_SKILL):
+        text = path.read_text(encoding="utf-8").lower()
+        assert "durable project memory" in text
+        assert "user likes terse replies" in text
+        assert "honcho" in text and "behavioural" in text
+        assert "do not write" in text and "secrets" in text and "credentials" in text
+        assert "list-folders" in text and "writable" in text
+        assert "source paths" in text and "preserve raw evidence" in text
+        assert "refusals are control signals" in text

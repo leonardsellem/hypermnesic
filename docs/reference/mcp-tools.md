@@ -67,6 +67,11 @@ truncated, omitted, manual_reindex_recommended }`. `protected_reason` is null wh
 writable, else the reason (protected class or allowlist miss); `omitted` counts folders
 dropped by the node cap.
 
+Use `list_folders` before writing when the destination is unclear. Folder discovery is
+part of the memory taxonomy: durable project memory belongs in Hypermnesic, while
+behavioural preference/session memory belongs in Honcho or an equivalent adjacent layer
+by default.
+
 ## Write tool (gated)
 
 ### `commit_note(path: str, body: str | None = None, set_fields: dict | None = None, summary: str | None = None)`
@@ -86,6 +91,11 @@ refusal tells the client to reconnect and approve write access, and says that wr
 does not bypass protected-path, frontmatter, dirty-tree, head-drift, audit, or git
 coordination guards. A refusal is never a silent success and never produces a partial write
 or an audit entry.
+
+Before calling `commit_note`, preserve raw evidence or cite source paths when consolidating.
+Do not write secrets, credentials, temporary session state, or behavioural preferences such as
+"user likes terse replies" to Hypermnesic by default. Refusals are control signals; clients should
+not bypass them by changing paths or transports.
 
 See [`docs/reference/cli.md`](cli.md) for the CLI twins of these tools, and
 [`SECURITY.md`](../../SECURITY.md) for the write-surface threat model.

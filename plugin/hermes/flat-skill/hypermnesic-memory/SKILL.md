@@ -11,6 +11,15 @@ local `hypermnesic` CLI for this surface.
 
 Use the CLI whenever prior context, a named entity, or a durable note would help.
 
+Hypermnesic is durable project memory. Use it for semantic memory, episodic/source
+memory, procedural/policy memory, generated summaries, raw captures, and current-state
+mirrors that should survive beyond the session as markdown/git truth.
+
+Do not write behavioural preference memory to Hypermnesic by default. Example: "user likes terse replies" belongs in Honcho or an equivalent adjacent behavioural memory
+layer, not in durable project memory. Do not write temporary session state, emotional
+inferences, secrets, credentials, private keys, bearer tokens, or unreviewed sensitive
+material.
+
 ## Reading
 
 All read commands converge the index before answering and support `--json`.
@@ -24,6 +33,14 @@ All read commands converge the index before answering and support `--json`.
 - `hypermnesic list-folders <repo> --json` — inspect folder taxonomy and writable
   locations before placing a note.
 
+Tool routing:
+
+- Use `retrieve` for durable topic, entity, and project history.
+- Use `think` for note-grounded exploration and related-but-unlinked pairs; it never
+  writes.
+- Use `resolve` before wikilinking a named entity; do not guess when it returns null.
+- Use `list-folders` before writes when the path or writable surface is unclear.
+
 ## Writing
 
 - `hypermnesic capture <repo> <text> --json` — frictionless capture. It writes raw
@@ -33,6 +50,11 @@ All read commands converge the index before answering and support `--json`.
 
 Do not treat plugin enablement or proactive recall as permission to write. Writing
 should be an explicit CLI action.
+
+Before writing, preserve raw evidence. Cite source paths when consolidating; do not
+replace raw captures with generated summaries. If the destination is unclear, call
+`list-folders` first and use the returned writable folders. Refusals are control signals: do not bypass protected-path, frontmatter, dirty-tree, head-drift, consent, or
+scope refusals.
 
 ## Model
 

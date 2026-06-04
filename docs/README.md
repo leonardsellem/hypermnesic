@@ -34,6 +34,10 @@ never misleads you.
   non-blocking in prompts, but records non-secret status out-of-band. Owners can inspect stable
   outcome codes or run test recall without reading hook source; MCP OAuth wiring still uses browser
   discovery and does not require a static token.
+- **Memory taxonomy:** Hypermnesic is durable project memory. Semantic facts, source episodes,
+  procedures, raw captures, generated summaries with source paths, and current-state mirrors belong
+  here; short-term session state and behavioural preferences belong in Honcho or an equivalent
+  adjacent behavioural memory layer by default.
 - **License:** proprietary/private today; the public license (**AGPL-3.0**) is **staged,
   not live** — see [`launch/`](launch/).
 
@@ -45,6 +49,7 @@ never misleads you.
 | Why it's different (positioning) | [`why-hypermnesic.md`](why-hypermnesic.md) |
 | How it works (architecture + diagram) | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) |
 | Getting started (local proof + setup diagnosis + client/plugin failure modes) | [`guides/getting-started.md`](guides/getting-started.md) |
+| Memory taxonomy (what belongs here) | [`guides/memory-taxonomy.md`](guides/memory-taxonomy.md) |
 | Memory control (inspect/export/forget/revert/audit/write scope) | [`guides/memory-control.md`](guides/memory-control.md) |
 | Consent and clients (scopes/reject/revoke/grants) | [`guides/consent-and-clients.md`](guides/consent-and-clients.md) |
 | MCP tool reference | [`reference/mcp-tools.md`](reference/mcp-tools.md) |

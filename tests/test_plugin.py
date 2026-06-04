@@ -22,6 +22,9 @@ _CLAUDE_MANIFEST = _PLUGIN_DIR / ".claude-plugin" / "plugin.json"
 _CODEX_MANIFEST = _PLUGIN_DIR / ".codex-plugin" / "plugin.json"
 _SKILL = _PLUGIN_DIR / "skills" / "hypermnesic-memory" / "SKILL.md"
 _README = _PLUGIN / "README.md"
+_DOCS = _REPO / "docs"
+_TAXONOMY = _DOCS / "guides" / "memory-taxonomy.md"
+_GLOSSARY = _REPO / "GLOSSARY.md"
 
 # Real engine tool names (mcp_server.READ_TOOL_NAMES + the write tool). The SKILL must
 # only teach these — a nonexistent tool name in the skill is a broken instruction.
@@ -146,3 +149,55 @@ def test_plugin_tree_carries_no_operator_specific_values():
         txt = p.read_text(encoding="utf-8", errors="ignore")
         hit = op_pat.search(txt)
         assert hit is None, f"operator-specific value {hit.group(0)!r} in {p}"
+
+
+# --- sprint 006: durable-memory taxonomy and routing ------------------------
+
+def test_skill_routes_durable_memory_and_rejects_preference_memory():
+    text = _SKILL.read_text(encoding="utf-8").lower()
+    assert "durable project memory" in text
+    assert "semantic memory" in text and "episodic/source memory" in text
+    assert "procedural/policy memory" in text and "current-state mirror" in text
+    assert "user likes terse replies" in text
+    assert "honcho" in text and "behavioural" in text
+    assert "do not write" in text and "secrets" in text and "credentials" in text
+    assert "list_folders" in text and "writable" in text
+    assert "source paths" in text and "preserve raw evidence" in text
+    assert "refusals are control signals" in text
+
+
+def test_memory_taxonomy_docs_and_glossary_define_routing_examples():
+    taxonomy = _TAXONOMY.read_text(encoding="utf-8").lower()
+    for required in (
+        "duration",
+        "type",
+        "scope",
+        "update strategy",
+        "retrieval mode",
+        "semantic memory",
+        "episodic/source memory",
+        "procedural/policy memory",
+        "generated summary",
+        "raw capture",
+        "current-state mirror",
+        "user likes terse replies",
+        "preserve raw evidence",
+        "source paths",
+    ):
+        assert required in taxonomy
+    assert "honcho" in taxonomy and "session context" in taxonomy
+    assert taxonomy.count("write to hypermnesic") >= 3
+    assert taxonomy.count("do not write to hypermnesic") >= 3
+
+    glossary = _GLOSSARY.read_text(encoding="utf-8").lower()
+    for required in (
+        "durable project memory",
+        "semantic memory",
+        "episodic/source memory",
+        "procedural/policy memory",
+        "generated summary",
+        "raw capture",
+        "current-state mirror",
+        "adjacent behavioural memory layer",
+    ):
+        assert required in glossary
