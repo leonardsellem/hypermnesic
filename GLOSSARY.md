@@ -44,6 +44,34 @@ unchanged source isn't re-extracted.
 **Capture** — frictionless landing of raw text into a free-append zone (`sources/`) with
 zero ceremony (`capture.py`), triaged later in thinking-mode.
 
+**Durable project memory** — memory that should survive beyond the current session as
+markdown/git truth: durable facts, decisions, source episodes, policies, generated
+summaries with source paths, raw captures, and current-state mirrors.
+
+**Semantic memory** — stable factual knowledge about a project, entity, person, system,
+or decision, written so future agents can retrieve it by topic or entity.
+
+**Episodic/source memory** — dated source evidence: meeting notes, imported excerpts,
+incident observations, raw transcripts, or other source episodes that should remain
+traceable.
+
+**Procedural/policy memory** — durable operating instructions, policies, runbooks, and
+guardrails that describe how work should be done.
+
+**Generated summary** — an explicitly generated synthesis over source material. It should
+cite source paths and remain traceable to raw captures or episodic/source memory.
+
+**Raw capture** — unprocessed source text landed for later triage. It should not be
+silently overwritten by a generated summary.
+
+**Current-state mirror** — a maintained note that mirrors external reality, such as a
+service topology, deployment state, or owner-approved configuration. It must be updated
+when the external state changes.
+
+**Adjacent behavioural memory layer** — a separate short-term, session, or preference
+memory layer such as Honcho. Behavioural preferences like "user likes terse replies" do
+not belong in Hypermnesic by default.
+
 **Git-first write** — the write model: `commit_note` writes the file and commits it to
 git *first*; the index follows as a projection. The agent never merges.
 

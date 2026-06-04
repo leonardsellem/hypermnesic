@@ -4,13 +4,14 @@ This guide expands the [README quick start](../../README.md#quick-start) with
 prerequisites, verification, and failure modes for the four ways to run hypermnesic.
 
 - **A. Prove local memory works** — validate the value path before remote setup.
-- **B. Self-host the endpoint** — you hold a vault and serve it to your apps.
-- **C. Connect a client** — point an app at an existing endpoint.
-- **D. Use it locally** — drive the engine directly with the CLI, no network.
-- **E. Control memory** — inspect, export, forget/delete, revert, and audit from owner
+- **B. Know what belongs here** — route durable memory to Hypermnesic and preferences elsewhere.
+- **C. Self-host the endpoint** — you hold a vault and serve it to your apps.
+- **D. Connect a client** — point an app at an existing endpoint.
+- **E. Use it locally** — drive the engine directly with the CLI, no network.
+- **F. Control memory** — inspect, export, forget/delete, revert, and audit from owner
   commands.
-- **F. Control clients** — inspect read/write grants and revoke client access.
-- **G. Diagnose plugin recall** — inspect hook status, run test recall, and pause auto-recall.
+- **G. Control clients** — inspect read/write grants and revoke client access.
+- **H. Diagnose plugin recall** — inspect hook status, run test recall, and pause auto-recall.
 
 ## Prerequisites
 
@@ -63,7 +64,23 @@ The JSON contract includes `status`, `completed_milestones`, `degraded_capabilit
 - **Lexical-only degraded state.** Local memory still works from exact text in markdown
   files. Configure `OPENAI_API_KEY` when you want dense ranking and fuzzier recall.
 
-## B. Self-host the endpoint
+## B. Know what belongs here
+
+Hypermnesic is durable project memory: markdown/git truth that should survive the current session
+and remain source-grounded for future recall. Good candidates include semantic facts, source
+episodes, procedural/policy notes, generated summaries that cite source paths, raw captures, and
+current-state mirrors.
+
+Do not route behavioural preferences or session state to Hypermnesic by default. "User likes terse
+replies" belongs in Honcho or an equivalent adjacent behavioural memory layer; "we are halfway
+through this answer" belongs in session context. Secrets, credentials, bearer tokens, private keys,
+and unreviewed sensitive material should not be written.
+
+Before advanced writes, read the [memory taxonomy guide](memory-taxonomy.md). When a destination is
+unclear, use `list_folders` / `hypermnesic list-folders` to discover writable locations, preserve
+raw evidence, and cite source paths in generated summaries.
+
+## C. Self-host the endpoint
 
 After the local proof succeeds:
 
@@ -96,7 +113,7 @@ curl -fsS https://<your-host>.ts.net/.well-known/oauth-authorization-server | jq
 Both must return JSON. If they 404 or time out, the funnel or service isn't up — see
 failure modes below.
 
-### Failure modes (B)
+### Failure modes (C)
 
 | Doctor/status code | What it means | Next action |
 |---|---|---|
@@ -114,7 +131,7 @@ failure modes below.
 `setup` fails after applying routes because discovery does not resolve, fix the route or
 service cause and rerun; setup converges the same declarative route set.
 
-## C. Connect a client (any remote app)
+## D. Connect a client (any remote app)
 
 Point the app's MCP server at your endpoint URL — OAuth is automatic:
 
@@ -133,7 +150,7 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
 - **Obsidian companion:** read-only over your tailnet — point it at the tailnet read route
   `http://<tailnet-ip>:8848/mcp` (no OAuth; tailnet membership is the boundary).
 
-### Failure modes (C)
+### Failure modes (D)
 
 - **Browser login never appears / connection fails:** the app needs OAuth *discovery* —
   confirm the well-knowns (above) resolve. A static `Authorization` header in the wiring
@@ -143,7 +160,7 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
   only allows `commit_note` requests; protected paths, frontmatter, dirty-tree, head-drift,
   audit, and git coordination guards still apply.
 
-## D. Use it locally (on the engine host)
+## E. Use it locally (on the engine host)
 
 The host that runs the engine skips the network and uses the CLI:
 
@@ -164,7 +181,7 @@ See the full [CLI reference](../reference/cli.md) and the
 [memory control guide](memory-control.md). For consent and revocation details, see
 [consent and clients](consent-and-clients.md).
 
-## E. Control memory
+## F. Control memory
 
 Use `hypermnesic memory` when you need to answer "what does Hypermnesic remember and
 how do I remove it?"
@@ -180,7 +197,7 @@ guard result, git effect, and verification plan. With `--apply`, it removes the 
 source file as a new git commit and updates the disposable index projection. It does not
 rewrite git history or delete old chat contexts.
 
-## F. Control clients
+## G. Control clients
 
 Use `hypermnesic clients` when you need to answer "which remote clients can read or
 write, and how do I revoke them?"
@@ -195,7 +212,7 @@ The grant list is metadata only: client identity, redirect origin, scopes, issue
 times, expiry times, status, and write-enabled state. It never prints bearer tokens,
 refresh tokens, approval credentials, client secrets, or credential file contents.
 
-## G. Diagnose plugin recall
+## H. Diagnose plugin recall
 
 Claude Code / Codex plugin auto-recall is intentionally silent during normal turns unless it has
 bounded context to inject. Check it out-of-band from the installed plugin checkout:

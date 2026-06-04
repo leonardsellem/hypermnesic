@@ -52,6 +52,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   shape, while preserving explicit resource overrides for advanced deployments.
 - OAuth consent now explains read/write scope consequences, generic-client warnings,
   reject/cancel choices, revocation guidance, and clearer write-scope refusal language.
+- README, getting-started, plugin skills, glossary, and references now teach the memory taxonomy:
+  Hypermnesic is durable project memory, while behavioural preferences and session state route to
+  Honcho or an equivalent adjacent layer by default.
 
 ## [0.0.6] — 2026-06-03
 

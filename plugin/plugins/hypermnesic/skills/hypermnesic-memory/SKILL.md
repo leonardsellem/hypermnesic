@@ -28,6 +28,19 @@ for diagnosis, not prompt context.
   existing page, then link to it.
 - **Capturing a durable note, decision, or summary** → `commit_note` (git-first, gated).
 
+Hypermnesic is durable project memory. Use it for semantic memory, episodic/source memory,
+procedural/policy memory, generated summaries, raw captures, and current-state mirrors that should
+survive beyond the session as markdown/git truth.
+
+Do not write behavioural preference memory to Hypermnesic by default. Example: "user likes terse replies" belongs in Honcho or an equivalent adjacent behavioural memory layer, not in durable
+project memory. Do not write temporary session state, emotional inferences, secrets, credentials,
+private keys, bearer tokens, or unreviewed sensitive material.
+
+Before writing, preserve raw evidence. Cite source paths when consolidating; do not replace raw
+captures with generated summaries. If the destination is unclear, call `list_folders` first and use
+the returned writable folders. Refusals are control signals: do not bypass protected-path,
+frontmatter, dirty-tree, head-drift, consent, or scope refusals.
+
 ## The tools (MCP)
 
 All read tools converge the index to the latest commit before answering, so a just-pushed note
@@ -46,6 +59,15 @@ is recall-able without a manual reindex.
   locations before placing a note: child folders under `root` (drill-down to `depth` levels), each
   with its `writable` flag (matching exactly what `commit_note` accepts), `protected_reason`, and
   recursive `note_count`. Read-only. Narrow `root` to drill deeper when `truncated` is true.
+
+Tool routing:
+
+- Use `search` for durable topic, entity, and project history.
+- Use `build_context` after a promising hit when neighboring wikilinked notes matter.
+- Use `think` for note-grounded exploration and related-but-unlinked pairs; it never writes.
+- Use `resolve` before wikilinking a named entity; do not guess when it returns null.
+- Use `list_folders` before writes when the path or writable surface is unclear.
+- Use `commit_note` only for explicit durable writes that pass the taxonomy above.
 
 ## Writing a note — `commit_note` (git-first, gated)
 

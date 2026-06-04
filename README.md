@@ -112,6 +112,21 @@ hypermnesic memory forget /path/to/vault notes/bad.md            # preview sourc
 hypermnesic clients list /path/to/vault                         # inspect OAuth client grants
 ```
 
+### E. Know what belongs in Hypermnesic
+
+Hypermnesic is for **durable project memory**: source-grounded facts, decisions, procedures,
+raw captures, generated summaries with citations, and current-state mirrors that should survive
+the current session as markdown/git truth.
+
+It is not the default home for short-lived session state or behavioural preferences. For example,
+"user likes terse replies" belongs in Honcho or another adjacent behavioural memory layer by
+default, not in Hypermnesic. Secrets, credentials, private keys, bearer tokens, and unreviewed
+sensitive material should not be written at all.
+
+Before writing, preserve raw evidence or cite source paths. If the destination is unclear, discover
+writable locations first (`list_folders` / `hypermnesic list-folders`). See the
+[memory taxonomy guide](docs/guides/memory-taxonomy.md).
+
 ---
 
 ## How it works
