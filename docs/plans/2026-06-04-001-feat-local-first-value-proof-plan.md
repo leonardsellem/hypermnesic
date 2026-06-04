@@ -378,6 +378,16 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. A reviewer must
 be able to rerun the automated gates locally without private operator infrastructure.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R1-R8 and AE1. Each row must name the automated test, manual smoke step, CLI transcript,
+  JSON fixture, or docs path that proves the requirement; "covered by implementation" is not
+  acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
+  matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
+  cannot be marked complete until the plan or implementation is corrected.
+- **Proof shape gate:** validation must include at least one happy path, one refusal or safety path,
+  one degraded/offline path when applicable, one machine-readable contract check when JSON exists,
+  and one docs/current-truth consistency check.
 - **AE1 product proof gate:** a clean disposable git-backed vault can complete the local-first path:
   initialize or select vault, index or capture at least one memory, retrieve it with a natural
   language question, display the source markdown path, and show the next remote-client step without
@@ -395,9 +405,13 @@ be able to rerun the automated gates locally without private operator infrastruc
   guard result, and no commit side effect. Tests must assert no git commit is created in dry-run.
 - **Docs gate:** README, docs index, CLI reference, and getting-started material must describe the
   same local-first flow and must not contradict `docs/README.md` current-truth pins.
-- **Regression gate:** at minimum run the targeted tests added by this sprint, `git diff --check`,
-  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`
-  before claiming the sprint complete.
+- **Regression gate:** run and record exact results for the targeted tests added by this sprint,
+  `git diff --check`, `uv sync --extra dev`, `uv run ruff check .`,
+  `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, and a
+  targeted changed-file scan for secrets, private hosts/IPs, token-looking strings, and raw private
+  note bodies before claiming the sprint complete. Targeted tests cannot substitute for the full
+  gate set.
 
 ## Sources & References
 

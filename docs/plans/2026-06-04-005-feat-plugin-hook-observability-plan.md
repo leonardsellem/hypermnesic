@@ -359,6 +359,17 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. U1-U4 product
 proofs must remain green.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R49-R56 and AE5. Each row must name the automated test, hook-status fixture, plugin
+  transcript, test-recall artifact, docs path, or bounded manual smoke step that proves the
+  requirement; "covered by implementation" is not acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
+  matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
+  cannot be marked complete until the plan or implementation is corrected.
+- **Proof shape gate:** validation must include every required hook outcome code, enabled and
+  disabled states, at least one auth failure, one timeout/degraded/no-hit case, one successful test
+  recall, one prompt/body redaction check, one machine-readable status check, and one docs/current-
+  truth consistency check.
 - **AE5 hook diagnosis gate:** when auto-recall is not injecting context, hook status must
   distinguish off-topic, disabled, unconfigured endpoint, missing credential, unauthenticated,
   timeout, degraded retrieval, no hits, and successful injection.
@@ -378,9 +389,12 @@ proofs must remain green.
 - **Cumulative product gate:** U1-U5 must compose: after consent and setup, a reviewer can install
   or fixture the plugin, run test recall, explain a non-injection result, and fix the next action
   without source-code inspection.
-- **Regression gate:** at minimum run targeted plugin hook tests, auth-relevant tests touched by the
-  status path, `git diff --check`, `uv run python scripts/preflight_public_scan.py`, and the repo
-  gates required by `AGENTS.md`.
+- **Regression gate:** run and record exact results for targeted plugin hook tests, auth-relevant
+  tests touched by the status path, `git diff --check`, `uv sync --extra dev`,
+  `uv run ruff check .`, `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, and a
+  targeted changed-file scan for secrets, private hosts/IPs, token-looking strings, and raw private
+  note bodies. Targeted tests cannot substitute for the full gate set.
 
 ## Sources & References
 

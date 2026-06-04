@@ -374,6 +374,16 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. The U1 local
 value proof must still pass after these changes.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R9-R21 and AE2. Each row must name the automated test, manual smoke step, CLI transcript,
+  JSON fixture, or docs path that proves the requirement; "covered by implementation" is not
+  acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
+  matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
+  cannot be marked complete until the plan or implementation is corrected.
+- **Proof shape gate:** validation must include at least one healthy path, one partial/broken setup
+  path, one non-mutating side-effect check, one JSON contract check, one secret-hygiene check, and
+  one docs/current-truth consistency check.
 - **AE2 diagnostic gate:** from a partially configured endpoint fixture, doctor/status output must
   clearly separate local index health, remote service reachability, Funnel/public URL state, OAuth
   discovery, auth state, write availability, and next corrective action.
@@ -392,8 +402,12 @@ value proof must still pass after these changes.
   Codex plugin use, Obsidian companion use, and generic remote MCP client use.
 - **Cumulative product gate:** rerun U1 local proof plus the new doctor/status tests. A user must be
   able to progress from local proof to setup diagnosis without source-code inspection.
-- **Regression gate:** at minimum run targeted setup/install/CLI tests, `git diff --check`,
-  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+- **Regression gate:** run and record exact results for targeted setup/install/CLI tests,
+  `git diff --check`, `uv sync --extra dev`, `uv run ruff check .`,
+  `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, and a
+  targeted changed-file scan for secrets, private hosts/IPs, token-looking strings, and raw private
+  note bodies. Targeted tests cannot substitute for the full gate set.
 
 ## Sources & References
 

@@ -445,6 +445,17 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. U1 and U2 proof
 flows must remain green.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R22-R36 and AE3. Each row must name the automated test, manual smoke step, CLI
+  transcript, JSON fixture, exported artifact, git commit/diff, audit entry, or docs path that
+  proves the requirement; "covered by implementation" is not acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
+  matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
+  cannot be marked complete until the plan or implementation is corrected.
+- **Proof shape gate:** validation must include at least one owner happy path, one destructive
+  preview-only path, one applied git-backed mutation, one protected/refused path, one recall-after-
+  change verification, one JSON contract check, one audit/body-redaction check, and one docs/current-
+  truth consistency check.
 - **AE3 control gate:** given an agent-written memory fixture, the owner can list it, inspect where
   it lives, see when it changed, see available writer/audit metadata, export it, preview deletion,
   apply forget/delete through the git-backed path, and verify the result from the same surface.
@@ -464,8 +475,12 @@ flows must remain green.
 - **Cumulative product gate:** U1 local proof, U2 doctor/status, and U3 memory control must compose:
   a reviewer can create or fixture a memory, diagnose health, remove/revert it, and verify recall no
   longer returns the removed memory.
-- **Regression gate:** at minimum run targeted audit/write-guard/control tests, `git diff --check`,
-  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+- **Regression gate:** run and record exact results for targeted audit/write-guard/control tests,
+  `git diff --check`, `uv sync --extra dev`, `uv run ruff check .`,
+  `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, and a
+  targeted changed-file scan for secrets, private hosts/IPs, token-looking strings, and raw private
+  note bodies. Targeted tests cannot substitute for the full gate set.
 
 ## Sources & References
 
