@@ -104,6 +104,8 @@ hypermnesic retrieve /path/to/vault "what do we know about X"   # hybrid search
 hypermnesic think    /path/to/vault "topic"                     # thinking-mode
 hypermnesic resolve  /path/to/vault "Some Entity"               # name → page path
 hypermnesic commit-note /path/to/vault notes/x.md --body "…"    # git-first write (dry-run preview)
+hypermnesic memory list /path/to/vault                          # inspect/control memory
+hypermnesic memory forget /path/to/vault notes/bad.md            # preview source removal
 ```
 
 ---
@@ -140,6 +142,10 @@ and the surfaces built on top:
   any allowlist), single-writer locks, and an append-only audit log. An explicit allowlist is an
   opt-in way to *narrow* the surface, not the default guard. The index follows as a projection — a
   reindex never loses a write. Write requires auth (`write_enabled ⇒ auth-required`).
+- **Memory control** — `hypermnesic memory` lists and inspects remembered files, exports
+  markdown plus provenance, previews and applies git-backed forget/delete, reverts safe
+  recent single-file writes, shows audit/refusal history, and answers what an agent may
+  write using the same guard as `commit_note`.
 - **Security** — operator-consent gates the `write` scope at login; audience-bound tokens
   (RFC 8707); refresh rotation + whole-grant revoke; a per-request consent CSP. See
   `docs/2026-06-03-unified-write-anywhere-security-review.md`.
@@ -169,6 +175,7 @@ Start with the [documentation index](docs/README.md). Highlights:
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — how it works (the disposable-index invariant, retrieval, write path, serving lanes).
 - [`docs/guides/getting-started.md`](docs/guides/getting-started.md) — local proof, setup diagnosis, and failure modes.
+- [`docs/guides/memory-control.md`](docs/guides/memory-control.md) — inspect, export, forget/delete, revert, audit, and write-scope controls.
 - [`docs/reference/`](docs/reference/) — the MCP tool, CLI, and configuration references.
 - `docs/unified-oauth-mcp-deploy-runbook.md` — the unified endpoint: topology, cutover, reverse.
 - `plugin/README.md` — the Claude Code / Codex plugin (OAuth-discovery, distribution-generic).

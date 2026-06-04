@@ -29,6 +29,10 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - **`hypermnesic doctor` / `hypermnesic status`**: non-mutating setup diagnostics for local
   index health, remote reach, OAuth discovery, auth challenge, write availability, and
   client-specific next actions, with JSON output for agents and CI.
+- **`hypermnesic memory`**: an owner memory-control command group for listing and
+  inspecting remembered files, exporting markdown with provenance, previewing and applying
+  git-backed forget/delete, reverting safe recent single-file writes, viewing
+  summary-only audit/refusal history, and answering what agents may write.
 - **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local

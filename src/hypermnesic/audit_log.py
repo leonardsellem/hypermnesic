@@ -13,11 +13,13 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import re
 import subprocess
 from pathlib import Path
 
 MAX_SUMMARY = 280  # summaries are short by contract; truncate defensively
 _SENTINEL = "server:hypermnesic"
+_TOKENISH = re.compile(r"sk-[A-Za-z0-9]{20,}|[A-Za-z0-9_\-]{32,}")
 
 
 def _git(repo, *args) -> str:
@@ -65,6 +67,25 @@ class AuditLog:
             fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
         return entry
 
+    def append_refusal(self, verb: str, path: str, category: str, summary: str = "",
+                       *, ts: str | None = None, actor=None) -> dict:
+        """Append a body-free refusal event for owner/auditor visibility."""
+        entry = {
+            "ts": ts or self._now(),
+            "actor": self._actor_fn(),          # server-set; caller value ignored
+            "verb": "refusal",
+            "attempted_verb": verb,
+            "path": path,
+            "old_sha": None,
+            "new_sha": None,
+            "category": category,
+            "summary": _safe_summary(summary),
+        }
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        return entry
+
     def entries(self) -> list[dict]:
         if not self.path.exists():
             return []
@@ -97,3 +118,8 @@ class AuditLog:
             prev = c
             n += 1
         return n
+
+
+def _safe_summary(summary: str) -> str:
+    text = _TOKENISH.sub("[redacted]", summary or "")
+    return text[:MAX_SUMMARY]

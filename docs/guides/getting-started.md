@@ -7,6 +7,8 @@ prerequisites, verification, and failure modes for the four ways to run hypermne
 - **B. Self-host the endpoint** — you hold a vault and serve it to your apps.
 - **C. Connect a client** — point an app at an existing endpoint.
 - **D. Use it locally** — drive the engine directly with the CLI, no network.
+- **E. Control memory** — inspect, export, forget/delete, revert, and audit from owner
+  commands.
 
 ## Prerequisites
 
@@ -144,9 +146,29 @@ hypermnesic think    /path/to/vault "topic"                     # thinking-mode
 hypermnesic resolve  /path/to/vault "Some Entity"               # name → page path
 hypermnesic list-folders /path/to/vault                         # writable folder taxonomy
 hypermnesic commit-note  /path/to/vault notes/x.md --body "…"   # git-first write (dry-run preview)
+hypermnesic memory list /path/to/vault                          # remembered files
+hypermnesic memory write-scope /path/to/vault                    # what agents may write
+hypermnesic memory forget /path/to/vault notes/bad.md            # preview delete/forget
 ```
 
-See the full [CLI reference](../reference/cli.md).
+See the full [CLI reference](../reference/cli.md) and the
+[memory control guide](memory-control.md).
+
+## E. Control memory
+
+Use `hypermnesic memory` when you need to answer "what does Hypermnesic remember and
+how do I remove it?"
+
+```sh
+hypermnesic memory inspect /path/to/vault notes/decision.md
+hypermnesic memory export /path/to/vault --folder projects/acme/ --dest ./hypermnesic-export
+hypermnesic memory audit /path/to/vault --json
+```
+
+Forget/delete is preview-first. Without `--apply`, the command shows the target path,
+guard result, git effect, and verification plan. With `--apply`, it removes the current
+source file as a new git commit and updates the disposable index projection. It does not
+rewrite git history or delete old chat contexts.
 
 ## Offline / degraded operation
 

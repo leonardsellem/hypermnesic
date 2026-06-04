@@ -22,6 +22,10 @@ never misleads you.
   diagnostics. They separate local index health, remote reach, OAuth discovery, auth
   challenge, write availability, and client next actions. `setup --resource` defaults to
   `--public-url` for the common endpoint shape.
+- **Memory control:** `hypermnesic memory` is the owner control surface for current
+  memory: list/inspect, export markdown with provenance, preview/apply git-backed
+  forget/delete, revert safe recent single-file writes, view audit/refusal history, and
+  answer write-scope questions using the same guard as `commit_note`.
 - **License:** proprietary/private today; the public license (**AGPL-3.0**) is **staged,
   not live** — see [`launch/`](launch/).
 
@@ -33,6 +37,7 @@ never misleads you.
 | Why it's different (positioning) | [`why-hypermnesic.md`](why-hypermnesic.md) |
 | How it works (architecture + diagram) | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) |
 | Getting started (local proof + setup diagnosis + failure modes) | [`guides/getting-started.md`](guides/getting-started.md) |
+| Memory control (inspect/export/forget/revert/audit/write scope) | [`guides/memory-control.md`](guides/memory-control.md) |
 | MCP tool reference | [`reference/mcp-tools.md`](reference/mcp-tools.md) |
 | CLI reference | [`reference/cli.md`](reference/cli.md) |
 | Configuration reference | [`reference/configuration.md`](reference/configuration.md) |

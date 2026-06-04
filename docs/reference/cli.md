@@ -11,7 +11,7 @@ hypermnesic --version
 hypermnesic <subcommand> [args] [flags]
 ```
 
-There are **19 subcommands**, grouped below by role.
+There are **20 subcommands**, grouped below by role.
 
 ## Local proof
 
@@ -86,6 +86,53 @@ Flags: `--body TEXT`, `--body-file PATH`, `--summary TEXT`, `--json`.
 ### `capture <repo> <text>`
 Frictionless capture: land raw text in `sources/` immediately (free-append zone).
 Flags: `--json`.
+
+## Memory control
+
+### `memory list <repo>`
+List remembered markdown files with path, title, bounded snippet, source type, last commit,
+audit actor when known, and writable/protected state.
+Flags: `--index-db PATH`, `--audit-log PATH`, `--folder PREFIX`, `--source-type
+{authored|captured|generated}`, `--writable`, `--protected`, `--recent`,
+`--allowlist PREFIX` (repeatable), `--now`, `--json`.
+
+### `memory inspect <repo> <path>`
+Inspect one remembered file by repo-relative path. Output explains provenance in file and
+commit terms; it does not include a raw full-body field.
+Flags: `--index-db PATH`, `--audit-log PATH`, `--allowlist PREFIX` (repeatable),
+`--now`, `--json`.
+
+### `memory write-scope <repo>`
+Answer "what would an agent be allowed to write?" using the same folder derivation and
+protected-path guard as `list-folders` and `commit_note`.
+Flags: `--index-db PATH`, `--audit-log PATH`, `--root PREFIX`, `--depth N`,
+`--allowlist PREFIX` (repeatable), `--now`, `--json`.
+
+### `memory export <repo>`
+Copy selected markdown files to a destination directory and write
+`hypermnesic-export-manifest.json` with path, last commit, actor when known, and source
+type. This is a markdown/provenance export, not an index database export.
+Flags: `--dest DIR` (required), `--folder PREFIX`, `--path PATH` (repeatable),
+`--index-db PATH`, `--audit-log PATH`, `--allowlist PREFIX` (repeatable), `--now`,
+`--json`.
+
+### `memory forget <repo> <path>`
+Preview or apply git-backed source removal for one memory. Preview is the default and has
+no side effects. `--apply` removes the current source file as a new commit, updates the
+index projection, and appends an audit entry. It does not rewrite git history or delete
+old chat contexts.
+Flags: `--apply`, `--index-db PATH`, `--audit-log PATH`, `--allowlist PREFIX`
+(repeatable), `--now`, `--json`.
+
+### `memory revert <repo> <commit>`
+Preview or apply a safe recent memory revert. The first implementation supports
+single-file markdown commits and refuses complex cases rather than guessing.
+Flags: `--apply`, `--index-db PATH`, `--audit-log PATH`, `--now`, `--json`.
+
+### `memory audit <repo>`
+Show recent write, forget, revert, reconcile, and refusal entries from the summary-only
+audit log.
+Flags: `--index-db PATH`, `--audit-log PATH`, `--limit N`, `--now`, `--json`.
 
 ## Hooks
 
