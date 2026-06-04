@@ -9,6 +9,7 @@ prerequisites, verification, and failure modes for the four ways to run hypermne
 - **D. Use it locally** — drive the engine directly with the CLI, no network.
 - **E. Control memory** — inspect, export, forget/delete, revert, and audit from owner
   commands.
+- **F. Control clients** — inspect read/write grants and revoke client access.
 
 ## Prerequisites
 
@@ -121,7 +122,8 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
   opens a browser once to authorize, then silently refreshes.
 - **Read vs. write:** read is the default. To grant the `commit_note` write tool, approve
   **write** on the consent page (enter your approval token from
-  `~/.config/hypermnesic-cloud/cloud.env`). The page shows exactly which scopes you grant.
+  `~/.config/hypermnesic-cloud/cloud.env`). The page shows exactly which scopes you grant,
+  explains that write cannot bypass Hypermnesic write guards, and lets you reject or cancel.
 - **Claude Code / Codex plugin:** install the plugin in `plugin/` and set
   `HYPERMNESIC_MCP_URL` to your endpoint (the bundled `.mcp.json` is discovery-only and
   carries no host or token). See [`plugin/README.md`](../../plugin/README.md).
@@ -134,6 +136,9 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
   confirm the well-knowns (above) resolve. A static `Authorization` header in the wiring
   would suppress discovery; the bundled `.mcp.json` deliberately omits one.
 - **401 after a while:** the token expired and refresh failed; reconnect to re-authorize.
+- **Write refused with `insufficient_scope`:** reconnect the client and approve write. This
+  only allows `commit_note` requests; protected paths, frontmatter, dirty-tree, head-drift,
+  audit, and git coordination guards still apply.
 
 ## D. Use it locally (on the engine host)
 
@@ -149,10 +154,12 @@ hypermnesic commit-note  /path/to/vault notes/x.md --body "…"   # git-first wr
 hypermnesic memory list /path/to/vault                          # remembered files
 hypermnesic memory write-scope /path/to/vault                    # what agents may write
 hypermnesic memory forget /path/to/vault notes/bad.md            # preview delete/forget
+hypermnesic clients list /path/to/vault                          # known OAuth grants
 ```
 
 See the full [CLI reference](../reference/cli.md) and the
-[memory control guide](memory-control.md).
+[memory control guide](memory-control.md). For consent and revocation details, see
+[consent and clients](consent-and-clients.md).
 
 ## E. Control memory
 
@@ -169,6 +176,21 @@ Forget/delete is preview-first. Without `--apply`, the command shows the target 
 guard result, git effect, and verification plan. With `--apply`, it removes the current
 source file as a new git commit and updates the disposable index projection. It does not
 rewrite git history or delete old chat contexts.
+
+## F. Control clients
+
+Use `hypermnesic clients` when you need to answer "which remote clients can read or
+write, and how do I revoke them?"
+
+```sh
+hypermnesic clients list /path/to/vault --json
+hypermnesic clients revoke /path/to/vault <grant-id>      # preview
+hypermnesic clients revoke /path/to/vault <grant-id> --apply
+```
+
+The grant list is metadata only: client identity, redirect origin, scopes, issue/update
+times, expiry times, status, and write-enabled state. It never prints bearer tokens,
+refresh tokens, approval credentials, client secrets, or credential file contents.
 
 ## Offline / degraded operation
 

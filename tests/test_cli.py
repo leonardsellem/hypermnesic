@@ -607,3 +607,37 @@ def test_setup_cli_fails_loud_on_install_error(tmp_path, capsys, monkeypatch):
     rc = cli.main(["setup", str(tmp_path), "--public-url", "https://h/mcp",
                    "--resource", "https://h/mcp"])
     assert rc == 1 and "tailscale" in capsys.readouterr().err.lower()
+
+
+def test_clients_cli_lists_and_revokes_grants(tmp_path, capsys):
+    from hypermnesic import client_control
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "client-grants.json"
+    client_control.upsert_grant(store, {
+        "grant_id": "grant-1",
+        "client_id": "cid-1",
+        "client_name": "ChatGPT",
+        "redirect_uri": "https://chatgpt.com/connector_platform_oauth_redirect",
+        "redirect_origin": "https://chatgpt.com",
+        "scopes": ["read", "write"],
+        "write_enabled": True,
+        "issued_at": 1_000_000,
+        "updated_at": 1_000_000,
+        "access_expires_at": 1_003_600,
+        "refresh_expires_at": 1_086_400,
+        "status": "active",
+        "active": True,
+        "revoked_at": None,
+    })
+    rc = cli.main(["clients", "list", str(repo), "--grant-store", str(store), "--json"])
+    assert rc == 0
+    listed = json.loads(capsys.readouterr().out)
+    assert listed["grants"][0]["write_enabled"] is True
+    rc = cli.main(["clients", "revoke", str(repo), "grant-1", "--grant-store", str(store),
+                   "--apply", "--json"])
+    assert rc == 0
+    revoked = json.loads(capsys.readouterr().out)
+    assert revoked["status"] == "revoked"
+    assert "token" not in json.dumps(revoked).lower()

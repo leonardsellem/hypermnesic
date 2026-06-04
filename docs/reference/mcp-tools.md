@@ -81,8 +81,11 @@ log.
 **Returns (success)** `{ committed, path, created, noop, new_sha, diff }`.
 **Returns (refusal)** `{ committed: false, refused: "<reason>" }` — a protected-path /
 governance / allowlist refusal, a frontmatter-drift abort, a head-drift / dirty-tree /
-coordination refusal, or an insufficient-scope rejection. A refusal is never a silent
-success and never produces a partial write or an audit entry.
+coordination refusal, or an insufficient-scope rejection. When write scope is missing, the
+refusal tells the client to reconnect and approve write access, and says that write approval
+does not bypass protected-path, frontmatter, dirty-tree, head-drift, audit, or git
+coordination guards. A refusal is never a silent success and never produces a partial write
+or an audit entry.
 
 See [`docs/reference/cli.md`](cli.md) for the CLI twins of these tools, and
 [`SECURITY.md`](../../SECURITY.md) for the write-surface threat model.
