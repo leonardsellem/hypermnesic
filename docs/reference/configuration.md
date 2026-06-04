@@ -12,6 +12,9 @@ Engine tunables live in [`src/hypermnesic/config.py`](../../src/hypermnesic/conf
 | `OPENAI_API_KEY` | embeddings | for dense retrieval | The OpenAI key for `text-embedding-3-large`. Absent → retrieval degrades to lexical-only (also how the test suite runs). Never written to the index, audit log, or any output. |
 | `HYPERMNESIC_MCP_URL` | plugin `.mcp.json` | per remote client | Your hypermnesic MCP endpoint URL (e.g. `https://YOUR-HOST.ts.net/mcp`). The bundled wiring templates the URL from this var; OAuth is via browser discovery (no token in the wiring). |
 | `HYPERMNESIC_MCP_TOKEN` | auto-recall hook | optional | HTTP auth credential the per-prompt recall hook uses for its bounded read on a remote (non-tailnet) device. Empty → use the tailnet read route. The MCP tool wiring itself needs no token. |
+| `HYPERMNESIC_HOOK_STATUS_FILE` | auto-recall hook | optional | Override the non-secret hook status JSON location. The file stores outcome categories, timestamps, endpoint/credential categories, host, enabled state, hit count, and degraded state; it never stores tokens, headers, endpoint URLs, or full prompts. |
+| `HYPERMNESIC_HOOK_DISABLE_LOOKUP` | auto-recall hook | optional | Set to `1` to disable proactive hook recall for this plugin install without uninstalling the plugin or removing MCP tools. |
+| `HYPERMNESIC_HOOK_DISABLED_HOSTS` | auto-recall hook | optional | Comma-separated host names (`claude`, `codex`) to disable proactive recall on specific hosts. |
 | `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` | `serve-cloud` / `setup` | for the public lane | The operator approval token that gates every public connection. Read from the environment **only** (never a CLI flag, so it can't leak via the process table / logs). Enforced minimum length. |
 
 The OpenAI key may also be read from a repo-root `.env` (the only file path searched by

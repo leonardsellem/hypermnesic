@@ -13,6 +13,13 @@ Reach for these tools whenever prior context, a known entity, or a durable note 
 relevance-gated recall hook may already surface related notes at prompt time, but call the tools
 directly whenever you need more than it offered.
 
+If the proactive hook does not inject context, do not infer that memory is absent. The hook is
+silent by design on off-topic prompts, disabled hosts, missing configuration, auth expiry, timeouts,
+degraded/no-hit reads, and parse failures. Owners can inspect that out-of-band with
+`hooks/scripts/hypermnesic_hook_status.py status --json` or run
+`hooks/scripts/hypermnesic_hook_status.py test-recall "<query>" --json`; those status surfaces are
+for diagnosis, not prompt context.
+
 ## When to use it
 
 - **Starting or continuing work** that would benefit from prior context → `search` /
@@ -77,3 +84,7 @@ For frictionless raw capture, prefer landing text under the free-append zone (co
 The MCP endpoint is OAuth2-authenticated. The plugin's MCP wiring presents your token
 automatically; you never handle tokens by hand, and a token value never appears in a prompt, a
 config file, or a log.
+
+The auto-recall hook is separate from MCP tool auth. It reads `HYPERMNESIC_MCP_URL` for a bounded
+read and only uses `HYPERMNESIC_MCP_TOKEN` when the hook route itself requires an HTTP credential;
+the MCP tool wiring remains OAuth-discovery-only and does not require a static token.

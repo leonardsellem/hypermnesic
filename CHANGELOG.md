@@ -36,6 +36,10 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - **`hypermnesic clients`**: an owner client-control command group for listing secret-free
   OAuth grant metadata and previewing/applying grant revocation without exposing bearer
   tokens, refresh tokens, approval credentials, or client secrets.
+- **Plugin hook status/test recall**: the Claude Code / Codex auto-recall hook now records
+  non-secret outcome status out-of-band, supports host-specific disable controls, and ships a
+  helper script for `status` and bounded `test-recall` diagnosis without exposing prompts,
+  endpoint URLs, tokens, headers, or raw large snippets.
 - **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local

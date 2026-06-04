@@ -157,6 +157,28 @@ Opt-in: install (or uninstall) the post-merge convergence hook. Idempotent,
 non-destructive (managed block).
 Flags: `--uninstall` (remove only the managed block), `--json`.
 
+## Plugin hook helper
+
+The Claude Code / Codex plugin ships a separate helper script, not a `hypermnesic` CLI
+subcommand:
+
+```sh
+plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py status --json --host claude
+plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py test-recall "Project Atlas" --json --host claude
+```
+
+`status` reports the last proactive auto-recall outcome, host, enabled state, endpoint category,
+credential category, hit count, degraded state, and a short explanation. Missing status files return
+`never_run`. `test-recall` runs the same bounded hook search path for an explicit query and prints
+sanitized path/heading/snippet previews. Neither mode prints endpoint URLs, Authorization headers,
+tokens, full prompts, or raw large snippets.
+
+Environment controls:
+
+- `HYPERMNESIC_HOOK_STATUS_FILE` — override the user-state status JSON path.
+- `HYPERMNESIC_HOOK_DISABLE_LOOKUP=1` — disable auto-recall for this plugin install.
+- `HYPERMNESIC_HOOK_DISABLED_HOSTS=claude,codex` — disable auto-recall for listed hosts only.
+
 ## Setup diagnostics
 
 ### `doctor <repo>`
