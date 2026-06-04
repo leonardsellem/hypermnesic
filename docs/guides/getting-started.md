@@ -10,6 +10,7 @@ prerequisites, verification, and failure modes for the four ways to run hypermne
 - **E. Control memory** — inspect, export, forget/delete, revert, and audit from owner
   commands.
 - **F. Control clients** — inspect read/write grants and revoke client access.
+- **G. Diagnose plugin recall** — inspect hook status, run test recall, and pause auto-recall.
 
 ## Prerequisites
 
@@ -126,7 +127,9 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
   explains that write cannot bypass Hypermnesic write guards, and lets you reject or cancel.
 - **Claude Code / Codex plugin:** install the plugin in `plugin/` and set
   `HYPERMNESIC_MCP_URL` to your endpoint (the bundled `.mcp.json` is discovery-only and
-  carries no host or token). See [`plugin/README.md`](../../plugin/README.md).
+  carries no host or token). The optional auto-recall hook uses the same URL plus
+  `HYPERMNESIC_MCP_TOKEN` only when its own read route requires an HTTP credential. See
+  [`plugin/README.md`](../../plugin/README.md).
 - **Obsidian companion:** read-only over your tailnet — point it at the tailnet read route
   `http://<tailnet-ip>:8848/mcp` (no OAuth; tailnet membership is the boundary).
 
@@ -191,6 +194,31 @@ hypermnesic clients revoke /path/to/vault <grant-id> --apply
 The grant list is metadata only: client identity, redirect origin, scopes, issue/update
 times, expiry times, status, and write-enabled state. It never prints bearer tokens,
 refresh tokens, approval credentials, client secrets, or credential file contents.
+
+## G. Diagnose plugin recall
+
+Claude Code / Codex plugin auto-recall is intentionally silent during normal turns unless it has
+bounded context to inject. Check it out-of-band from the installed plugin checkout:
+
+```sh
+hooks/scripts/hypermnesic_hook_status.py status --json --host claude
+hooks/scripts/hypermnesic_hook_status.py test-recall "Project Atlas" --json --host claude
+```
+
+Status distinguishes `off_topic`, `disabled_global`, `disabled_host`,
+`unconfigured_endpoint`, `missing_credential`, `auth_expired`, `timeout`, `lookup_failed`,
+`no_hits`, `degraded_lexical_only`, and `success`. Output includes endpoint and credential
+categories, not endpoint URLs, tokens, headers, or full prompts.
+
+Pause proactive recall without uninstalling the plugin:
+
+```sh
+export HYPERMNESIC_HOOK_DISABLE_LOOKUP=1
+export HYPERMNESIC_HOOK_DISABLED_HOSTS=codex
+```
+
+This affects only auto-recall. MCP tools remain available through OAuth discovery, and local CLI
+use on the engine host is unchanged.
 
 ## Offline / degraded operation
 

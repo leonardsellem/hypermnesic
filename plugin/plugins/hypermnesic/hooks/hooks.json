@@ -1,5 +1,5 @@
 {
-  "description": "hypermnesic auto-recall — surfaces relevant memory at prompt submit. Silent unless configured (HYPERMNESIC_MCP_URL + HYPERMNESIC_MCP_TOKEN) and the prompt is memory-relevant; never blocks a turn.",
+  "description": "hypermnesic auto-recall — surfaces relevant memory at prompt submit. Silent unless HYPERMNESIC_MCP_URL is configured and the prompt is memory-relevant; a token is optional for authed hook routes and not part of MCP OAuth wiring; never blocks a turn.",
   "hooks": {
     "UserPromptSubmit": [
       {

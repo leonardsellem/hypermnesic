@@ -24,6 +24,7 @@ plugin/
     skills/hypermnesic-memory/SKILL.md     # the skillset (search/build_context/think/resolve/list_folders/commit_note, disk-first)
     hooks/hooks.json                       # one UserPromptSubmit auto-recall hook
     hooks/scripts/hypermnesic_agent_hook.py# the auto-recall hook (Claude+Codex, --host)
+    hooks/scripts/hypermnesic_hook_status.py# status + test-recall helper for the hook
     .mcp.json                              # OAuth-discovery MCP wiring (env-templated URL, no host, no token)
   hermes/
     plugin.yaml                            # Hermes plugin manifest
@@ -39,10 +40,16 @@ plugin/
   reaches for `search` / `build_context` / `think` / `resolve` / `list_folders` / `commit_note`
   when memory is relevant. This is the lightweight, on-demand path — no per-turn cost.
 - **One auto-recall hook** (`UserPromptSubmit`) adds *optional* proactive recall: when a prompt
-  looks memory-relevant AND an endpoint + token are configured, it runs a single bounded search
-  and injects the top hits. It is **silent and non-blocking** otherwise (off-topic prompt,
-  unconfigured, 401, timeout, no hits) so it never pollutes or blocks a turn. There is no
-  SessionStart preamble and no Bash interception — the hook does exactly one thing.
+  looks memory-relevant and `HYPERMNESIC_MCP_URL` is configured, it runs a single bounded search
+  and injects the top hits. A token is optional: use `HYPERMNESIC_MCP_TOKEN` only for an authed
+  hook read route; leave it empty for the tailnet read companion. It is **silent and
+  non-blocking** otherwise (off-topic prompt, unconfigured, missing credential, 401/expired auth,
+  timeout, degraded/no-hit) so it never pollutes or blocks a turn. There is no SessionStart
+  preamble and no Bash interception — the hook does exactly one thing.
+- **Hook status** is out-of-band: the hook records a small non-secret status file with the last
+  outcome category, endpoint category, credential category, host, enabled state, hit count, and
+  degraded state. It never stores the full prompt, endpoint URL, token, Authorization header, or
+  raw large snippets.
 
 ## Configuration (per host)
 
@@ -87,3 +94,30 @@ that OAuth discovery.
 
 The manifest declares no `hooks`/`skills` paths — Claude Code auto-discovers `hooks/hooks.json`
 and `skills/`, so the plugin loads cleanly with no duplicate-load conflict.
+
+## Hook status and test recall
+
+The hook is intentionally silent in normal agent turns. To diagnose why it did or did not inject
+memory, run the helper script from the installed plugin checkout:
+
+```sh
+hooks/scripts/hypermnesic_hook_status.py status --json --host claude
+hooks/scripts/hypermnesic_hook_status.py test-recall "Project Atlas" --json --host claude
+```
+
+The stable outcome codes are:
+
+`never_run`, `off_topic`, `disabled_global`, `disabled_host`, `unconfigured_endpoint`,
+`missing_credential`, `auth_expired`, `timeout`, `lookup_failed`, `no_hits`,
+`degraded_lexical_only`, and `success`.
+
+Disable proactive recall without uninstalling the plugin:
+
+```sh
+export HYPERMNESIC_HOOK_DISABLE_LOOKUP=1          # this plugin install
+export HYPERMNESIC_HOOK_DISABLED_HOSTS=codex      # one host; comma-separated
+```
+
+Status is written to `${HYPERMNESIC_HOOK_STATUS_FILE}` when set, otherwise to the user state
+directory. Status writes are best-effort and never block the hook. A missing status file reports
+`never_run`, not an error.

@@ -17,6 +17,7 @@ ONLY in the Authorization header, never written to stdout, stderr, or the inject
 User-neutral + distributable: no hardcoded endpoint (the URL comes from HYPERMNESIC_MCP_URL),
 and no project- or migration-specific content.
 """
+# ruff: noqa: E402, I001
 
 from __future__ import annotations
 
@@ -25,7 +26,20 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 from typing import Any
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+
+from hypermnesic_hook_status import (  # noqa: E402
+    disabled_state,
+    endpoint_category,
+    make_record,
+    recall as _recall,
+    write_status,
+)
 
 # Relevance signals: memory-ish phrasing OR a multi-word proper noun (a likely entity).
 RELEVANCE_TERMS = (
@@ -59,32 +73,8 @@ def _search_hits(query: str, url: str, token: str) -> list[dict] | None:
     """One bounded search over the MCP endpoint; None on ANY failure (timeout/401/down/parse).
     A test fixture (HYPERMNESIC_HOOK_FIXTURE → a JSON file with {"hits":[…]} or {"error":…})
     stands in for the network. The token is used only in the Authorization header."""
-    fixture = os.environ.get("HYPERMNESIC_HOOK_FIXTURE")
-    if fixture:
-        try:
-            data = json.loads(open(fixture, encoding="utf-8").read())
-        except Exception:
-            return None
-        if isinstance(data, dict) and "hits" in data and "error" not in data:
-            return data["hits"]
-        return None
-    import urllib.request
-    body = json.dumps({
-        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
-        "params": {"name": "search", "arguments": {"query": query, "k": 5}}}).encode()
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    if token:                                       # authed path; omit entirely on the read route
-        headers["Authorization"] = f"Bearer {token}"
-    req = urllib.request.Request(url, data=body, method="POST", headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=2.5) as resp:   # bounded; 401 → HTTPError → None
-            payload = json.loads(resp.read().decode())
-    except Exception:
-        return None
-    result = (payload or {}).get("result") or {}
-    structured = result.get("structuredContent") or result
-    hits = structured.get("hits") if isinstance(structured, dict) else None
-    return hits if isinstance(hits, list) else None
+    outcome, hits, _degraded = _recall(query, url, token)
+    return hits if outcome in {"success", "degraded_lexical_only", "no_hits"} else None
 
 
 def _flat(s: str) -> str:                       # one line per hit: neutralize injected newlines
@@ -114,6 +104,40 @@ def injection(prompt: str) -> str:
     return "\n".join(lines)
 
 
+def _injection_with_status(prompt: str, host: str) -> tuple[str, dict[str, Any]]:
+    enabled, disabled_reason = disabled_state(host)
+    if not enabled:
+        outcome = "disabled_host" if disabled_reason == "host" else "disabled_global"
+        return "", make_record(host=host, outcome=outcome)
+    if not relevant(prompt):
+        return "", make_record(host=host, outcome="off_topic")
+    url = os.environ.get("HYPERMNESIC_MCP_URL", "")
+    token = os.environ.get("HYPERMNESIC_MCP_TOKEN", "")
+    if not url:
+        return "", make_record(host=host, outcome="unconfigured_endpoint")
+    if not token and endpoint_category(url) != "tailnet_read":
+        return "", make_record(host=host, outcome="missing_credential")
+    query = " ".join(prompt.split())[:220]
+    if not query:
+        return "", make_record(host=host, outcome="off_topic")
+    outcome, hits, degraded = _recall(query, url, token)
+    record = make_record(
+        host=host,
+        outcome=outcome,
+        hit_count=len(hits),
+        degraded_lexical_only=degraded,
+    )
+    if not hits:
+        return "", record
+    lines = ["hypermnesic memory hits:"]
+    for h in hits[:5]:
+        path = _flat(h.get("path", ""))
+        heading = _flat(h.get("heading", ""))
+        snippet = _flat(h.get("snippet", "")).strip()[:200]
+        lines.append(f"- {path}: {heading} — {snippet}".rstrip(" —"))
+    return "\n".join(lines), record
+
+
 def handle(payload: dict[str, Any], host: str, event_override: str | None) -> dict[str, Any]:
     """Only UserPromptSubmit does anything; every other event is an inert continue."""
     event = event_override or str(
@@ -122,7 +146,8 @@ def handle(payload: dict[str, Any], host: str, event_override: str | None) -> di
     canon = event.lower().replace("_", "").replace("-", "")
     if canon not in {"userpromptsubmit", "messagepreprocessed", "messagereceived", ""}:
         return {"continue": True}
-    text = injection(_prompt_from(payload))
+    text, record = _injection_with_status(_prompt_from(payload), host)
+    write_status(None, record)
     if not text:
         return {"continue": True}
     return {"continue": True,
