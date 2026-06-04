@@ -50,6 +50,10 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local
   `hypermnesic` CLI. This is distinct from the Claude Code / Codex MCP plugin pack.
+- **Default client scope controls:** `serve-cloud` and `setup` now support
+  `--default-client-scopes read write`, plus
+  `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`, so operators can make newly registered
+  clients request both read and write on the first consent screen.
 
 ### Changed
 - README and getting-started onboarding now lead with the local proof milestone before

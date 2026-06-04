@@ -159,6 +159,33 @@ DEFAULT_WRITE_ALLOWLIST = ("notes/", "sources/", "dashboards/", "captures/")
 WRITE_SCOPE = "write"
 
 
+def normalize_default_client_scopes(default_client_scopes=None, *,
+                                    scopes_supported=("read", "write")) -> list[str]:
+    """Normalize admin-provided OAuth DCR defaults and fail loud on unsupported scopes."""
+    supported = [str(s).strip() for s in scopes_supported if str(s).strip()]
+    supported_set = set(supported)
+    raw = default_client_scopes
+    if raw is None:
+        raw = ["read"]
+    elif isinstance(raw, str):
+        raw = [raw]
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in raw:
+        for scope in str(item).replace(",", " ").split():
+            if scope not in seen:
+                normalized.append(scope)
+                seen.add(scope)
+    if not normalized:
+        raise ValueError("default_client_scopes must include at least one scope")
+    invalid = [s for s in normalized if s not in supported_set]
+    if invalid:
+        raise ValueError(
+            "default_client_scopes must be a subset of scopes_supported "
+            f"({', '.join(supported)}); invalid: {', '.join(invalid)}")
+    return normalized
+
+
 def _effective_write_surface(write_allowlist: list[str] | None) -> list[str] | None:
     """The SOLE coercion of a caller's ``--allowlist`` into the effective write surface.
 
@@ -684,6 +711,7 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
                        path: str = DEFAULT_PATH, repo: Path | None = None, embedder=None,
                        resource: str, public_url: str, approval_token: str,
                        scopes_supported=("read", "write"), token_ttl_seconds: int = 3600,
+                       default_client_scopes: list[str] | None = None,
                        write_allowlist: list[str] | None = None,
                        audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:
     """Build the **unified public** OAuth MCP — the sole network lane for every remote client
@@ -712,15 +740,18 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
     # over the standard chain). Refuse it at construction — fail loud, no half-open server.
     _require_public_https_origin(public_url, "public_url")
     _require_public_https_origin(resource, "resource")
+    default_scopes = normalize_default_client_scopes(
+        default_client_scopes, scopes_supported=scopes_supported)
 
     provider = auth_cloud.CloudAuthProvider(
         resource=resource, public_url=public_url, approval_token=approval_token,
         scopes_supported=list(scopes_supported), token_ttl_seconds=token_ttl_seconds,
+        default_scopes=default_scopes,
         grant_store_path=(client_control.grant_store_path(repo) if repo is not None else None))
     auth = AuthSettings(
         issuer_url=public_url, resource_server_url=resource, required_scopes=None,
         client_registration_options=ClientRegistrationOptions(
-            enabled=True, valid_scopes=list(scopes_supported), default_scopes=["read"]),
+            enabled=True, valid_scopes=list(scopes_supported), default_scopes=default_scopes),
         revocation_options=RevocationOptions(enabled=True))
     # Pass write_allowlist (including None) STRAIGHT THROUGH — no pre-coercion here. The single
     # coercion site is build_server's _effective_write_surface, so the cloud default and the

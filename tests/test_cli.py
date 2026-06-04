@@ -535,6 +535,42 @@ def test_serve_cloud_plumbs_to_build_cloud_server(tmp_path, monkeypatch):
     assert captured["token_ttl_seconds"] == 1800
 
 
+def test_serve_cloud_plumbs_default_client_scopes_flag(tmp_path, monkeypatch):
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret-token-24-chars-or-more")
+    captured: dict = {}
+    srv = _FakeSrv()
+
+    def fake_cloud(index_db, **kw):
+        captured.update(kw)
+        return srv
+
+    from hypermnesic import mcp_server
+    monkeypatch.setattr(mcp_server, "build_cloud_server", fake_cloud)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp",
+                   "--default-client-scopes", "read", "write"])
+    assert rc == 0 and srv.ran
+    assert captured["default_client_scopes"] == ["read", "write"]
+
+
+def test_serve_cloud_plumbs_default_client_scopes_env(tmp_path, monkeypatch):
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret-token-24-chars-or-more")
+    monkeypatch.setenv("HYPERMNESIC_DEFAULT_CLIENT_SCOPES", "read,write")
+    captured: dict = {}
+    srv = _FakeSrv()
+
+    def fake_cloud(index_db, **kw):
+        captured.update(kw)
+        return srv
+
+    from hypermnesic import mcp_server
+    monkeypatch.setattr(mcp_server, "build_cloud_server", fake_cloud)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp"])
+    assert rc == 0 and srv.ran
+    assert captured["default_client_scopes"] == ["read", "write"]
+
+
 def test_serve_cloud_refuses_weak_approval_token(tmp_path, capsys, monkeypatch):
     # a public WRITE surface gated by a single token needs an entropy floor (online-brute-force)
     monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "short")
@@ -563,10 +599,12 @@ def test_setup_cli_plumbs_to_install_setup(tmp_path, capsys, monkeypatch):
     from hypermnesic import install
     monkeypatch.setattr(install, "setup", fake_setup)
     rc = cli.main(["setup", str(tmp_path), "--public-url", "https://h/mcp",
-                   "--resource", "https://h/mcp", "--port", "8850"])
+                   "--resource", "https://h/mcp", "--port", "8850",
+                   "--default-client-scopes", "read", "write"])
     out = capsys.readouterr().out
     assert rc == 0
     assert captured["public_url"] == "https://h/mcp" and captured["resource"] == "https://h/mcp"
+    assert captured["default_client_scopes"] == ["read", "write"]
     assert "https://h/mcp" in out                                 # the URL is printed
     assert "log in" in out.lower() or "authorize" in out.lower()  # login instructions printed
 

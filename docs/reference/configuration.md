@@ -16,12 +16,18 @@ Engine tunables live in [`src/hypermnesic/config.py`](../../src/hypermnesic/conf
 | `HYPERMNESIC_HOOK_DISABLE_LOOKUP` | auto-recall hook | optional | Set to `1` to disable proactive hook recall for this plugin install without uninstalling the plugin or removing MCP tools. |
 | `HYPERMNESIC_HOOK_DISABLED_HOSTS` | auto-recall hook | optional | Comma-separated host names (`claude`, `codex`) to disable proactive recall on specific hosts. |
 | `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` | `serve-cloud` / `setup` | for the public lane | The operator approval token that gates every public connection. Read from the environment **only** (never a CLI flag, so it can't leak via the process table / logs). Enforced minimum length. |
+| `HYPERMNESIC_DEFAULT_CLIENT_SCOPES` | `serve-cloud` / `setup` | optional | Comma- or space-separated OAuth scopes requested by default when a dynamically registered client omits `scope`. Default is `read`; set `read,write` when new connector approvals should request both read access and `commit_note` write access. The consent page still requires the operator approval token and write guards still apply. |
 
 The OpenAI key may also be read from a repo-root `.env` (the only file path searched by
 default); the OAuth consent secret is persisted by `setup` to an owner-only env file
 (`~/.config/hypermnesic-cloud/cloud.env`, `chmod 600`), never committed.
 `hypermnesic doctor --env-file PATH` checks only whether that file exists and has
 owner-only permissions; it never reads or prints the secret value.
+
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES` can also be set as an explicit admin flag:
+`hypermnesic serve-cloud ... --default-client-scopes read write` or
+`hypermnesic setup ... --default-client-scopes read write`. Unsupported scopes fail
+loudly before the service starts.
 
 ## Embedding model (pinned)
 

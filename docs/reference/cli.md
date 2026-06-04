@@ -228,7 +228,9 @@ operator-consent gate + a write-enabled serve), exposed via Funnel. The operator
 token is read from `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` (env, never a flag).
 Flags: `--index-db PATH` (required), `--host` (default 127.0.0.1), `--port N` (default
 8850), `--path /mcp`, `--public-url URL` (required), `--resource URL` (required),
-`--repo PATH`, `--token-ttl N` (default 3600), `--allowlist PREFIX` (repeatable).
+`--repo PATH`, `--token-ttl N` (default 3600), `--default-client-scopes SCOPE ...`
+(default: `read`; env: `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`), `--allowlist
+PREFIX` (repeatable).
 
 ### `setup <repo>`
 One idempotent command to bring the unified public OAuth endpoint online: render + start
@@ -236,7 +238,9 @@ the service, persist the consent secret, configure the funnel, verify the live H
 discovery chain. Fail-closed (no partial state).
 Flags: `--public-url URL` (required), `--resource URL` (defaults to `--public-url`),
 `--host` (default 127.0.0.1), `--port N` (default 8850), `--path` (default `/`),
-`--env-file PATH`, `--allowlist PREFIX` (repeatable), `--token-ttl N`, `--json`.
+`--env-file PATH`, `--allowlist PREFIX` (repeatable), `--token-ttl N`,
+`--default-client-scopes SCOPE ...` (default: `read`; env:
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`), `--json`.
 JSON output includes `milestones`, `what_this_means`, and `client_next_actions` in
 addition to the rendered service, route, and discovery fields.
 

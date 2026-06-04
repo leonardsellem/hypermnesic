@@ -68,3 +68,9 @@ If a client without write scope calls `commit_note`, the MCP result is
 `committed: false` with an actionable `insufficient_scope` refusal. The refusal tells the
 client to reconnect and approve write, and repeats that write approval does not bypass
 Hypermnesic's write guards.
+
+By default, dynamically registered clients that omit OAuth `scope` request `read`. Operators
+can change the default requested consent scopes with
+`--default-client-scopes read write` or `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`. This
+changes what the consent page asks for; it does not auto-approve clients or weaken
+`commit_note` write guards.

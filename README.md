@@ -78,6 +78,9 @@ It prints milestone checks, your endpoint URL, and login instructions. `--resour
 defaults to `--public-url`; pass it only when the OAuth resource identifier differs.
 `doctor` and `status` report local index health, remote reach, OAuth discovery, auth
 challenge, write availability, and client-specific next actions without mutating state.
+By default, new OAuth clients request `read`; admins can make new approvals request both
+read and write with `--default-client-scopes read write` or
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`.
 
 ### C. Connect a client (any remote app)
 
@@ -86,10 +89,11 @@ Point the app's MCP server at your endpoint URL — that's it. OAuth is automati
 - **Claude / ChatGPT (cloud connectors), Claude Code plugin, Codex:** add the MCP
   server URL `https://<your-host>.ts.net/mcp`. On first connect the app discovers the
   OAuth server, opens a browser once for you to authorize, then silently refreshes.
-- **Read vs. write:** read access is the default. To grant the `commit_note` **write**
-  tool, approve **write** on the consent page (type your approval token from
-  `~/.config/hypermnesic-cloud/cloud.env`). The consent page shows exactly which scopes
-  you're granting, lets you reject or cancel, and explains how to revoke later.
+- **Read vs. write:** read access is the default unless the endpoint admin configures
+  `--default-client-scopes read write` / `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`.
+  To grant the `commit_note` **write** tool, approve **write** on the consent page (type your
+  approval token from `~/.config/hypermnesic-cloud/cloud.env`). The consent page shows exactly
+  which scopes you're granting, lets you reject or cancel, and explains how to revoke later.
 - **Client control:** after authorization, inspect or revoke known grants on the engine
   host with `hypermnesic clients list /path/to/vault` and
   `hypermnesic clients revoke /path/to/vault <grant-id> --apply`.

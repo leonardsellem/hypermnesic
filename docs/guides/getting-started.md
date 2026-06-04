@@ -102,6 +102,13 @@ live HTTPS discovery chain** before reporting success. Re-running converges to t
 state. `--resource` defaults to `--public-url`; pass it only when the OAuth resource
 identifier differs.
 
+By default, newly registered clients request `read` when they omit OAuth `scope`. Admins who
+want new approvals to request both read and write can run setup with
+`--default-client-scopes read write` or set
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write` in the cloud service environment. The consent
+page still requires the operator approval token, and write approval still cannot bypass protected
+paths, frontmatter validation, dirty-tree checks, head-drift checks, audit logging, or git guards.
+
 `doctor` and its alias `status` are non-mutating. They do not start services, rewrite
 configuration, create tokens, change funnel routes, modify the vault, or create git commits.
 Use `--json` when an agent or CI check needs the structured status contract.
@@ -141,10 +148,12 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
 - **Claude / ChatGPT connectors, Claude Code plugin, Codex:** add the MCP server URL
   `https://<your-host>.ts.net/mcp`. On first connect the app discovers the OAuth server,
   opens a browser once to authorize, then silently refreshes.
-- **Read vs. write:** read is the default. To grant the `commit_note` write tool, approve
-  **write** on the consent page (enter your approval token from
-  `~/.config/hypermnesic-cloud/cloud.env`). The page shows exactly which scopes you grant,
-  explains that write cannot bypass Hypermnesic write guards, and lets you reject or cancel.
+- **Read vs. write:** read is the default unless the endpoint admin configured
+  `--default-client-scopes read write` / `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`.
+  To grant the `commit_note` write tool, approve **write** on the consent page (enter your
+  approval token from `~/.config/hypermnesic-cloud/cloud.env`). The page shows exactly which
+  scopes you grant, explains that write cannot bypass Hypermnesic write guards, and lets you
+  reject or cancel.
 - **Claude Code / Codex plugin:** install the plugin in `plugin/` and set
   `HYPERMNESIC_MCP_URL` to your endpoint (the bundled `.mcp.json` is discovery-only and
   carries no host or token). The optional auto-recall hook uses the same URL plus
