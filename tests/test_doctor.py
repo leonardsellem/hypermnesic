@@ -52,7 +52,7 @@ def test_doctor_reports_local_remote_oauth_auth_write_and_next_action(
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     _build_index(repo, fake_embedder)
     env_file = tmp_path / "cloud.env"
-    env_file.write_text("HYPERMNESIC_CLOUD_APPROVAL" + "_TOKEN=<redacted>\n")
+    env_file.write_text("HYPERMNESIC_CLOUD_APPROVAL" + "_TOKEN=stub\n")
     env_file.chmod(0o600)
     ops = _DoctorOps()
 

@@ -376,6 +376,19 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. This is the
 release-blocking proof for the whole U1-U8 sequence.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R76-R83 and AE8, plus links to the evidence matrices for U1-U7. Each row must name the
+  automated test, local smoke command, remote-client checklist item, docs path, launch artifact,
+  security scan, or benchmark-positioning review that proves the requirement; "covered by
+  implementation" is not acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the U1-U8
+  evidence chain is missing, stale, flaky, ambiguous, or dependent on unrecorded private operator
+  infrastructure, Hypermnesic cannot claim first-class readiness.
+- **Proof shape gate:** validation must include automated local smoke, simulated remote-client
+  contract tests where possible, separately labeled manual external-client evidence, consent
+  approval/rejection/revoke evidence, write refusal/success evidence, memory removal/recovery
+  evidence, hook/taxonomy/daily-loop evidence, docs/index/changelog proof, and security/public-
+  surface scans.
 - **AE8 end-to-end gate:** the product proof checklist must show passing evidence for local value,
   setup diagnosis, remote connection, consent approval/rejection, write refusal/success, memory
   inspection, export, removal/forget, revert or recovery, hook diagnosis, taxonomy routing, daily

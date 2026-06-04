@@ -378,6 +378,17 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. U1-U6 product
 proofs must remain green.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R67-R75 and AE7. Each row must name the automated test, workflow transcript, generated
+  review artifact, recipe/docs path, Obsidian-boundary check, or bounded manual smoke step that
+  proves the requirement; "covered by implementation" is not acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
+  matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
+  cannot be marked complete until the plan or implementation is corrected.
+- **Proof shape gate:** validation must include the full capture -> triage -> recall -> write ->
+  review -> cleanup loop, a raw-source preservation check, a protected/refused destination check, a
+  degraded/offline behavior check, an Obsidian read-only boundary check, and a docs/current-truth
+  consistency check.
 - **AE7 daily-loop gate:** a reviewer can capture raw text during work, return later, see a triage
   path, receive suggested placement/links/questions, and confirm that raw source was not silently
   moved or deleted.
@@ -397,9 +408,12 @@ proofs must remain green.
   Tests or checklist evidence must show the user can verify the post-cleanup memory state.
 - **Cumulative product gate:** U1-U7 must compose into a daily operator walkthrough from local proof
   through capture/triage/recall/write/review/cleanup, including diagnosis and trust controls.
-- **Regression gate:** at minimum run targeted capture/triage/control docs or CLI tests,
-  `git diff --check`, `uv run python scripts/preflight_public_scan.py`, and the repo gates required
-  by `AGENTS.md`.
+- **Regression gate:** run and record exact results for targeted capture/triage/control docs or CLI
+  tests, `git diff --check`, `uv sync --extra dev`, `uv run ruff check .`,
+  `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, and a
+  targeted changed-file scan for secrets, private hosts/IPs, token-looking strings, and raw private
+  note bodies. Targeted tests cannot substitute for the full gate set.
 
 ## Sources & References
 

@@ -334,6 +334,17 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. U1-U5 product
 proofs must remain green.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R57-R66 and AE6. Each row must name the automated test, skill fixture, routing table,
+  docs path, glossary entry, or review checklist item that proves the requirement; "covered by
+  implementation" is not acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
+  matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
+  cannot be marked complete until the plan or implementation is corrected.
+- **Proof shape gate:** validation must include positive write-routing examples, negative
+  no-Hypermnesic examples, Honcho/session/preference routing examples, evidence-preservation
+  examples, refusal-handling examples, skill content checks, and docs/glossary/current-truth
+  consistency checks.
 - **AE6 routing gate:** given examples such as "the user likes terse replies", temporary session
   state, behavioural preference, durable project fact, decision rationale, source evidence, and
   cleanup instruction, bundled guidance must route each to Hypermnesic, Honcho, session context, or
@@ -355,8 +366,12 @@ proofs must remain green.
 - **Cumulative product gate:** U1-U6 must compose: a reviewer can prove value, diagnose setup,
   control memory, trust/revoke clients, diagnose hooks, and explain what belongs in each memory
   layer without reading source code.
-- **Regression gate:** at minimum run targeted docs/skill tests or checks, `git diff --check`,
-  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+- **Regression gate:** run and record exact results for targeted docs/skill tests or checks,
+  `git diff --check`, `uv sync --extra dev`, `uv run ruff check .`,
+  `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, and a
+  targeted changed-file scan for secrets, private hosts/IPs, token-looking strings, and raw private
+  note bodies. Targeted tests cannot substitute for the full gate set.
 
 ## Sources & References
 

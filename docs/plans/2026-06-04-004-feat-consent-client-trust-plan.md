@@ -406,6 +406,17 @@ This sprint is not complete until every gate below has passing evidence captured
 description, Linear issue comment when available, and final implementation handoff. U1-U3 product
 proofs must remain green.
 
+- **Evidence matrix gate:** the final handoff must include a requirement-by-requirement evidence
+  matrix for R37-R48 and AE4. Each row must name the automated test, manual browser/smoke step, HTTP
+  transcript, grant-state fixture, refusal fixture, security-header assertion, or docs path that
+  proves the requirement; "covered by implementation" is not acceptable evidence.
+- **Blocking standard:** these gates are release-blocking, not advisory. If any row in the evidence
+  matrix is missing, flaky, ambiguous, or dependent on private operator infrastructure, the sprint
+  cannot be marked complete until the plan or implementation is corrected.
+- **Proof shape gate:** validation must include at least one approve path, one reject/cancel path,
+  one malformed or expired request path, one revoked-client path, one write-scope refusal path, one
+  accessibility/security-header check, one secret-hygiene check, and one docs/current-truth
+  consistency check.
 - **AE4 consent gate:** a new write-capable client request must show a consent page where the owner
   can tell what write permits, what path scope applies, which client is requesting access, and how
   to reject safely or approve intentionally.
@@ -425,8 +436,12 @@ proofs must remain green.
   consent CSP, and existing write-gate tests must remain green for changed surfaces.
 - **Cumulative product gate:** U1-U4 must compose: a reviewer can prove local value, diagnose remote
   setup, inspect/control memory, approve a client, revoke it, and verify write refusal afterward.
-- **Regression gate:** at minimum run targeted auth/OAuth/MCP/write-scope tests, `git diff --check`,
-  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`.
+- **Regression gate:** run and record exact results for targeted auth/OAuth/MCP/write-scope tests,
+  `git diff --check`, `uv sync --extra dev`, `uv run ruff check .`,
+  `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, and a
+  targeted changed-file scan for secrets, private hosts/IPs, token-looking strings, and raw private
+  note bodies. Targeted tests cannot substitute for the full gate set.
 
 ## Sources & References
 
