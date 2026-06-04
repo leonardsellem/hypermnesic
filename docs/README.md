@@ -34,6 +34,7 @@ never misleads you.
 | Changelog | [`../CHANGELOG.md`](../CHANGELOG.md) |
 | Deploy (current) | [`unified-oauth-mcp-deploy-runbook.md`](unified-oauth-mcp-deploy-runbook.md) |
 | Agent plugins | [`../plugin/README.md`](../plugin/README.md) |
+| Product/design reports | [`reports/2026-06-04-hypermnesic-product-design-review.md`](reports/2026-06-04-hypermnesic-product-design-review.md) |
 | Security reviews (dated deltas) | [`2026-06-03-unified-write-anywhere-security-review.md`](2026-06-03-unified-write-anywhere-security-review.md), [`2026-06-03-blocklist-write-surface-security-review.md`](2026-06-03-blocklist-write-surface-security-review.md) |
 
 ## Public-launch staging
