@@ -28,21 +28,36 @@ See [why hypermnesic](docs/why-hypermnesic.md) and the [benchmarks](#benchmarks)
 
 ## Quick start
 
-### A. Self-host the endpoint (on the machine that holds your vault)
+### A. Prove local memory works
 
-You need: a **git repo** of markdown notes (your vault), an **`OPENAI_API_KEY`**
-(embeddings), and **[Tailscale](https://tailscale.com)** installed and logged in
-(`tailscale up`) — hypermnesic uses Tailscale Funnel for public HTTPS + automatic
-TLS, so there is no reverse proxy or cert to manage.
+Start on the machine that holds the vault. You need only a **git repo** of markdown
+notes. Dense embeddings improve ranking when `OPENAI_API_KEY` is configured, but the
+proof also works offline in lexical mode.
 
 ```sh
 # 1. install the engine (from a clone of this repo)
 uv tool install .
 
-# 2. build the index over your vault (one-time; uses OPENAI_API_KEY)
-hypermnesic init /path/to/your/vault
+# 2. prove recall from your own markdown files, with a dry-run write preview
+hypermnesic local-proof /path/to/your/vault
 
-# 3. bring the unified OAuth endpoint online — one idempotent command
+# or try a tiny generated demo vault first
+hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo
+```
+
+The proof path validates a git-backed vault, projects committed markdown files into the
+disposable `.hypermnesic/` index, asks a natural-language question, returns the
+repo-relative source markdown path, and shows a `commit_note` dry-run diff without
+creating a write commit. The success milestone is **Local memory works**.
+
+### B. Self-host the endpoint
+
+After the local proof succeeds, bring the shared endpoint online for remote apps. You need
+[Tailscale](https://tailscale.com) installed and logged in (`tailscale up`); hypermnesic
+uses Tailscale Funnel for public HTTPS + automatic TLS, so there is no reverse proxy or
+cert to manage.
+
+```sh
 hypermnesic setup /path/to/your/vault \
   --public-url https://<your-host>.ts.net/mcp \
   --resource   https://<your-host>.ts.net/mcp
@@ -54,7 +69,7 @@ hypermnesic setup /path/to/your/vault \
 discovery chain** before reporting success. Re-running it converges to the same state.
 It prints your endpoint URL and login instructions.
 
-### B. Connect a client (any remote app)
+### C. Connect a client (any remote app)
 
 Point the app's MCP server at your endpoint URL — that's it. OAuth is automatic:
 
@@ -73,11 +88,12 @@ Point the app's MCP server at your endpoint URL — that's it. OAuth is automati
   ships from a **separate repository under GPL-3.0** (private until its first release) —
   see [`obsidian-plugin/README.md`](obsidian-plugin/README.md) and the license boundary below.
 
-### C. Use it locally (on the engine host)
+### D. Use it locally (on the engine host)
 
 The host that runs the engine skips the network entirely and uses the CLI:
 
 ```sh
+hypermnesic local-proof /path/to/vault                           # first local value proof
 hypermnesic retrieve /path/to/vault "what do we know about X"   # hybrid search
 hypermnesic think    /path/to/vault "topic"                     # thinking-mode
 hypermnesic resolve  /path/to/vault "Some Entity"               # name → page path

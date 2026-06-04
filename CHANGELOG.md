@@ -14,18 +14,26 @@ its own changelog and version.
 
 ## [Unreleased]
 
-First-class documentation & public-launch readiness — **documentation only, no engine
-or product behavior change**. Adds the community-health and technical-reference
-documents (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, ARCHITECTURE, references, guides,
-glossary, GitHub templates), reconciles doc↔code drift from the 0.0.5 PR set, and
-stages the AGPL-3.0 license + public-flip runbook under `docs/launch/` without
-flipping the live license or repository visibility.
+First-class product track and public-launch readiness. Adds the community-health and
+technical-reference documents (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, ARCHITECTURE,
+references, guides, glossary, GitHub templates), reconciles doc↔code drift from the
+0.0.5 PR set, and stages the AGPL-3.0 license + public-flip runbook under
+`docs/launch/` without flipping the live license or repository visibility.
 
 ### Added
+- **`hypermnesic local-proof`**: a local-first value proof that validates or creates a
+  git-backed markdown vault, projects committed files into the disposable index, retrieves
+  a natural-language question with the repo-relative source path, explains lexical-only
+  degradation in product language, and shows a `commit_note` dry-run diff without creating
+  a write commit.
 - **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local
   `hypermnesic` CLI. This is distinct from the Claude Code / Codex MCP plugin pack.
+
+### Changed
+- README and getting-started onboarding now lead with the local proof milestone before
+  endpoint setup or remote-client connection.
 
 ## [0.0.6] — 2026-06-03
 

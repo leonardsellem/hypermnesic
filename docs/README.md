@@ -14,6 +14,10 @@ never misleads you.
   client) + a **tailnet read companion** (`:8848`, read-only). The `:8849`
   client-credentials AS lane is **retired**. Anything describing "tailnet-only" or four
   lanes is **superseded**.
+- **First-run path:** local proof comes before endpoint setup. `hypermnesic local-proof`
+  validates a git-backed markdown vault, retrieves a source-grounded answer, shows the
+  disposable index path, and previews a dry-run write before remote-client concepts enter
+  the flow.
 - **License:** proprietary/private today; the public license (**AGPL-3.0**) is **staged,
   not live** — see [`launch/`](launch/).
 
@@ -24,7 +28,7 @@ never misleads you.
 | What it is, quick start, benchmarks | [`../README.md`](../README.md) |
 | Why it's different (positioning) | [`why-hypermnesic.md`](why-hypermnesic.md) |
 | How it works (architecture + diagram) | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) |
-| Getting started (3 paths + failure modes) | [`guides/getting-started.md`](guides/getting-started.md) |
+| Getting started (local proof + setup paths + failure modes) | [`guides/getting-started.md`](guides/getting-started.md) |
 | MCP tool reference | [`reference/mcp-tools.md`](reference/mcp-tools.md) |
 | CLI reference | [`reference/cli.md`](reference/cli.md) |
 | Configuration reference | [`reference/configuration.md`](reference/configuration.md) |

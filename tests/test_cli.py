@@ -13,6 +13,8 @@ import os
 import subprocess
 import sys
 
+import pytest
+
 from hypermnesic import cli, config, index, install
 
 
@@ -89,6 +91,98 @@ def test_retrieve_human_output_is_nonempty(make_corpus, fake_embedder, monkeypat
     rc = cli.main(["retrieve", str(repo), "Hetzner"])          # non-JSON path
     assert rc == 0
     assert "retrieve: Hetzner" in capsys.readouterr().out
+
+
+# --- First-class product track U1: local-first value proof --------------------
+
+def test_local_proof_cli_json_contract_existing_vault(make_corpus, monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({
+        "notes/alpha.md": (
+            "# Alpha\n\n"
+            "Question answered: what should Hypermnesic remember about CLI proof\n\n"
+            "The CLI proof returns a source-grounded markdown path.\n"
+        )
+    })
+
+    rc = cli.main([
+        "local-proof",
+        str(repo),
+        "--query",
+        "what should Hypermnesic remember about CLI proof",
+        "--json",
+    ])
+
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "local_memory_works"
+    assert {"status", "completed_milestones", "degraded_capabilities", "source_path",
+            "next_action", "error"}.issubset(out)
+    assert out["source_path"] == "notes/alpha.md"
+    assert out["error"] is None
+    assert str(repo) not in json.dumps(out)
+
+
+def test_local_proof_cli_human_output_starts_with_local_value(make_corpus, monkeypatch,
+                                                              tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({
+        "notes/local.md": (
+            "# Local\n\n"
+            "Question answered: what should Hypermnesic remember about local first\n\n"
+            "Local-first proof comes before network setup.\n"
+        )
+    })
+
+    rc = cli.main([
+        "local-proof",
+        str(repo),
+        "--query",
+        "what should Hypermnesic remember about local first",
+    ])
+
+    assert rc == 0
+    lines = [line.strip() for line in capsys.readouterr().out.splitlines() if line.strip()]
+    assert lines[0] == "Local memory works"
+    proof_text = "\n".join(lines[:5]).lower()
+    for advanced_term in ("oauth", "tailscale", "resource-server", "funnel", "mcp"):
+        assert advanced_term not in proof_text
+
+
+def test_local_proof_cli_demo_dir_creates_demo_vault(monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    demo = tmp_path / "demo"
+
+    rc = cli.main(["local-proof", "--demo-dir", str(demo), "--json"])
+
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["mode"] == "demo"
+    assert out["source_path"] == "memory/local-proof-memory.md"
+    assert (demo / "memory" / "local-proof-memory.md").exists()
+    assert str(demo) not in json.dumps(out)
+
+
+def test_local_proof_cli_non_git_error_is_actionable(tmp_path, capsys):
+    repo = tmp_path / "not-git"
+    repo.mkdir()
+
+    rc = cli.main(["local-proof", str(repo)])
+
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "local-proof failed" in err
+    assert "git repo" in err
+    assert "traceback" not in err.lower()
+
+
+def test_local_proof_is_listed_in_help(capsys):
+    parser = cli.build_parser()
+    with pytest.raises(SystemExit) as excinfo:
+        parser.parse_args(["local-proof", "--help"])
+
+    assert excinfo.value.code == 0
+    assert "prove local memory works" in capsys.readouterr().out
 
 
 # --- U33: opt-in install-hooks + the converge command it calls ----------------
