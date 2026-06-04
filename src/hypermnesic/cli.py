@@ -514,6 +514,113 @@ def _cmd_doctor(args) -> int:
     return 0
 
 
+def _cmd_memory(args) -> int:
+    """Owner-facing memory control center."""
+    from hypermnesic import (
+        audit_log,
+        index,
+        memory_control,
+        serialize,
+    )
+    from hypermnesic import (
+        converge as converge_mod,
+    )
+
+    repo = Path(args.repo)
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
+    idx = index.Index(db)
+    try:
+        try:
+            from hypermnesic import embed
+            embedder = embed.OpenAIEmbedder()
+        except Exception:
+            embedder = None
+        converge_mod.converge(repo, idx, embedder, debounce_seconds=(0 if args.now else None))
+        log_path = (Path(args.audit_log) if args.audit_log
+                    else index.state_dir_for(repo) / "audit.jsonl")
+        log = audit_log.AuditLog(log_path)
+
+        if args.memory_command == "list":
+            writable = True if args.writable else False if args.protected else None
+            out = memory_control.list_memories(
+                repo, idx, log=log, folder=args.folder, writable=writable,
+                source_type=args.source_type, allowlist=args.allowlist, recent=args.recent)
+        elif args.memory_command == "inspect":
+            out = memory_control.inspect_memory(
+                repo, idx, args.path, log=log, allowlist=args.allowlist)
+        elif args.memory_command == "write-scope":
+            out = memory_control.write_scope(
+                repo, idx, allowlist=args.allowlist, root=args.root, depth=args.depth)
+        elif args.memory_command == "export":
+            out = memory_control.export_memories(
+                repo, idx, args.dest, log=log, folder=args.folder, paths=args.path,
+                allowlist=args.allowlist)
+        elif args.memory_command == "forget":
+            if args.apply:
+                out = memory_control.apply_forget(
+                    repo, idx, args.path, log=log, allowlist=args.allowlist)
+            else:
+                out = memory_control.preview_forget(
+                    repo, idx, args.path, allowlist=args.allowlist)
+        elif args.memory_command == "revert":
+            if args.apply:
+                out = memory_control.apply_revert(repo, idx, args.commit, log=log)
+            else:
+                out = memory_control.preview_revert(repo, args.commit)
+        elif args.memory_command == "audit":
+            out = memory_control.audit_view(log, limit=args.limit)
+        else:
+            raise ValueError(f"unknown memory command: {args.memory_command}")
+    except (FileNotFoundError, ValueError, serialize.WriteGuardError, serialize.DirtyTreeError,
+            serialize.HeadDriftError) as exc:
+        idx.close()
+        print(f"memory {args.memory_command} failed: {exc}", file=sys.stderr)
+        return 1
+    idx.close()
+
+    if args.json:
+        _print_json(out)
+    else:
+        _print_memory_human(args.memory_command, out)
+    return 0
+
+
+def _print_memory_human(command: str, out: dict) -> None:
+    if command == "list":
+        print(f"# memory ({out['count']})")
+        for item in out["items"]:
+            flag = "writable" if item["writable"] else item["protected_reason"]
+            print(f"  - {item['path']} [{item['source_type']}; {flag}]")
+    elif command == "inspect":
+        if out["status"] == "not_found":
+            print(f"not found: {out['path']}")
+        else:
+            print(f"{out['path']} — {out['title']}")
+            print(f"  provenance: {out['provenance']['source']} {out['last_commit']}")
+            print(f"  actor: {out['actor']}")
+    elif command == "write-scope":
+        print(out["summary"]["answer"])
+        for folder in out["folders"]:
+            flag = "w" if folder["writable"] else "-"
+            reason = "" if folder["writable"] else f" [{folder['protected_reason']}]"
+            print(f"  [{flag}] {folder['path']}{reason}")
+    elif command == "export":
+        print(f"{out['status']}: {out['count']} file(s) -> {out['dest']}")
+    elif command == "forget":
+        print(f"{out['stage']}: {out.get('path') or out['target']['path']}")
+        for line in out.get("limits", []):
+            print(f"  note: {line}")
+    elif command == "revert":
+        print(f"{out['stage']}: {out.get('commit') or out.get('reverted')}")
+        if "paths" in out:
+            for path in out["paths"]:
+                print(f"  path: {path}")
+    elif command == "audit":
+        print(f"# memory audit ({out['count']})")
+        for entry in out["entries"]:
+            print(f"  - {entry['verb']} {entry.get('path') or ''}: {entry.get('summary') or ''}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hypermnesic", description="hypermnesic CLI")
     parser.add_argument("--version", action="version", version=f"hypermnesic {__version__}")
@@ -757,6 +864,69 @@ def build_parser() -> argparse.ArgumentParser:
                             help="owner-only env file to check for existence/permissions")
         p_diag.add_argument("--json", action="store_true")
         p_diag.set_defaults(func=_cmd_doctor)
+
+    p_memory = sub.add_parser("memory", help="owner memory control center")
+    mem = p_memory.add_subparsers(dest="memory_command", required=True)
+
+    def add_memory_common(p):
+        p.add_argument("repo", help="repo whose memory to control")
+        p.add_argument("--index-db", default=None,
+                       help="index db (default: <repo>/.hypermnesic)")
+        p.add_argument("--audit-log", default=None,
+                       help="audit log path (default: <repo>/.hypermnesic/audit.jsonl)")
+        p.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
+                       help="preview/control under a narrowed writable surface")
+        p.add_argument("--now", action="store_true",
+                       help="force a non-debounced converge before reading")
+        p.add_argument("--json", action="store_true")
+
+    p_mem_list = mem.add_parser("list", help="list remembered files")
+    add_memory_common(p_mem_list)
+    p_mem_list.add_argument("--folder", default=None)
+    p_mem_list.add_argument("--source-type", choices=["authored", "captured", "generated"],
+                            default=None)
+    p_mem_list.add_argument("--writable", action="store_true")
+    p_mem_list.add_argument("--protected", action="store_true")
+    p_mem_list.add_argument("--recent", action="store_true")
+    p_mem_list.set_defaults(func=_cmd_memory)
+
+    p_mem_inspect = mem.add_parser("inspect", help="inspect one remembered file")
+    add_memory_common(p_mem_inspect)
+    p_mem_inspect.add_argument("path", help="repo-relative memory path")
+    p_mem_inspect.set_defaults(func=_cmd_memory)
+
+    p_mem_scope = mem.add_parser("write-scope", help="answer what an agent may write")
+    add_memory_common(p_mem_scope)
+    p_mem_scope.add_argument("--root", default="")
+    p_mem_scope.add_argument("--depth", type=int, default=1)
+    p_mem_scope.set_defaults(func=_cmd_memory)
+
+    p_mem_export = mem.add_parser("export", help="export selected memory as markdown")
+    add_memory_common(p_mem_export)
+    p_mem_export.add_argument("--dest", required=True, help="destination directory")
+    p_mem_export.add_argument("--folder", default=None)
+    p_mem_export.add_argument("--path", action="append", default=None,
+                              help="explicit repo-relative path to export")
+    p_mem_export.set_defaults(func=_cmd_memory)
+
+    p_mem_forget = mem.add_parser("forget", help="preview/apply git-backed memory removal")
+    add_memory_common(p_mem_forget)
+    p_mem_forget.add_argument("path", help="repo-relative memory path")
+    p_mem_forget.add_argument("--apply", action="store_true",
+                              help="apply the removal as a git commit")
+    p_mem_forget.set_defaults(func=_cmd_memory)
+
+    p_mem_revert = mem.add_parser("revert", help="preview/apply a safe recent memory revert")
+    add_memory_common(p_mem_revert)
+    p_mem_revert.add_argument("commit", help="commit sha to revert")
+    p_mem_revert.add_argument("--apply", action="store_true",
+                              help="apply the revert as a new git commit")
+    p_mem_revert.set_defaults(func=_cmd_memory)
+
+    p_mem_audit = mem.add_parser("audit", help="show recent memory writes/refusals")
+    add_memory_common(p_mem_audit)
+    p_mem_audit.add_argument("--limit", type=int, default=None)
+    p_mem_audit.set_defaults(func=_cmd_memory)
     return parser
 
 
