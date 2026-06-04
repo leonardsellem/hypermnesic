@@ -311,6 +311,45 @@ def _cmd_capture(args) -> int:
     return 0
 
 
+def _cmd_daily_review(args) -> int:
+    """Generate a review-gated daily workflow surface."""
+    from hypermnesic import audit_log, daily_review, graph, index
+
+    repo = Path(args.repo)
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
+    idx = index.Index(db) if db.exists() else None
+    g = graph.Graph.from_index(idx) if idx is not None else None
+    log_path = (Path(args.audit_log) if args.audit_log
+                else index.state_dir_for(repo) / "audit.jsonl")
+    log = audit_log.AuditLog(log_path)
+    degraded = [] if idx is not None else ["partial: no index found; review uses files/audit only"]
+    res = daily_review.review_proposal(
+        repo,
+        idx,
+        g,
+        audit_log=log,
+        digest_rel=args.digest_rel,
+        nav_rel=args.nav_rel,
+        connections_rel=args.connections_rel,
+        degraded=degraded,
+        gh_create=None,
+    )
+    if idx is not None:
+        idx.close()
+    out = {
+        "generated": True,
+        "files": res.files,
+        "branch": res.branch,
+        "noop": res.noop,
+        "cleanup_actions": daily_review.CLEANUP_ACTIONS,
+    }
+    if args.json:
+        _print_json(out)
+    else:
+        print(f"daily review → {res.files[0]} ({'noop' if res.noop else 'proposal'})")
+    return 0
+
+
 def _cmd_converge(args) -> int:
     """Pre-warm: catch the index up to HEAD + a bounded dense fill (U27). The
     post-merge hook's entrypoint; also a manual warm. Lazy read-time convergence
@@ -777,6 +816,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_capture.add_argument("text", help="the raw text to capture")
     p_capture.add_argument("--json", action="store_true")
     p_capture.set_defaults(func=_cmd_capture)
+
+    p_daily = sub.add_parser("daily-review",
+                             help="generate the capture/triage/recall/review cleanup surface")
+    p_daily.add_argument("repo", help="repo to review")
+    p_daily.add_argument("--index-db", default=None,
+                         help="index db (default: <repo>/.hypermnesic)")
+    p_daily.add_argument("--audit-log", default=None,
+                         help="audit log path (default: <repo>/.hypermnesic/audit.jsonl)")
+    p_daily.add_argument("--nav-rel", default="dashboards/MOC.md",
+                         help="navigation surface link")
+    p_daily.add_argument("--digest-rel", default="dashboards/salience-digest.md",
+                         help="salience digest link")
+    p_daily.add_argument("--connections-rel", default=None,
+                         help="suggested connections surface link")
+    p_daily.add_argument("--json", action="store_true")
+    p_daily.set_defaults(func=_cmd_daily_review)
 
     p_conv = sub.add_parser("converge",
                             help="pre-warm: catch the index up to HEAD + bounded dense fill")

@@ -18,3 +18,8 @@ only at arm's length over the read-only MCP wire protocol (`search` / `build_con
 processes with no shared or statically-linked code — and stays true only while the companion
 **does not vendor, import, or statically link engine source** (the read-only-over-the-wire
 invariant). See the engine README's "License" section for the canonical boundary statement.
+
+In the Hypermnesic daily loop, Obsidian is a **read-only** review and navigation surface for
+capture backlog, generated dashboards, daily loop notes, and source paths. Write, cleanup, revoke,
+forget/delete, and revert actions stay in the CLI/MCP git-first surfaces; the companion cannot
+bypass consent, write scope, protected-path refusals, or server-side write guards.

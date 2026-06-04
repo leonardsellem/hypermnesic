@@ -29,6 +29,7 @@ BASE_REL = "dashboards/overview.base"
 
 
 def build_moc(idx, graph, *, audit_log=None, digest_rel=None, connections_rel=None,
+              daily_review_rel=None,
               now: str | None = None) -> str:
     """Render the Map-of-Content note (demarcated). Lists entry-point notes, a
     what-changed section (from the audit log, if given), and links to the salience
@@ -54,6 +55,8 @@ def build_moc(idx, graph, *, audit_log=None, digest_rel=None, connections_rel=No
         lines += ["", "## Resurfaced (salience)", "", f"See [[{digest_rel}]]."]
     if connections_rel:
         lines += ["", "## Suggested connections", "", f"See [[{connections_rel}]]."]
+    if daily_review_rel:
+        lines += ["", "## Daily review", "", f"See [[{daily_review_rel}]]."]
 
     fm = {"title": "Map of Content", "type": "dashboard"}
     if now:
@@ -80,13 +83,15 @@ def build_base_config(*, now: str | None = None) -> str:
 
 
 def nav_proposal(repo, idx, graph, *, audit_log=None, digest_rel=None,
-                 connections_rel=None, log=None, gh_create=None, now: str | None = None):
+                 connections_rel=None, daily_review_rel=None,
+                 log=None, gh_create=None, now: str | None = None):
     """Build the MOC + ``.base`` and emit them as ONE review-gated U18 proposal.
 
     The slug is content-addressed so an unchanged surface re-proposes to a no-op
     and a changed surface opens a fresh proposal."""
     moc = build_moc(idx, graph, audit_log=audit_log, digest_rel=digest_rel,
-                    connections_rel=connections_rel, now=now)
+                    connections_rel=connections_rel, daily_review_rel=daily_review_rel,
+                    now=now)
     base = build_base_config(now=now)
     digest = hashlib.sha256((moc + base).encode("utf-8")).hexdigest()[:8]
     return propose_mod.propose(

@@ -50,6 +50,7 @@ never misleads you.
 | How it works (architecture + diagram) | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) |
 | Getting started (local proof + setup diagnosis + client/plugin failure modes) | [`guides/getting-started.md`](guides/getting-started.md) |
 | Memory taxonomy (what belongs here) | [`guides/memory-taxonomy.md`](guides/memory-taxonomy.md) |
+| Daily workflows (capture, triage, recall, review, cleanup) | [`guides/daily-workflows.md`](guides/daily-workflows.md) |
 | Memory control (inspect/export/forget/revert/audit/write scope) | [`guides/memory-control.md`](guides/memory-control.md) |
 | Consent and clients (scopes/reject/revoke/grants) | [`guides/consent-and-clients.md`](guides/consent-and-clients.md) |
 | MCP tool reference | [`reference/mcp-tools.md`](reference/mcp-tools.md) |

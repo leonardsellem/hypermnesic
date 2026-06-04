@@ -69,6 +69,15 @@ Tool routing:
 - Use `list_folders` before writes when the path or writable surface is unclear.
 - Use `commit_note` only for explicit durable writes that pass the taxonomy above.
 
+Daily workflow routing:
+
+- Use `capture` or the local `hypermnesic capture` CLI for low-friction raw-source intake.
+- Treat triage as review-gated: suggest placement, links, and questions; do not silently move raw
+  captures.
+- Use the local `hypermnesic daily-review` CLI when an owner needs the scan-friendly capture ->
+  triage -> recall -> write -> review -> clean up surface.
+- Use memory-control commands for cleanup; do not create a second delete/revert path.
+
 ## Writing a note — `commit_note` (git-first, gated)
 
 `commit_note(path, body, set_fields?, summary?)` is the **one sanctioned write path**. It is

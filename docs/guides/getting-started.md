@@ -12,6 +12,7 @@ prerequisites, verification, and failure modes for the four ways to run hypermne
   commands.
 - **G. Control clients** — inspect read/write grants and revoke client access.
 - **H. Diagnose plugin recall** — inspect hook status, run test recall, and pause auto-recall.
+- **I. Use the daily loop** — capture, triage, recall, write, review, and clean up.
 
 ## Prerequisites
 
@@ -236,6 +237,19 @@ export HYPERMNESIC_HOOK_DISABLED_HOSTS=codex
 
 This affects only auto-recall. MCP tools remain available through OAuth discovery, and local CLI
 use on the engine host is unchanged.
+
+## I. Use the daily loop
+
+The daily product loop is **capture -> triage -> recall -> write -> review -> clean up**:
+
+```sh
+hypermnesic capture /path/to/vault "raw source or project observation"
+hypermnesic daily-review /path/to/vault
+```
+
+The review surface shows capture backlog, recent writes, generated dashboards, recall-mode
+reminders, degraded/offline notes, and cleanup next actions. Triage is review-gated; raw captures
+are not silently moved or deleted. See [daily workflows](daily-workflows.md).
 
 ## Offline / degraded operation
 
