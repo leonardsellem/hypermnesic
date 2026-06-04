@@ -43,6 +43,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - **`hypermnesic daily-review`**: a review-gated daily workflow dashboard proposal that composes
   capture backlog, recent writes, generated surfaces, recall guidance, degraded/offline notes, and
   cleanup next actions without moving, deleting, or rewriting source notes.
+- **Product readiness proof**: a deterministic `scripts/product_smoke.py` loop, offline
+  remote-client contract tests, a remote-client smoke checklist, and a first-class product
+  readiness checklist that separate benchmark quality from setup/control/client operability.
 - **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local

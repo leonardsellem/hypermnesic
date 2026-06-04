@@ -13,6 +13,8 @@ prerequisites, verification, and failure modes for the four ways to run hypermne
 - **G. Control clients** — inspect read/write grants and revoke client access.
 - **H. Diagnose plugin recall** — inspect hook status, run test recall, and pause auto-recall.
 - **I. Use the daily loop** — capture, triage, recall, write, review, and clean up.
+- **J. Prove product readiness** — run automated product smoke, remote contracts, and the
+  remote-client smoke checklist before making a first-class claim.
 
 ## Prerequisites
 
@@ -161,6 +163,13 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
   only allows `commit_note` requests; protected paths, frontmatter, dirty-tree, head-drift,
   audit, and git coordination guards still apply.
 
+For release or first-class validation, do not stop at a successful connection. Run the
+[remote-client smoke checklist](remote-client-smoke-checklist.md) and record OAuth discovery,
+read-scoped access, write refusal without write scope, write-scoped access, write-guard refusal,
+and revocation evidence for each in-scope client. The
+[first-class product readiness checklist](../launch/first-class-product-readiness-checklist.md)
+is the release gate that combines this manual evidence with automated checks.
+
 ## E. Use it locally (on the engine host)
 
 The host that runs the engine skips the network and uses the CLI:
@@ -250,6 +259,21 @@ hypermnesic daily-review /path/to/vault
 The review surface shows capture backlog, recent writes, generated dashboards, recall-mode
 reminders, degraded/offline notes, and cleanup next actions. Triage is review-gated; raw captures
 are not silently moved or deleted. See [daily workflows](daily-workflows.md).
+
+## J. Prove product readiness
+
+Run the local and offline gates before any manual client smoke:
+
+```sh
+uv run python scripts/product_smoke.py --work-dir /tmp/hypermnesic-smoke --json
+uv run pytest tests/test_smoke.py tests/test_product_remote_smoke.py
+```
+
+Then run the [remote-client smoke checklist](remote-client-smoke-checklist.md) for real clients and
+record the result in the
+[first-class product readiness checklist](../launch/first-class-product-readiness-checklist.md).
+LongMemEval measures retrieval quality; it does not replace setup, consent, memory-control,
+client, revocation, or daily-workflow evidence.
 
 ## Offline / degraded operation
 

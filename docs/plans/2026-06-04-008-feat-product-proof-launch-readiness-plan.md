@@ -1,7 +1,7 @@
 ---
 title: "feat: Product Proof Launch Readiness"
 type: feat
-status: active
+status: completed
 date: 2026-06-04
 origin: docs/brainstorms/2026-06-04-first-class-product-requirements.md
 sprint_unit: U8
@@ -419,6 +419,26 @@ release-blocking proof for the whole U1-U8 sequence.
   `git diff --check` and targeted secret scans.
 
 ## Sources & References
+
+## Implementation Evidence
+
+- Local product smoke: `scripts/product_smoke.py`; covered by `tests/test_smoke.py`.
+- Offline remote contracts: `tests/test_product_remote_smoke.py` covers OAuth discovery, read
+  scope, write-scope refusal, write-scoped success, protected-path refusal, and revocation.
+- Readiness docs contract: `tests/test_product_readiness_docs.py` requires the remote-client smoke
+  checklist, first-class readiness checklist, public-doc links, and benchmark/product-proof
+  separation.
+- Operator manual gate: `docs/guides/remote-client-smoke-checklist.md`.
+- Release-blocking checklist: `docs/launch/first-class-product-readiness-checklist.md`.
+- Benchmark-positioning docs: `README.md` and `harness/BENCHMARKS.md` state that LongMemEval
+  measures retrieval quality and does not replace product operability evidence.
+
+Focused verification before full gates:
+
+```sh
+uv run pytest tests/test_smoke.py tests/test_product_remote_smoke.py tests/test_product_readiness_docs.py -q
+# 11 passed
+```
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)
 - Product review: [docs/reports/2026-06-04-hypermnesic-product-design-review.md](../reports/2026-06-04-hypermnesic-product-design-review.md)

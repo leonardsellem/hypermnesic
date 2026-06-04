@@ -20,6 +20,10 @@ they *own* — plain markdown in their own git repo, no vendor memory database, 
 **Why it's different:** files-are-truth with a throwaway index (not a proprietary memory DB),
 git-first writes (every memory is a reviewable commit), and one endpoint every client shares.
 See [why hypermnesic](docs/why-hypermnesic.md) and the [benchmarks](#benchmarks) below.
+Product proof is tracked separately: use the
+[remote-client smoke checklist](docs/guides/remote-client-smoke-checklist.md) and
+[first-class product readiness checklist](docs/launch/first-class-product-readiness-checklist.md)
+before claiming release readiness.
 
 > **Status:** private, pre-release. The public open-source license (AGPL-3.0) is **staged,
 > not yet live** — see [`docs/launch/`](docs/launch/).
@@ -204,6 +208,11 @@ comparability envelope, per-ability tables, corrections log, and a re-runnable h
 (pinned dataset hash; ~$31 to reproduce) are in
 [`harness/BENCHMARKS.md`](harness/BENCHMARKS.md).
 
+LongMemEval measures retrieval quality. It does not prove setup, consent, memory control, or remote-client operability. Product operability is gated by the local product smoke
+(`scripts/product_smoke.py`), offline remote-contract tests, the
+[remote-client smoke checklist](docs/guides/remote-client-smoke-checklist.md), and the
+[first-class product readiness checklist](docs/launch/first-class-product-readiness-checklist.md).
+
 ## Docs
 
 Start with the [documentation index](docs/README.md). Highlights:
@@ -212,6 +221,8 @@ Start with the [documentation index](docs/README.md). Highlights:
 - [`docs/guides/getting-started.md`](docs/guides/getting-started.md) — local proof, setup diagnosis, and failure modes.
 - [`docs/guides/memory-control.md`](docs/guides/memory-control.md) — inspect, export, forget/delete, revert, audit, and write-scope controls.
 - [`docs/guides/consent-and-clients.md`](docs/guides/consent-and-clients.md) — consent scopes, reject/cancel, client grants, and revocation.
+- [`docs/guides/remote-client-smoke-checklist.md`](docs/guides/remote-client-smoke-checklist.md) — real-client OAuth/read/write/revoke smoke evidence.
+- [`docs/launch/first-class-product-readiness-checklist.md`](docs/launch/first-class-product-readiness-checklist.md) — first-class product readiness checklist.
 - [`docs/reference/`](docs/reference/) — the MCP tool, CLI, and configuration references.
 - `docs/unified-oauth-mcp-deploy-runbook.md` — the unified endpoint: topology, cutover, reverse.
 - `plugin/README.md` — the Claude Code / Codex plugin (OAuth-discovery, distribution-generic).

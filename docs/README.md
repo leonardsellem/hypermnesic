@@ -38,6 +38,9 @@ never misleads you.
   procedures, raw captures, generated summaries with source paths, and current-state mirrors belong
   here; short-term session state and behavioural preferences belong in Honcho or an equivalent
   adjacent behavioural memory layer by default.
+- **Product proof:** benchmark quality and product operability are separate gates. LongMemEval
+  measures retrieval quality; first-class product claims also require local product smoke, offline
+  remote contracts, the remote-client smoke checklist, and the first-class product readiness checklist.
 - **License:** proprietary/private today; the public license (**AGPL-3.0**) is **staged,
   not live** — see [`launch/`](launch/).
 
@@ -53,6 +56,8 @@ never misleads you.
 | Daily workflows (capture, triage, recall, review, cleanup) | [`guides/daily-workflows.md`](guides/daily-workflows.md) |
 | Memory control (inspect/export/forget/revert/audit/write scope) | [`guides/memory-control.md`](guides/memory-control.md) |
 | Consent and clients (scopes/reject/revoke/grants) | [`guides/consent-and-clients.md`](guides/consent-and-clients.md) |
+| Remote-client smoke checklist | [`guides/remote-client-smoke-checklist.md`](guides/remote-client-smoke-checklist.md) |
+| First-class product readiness checklist | [`launch/first-class-product-readiness-checklist.md`](launch/first-class-product-readiness-checklist.md) |
 | MCP tool reference | [`reference/mcp-tools.md`](reference/mcp-tools.md) |
 | CLI reference | [`reference/cli.md`](reference/cli.md) |
 | Configuration reference | [`reference/configuration.md`](reference/configuration.md) |
