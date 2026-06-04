@@ -370,6 +370,37 @@ Obsidian connections.
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. This is the
+release-blocking proof for the whole U1-U8 sequence.
+
+- **AE8 end-to-end gate:** the product proof checklist must show passing evidence for local value,
+  setup diagnosis, remote connection, consent approval/rejection, write refusal/success, memory
+  inspection, export, removal/forget, revert or recovery, hook diagnosis, taxonomy routing, daily
+  workflow, docs coverage, and launch readiness.
+- **Automated smoke gate:** CI or a documented local command must run a deterministic local product
+  smoke over a fixture vault that exercises capture/index, retrieve with source path, dry-run write,
+  doctor/status JSON, memory inspection/control, and degraded retrieval messaging.
+- **Remote-contract gate:** remote-client behavior must be covered by automated contract tests where
+  local infrastructure can simulate it. Manual remote-client evidence is allowed only for true
+  external-client UX checks and must be separately labeled.
+- **First-class checklist gate:** `docs/launch/first-class-product-readiness-checklist.md` must be
+  created and must require current evidence, command output, responsible reviewer, date, and pass/fail
+  state for every U1-U8 product outcome.
+- **Claim-control gate:** README, launch docs, changelog, and release notes must not claim
+  first-class readiness unless the checklist is current and all blocking automated gates pass.
+- **Security/public-surface gate:** public scan, targeted secret/operator-host scans, license scan,
+  auth/write-guard tests, and docs scans must pass over all changed files and fixtures.
+- **Benchmark-positioning gate:** benchmark docs must clearly separate retrieval-quality evidence
+  from product-readiness evidence. LongMemEval or similar benchmark results cannot substitute for
+  product smoke, consent, memory control, or docs proof.
+- **Full-suite release gate:** run the full `AGENTS.md` gate set: `uv sync --extra dev`,
+  `uv run ruff check .`, `uv run python scripts/check_version_consistency.py`, `uv run pytest`,
+  `uv run python scripts/license_scan.py`, `uv run python scripts/preflight_public_scan.py`, plus
+  `git diff --check` and targeted secret scans.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)

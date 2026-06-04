@@ -353,6 +353,35 @@ status behavior.
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. U1-U4 product
+proofs must remain green.
+
+- **AE5 hook diagnosis gate:** when auto-recall is not injecting context, hook status must
+  distinguish off-topic, disabled, unconfigured endpoint, missing credential, unauthenticated,
+  timeout, degraded retrieval, no hits, and successful injection.
+- **Outcome taxonomy gate:** every hook run must map to one stable machine-readable outcome code and
+  a concise human explanation. Tests must assert code stability and prevent ambiguous catch-all
+  success/failure buckets from hiding product problems.
+- **No secret logging gate:** hook status records, plugin logs, snapshots, and docs must not include
+  raw prompts beyond bounded safe snippets, bearer tokens, auth headers, private hosts, private IPs,
+  or environment file contents.
+- **Disable-control gate:** the user can intentionally disable the hook and later see that disabled
+  state as distinct from failure. Disable state must not be reported as misconfiguration.
+- **Test-recall gate:** a local test recall command or equivalent surface must prove endpoint
+  reachability, auth state, retrieval result/degradation, and injection eligibility without waiting
+  for a real agent hook event.
+- **Docs distinction gate:** plugin docs must clearly separate MCP server capability, plugin skill
+  guidance, hook auto-recall behavior, and troubleshooting/status surfaces.
+- **Cumulative product gate:** U1-U5 must compose: after consent and setup, a reviewer can install
+  or fixture the plugin, run test recall, explain a non-injection result, and fix the next action
+  without source-code inspection.
+- **Regression gate:** at minimum run targeted plugin hook tests, auth-relevant tests touched by the
+  status path, `git diff --check`, `uv run python scripts/preflight_public_scan.py`, and the repo
+  gates required by `AGENTS.md`.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)

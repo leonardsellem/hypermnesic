@@ -372,6 +372,33 @@ default.
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. A reviewer must
+be able to rerun the automated gates locally without private operator infrastructure.
+
+- **AE1 product proof gate:** a clean disposable git-backed vault can complete the local-first path:
+  initialize or select vault, index or capture at least one memory, retrieve it with a natural
+  language question, display the source markdown path, and show the next remote-client step without
+  requiring Tailscale, OAuth, MCP, or a public URL.
+- **Onboarding copy gate:** the first-run human output must not lead with OAuth, Tailscale,
+  resource-server, Funnel, or MCP concepts. Those terms may appear only after the local value proof
+  succeeds or in an explicitly labeled remote-client next step.
+- **Agent contract gate:** JSON output for the local proof path must include stable machine-readable
+  fields for status, completed milestones, degraded capabilities, source path, next action, and
+  actionable error codes. Tests must assert field presence and no secret-bearing values.
+- **Retrieval evidence gate:** tests must prove both dense-enabled and lexical-only/degraded paths
+  return useful source-grounded output, and the degraded path must explain the capability loss
+  without treating the product as broken.
+- **Write-safety preview gate:** the dry-run write preview must show exact destination, diff intent,
+  guard result, and no commit side effect. Tests must assert no git commit is created in dry-run.
+- **Docs gate:** README, docs index, CLI reference, and getting-started material must describe the
+  same local-first flow and must not contradict `docs/README.md` current-truth pins.
+- **Regression gate:** at minimum run the targeted tests added by this sprint, `git diff --check`,
+  `uv run python scripts/preflight_public_scan.py`, and the repo gates required by `AGENTS.md`
+  before claiming the sprint complete.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)

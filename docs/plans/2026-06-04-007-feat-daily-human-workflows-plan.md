@@ -372,6 +372,35 @@ generated surfaces, capture backlog, and suggested connections.
 
 ---
 
+## First-Class Validation Gates
+
+This sprint is not complete until every gate below has passing evidence captured in the PR
+description, Linear issue comment when available, and final implementation handoff. U1-U6 product
+proofs must remain green.
+
+- **AE7 daily-loop gate:** a reviewer can capture raw text during work, return later, see a triage
+  path, receive suggested placement/links/questions, and confirm that raw source was not silently
+  moved or deleted.
+- **Workflow completeness gate:** the documented and surfaced loop must cover capture, triage,
+  recall, write, owner review, cleanup, and Obsidian companion read-only alignment. No step may be
+  an unexplained jump to implementation internals.
+- **Review-gated mutation gate:** any workflow step that writes, moves, deletes, or rewrites memory
+  must use preview/review semantics and the git-first write path. Tests must prove raw capture
+  preservation and refusal on protected destinations.
+- **Human ergonomics gate:** command names, output labels, and docs must use the same product verbs
+  as the control center. The user should not need to know index internals, sqlite tables, or MCP
+  transport details to complete the daily loop.
+- **Obsidian alignment gate:** companion guidance must remain read-only unless a separate approved
+  plan changes that boundary. Docs must not imply Obsidian can bypass server-side consent or write
+  guards.
+- **Cleanup gate:** cleanup must distinguish archive, forget/delete, revert, and triage completion.
+  Tests or checklist evidence must show the user can verify the post-cleanup memory state.
+- **Cumulative product gate:** U1-U7 must compose into a daily operator walkthrough from local proof
+  through capture/triage/recall/write/review/cleanup, including diagnosis and trust controls.
+- **Regression gate:** at minimum run targeted capture/triage/control docs or CLI tests,
+  `git diff --check`, `uv run python scripts/preflight_public_scan.py`, and the repo gates required
+  by `AGENTS.md`.
+
 ## Sources & References
 
 - Origin document: [docs/brainstorms/2026-06-04-first-class-product-requirements.md](../brainstorms/2026-06-04-first-class-product-requirements.md)
