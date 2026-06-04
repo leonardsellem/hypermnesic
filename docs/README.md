@@ -33,6 +33,7 @@ never misleads you.
 | Contributing / agent contract | [`../CONTRIBUTING.md`](../CONTRIBUTING.md), [`../AGENTS.md`](../AGENTS.md) |
 | Changelog | [`../CHANGELOG.md`](../CHANGELOG.md) |
 | Deploy (current) | [`unified-oauth-mcp-deploy-runbook.md`](unified-oauth-mcp-deploy-runbook.md) |
+| Agent plugins | [`../plugin/README.md`](../plugin/README.md) |
 | Security reviews (dated deltas) | [`2026-06-03-unified-write-anywhere-security-review.md`](2026-06-03-unified-write-anywhere-security-review.md), [`2026-06-03-blocklist-write-surface-security-review.md`](2026-06-03-blocklist-write-surface-security-review.md) |
 
 ## Public-launch staging

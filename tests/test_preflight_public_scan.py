@@ -111,6 +111,7 @@ def test_scope_scans_durable_docs_and_code_in_default():
     assert pf.in_scope("docs/reference/cli.md", strict=False) is True
     assert pf.in_scope("docs/README.md", strict=False) is True
     assert pf.in_scope("src/hypermnesic/cli.py", strict=False) is True
+    assert pf.in_scope("plugin/hermes/plugin.yaml", strict=False) is True
     assert pf.in_scope("tests/test_smoke.py", strict=False) is True
 
 

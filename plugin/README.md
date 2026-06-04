@@ -1,9 +1,17 @@
-# hypermnesic plugin (Claude Code + Codex)
+# hypermnesic plugins
 
-Makes **hypermnesic** the default memory layer for coding agents: a skillset that teaches
-agents when/how to use it, a lightweight auto-recall hook that surfaces relevant context at
-prompt time, and OAuth-discovery MCP wiring (point it at your endpoint, log in once in a
-browser, then silent refresh).
+This directory contains two distinct agent integration surfaces:
+
+- **Claude Code + Codex:** the marketplace/MCP pack under `plugin/plugins/hypermnesic/`.
+- **Hermes Agent:** the CLI-first pack under `plugin/hermes/`.
+
+The Claude Code + Codex pack makes **hypermnesic** the default memory layer for coding agents:
+a skillset that teaches agents when/how to use it, a lightweight auto-recall hook that surfaces
+relevant context at prompt time, and OAuth-discovery MCP wiring (point it at your endpoint, log in
+once in a browser, then silent refresh).
+
+The Hermes Agent pack is intentionally separate. Hermes uses the local `hypermnesic` CLI through
+`plugin/hermes/`; it does not consume the Claude/Codex manifests or MCP wiring.
 
 ## What's inside
 
@@ -17,6 +25,12 @@ plugin/
     hooks/hooks.json                       # one UserPromptSubmit auto-recall hook
     hooks/scripts/hypermnesic_agent_hook.py# the auto-recall hook (Claude+Codex, --host)
     .mcp.json                              # OAuth-discovery MCP wiring (env-templated URL, no host, no token)
+  hermes/
+    plugin.yaml                            # Hermes plugin manifest
+    __init__.py                            # register(ctx): skill + optional pre_llm_call hook
+    skills/hypermnesic-memory/SKILL.md     # Hermes namespaced skill (CLI commands)
+    flat-skill/hypermnesic-memory/SKILL.md # optional flat skill export
+    README.md                              # Hermes CLI setup guide
 ```
 
 ## How it surfaces memory

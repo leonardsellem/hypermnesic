@@ -30,6 +30,8 @@ import sys
 import tomllib
 from pathlib import Path
 
+from ruamel.yaml import YAML
+
 ROOT = Path(__file__).resolve().parent.parent
 
 AUTHORITY = ROOT / "pyproject.toml"
@@ -38,6 +40,7 @@ MANIFESTS = (
     ROOT / "plugin" / ".claude-plugin" / "marketplace.json",
     ROOT / "plugin" / "plugins" / "hypermnesic" / ".claude-plugin" / "plugin.json",
     ROOT / "plugin" / "plugins" / "hypermnesic" / ".codex-plugin" / "plugin.json",
+    ROOT / "plugin" / "hermes" / "plugin.yaml",
 )
 
 
@@ -56,7 +59,12 @@ def init_version(path: Path = INIT) -> str | None:
 def manifest_versions(path: Path) -> list[str]:
     """Every version string a manifest declares — top-level ``version`` plus each
     ``plugins[].version`` (so the marketplace listing's nested slot is covered too)."""
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    path = Path(path)
+    raw = path.read_text(encoding="utf-8")
+    if path.suffix in {".yaml", ".yml"}:
+        data = YAML(typ="safe").load(raw) or {}
+    else:
+        data = json.loads(raw)
     out: list[str] = []
     if isinstance(data.get("version"), str):
         out.append(data["version"])
