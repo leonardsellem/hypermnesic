@@ -456,8 +456,14 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 principal = get_access_token()
                 if principal is not None and write_scope not in (principal.scopes or []):
                     return {"committed": False,
-                            "refused": f"insufficient_scope: '{write_scope}' scope required "
-                                       "for commit_note"}
+                            "refused": (
+                                f"insufficient_scope: {write_scope} scope is required for "
+                                "commit_note. Reconnect this client and approve write access "
+                                "before requesting memory writes. Write approval only allows "
+                                "the client to request commit_note; it does not bypass "
+                                "protected-path, frontmatter, dirty-tree, head-drift, audit, "
+                                "or git coordination guards."
+                            )}
             try:
                 r = commit_note_mod.commit_note(
                     backend.repo, path, body=body, set_fields=set_fields, summary=summary,
@@ -477,19 +483,47 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
 
 _CONSENT_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <title>hypermnesic — authorize</title></head>
-<body style="font-family:system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">
-<h2>Authorize a connection to your hypermnesic memory</h2>
-<p>This client is requesting access. Approve it ONLY if you recognise it — entering your
-approval token grants it the scopes below. Only you hold this token.</p>
-<ul><li><b>Client:</b> {client}</li><li><b>Redirect:</b> {redirect}</li>
-<li><b>Scopes:</b> {scopes}</li></ul>
+<body style="font-family:system-ui;max-width:42rem;margin:3rem auto;padding:0 1rem;line-height:1.5">
+<main>
+<h1 style="font-size:1.6rem;margin-bottom:.25rem">Authorize Hypermnesic access</h1>
+<p style="margin-top:0;color:#444">Review what this client can do before approving. This page
+does not show or reveal your operator approval credential.</p>
+{warning}
+<section aria-labelledby="request-details">
+<h2 id="request-details" style="font-size:1.1rem">Request details</h2>
+<dl>
+<dt><b>Client</b></dt><dd>{client}</dd>
+<dt><b>Redirect origin</b></dt><dd>{redirect_origin}</dd>
+<dt><b>Redirect URI</b></dt><dd>{redirect}</dd>
+<dt><b>Requested scopes</b></dt><dd>{scopes}</dd>
+</dl>
+</section>
+<section aria-labelledby="scope-details">
+<h2 id="scope-details" style="font-size:1.1rem">What access means</h2>
+<ul>{scope_explanations}</ul>
+<p>Write access can request <code>commit_note</code>, but it does not bypass protected paths,
+frontmatter validation, dirty-tree checks, head-drift checks, audit logging, or git coordination
+guards.</p>
+</section>
+<section aria-labelledby="revoke-details">
+<h2 id="revoke-details" style="font-size:1.1rem">Revocation</h2>
+<p>You can reject this request now. Use client control after approval to revoke this client and stop
+future access.</p>
+</section>
 {error}
 <form method="post" action="{action}">
 <input type="hidden" name="pending" value="{pending}">
-<label>Approval token<br><input type="password" name="approval_token" autocomplete="off"
-style="width:100%;padding:.5rem"></label>
-<p><button type="submit" style="padding:.5rem 1rem">Approve</button></p>
-</form></body></html>"""
+<label for="approval-token"><b>Approval credential</b></label><br>
+<input id="approval-token" type="password" name="approval_token" autocomplete="off"
+style="width:100%;padding:.5rem;margin:.25rem 0 1rem">
+<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+<button type="submit" name="decision" value="approve" style="padding:.5rem 1rem">
+{approve_label}</button>
+<button type="submit" name="decision" value="reject" style="padding:.5rem 1rem">Reject</button>
+<button type="submit" name="decision" value="cancel" style="padding:.5rem 1rem">Cancel</button>
+</div>
+</form>
+</main></body></html>"""
 
 _CONSENT_ERROR_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <title>hypermnesic — authorize</title></head>
@@ -530,15 +564,54 @@ def _render_consent(provider, pending_id: str, error: str = "") -> tuple[str, in
     details = provider.pending_details(pending_id)
     if details is None:
         return _CONSENT_ERROR_HTML, 404          # do not reflect an unknown/arbitrary id
-    err = f'<p style="color:#b00">{_html.escape(error)}</p>' if error else ""
+    from urllib.parse import urlsplit
+
+    err = f'<p role="alert" style="color:#b00">{_html.escape(error)}</p>' if error else ""
     # the form must POST back to the PUBLIC consent path (<public>/consent), not a root-absolute
     # "/consent" — behind the Funnel's /cloud mount the latter posts to the host root and 404s.
     action = _html.escape(f"{provider.public_url}/consent")
+    scopes = list(details["scopes"])
+    scope_explanations: list[str] = []
+    if "read" in scopes:
+        scope_explanations.append(
+            "<li><b>Read access</b>: the client can search and recall indexed memory.</li>"
+        )
+    if "write" in scopes:
+        scope_explanations.append(
+            "<li><b>Write access</b>: the client can request commit_note writes, subject to "
+            "all Hypermnesic write guards.</li>"
+        )
+    for scope in scopes:
+        if scope not in {"read", "write"}:
+            scope_explanations.append(
+                f"<li><b>{_html.escape(str(scope))}</b>: unrecognized scope.</li>"
+            )
+    if not scope_explanations:
+        scope_explanations.append("<li>No recognized scopes were requested.</li>")
+    redirect_uri = str(details["redirect_uri"])
+    redirect_origin = urlsplit(redirect_uri)
+    redirect_origin_text = (
+        f"{redirect_origin.scheme}://{redirect_origin.netloc}"
+        if redirect_origin.scheme and redirect_origin.netloc else "(unknown)"
+    )
+    client_name = details.get("client_name")
+    client_label = str(client_name or details["client_id"])
+    generic_names = {"client", "mcp client", "oauth client", "unknown", "hypermnesic client"}
+    warning = ""
+    if not client_name or str(client_name).strip().lower() in generic_names:
+        warning = (
+            '<p role="note" style="border:1px solid #b88700;padding:.75rem;background:#fff8df">'
+            "Warning: this request has a generic or missing client identity. Approve only if you "
+            "recognize the app and redirect origin.</p>"
+        )
+    approve_label = "Approve read and write" if "write" in scopes else "Approve read"
     html = _CONSENT_HTML.format(
         action=action, pending=_html.escape(pending_id),
-        client=_html.escape(str(details.get("client_name") or details["client_id"])),
-        redirect=_html.escape(str(details["redirect_uri"])),
-        scopes=_html.escape(" ".join(details["scopes"])), error=err)
+        client=_html.escape(client_label),
+        redirect_origin=_html.escape(redirect_origin_text),
+        redirect=_html.escape(redirect_uri),
+        scopes=_html.escape(" ".join(scopes)), scope_explanations="\n".join(scope_explanations),
+        warning=warning, approve_label=_html.escape(approve_label), error=err)
     return html, (403 if error else 200)
 
 
@@ -593,8 +666,12 @@ def _register_consent_route(mcp: FastMCP, provider) -> None:
         pending = str(form.get("pending", ""))
         redirect_uri = _redirect_uri_of(pending)          # capture BEFORE finalize consumes it
         try:
-            redirect = provider.finalize_consent(pending, approval_token=str(
-                form.get("approval_token", "")))
+            decision = str(form.get("decision", "approve"))
+            if decision in {"reject", "cancel"}:
+                redirect = provider.reject_consent(pending, decision=decision)
+            else:
+                redirect = provider.finalize_consent(pending, approval_token=str(
+                    form.get("approval_token", "")))
         except auth_cloud.ConsentError as exc:
             html, status = _render_consent(provider, pending, error=str(exc))
             return HTMLResponse(html, status_code=status,
@@ -627,7 +704,7 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
         RevocationOptions,
     )
 
-    from hypermnesic import auth_cloud
+    from hypermnesic import auth_cloud, client_control
 
     # R2 (engine invariant): the unified lane must advertise an HTTPS public-origin issuer +
     # resource — never a bare-IP / plain-HTTP one. A non-HTTPS or bare-IP issuer is exactly the
@@ -638,7 +715,8 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
 
     provider = auth_cloud.CloudAuthProvider(
         resource=resource, public_url=public_url, approval_token=approval_token,
-        scopes_supported=list(scopes_supported), token_ttl_seconds=token_ttl_seconds)
+        scopes_supported=list(scopes_supported), token_ttl_seconds=token_ttl_seconds,
+        grant_store_path=(client_control.grant_store_path(repo) if repo is not None else None))
     auth = AuthSettings(
         issuer_url=public_url, resource_server_url=resource, required_scopes=None,
         client_registration_options=ClientRegistrationOptions(

@@ -33,6 +33,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   inspecting remembered files, exporting markdown with provenance, previewing and applying
   git-backed forget/delete, reverting safe recent single-file writes, viewing
   summary-only audit/refusal history, and answering what agents may write.
+- **`hypermnesic clients`**: an owner client-control command group for listing secret-free
+  OAuth grant metadata and previewing/applying grant revocation without exposing bearer
+  tokens, refresh tokens, approval credentials, or client secrets.
 - **Hermes Agent CLI plugin pack:** added a Hermes-specific `plugin/hermes/` package
   that registers a namespaced hypermnesic memory skill, includes an optional flat skill
   export, and can opt into bounded `pre_llm_call` recall through the local
@@ -43,6 +46,8 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   endpoint setup or remote-client connection.
 - `hypermnesic setup --resource` now defaults to `--public-url` for the common endpoint
   shape, while preserving explicit resource overrides for advanced deployments.
+- OAuth consent now explains read/write scope consequences, generic-client warnings,
+  reject/cancel choices, revocation guidance, and clearer write-scope refusal language.
 
 ## [0.0.6] — 2026-06-03
 

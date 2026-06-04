@@ -11,7 +11,7 @@ hypermnesic --version
 hypermnesic <subcommand> [args] [flags]
 ```
 
-There are **20 subcommands**, grouped below by role.
+There are **21 subcommands**, grouped below by role.
 
 ## Local proof
 
@@ -133,6 +133,22 @@ Flags: `--apply`, `--index-db PATH`, `--audit-log PATH`, `--now`, `--json`.
 Show recent write, forget, revert, reconcile, and refusal entries from the summary-only
 audit log.
 Flags: `--index-db PATH`, `--audit-log PATH`, `--limit N`, `--now`, `--json`.
+
+## Client control
+
+### `clients list <repo>`
+List known OAuth client grants from the secret-free grant metadata store. Output includes
+grant id, client id/name, redirect URI/origin, scopes, write-enabled state, issue/update
+times, expiry times, status, and active flag. It does not include bearer tokens, refresh
+tokens, approval credentials, client secrets, or token hashes.
+Flags: `--grant-store PATH` (default `<repo>/.hypermnesic/client-grants.json`), `--json`.
+
+### `clients revoke <repo> <grant_id>`
+Preview or apply revocation for a known client grant. Preview is the default. `--apply`
+marks the grant revoked in the metadata store; a running server sharing that store refuses
+the grant on the next access or refresh validation, and provider-level revocation kills
+the live access/refresh pair.
+Flags: `--grant-store PATH`, `--apply`, `--json`.
 
 ## Hooks
 

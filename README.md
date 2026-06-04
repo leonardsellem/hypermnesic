@@ -85,7 +85,10 @@ Point the app's MCP server at your endpoint URL — that's it. OAuth is automati
 - **Read vs. write:** read access is the default. To grant the `commit_note` **write**
   tool, approve **write** on the consent page (type your approval token from
   `~/.config/hypermnesic-cloud/cloud.env`). The consent page shows exactly which scopes
-  you're granting.
+  you're granting, lets you reject or cancel, and explains how to revoke later.
+- **Client control:** after authorization, inspect or revoke known grants on the engine
+  host with `hypermnesic clients list /path/to/vault` and
+  `hypermnesic clients revoke /path/to/vault <grant-id> --apply`.
 - **Claude Code / Codex plugin:** install the plugin in `plugin/` and set
   `HYPERMNESIC_MCP_URL` to your endpoint — the bundled `.mcp.json` is discovery-only and
   carries no host or token. See `plugin/README.md`.
@@ -106,6 +109,7 @@ hypermnesic resolve  /path/to/vault "Some Entity"               # name → page 
 hypermnesic commit-note /path/to/vault notes/x.md --body "…"    # git-first write (dry-run preview)
 hypermnesic memory list /path/to/vault                          # inspect/control memory
 hypermnesic memory forget /path/to/vault notes/bad.md            # preview source removal
+hypermnesic clients list /path/to/vault                         # inspect OAuth client grants
 ```
 
 ---
@@ -146,6 +150,9 @@ and the surfaces built on top:
   markdown plus provenance, previews and applies git-backed forget/delete, reverts safe
   recent single-file writes, shows audit/refusal history, and answers what an agent may
   write using the same guard as `commit_note`.
+- **Client control** — `hypermnesic clients` lists secret-free OAuth grant metadata and
+  revokes grants without exposing bearer tokens, refresh tokens, approval credentials, or
+  client secrets.
 - **Security** — operator-consent gates the `write` scope at login; audience-bound tokens
   (RFC 8707); refresh rotation + whole-grant revoke; a per-request consent CSP. See
   `docs/2026-06-03-unified-write-anywhere-security-review.md`.
@@ -176,6 +183,7 @@ Start with the [documentation index](docs/README.md). Highlights:
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — how it works (the disposable-index invariant, retrieval, write path, serving lanes).
 - [`docs/guides/getting-started.md`](docs/guides/getting-started.md) — local proof, setup diagnosis, and failure modes.
 - [`docs/guides/memory-control.md`](docs/guides/memory-control.md) — inspect, export, forget/delete, revert, audit, and write-scope controls.
+- [`docs/guides/consent-and-clients.md`](docs/guides/consent-and-clients.md) — consent scopes, reject/cancel, client grants, and revocation.
 - [`docs/reference/`](docs/reference/) — the MCP tool, CLI, and configuration references.
 - `docs/unified-oauth-mcp-deploy-runbook.md` — the unified endpoint: topology, cutover, reverse.
 - `plugin/README.md` — the Claude Code / Codex plugin (OAuth-discovery, distribution-generic).

@@ -671,6 +671,27 @@ def test_commit_note_rejects_read_scoped_principal(make_corpus, fake_embedder):
     assert not (repo / "notes/n.md").exists()                 # nothing written
 
 
+def test_commit_note_read_scope_refusal_is_actionable_and_guard_preserving(make_corpus,
+                                                                           fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    srv = _write_server(repo, fake_embedder)
+    head_before = _git(repo, "rev-parse", "HEAD")
+    var, tok = _set_principal(["read"])
+    try:
+        out = _call(srv, "commit_note", {"path": "notes/n.md", "body": "# N\n\nbody.\n"})
+    finally:
+        var.reset(tok)
+    assert out["committed"] is False
+    refusal = out["refused"]
+    assert "write scope is required" in refusal
+    assert "reconnect" in refusal or "approve write" in refusal
+    assert "does not bypass protected-path" in refusal
+    assert "frontmatter" in refusal and "git" in refusal
+    assert "token" not in refusal.lower() and "secret" not in refusal.lower()
+    assert _git(repo, "rev-parse", "HEAD") == head_before
+    assert not (repo / "notes/n.md").exists()
+
+
 def test_commit_note_allows_write_scoped_principal(make_corpus, fake_embedder):
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     srv = _write_server(repo, fake_embedder)

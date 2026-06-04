@@ -26,6 +26,7 @@ import hmac
 import secrets
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 from mcp.server.auth.provider import (
     AccessToken,
@@ -76,7 +77,7 @@ class CloudAuthProvider:
     def __init__(self, *, resource: str, public_url: str, approval_token: str,
                  scopes_supported: list[str], token_ttl_seconds: int = 3600,
                  code_ttl_seconds: int = 300, refresh_ttl_seconds: int = 30 * 24 * 3600,
-                 now=None) -> None:
+                 now=None, grant_store_path: Path | None = None) -> None:
         self._resource = str(resource).rstrip("/")
         self._public = str(public_url).rstrip("/")
         self._approval_hash = _hash(approval_token)        # the operator credential, hashed
@@ -91,6 +92,10 @@ class CloudAuthProvider:
         self._access: dict[str, AccessToken] = {}
         self._refresh: dict[str, RefreshToken] = {}
         self._sibling: dict[str, str] = {}        # access<->refresh linkage (whole-grant revoke)
+        self._grants: dict[str, dict] = {}
+        self._grant_by_token: dict[str, str] = {}
+        self._grant_tokens: dict[str, tuple[str, str]] = {}
+        self._grant_store_path = Path(grant_store_path) if grant_store_path is not None else None
 
     @property
     def public_url(self) -> str:
@@ -107,10 +112,66 @@ class CloudAuthProvider:
                         if v.expires_at is None or v.expires_at > now}
         self._refresh = {k: v for k, v in self._refresh.items()
                          if v.expires_at is None or v.expires_at > now}
+        self._sync_grant_statuses()
         if len(self._pending) > MAX_PENDING:       # drop the oldest pendings past the cap
             ordered = sorted(self._pending, key=lambda x: self._pending[x].expires_at)
             for k in ordered[:-MAX_PENDING]:
                 self._pending.pop(k, None)
+
+    def _persist_grant(self, grant: dict) -> None:
+        if self._grant_store_path is None:
+            return
+        from hypermnesic import client_control
+        client_control.upsert_grant(self._grant_store_path, grant)
+
+    def _stored_revoked(self, grant_id: str) -> bool:
+        if self._grant_store_path is None:
+            return False
+        from hypermnesic import client_control
+        stored = client_control.find_grant(self._grant_store_path, grant_id)
+        return bool(stored and stored.get("status") == "revoked")
+
+    def _mark_grant(self, grant_id: str, status: str) -> None:
+        grant = self._grants.get(grant_id)
+        if grant is None:
+            return
+        grant["status"] = status
+        grant["active"] = status == "active"
+        grant["updated_at"] = self._now()
+        if status == "revoked":
+            grant["revoked_at"] = self._now()
+        self._persist_grant(grant)
+
+    def _sync_grant_statuses(self) -> None:
+        for grant_id, grant in list(self._grants.items()):
+            if grant.get("status") == "revoked":
+                continue
+            if self._stored_revoked(grant_id):
+                self._revoke_grant_tokens(grant_id)
+                self._mark_grant(grant_id, "revoked")
+                continue
+            tokens = self._grant_tokens.get(grant_id)
+            if not tokens:
+                self._mark_grant(grant_id, "expired")
+                continue
+            access, refresh = tokens
+            if access not in self._access and refresh not in self._refresh:
+                self._mark_grant(grant_id, "expired")
+
+    def _revoke_grant_tokens(self, grant_id: str) -> None:
+        tokens = self._grant_tokens.pop(grant_id, None)
+        if not tokens:
+            return
+        for tok in tokens:
+            sib = self._sibling.pop(tok, None)
+            self._sibling.pop(sib, None) if sib else None
+            self._access.pop(tok, None)
+            self._refresh.pop(tok, None)
+            self._grant_by_token.pop(tok, None)
+            if sib:
+                self._access.pop(sib, None)
+                self._refresh.pop(sib, None)
+                self._grant_by_token.pop(sib, None)
 
     # --- DCR ---------------------------------------------------------------
     async def get_client(self, client_id: str) -> OAuthClientInformationFull | None:
@@ -150,6 +211,9 @@ class CloudAuthProvider:
                 "redirect_uri": p.redirect_uri, "scopes": list(p.scopes)}
 
     def finalize_consent(self, pending_id: str, approval_token: str) -> str:
+        return self.finalize_consent_result(pending_id, approval_token)["redirect_uri"]
+
+    def finalize_consent_result(self, pending_id: str, approval_token: str) -> dict:
         """The consent route calls this after the operator authenticates. The operator's approval
         token is required; a wrong token is counted and the pending is dropped after the failure
         cap (no indefinite online brute force). The issued code is bound to our single resource."""
@@ -164,6 +228,7 @@ class CloudAuthProvider:
                 self._pending.pop(pending_id, None)        # stop online brute force on this pending
             raise ConsentError("operator approval required: invalid or missing approval token")
         self._pending.pop(pending_id, None)
+        client = self._clients.get(pending.client_id)
         code = CODE_PREFIX + secrets.token_urlsafe(24)
         self._codes[code] = AuthorizationCode(
             code=code, scopes=list(pending.scopes), expires_at=self._now() + self._code_ttl,
@@ -172,6 +237,37 @@ class CloudAuthProvider:
             redirect_uri_provided_explicitly=pending.redirect_uri_provided_explicitly,
             resource=self._resource, subject="operator")          # always our single resource
         params = {"code": code}
+        if pending.state is not None:
+            params["state"] = pending.state
+        return {
+            "redirect_uri": construct_redirect_uri(pending.redirect_uri, **params),
+            "confirmation": {
+                "client_id": pending.client_id,
+                "client_name": client.client_name if client else None,
+                "redirect_uri": pending.redirect_uri,
+                "scopes": list(pending.scopes),
+                "write_enabled": "write" in pending.scopes,
+                "message": (
+                    "Approved write access: this client can request commit_note, subject to "
+                    "Hypermnesic write guards."
+                    if "write" in pending.scopes
+                    else "Approved read access: this client can search and recall memory."
+                ),
+            },
+        }
+
+    def reject_consent(self, pending_id: str, *, decision: str = "reject") -> str:
+        """Consume a pending request without issuing a code. The client receives the OAuth
+        denial redirect and no grant state is created."""
+        self._sweep()
+        pending = self._pending.pop(pending_id, None)
+        if pending is None or pending.expires_at <= self._now():
+            raise ConsentError("unknown, expired, or already-consumed authorization request")
+        description = (
+            "Hypermnesic authorization cancelled by the operator"
+            if decision == "cancel" else "Hypermnesic authorization rejected by the operator"
+        )
+        params = {"error": "access_denied", "error_description": description}
         if pending.state is not None:
             params["state"] = pending.state
         return construct_redirect_uri(pending.redirect_uri, **params)
@@ -187,7 +283,8 @@ class CloudAuthProvider:
     async def exchange_authorization_code(self, client: OAuthClientInformationFull,
                                           authorization_code: AuthorizationCode) -> OAuthToken:
         self._codes.pop(authorization_code.code, None)         # single-use
-        return self._issue(client.client_id, tuple(authorization_code.scopes))
+        return self._issue(client.client_id, tuple(authorization_code.scopes),
+                           redirect_uri=str(authorization_code.redirect_uri))
 
     # --- refresh -----------------------------------------------------------
     async def load_refresh_token(self, client: OAuthClientInformationFull,
@@ -197,6 +294,11 @@ class CloudAuthProvider:
             return None
         if rt.expires_at is not None and rt.expires_at <= self._now():
             return None
+        grant_id = self._grant_by_token.get(refresh_token)
+        if grant_id and self._stored_revoked(grant_id):
+            self._revoke_grant_tokens(grant_id)
+            self._mark_grant(grant_id, "revoked")
+            return None
         return rt
 
     async def exchange_refresh_token(self, client: OAuthClientInformationFull,
@@ -204,11 +306,16 @@ class CloudAuthProvider:
         granted = tuple(s for s in (scopes or refresh_token.scopes) if s in refresh_token.scopes)
         # rotate: invalidate the consumed refresh token (the old access keeps its short TTL)
         old = refresh_token.token
+        grant_id = self._grant_by_token.get(old)
+        redirect_uri = self._grants.get(grant_id or "", {}).get("redirect_uri")
         self._refresh.pop(old, None)
         old_access = self._sibling.pop(old, None)
         if old_access:
             self._sibling.pop(old_access, None)
-        return self._issue(client.client_id, granted or tuple(refresh_token.scopes))
+            self._grant_by_token.pop(old_access, None)
+        self._grant_by_token.pop(old, None)
+        return self._issue(client.client_id, granted or tuple(refresh_token.scopes),
+                           redirect_uri=redirect_uri, grant_id=grant_id)
 
     # --- access-token validation (the RS path via ProviderTokenVerifier) ---
     async def load_access_token(self, token: str) -> AccessToken | None:
@@ -217,33 +324,101 @@ class CloudAuthProvider:
             return None
         if str(at.resource or "").rstrip("/") != self._resource:   # audience enforced at the RS
             return None
+        grant_id = self._grant_by_token.get(token)
+        if grant_id and self._stored_revoked(grant_id):
+            self._revoke_grant_tokens(grant_id)
+            self._mark_grant(grant_id, "revoked")
+            return None
         return at
 
     async def revoke_token(self, token) -> None:
         """RFC 7009: revoking either token of a grant kills the whole grant (access + its
         refresh sibling) — the operator's kill switch must really cut access."""
         tok = getattr(token, "token", token)
+        grant_id = self._grant_by_token.get(tok)
         sib = self._sibling.pop(tok, None)
         self._access.pop(tok, None)
         self._refresh.pop(tok, None)
+        self._grant_by_token.pop(tok, None)
         if sib:
             self._sibling.pop(sib, None)
             self._access.pop(sib, None)
             self._refresh.pop(sib, None)
+            self._grant_by_token.pop(sib, None)
+        if grant_id:
+            self._grant_tokens.pop(grant_id, None)
+            self._mark_grant(grant_id, "revoked")
+
+    def list_grants(self) -> list[dict]:
+        self._sweep()
+        return [
+            dict(grant)
+            for grant in sorted(
+                self._grants.values(),
+                key=lambda g: g.get("issued_at") or 0,
+            )
+        ]
+
+    def revoke_grant(self, grant_id: str) -> dict:
+        self._sweep()
+        grant = self._grants.get(grant_id)
+        if grant is None:
+            return {"status": "not_found", "grant_id": grant_id}
+        if grant.get("status") == "revoked":
+            return {"status": "already_revoked", "grant_id": grant_id, "active": False}
+        self._revoke_grant_tokens(grant_id)
+        self._mark_grant(grant_id, "revoked")
+        return {"status": "revoked", "grant_id": grant_id, "active": False}
 
     # --- issuance helper ---------------------------------------------------
-    def _issue(self, client_id: str, scopes: tuple[str, ...]) -> OAuthToken:
+    def _issue(self, client_id: str, scopes: tuple[str, ...], *,
+               redirect_uri: str | None = None, grant_id: str | None = None) -> OAuthToken:
+        from urllib.parse import urlsplit
+
         access = ACCESS_PREFIX + secrets.token_urlsafe(32)
         refresh = REFRESH_PREFIX + secrets.token_urlsafe(32)
+        grant_id = grant_id or ("grant_" + secrets.token_urlsafe(16))
         exp = self._now() + self._token_ttl
+        refresh_exp = self._now() + self._refresh_ttl
         self._access[access] = AccessToken(
             token=access, client_id=client_id, scopes=list(scopes), expires_at=exp,
             resource=self._resource, subject="operator", claims={"aud": self._resource})
         self._refresh[refresh] = RefreshToken(
             token=refresh, client_id=client_id, scopes=list(scopes),
-            expires_at=self._now() + self._refresh_ttl, subject="operator")
+            expires_at=refresh_exp, subject="operator")
         self._sibling[access] = refresh        # link the grant so revoke kills both
         self._sibling[refresh] = access
+        self._grant_by_token[access] = grant_id
+        self._grant_by_token[refresh] = grant_id
+        self._grant_tokens[grant_id] = (access, refresh)
+        client = self._clients.get(client_id)
+        redirect_uri = redirect_uri or (
+            str(client.redirect_uris[0]) if client and client.redirect_uris else ""
+        )
+        parsed = urlsplit(redirect_uri)
+        redirect_origin = (
+            f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else ""
+        )
+        prior = self._grants.get(grant_id, {})
+        now = self._now()
+        grant = {
+            "grant_id": grant_id,
+            "client_id": client_id,
+            "client_name": client.client_name if client else None,
+            "redirect_uri": redirect_uri,
+            "redirect_origin": redirect_origin,
+            "scopes": list(scopes),
+            "write_enabled": "write" in scopes,
+            "issued_at": prior.get("issued_at", now),
+            "updated_at": now,
+            "access_expires_at": exp,
+            "refresh_expires_at": refresh_exp,
+            "status": "active",
+            "active": True,
+            "revoked_at": None,
+        }
+        self._grants[grant_id] = grant
+        self._persist_grant(grant)
         return OAuthToken(access_token=access, token_type="Bearer", expires_in=self._token_ttl,
                           scope=" ".join(scopes), refresh_token=refresh)
 

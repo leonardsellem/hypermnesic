@@ -585,6 +585,29 @@ def _cmd_memory(args) -> int:
     return 0
 
 
+def _cmd_clients(args) -> int:
+    """Owner-facing OAuth client/grant control."""
+    from hypermnesic import client_control
+
+    store = (Path(args.grant_store) if args.grant_store
+             else client_control.grant_store_path(Path(args.repo)))
+    try:
+        if args.clients_command == "list":
+            out = client_control.list_grants(store)
+        elif args.clients_command == "revoke":
+            out = client_control.revoke_grant(store, args.grant_id, apply=args.apply)
+        else:
+            raise ValueError(f"unknown clients command: {args.clients_command}")
+    except (OSError, ValueError) as exc:
+        print(f"clients {args.clients_command} failed: {exc}", file=sys.stderr)
+        return 1
+    if args.json:
+        _print_json(out)
+    else:
+        _print_clients_human(args.clients_command, out)
+    return 0
+
+
 def _print_memory_human(command: str, out: dict) -> None:
     if command == "list":
         print(f"# memory ({out['count']})")
@@ -619,6 +642,20 @@ def _print_memory_human(command: str, out: dict) -> None:
         print(f"# memory audit ({out['count']})")
         for entry in out["entries"]:
             print(f"  - {entry['verb']} {entry.get('path') or ''}: {entry.get('summary') or ''}")
+
+
+def _print_clients_human(command: str, out: dict) -> None:
+    if command == "list":
+        print(f"# clients ({out['count']})")
+        for grant in out["grants"]:
+            access = "write" if grant["write_enabled"] else "read"
+            print(f"  - {grant['grant_id']} {grant.get('client_name') or grant['client_id']} "
+                  f"[{access}; {grant['status']}]")
+    elif command == "revoke":
+        if out.get("stage") == "preview":
+            print(f"preview revoke: {out['grant_id']}")
+        else:
+            print(f"{out['status']}: {out['grant_id']}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -927,6 +964,26 @@ def build_parser() -> argparse.ArgumentParser:
     add_memory_common(p_mem_audit)
     p_mem_audit.add_argument("--limit", type=int, default=None)
     p_mem_audit.set_defaults(func=_cmd_memory)
+
+    p_clients = sub.add_parser("clients", help="owner client and grant control")
+    clients = p_clients.add_subparsers(dest="clients_command", required=True)
+
+    def add_clients_common(p):
+        p.add_argument("repo", help="repo whose client grants to control")
+        p.add_argument("--grant-store", default=None,
+                       help="client grant metadata file (default: <repo>/.hypermnesic)")
+        p.add_argument("--json", action="store_true")
+
+    p_clients_list = clients.add_parser("list", help="list known client grants")
+    add_clients_common(p_clients_list)
+    p_clients_list.set_defaults(func=_cmd_clients)
+
+    p_clients_revoke = clients.add_parser("revoke", help="revoke a client grant")
+    add_clients_common(p_clients_revoke)
+    p_clients_revoke.add_argument("grant_id", help="grant id to revoke")
+    p_clients_revoke.add_argument("--apply", action="store_true",
+                                  help="write the revocation marker to the metadata store")
+    p_clients_revoke.set_defaults(func=_cmd_clients)
     return parser
 
 

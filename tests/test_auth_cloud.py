@@ -25,11 +25,13 @@ PUBLIC = "https://example.ts.net/cloud"
 REDIRECT = "https://chatgpt.com/connector_platform_oauth_redirect"
 
 
-def _provider(now=None, token_ttl=3600, code_ttl=300):
+def _provider(now=None, token_ttl=3600, code_ttl=300, refresh_ttl=30 * 24 * 3600,
+              grant_store_path=None):
     return auth_cloud.CloudAuthProvider(
         resource=RES, public_url=PUBLIC, approval_token="op-approval-secret",
         scopes_supported=["read", "write"], token_ttl_seconds=token_ttl,
-        code_ttl_seconds=code_ttl, now=now)
+        code_ttl_seconds=code_ttl, refresh_ttl_seconds=refresh_ttl, now=now,
+        grant_store_path=grant_store_path)
 
 
 def _client(scope="read write") -> OAuthClientInformationFull:
@@ -85,6 +87,37 @@ def test_consent_with_approval_token_issues_code_redirect():
     # the operator's approval token → redirect to the client with code + state
     redirect = p.finalize_consent(pending, approval_token="op-approval-secret")
     assert redirect.startswith(REDIRECT) and "code=" in redirect and "state=xyz" in redirect
+
+
+def test_reject_consent_redirects_with_error_and_no_grant():
+    p = _provider()
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params(scopes=("read", "write")))).split("pending=")[1]
+    redirect = p.reject_consent(pending, decision="reject")
+    assert redirect.startswith(REDIRECT)
+    assert "error=access_denied" in redirect and "state=xyz" in redirect
+    assert "code=" not in redirect
+    assert p._codes == {}
+    assert p._access == {} and p._refresh == {}
+    with pytest.raises(auth_cloud.ConsentError):
+        p.finalize_consent(pending, approval_token="op-approval-secret")
+
+
+def test_finalize_consent_result_includes_confirmation_state():
+    p = _provider()
+    c = OAuthClientInformationFull(
+        client_id="cid-1", client_secret="s", redirect_uris=[REDIRECT],
+        grant_types=["authorization_code"], response_types=["code"], scope="read write",
+        client_name="ChatGPT", token_endpoint_auth_method="none")
+    _run(p.register_client(c))
+    pending = _run(p.authorize(c, _params(scopes=("read", "write")))).split("pending=")[1]
+    result = p.finalize_consent_result(pending, approval_token="op-approval-secret")
+    assert result["redirect_uri"].startswith(REDIRECT)
+    assert result["confirmation"]["client_id"] == "cid-1"
+    assert result["confirmation"]["client_name"] == "ChatGPT"
+    assert result["confirmation"]["scopes"] == ["read", "write"]
+    assert result["confirmation"]["write_enabled"] is True
+    assert "commit_note" in result["confirmation"]["message"]
 
 
 def test_consent_token_never_compared_in_plaintext_storage():
@@ -169,6 +202,63 @@ def test_revocation_kills_the_whole_grant_incl_refresh():
     _run(p.revoke_token(_run(p.load_access_token(tokens.access_token))))
     assert _run(p.load_access_token(tokens.access_token)) is None
     assert _run(p.load_refresh_token(_client(), tokens.refresh_token)) is None   # refresh dead too
+
+
+def test_grant_listing_records_read_and_write_metadata_without_tokens():
+    p = _provider()
+    c = OAuthClientInformationFull(
+        client_id="cid-1", client_secret="s", redirect_uris=[REDIRECT],
+        grant_types=["authorization_code"], response_types=["code"], scope="read write",
+        client_name="ChatGPT", token_endpoint_auth_method="none")
+    _run(p.register_client(c))
+    read_tokens = _redeem(p, scopes=("read",))
+    write_tokens = _redeem(p, scopes=("read", "write"))
+    grants = p.list_grants()
+    assert len(grants) == 2
+    assert [g["write_enabled"] for g in grants] == [False, True]
+    assert {g["client_id"] for g in grants} == {"cid-1"}
+    assert {g["client_name"] for g in grants} == {"ChatGPT"}
+    assert {g["redirect_origin"] for g in grants} == {"https://chatgpt.com"}
+    blob = json.dumps(grants)
+    assert read_tokens.access_token not in blob and read_tokens.refresh_token not in blob
+    assert write_tokens.access_token not in blob and write_tokens.refresh_token not in blob
+    assert "op-approval-secret" not in blob and "csecret" not in blob
+
+
+def test_revoke_grant_invalidates_access_refresh_and_listing():
+    p = _provider()
+    _run(p.register_client(_client()))
+    tokens = _redeem(p, scopes=("read", "write"))
+    grant_id = p.list_grants()[0]["grant_id"]
+    result = p.revoke_grant(grant_id)
+    assert result["status"] == "revoked" and result["grant_id"] == grant_id
+    assert _run(p.load_access_token(tokens.access_token)) is None
+    assert _run(p.load_refresh_token(_client(), tokens.refresh_token)) is None
+    grant = p.list_grants()[0]
+    assert grant["status"] == "revoked" and grant["active"] is False
+
+
+def test_expired_grant_not_reported_active_after_sweep():
+    clock = {"t": 1_000_000}
+    p = _provider(now=lambda: clock["t"], token_ttl=10, refresh_ttl=10)
+    _run(p.register_client(_client()))
+    _redeem(p, scopes=("read",))
+    clock["t"] += 11
+    grant = p.list_grants()[0]
+    assert grant["status"] == "expired" and grant["active"] is False
+
+
+def test_grant_store_persists_secret_free_metadata(tmp_path):
+    store = tmp_path / "client-grants.json"
+    p = _provider(grant_store_path=store)
+    _run(p.register_client(_client()))
+    tokens = _redeem(p, scopes=("read", "write"))
+    raw = store.read_text(encoding="utf-8")
+    data = json.loads(raw)
+    assert data["grants"][0]["write_enabled"] is True
+    assert data["grants"][0]["status"] == "active"
+    assert tokens.access_token not in raw and tokens.refresh_token not in raw
+    assert "op-approval-secret" not in raw
 
 
 def test_refresh_rotates_old_token_invalidated():
@@ -382,6 +472,38 @@ def test_consent_render_escapes_client_fields_and_hides_unknown_pending():
     assert "write" in html and "chatgpt.com" in html              # scopes + target shown
     html2, status2 = mcp_server._render_consent(p, '"><script>evil()</script>')
     assert status2 == 404 and "<script>evil()</script>" not in html2 and "evil()" not in html2
+
+
+def test_consent_page_explains_scopes_reject_cancel_and_revocation():
+    from hypermnesic import mcp_server
+    p = _provider()
+    _run(p.register_client(_client()))
+    pending = _run(p.authorize(_client(), _params(scopes=("read", "write")))).split("pending=")[1]
+    html, status = mcp_server._render_consent(p, pending)
+    assert status == 200
+    assert "Read access" in html and "search and recall" in html
+    assert "Write access" in html and "request commit_note" in html
+    assert "does not bypass protected paths" in html
+    assert 'name="decision" value="approve"' in html
+    assert 'name="decision" value="reject"' in html
+    assert 'name="decision" value="cancel"' in html
+    assert "revoke this client" in html
+    assert "op-approval-secret" not in html
+
+
+def test_consent_page_warns_for_generic_client_identity():
+    from hypermnesic import mcp_server
+    p = _provider()
+    generic = OAuthClientInformationFull(
+        client_id="cid-generic", client_secret="s", redirect_uris=[REDIRECT],
+        grant_types=["authorization_code"], response_types=["code"], scope="read write",
+        token_endpoint_auth_method="none")
+    _run(p.register_client(generic))
+    pending = _run(p.authorize(generic, _params(scopes=("read",)))).split("pending=")[1]
+    html, status = mcp_server._render_consent(p, pending)
+    assert status == 200
+    assert "generic or missing client identity" in html
+    assert "chatgpt.com" in html
 
 
 def test_consent_form_posts_to_the_public_path_not_root():
