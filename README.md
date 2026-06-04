@@ -59,15 +59,21 @@ cert to manage.
 
 ```sh
 hypermnesic setup /path/to/your/vault \
-  --public-url https://<your-host>.ts.net/mcp \
-  --resource   https://<your-host>.ts.net/mcp
+  --public-url https://<your-host>.ts.net/mcp
+
+# later, diagnose without changing services, secrets, funnel routes, or git
+hypermnesic doctor /path/to/your/vault \
+  --public-url https://<your-host>.ts.net/mcp
 ```
 
 `setup` renders + starts a user service, generates an owner-only **consent secret**
 (`~/.config/hypermnesic-cloud/cloud.env`, chmod 600), configures the Tailscale funnel
 (the `/mcp` mount + the OAuth discovery well-knowns), then **verifies the live HTTPS
 discovery chain** before reporting success. Re-running it converges to the same state.
-It prints your endpoint URL and login instructions.
+It prints milestone checks, your endpoint URL, and login instructions. `--resource`
+defaults to `--public-url`; pass it only when the OAuth resource identifier differs.
+`doctor` and `status` report local index health, remote reach, OAuth discovery, auth
+challenge, write availability, and client-specific next actions without mutating state.
 
 ### C. Connect a client (any remote app)
 
@@ -162,7 +168,7 @@ comparability envelope, per-ability tables, corrections log, and a re-runnable h
 Start with the [documentation index](docs/README.md). Highlights:
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — how it works (the disposable-index invariant, retrieval, write path, serving lanes).
-- [`docs/guides/getting-started.md`](docs/guides/getting-started.md) — the three setup paths + failure modes.
+- [`docs/guides/getting-started.md`](docs/guides/getting-started.md) — local proof, setup diagnosis, and failure modes.
 - [`docs/reference/`](docs/reference/) — the MCP tool, CLI, and configuration references.
 - `docs/unified-oauth-mcp-deploy-runbook.md` — the unified endpoint: topology, cutover, reverse.
 - `plugin/README.md` — the Claude Code / Codex plugin (OAuth-discovery, distribution-generic).

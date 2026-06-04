@@ -464,7 +464,8 @@ def _cmd_setup(args) -> int:
 
     try:
         res = install.setup(
-            Path(args.repo), public_url=args.public_url, resource=args.resource,
+            Path(args.repo), public_url=args.public_url,
+            resource=(args.resource or args.public_url),
             host=args.host, port=args.port, path=args.path,
             env_file=(Path(args.env_file) if args.env_file else None),
             allowlist=args.allowlist, token_ttl=args.token_ttl)
@@ -475,9 +476,41 @@ def _cmd_setup(args) -> int:
         _print_json(res)
     else:
         print(f"hypermnesic unified endpoint live: {res['public_url']}")
+        if res.get("what_this_means"):
+            print(f"  what this means: {res['what_this_means']}")
         print(f"  service: {res['service']}  (consent secret: {res['env_file']})")
+        for m in res.get("milestones", []):
+            print(f"  [{m['status']}] {m['id']}: {m['summary']}")
         for step in res.get("next_steps", []):
             print(f"  next: {step}")
+    return 0
+
+
+def _cmd_doctor(args) -> int:
+    """Non-mutating setup/status diagnostics."""
+    from hypermnesic import doctor
+
+    result = doctor.run_doctor(
+        Path(args.repo),
+        public_url=args.public_url,
+        resource=args.resource,
+        env_file=(Path(args.env_file) if args.env_file else None),
+    )
+    out = result.as_dict()
+    if args.json:
+        _print_json(out)
+    else:
+        print(f"hypermnesic {args.command}: {out['status']}")
+        print(f"what this means: {out['what_this_means']}")
+        for check in out["checks"]:
+            print(f"  [{check['status']}] {check['id']}: {check['summary']}")
+            action = check["next_action"]
+            if action["code"] != "none":
+                next_line = action["command"] or action["summary"]
+                print(f"      next: {next_line}")
+        for action in out["next_actions"].values():
+            if action.get("available"):
+                print(f"  next: {action['label']}: {action['next_action']}")
     return 0
 
 
@@ -694,9 +727,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("repo", help="repo whose index the endpoint serves (engine host)")
     p_setup.add_argument("--public-url", required=True,
                          help="the public HTTPS issuer/MCP URL (e.g. https://<host>.ts.net/mcp)")
-    p_setup.add_argument("--resource", required=True,
+    p_setup.add_argument("--resource", default=None,
                          help="the public MCP resource identifier (RFC 8707 audience); "
-                              "usually the same as --public-url")
+                              "defaults to --public-url")
     p_setup.add_argument("--host", default="127.0.0.1",
                          help="local bind (the Funnel proxies the public hostname to it)")
     p_setup.add_argument("--port", type=int, default=8850)
@@ -712,6 +745,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("--token-ttl", type=int, default=3600)
     p_setup.add_argument("--json", action="store_true")
     p_setup.set_defaults(func=_cmd_setup)
+
+    for name in ("doctor", "status"):
+        p_diag = sub.add_parser(name, help="non-mutating setup diagnostics and next actions")
+        p_diag.add_argument("repo", help="repo whose local/remote setup to diagnose")
+        p_diag.add_argument("--public-url", default=None,
+                            help="public HTTPS MCP URL to verify (optional)")
+        p_diag.add_argument("--resource", default=None,
+                            help="OAuth resource identifier; defaults to --public-url")
+        p_diag.add_argument("--env-file", default=None,
+                            help="owner-only env file to check for existence/permissions")
+        p_diag.add_argument("--json", action="store_true")
+        p_diag.set_defaults(func=_cmd_doctor)
     return parser
 
 

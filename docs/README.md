@@ -18,6 +18,10 @@ never misleads you.
   validates a git-backed markdown vault, retrieves a source-grounded answer, shows the
   disposable index path, and previews a dry-run write before remote-client concepts enter
   the flow.
+- **Setup diagnosis:** `hypermnesic doctor` / `hypermnesic status` are non-mutating
+  diagnostics. They separate local index health, remote reach, OAuth discovery, auth
+  challenge, write availability, and client next actions. `setup --resource` defaults to
+  `--public-url` for the common endpoint shape.
 - **License:** proprietary/private today; the public license (**AGPL-3.0**) is **staged,
   not live** — see [`launch/`](launch/).
 
@@ -28,7 +32,7 @@ never misleads you.
 | What it is, quick start, benchmarks | [`../README.md`](../README.md) |
 | Why it's different (positioning) | [`why-hypermnesic.md`](why-hypermnesic.md) |
 | How it works (architecture + diagram) | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) |
-| Getting started (local proof + setup paths + failure modes) | [`guides/getting-started.md`](guides/getting-started.md) |
+| Getting started (local proof + setup diagnosis + failure modes) | [`guides/getting-started.md`](guides/getting-started.md) |
 | MCP tool reference | [`reference/mcp-tools.md`](reference/mcp-tools.md) |
 | CLI reference | [`reference/cli.md`](reference/cli.md) |
 | Configuration reference | [`reference/configuration.md`](reference/configuration.md) |

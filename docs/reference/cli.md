@@ -11,7 +11,7 @@ hypermnesic --version
 hypermnesic <subcommand> [args] [flags]
 ```
 
-There are **17 subcommands**, grouped below by role.
+There are **19 subcommands**, grouped below by role.
 
 ## Local proof
 
@@ -94,6 +94,19 @@ Opt-in: install (or uninstall) the post-merge convergence hook. Idempotent,
 non-destructive (managed block).
 Flags: `--uninstall` (remove only the managed block), `--json`.
 
+## Setup diagnostics
+
+### `doctor <repo>`
+Non-mutating setup diagnostics. Reports local git/index/dense state, consent-secret file
+presence/permissions when provided, Tailscale readiness when a public URL is provided,
+cloud service-unit presence, OAuth discovery, unauthenticated auth challenge, write
+availability, and client-specific next actions.
+Flags: `--public-url URL`, `--resource URL` (defaults to `--public-url`), `--env-file PATH`
+(check existence/permissions only; never prints contents), `--json`.
+
+### `status <repo>`
+Alias for `doctor <repo>` with the same flags and JSON shape.
+
 ## Serving & provisioning
 
 ### `serve`
@@ -117,9 +130,11 @@ Flags: `--index-db PATH` (required), `--host` (default 127.0.0.1), `--port N` (d
 One idempotent command to bring the unified public OAuth endpoint online: render + start
 the service, persist the consent secret, configure the funnel, verify the live HTTPS
 discovery chain. Fail-closed (no partial state).
-Flags: `--public-url URL` (required), `--resource URL` (required), `--host` (default
-127.0.0.1), `--port N` (default 8850), `--path` (default `/`), `--env-file PATH`,
-`--allowlist PREFIX` (repeatable), `--token-ttl N`, `--json`.
+Flags: `--public-url URL` (required), `--resource URL` (defaults to `--public-url`),
+`--host` (default 127.0.0.1), `--port N` (default 8850), `--path` (default `/`),
+`--env-file PATH`, `--allowlist PREFIX` (repeatable), `--token-ttl N`, `--json`.
+JSON output includes `milestones`, `what_this_means`, and `client_next_actions` in
+addition to the rendered service, route, and discovery fields.
 
 ### `install [repo]`
 Provision a host into a role: render artifacts, write role config, install the
