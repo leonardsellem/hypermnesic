@@ -1,11 +1,12 @@
 # Getting started
 
 This guide expands the [README quick start](../../README.md#quick-start) with
-prerequisites, verification, and failure modes for the three ways to run hypermnesic.
+prerequisites, verification, and failure modes for the four ways to run hypermnesic.
 
-- **A. Self-host the endpoint** — you hold a vault and serve it to your apps.
-- **B. Connect a client** — point an app at an existing endpoint.
-- **C. Use it locally** — drive the engine directly with the CLI, no network.
+- **A. Prove local memory works** — validate the value path before remote setup.
+- **B. Self-host the endpoint** — you hold a vault and serve it to your apps.
+- **C. Connect a client** — point an app at an existing endpoint.
+- **D. Use it locally** — drive the engine directly with the CLI, no network.
 
 ## Prerequisites
 
@@ -17,13 +18,52 @@ prerequisites, verification, and failure modes for the three ways to run hypermn
   in (`tailscale up`). hypermnesic uses **Tailscale Funnel** for public HTTPS + automatic
   TLS, so there is no reverse proxy or certificate to manage.
 
-## A. Self-host the endpoint
+## A. Prove local memory works
 
-On the machine that holds your vault:
+Run this first on the machine that holds your vault:
 
 ```sh
 uv tool install .                              # install the `hypermnesic` CLI (from a clone)
-hypermnesic init /path/to/your/vault           # build the index (one-time; uses OPENAI_API_KEY)
+hypermnesic local-proof /path/to/your/vault    # no network or client setup required
+```
+
+If you want a disposable sample before pointing at your own notes:
+
+```sh
+hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo
+```
+
+A successful proof prints **Local memory works** and shows:
+
+- the repo-relative markdown source path that answered the question;
+- the disposable `.hypermnesic/index.db` projection path;
+- whether recall is lexical-only or dense-enabled;
+- a `commit_note` dry-run preview destination and diff, with no write commit.
+
+For agents and scripts:
+
+```sh
+hypermnesic local-proof /path/to/your/vault --json
+```
+
+The JSON contract includes `status`, `completed_milestones`, `degraded_capabilities`,
+`source_path`, `retrieval`, `write_preview`, `next_action`, and `error`.
+
+### Failure modes (A)
+
+- **Path is not a git repo.** Initialize the vault with git first, or run with
+  `--demo-dir` to create a tiny proof vault.
+- **No retrieval hit.** Add a markdown note containing the answer and rerun with
+  `--query`, or use `--seed-sample` when you explicitly want the deterministic sample
+  note added to an existing repo.
+- **Lexical-only degraded state.** Local memory still works from exact text in markdown
+  files. Configure `OPENAI_API_KEY` when you want dense ranking and fuzzier recall.
+
+## B. Self-host the endpoint
+
+After the local proof succeeds:
+
+```sh
 hypermnesic setup /path/to/your/vault \
   --public-url https://<your-host>.ts.net/mcp \
   --resource   https://<your-host>.ts.net/mcp
@@ -45,7 +85,7 @@ curl -fsS https://<your-host>.ts.net/.well-known/oauth-authorization-server | jq
 Both must return JSON. If they 404 or time out, the funnel or service isn't up — see
 failure modes below.
 
-### Failure modes (A)
+### Failure modes (B)
 
 - **`setup` fails / leaves nothing provisioned.** It is fail-closed: any failure leaves
   no partial state. Re-run after fixing the cause (commonly: Tailscale not logged in, or
@@ -56,7 +96,7 @@ failure modes below.
   (`write_enabled ⇒ auth-required`); connect via the OAuth lane, or for a local-only box
   use the CLI (path C).
 
-## B. Connect a client (any remote app)
+## C. Connect a client (any remote app)
 
 Point the app's MCP server at your endpoint URL — OAuth is automatic:
 
@@ -72,18 +112,19 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
 - **Obsidian companion:** read-only over your tailnet — point it at the tailnet read route
   `http://<tailnet-ip>:8848/mcp` (no OAuth; tailnet membership is the boundary).
 
-### Failure modes (B)
+### Failure modes (C)
 
 - **Browser login never appears / connection fails:** the app needs OAuth *discovery* —
   confirm the well-knowns (above) resolve. A static `Authorization` header in the wiring
   would suppress discovery; the bundled `.mcp.json` deliberately omits one.
 - **401 after a while:** the token expired and refresh failed; reconnect to re-authorize.
 
-## C. Use it locally (on the engine host)
+## D. Use it locally (on the engine host)
 
 The host that runs the engine skips the network and uses the CLI:
 
 ```sh
+hypermnesic local-proof /path/to/vault                           # first local value proof
 hypermnesic retrieve /path/to/vault "what do we know about X"   # hybrid search
 hypermnesic think    /path/to/vault "topic"                     # thinking-mode
 hypermnesic resolve  /path/to/vault "Some Entity"               # name → page path

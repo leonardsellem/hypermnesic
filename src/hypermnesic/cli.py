@@ -174,6 +174,47 @@ def _cmd_retrieve(args) -> int:
     return 0
 
 
+def _cmd_local_proof(args) -> int:
+    """Local-first value proof: create/read a local vault, retrieve, and preview a write."""
+    from hypermnesic import local_proof
+
+    embedder = None
+    if args.dense:
+        from hypermnesic import embed
+        embedder = embed.OpenAIEmbedder()
+    try:
+        result = local_proof.run_local_proof(
+            repo=(Path(args.repo) if args.repo else None),
+            demo_dir=(Path(args.demo_dir) if args.demo_dir else None),
+            query=args.query,
+            seed_sample=args.seed_sample,
+            preview_path=args.preview_path,
+            embedder=embedder,
+        )
+    except local_proof.LocalProofError as exc:
+        out = exc.as_dict()
+        if args.json:
+            _print_json(out)
+        else:
+            print(f"local-proof failed: {exc.message}", file=sys.stderr)
+            print(f"next: {exc.next_action}", file=sys.stderr)
+        return 1
+
+    out = result.as_dict()
+    if args.json:
+        _print_json(out)
+    else:
+        print("Local memory works")
+        print(f"  source: {out['source_path']}")
+        print(f"  index: {out['index']['state_path']} (disposable projection)")
+        print(f"  recall: {out['retrieval']['hit']['heading'] or out['source_path']}")
+        print(f"  preview: {out['write_preview']['destination']} (dry-run, no commit)")
+        if out["degraded_capabilities"]["degraded_lexical_only"]:
+            print(f"  note: {out['degraded_capabilities']['message']}")
+        print(f"  next: {out['next_action']}")
+    return 0
+
+
 def _cmd_resolve(args) -> int:
     """Entity resolution (read-only): name → existing page path, or null (U1).
 
@@ -506,6 +547,25 @@ def build_parser() -> argparse.ArgumentParser:
                                  "committed within the debounce window)")
     p_retrieve.add_argument("--json", action="store_true")
     p_retrieve.set_defaults(func=_cmd_retrieve)
+
+    p_local = sub.add_parser(
+        "local-proof",
+        help="prove local memory works before remote setup",
+        description="prove local memory works before remote setup")
+    p_local.add_argument("repo", nargs="?",
+                         help="existing markdown git repo to prove locally")
+    p_local.add_argument("--demo-dir", default=None,
+                         help="create or reuse a tiny git-backed demo vault at DIR")
+    p_local.add_argument("--query", default=None,
+                         help="natural question to retrieve (demo mode has a default)")
+    p_local.add_argument("--seed-sample", action="store_true",
+                         help="explicitly add the deterministic sample note to an existing repo")
+    p_local.add_argument("--preview-path", default="memory/local-proof-preview.md",
+                         help="repo-relative dry-run write destination")
+    p_local.add_argument("--dense", action="store_true",
+                         help="try the dense embedding channel; default is local lexical proof")
+    p_local.add_argument("--json", action="store_true")
+    p_local.set_defaults(func=_cmd_local_proof)
 
     p_resolve = sub.add_parser("resolve",
                                help="entity resolution (read-only): name → existing page, or null")

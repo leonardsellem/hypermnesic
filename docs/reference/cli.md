@@ -11,7 +11,22 @@ hypermnesic --version
 hypermnesic <subcommand> [args] [flags]
 ```
 
-There are **16 subcommands**, grouped below by role.
+There are **17 subcommands**, grouped below by role.
+
+## Local proof
+
+### `local-proof [repo]`
+Prove local memory works before remote setup. Existing-vault mode validates a markdown
+git repo, projects committed files into `.hypermnesic/index.db`, retrieves a natural
+question, shows the repo-relative source path, and previews a `commit_note` write as a
+dry-run diff with no commit. Demo mode creates a tiny git-backed vault.
+Flags: `--demo-dir DIR`, `--query TEXT`, `--seed-sample` (explicitly add the deterministic
+sample note to an existing repo), `--preview-path PATH` (default
+`memory/local-proof-preview.md`), `--dense` (try the dense embedding channel; default is
+lexical local proof), `--json`.
+
+JSON output includes `status`, `completed_milestones`, `degraded_capabilities`,
+`source_path`, `retrieval`, `write_preview`, `index`, `next_action`, and `error`.
 
 ## Indexing
 
