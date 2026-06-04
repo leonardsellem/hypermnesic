@@ -585,7 +585,11 @@ def _cloud_call_as(srv, scopes, name, args):
         token="t", client_id="c", scopes=list(scopes), resource=RES, claims={"aud": RES})))
     try:
         out = _aio.run(srv.call_tool(name, args))
-        return out[1] if isinstance(out, tuple) else json.loads(out[0].text)
+        if isinstance(out, tuple):
+            return out[1]
+        if getattr(out, "structuredContent", None) is not None:
+            return out.structuredContent
+        return json.loads(out[0].text)
     finally:
         auth_context_var.reset(var)
 

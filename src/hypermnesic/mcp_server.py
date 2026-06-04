@@ -30,11 +30,12 @@ lexical + graph results still return (the dense channel is simply absent).
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
-from mcp.types import ToolAnnotations
+from mcp.types import CallToolResult, TextContent, ToolAnnotations
 
 # Pydantic (the SDK's schema generator) requires typing_extensions.TypedDict on Python < 3.12.
 from typing_extensions import TypedDict
@@ -101,10 +102,10 @@ class ThinkOutput(TypedDict):
     manual_reindex_recommended: bool
 
 
-# total=False (all keys optional): the result is a union — a success carries
-# path/created/noop/new_sha/diff; a refusal carries refused — and only ``committed`` is on
-# both. (Per-field NotRequired can't be used here: ``from __future__ import annotations``
-# stringizes the annotations, which defeats TypedDict's required/optional key computation.)
+# total=False: the result is a union — a success carries path/created/noop/new_sha/diff; a
+# refusal carries refused; and committed is present on both. commit_note returns an explicit
+# CallToolResult so FastMCP does not materialize absent union fields as null in HTTP
+# structuredContent and then reject them against the generated output schema.
 class CommitNoteOutput(TypedDict, total=False):
     committed: bool                    # present on every path; the rest depend on the outcome
     path: str
@@ -113,6 +114,15 @@ class CommitNoteOutput(TypedDict, total=False):
     new_sha: str
     diff: str
     refused: str                       # set (with committed=False) when a gate/guard refuses
+
+
+def _commit_note_tool_result(payload: CommitNoteOutput) -> CallToolResult:
+    """Return a minimal structured union branch without FastMCP injecting nulls."""
+    data = dict(payload)
+    return CallToolResult(
+        content=[TextContent(type="text", text=json.dumps(data, ensure_ascii=False, indent=2))],
+        structuredContent=data,
+    )
 
 
 class FolderEntry(TypedDict):
@@ -482,15 +492,16 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 from mcp.server.auth.middleware.auth_context import get_access_token
                 principal = get_access_token()
                 if principal is not None and write_scope not in (principal.scopes or []):
-                    return {"committed": False,
-                            "refused": (
+                    return _commit_note_tool_result(
+                        {"committed": False,
+                         "refused": (
                                 f"insufficient_scope: {write_scope} scope is required for "
                                 "commit_note. Reconnect this client and approve write access "
                                 "before requesting memory writes. Write approval only allows "
                                 "the client to request commit_note; it does not bypass "
                                 "protected-path, frontmatter, dirty-tree, head-drift, audit, "
                                 "or git coordination guards."
-                            )}
+                            )})
             try:
                 r = commit_note_mod.commit_note(
                     backend.repo, path, body=body, set_fields=set_fields, summary=summary,
@@ -501,9 +512,10 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 # diff-or-die / protected-path / allowlist refusal, OR a coordination
                 # refusal (remote drift / push could not reach origin/main) — no commit
                 # reached the shared remote, no audit entry (U11). Never a silent success.
-                return {"committed": False, "refused": str(exc)}
-            return {"committed": not r.noop, "path": r.path, "created": r.created,
-                    "noop": r.noop, "new_sha": r.new_sha, "diff": r.diff}
+                return _commit_note_tool_result({"committed": False, "refused": str(exc)})
+            return _commit_note_tool_result(
+                {"committed": not r.noop, "path": r.path, "created": r.created,
+                 "noop": r.noop, "new_sha": r.new_sha or "", "diff": r.diff})
 
     return mcp
 
