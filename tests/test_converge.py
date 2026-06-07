@@ -217,6 +217,10 @@ def test_authoring_host_overlay_indexes_uncommitted_without_advancing_checkpoint
     assert "draft.md" in res.overlay_paths
     assert any(idx.get_chunk(c)["path"] == "draft.md"
                for c, _ in idx.lexical_search("OVERLAYMARKER", k=10))
+    assert res.chunks_embedded == 0 and res.docs_embedded == 0  # overlay is lexical-only
+    assert idx.chunks_for_path("draft.md")
+    assert set(idx.chunks_for_path("draft.md")).issubset(set(idx.stale_chunk_ids()))
+    assert "draft.md" in idx.paths_missing_doc_vector()
     assert idx.get_checkpoint() == cp                    # overlay never advances checkpoint
     idx.close()
 

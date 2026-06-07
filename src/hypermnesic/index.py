@@ -475,14 +475,17 @@ def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
 
 
 def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
-                       budget: int | None = None) -> dict:
+                       budget: int | None = None,
+                       exclude_paths: set[str] | None = None) -> dict:
     """Lock-free core of :func:`embed_stale` — the caller MUST already hold the
     single-indexer lock (``converge`` holds it for the whole convergence pass, so
     it cannot re-enter the public :func:`embed_stale`, whose own acquire would
     self-conflict across descriptors). Budget semantics: see :func:`embed_stale`.
+    ``exclude_paths`` lets convergence keep authoring-host overlay rows lexical-only.
     """
     config.assert_embedder_agrees(embedder)
     repo = Path(repo)
+    excluded = exclude_paths or set()
     stale = idx.stale_chunk_ids()
     if budget is not None:
         stale = stale[:budget]
@@ -490,10 +493,14 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
     for i in range(0, len(stale), batch):
         ids = stale[i:i + batch]
         rows = idx.conn.execute(
-            f"SELECT chunk_id, text FROM chunks WHERE chunk_id IN "
+            f"SELECT chunk_id, text, path FROM chunks WHERE chunk_id IN "
             f"({','.join('?' * len(ids))})", ids).fetchall()
+        if excluded:
+            rows = [r for r in rows if r[2] not in excluded]
+        if not rows:
+            continue
         vecs = embedder.embed([r[1] for r in rows])
-        for (cid, _text), vec in zip(rows, vecs, strict=True):
+        for (cid, _text, _path), vec in zip(rows, vecs, strict=True):
             idx.conn.execute(
                 "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
                 (cid, sqlite_vec.serialize_float32(vec)))
@@ -512,6 +519,8 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
         doc_batch.clear()
 
     missing_docs = idx.paths_missing_doc_vector()
+    if excluded:
+        missing_docs = [p for p in missing_docs if p not in excluded]
     if budget is not None:
         missing_docs = missing_docs[:budget]
     for path in missing_docs:
