@@ -430,6 +430,27 @@ def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
             "full": not have_cp}
 
 
+def _doc_surface_for_projection(repo: Path, path: str) -> str | None:
+    """Return the doc surface for the committed projection, falling back off-git.
+
+    Git-backed indexes are projections of HEAD, not of a dirty working tree. The
+    fallback preserves embed_stale behavior for non-git/local scratch corpora.
+    """
+    head = _git_head(repo)
+    if head:
+        shown = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
+                                "show", f"{head}:{path}"], capture_output=True, text=True)
+        if shown.returncode != 0:
+            return None
+        raw = shown.stdout
+    else:
+        fp = repo / path
+        if not fp.is_file():
+            return None
+        raw = fp.read_text(encoding="utf-8", errors="replace")
+    return ingest.doc_surface(raw, path) or None
+
+
 def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
                 budget: int | None = None) -> dict:
     """Async embed pass (U13): fill the dense vectors that lag lexical (AE5).
@@ -494,10 +515,7 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
     if budget is not None:
         missing_docs = missing_docs[:budget]
     for path in missing_docs:
-        fp = repo / path
-        if not fp.is_file():
-            continue
-        surface = ingest.doc_surface(fp.read_text(encoding="utf-8", errors="replace"), path)
+        surface = _doc_surface_for_projection(repo, path)
         if surface:
             doc_batch.append((path, surface))
             if len(doc_batch) >= batch:

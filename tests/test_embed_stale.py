@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+
 from hypermnesic import audit_log as al
 from hypermnesic import commit_note as cn
 from hypermnesic import index as ix
@@ -18,6 +20,14 @@ class CountingEmbedder:
     def embed(self, texts: list[str]) -> list[list[float]]:
         self.texts.extend(texts)
         return self.wrapped.embed(texts)
+
+
+def _commit_file(repo, rel, body, msg="edit"):
+    (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / rel).write_text(body, encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", msg],
+                   check=True, capture_output=True)
 
 
 def _log(tmp_path):
@@ -90,7 +100,7 @@ def test_embed_stale_refreshes_only_invalidated_doc_surface(make_corpus, fake_em
         "b.md": "# B\n\nbeta unchanged.\n",
     })
     idx = ix.build_index(repo, fake_embedder)
-    (repo / "a.md").write_text("# A changed\n\nalpha updated surface.\n", encoding="utf-8")
+    _commit_file(repo, "a.md", "# A changed\n\nalpha updated surface.\n", "edit a")
     idx.upsert_lexical(
         "a.md",
         ingest.chunks_for_text("a.md", "# A changed\n\nalpha updated surface.\n"),
@@ -116,12 +126,12 @@ def test_embed_stale_budget_resumes_multiple_invalidated_doc_surfaces(
         "b.md": "# B\n\nbeta original.\n",
     })
     idx = ix.build_index(repo, fake_embedder)
-    (repo / "a.md").write_text("# A changed\n\nalpha updated.\n", encoding="utf-8")
+    _commit_file(repo, "a.md", "# A changed\n\nalpha updated.\n", "edit a")
     idx.upsert_lexical(
         "a.md",
         ingest.chunks_for_text("a.md", "# A changed\n\nalpha updated.\n"),
     )
-    (repo / "b.md").write_text("# B changed\n\nbeta updated.\n", encoding="utf-8")
+    _commit_file(repo, "b.md", "# B changed\n\nbeta updated.\n", "edit b")
     idx.upsert_lexical(
         "b.md",
         ingest.chunks_for_text("b.md", "# B changed\n\nbeta updated.\n"),
