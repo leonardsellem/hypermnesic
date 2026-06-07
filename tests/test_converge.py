@@ -41,6 +41,19 @@ class _DownEmbedder:
         raise embed_mod.EmbeddingError("API down")
 
 
+class _CountingEmbedder:
+    model = "fake-deterministic"
+    dim = config.EMBED_DIM
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.texts: list[str] = []
+
+    def embed(self, texts):
+        self.texts.extend(texts)
+        return self.wrapped.embed(texts)
+
+
 # --- debounce ---------------------------------------------------------------
 
 def test_debounce_returns_early_without_relocking(make_corpus, fake_embedder):
@@ -92,6 +105,23 @@ def test_converge_refreshes_edited_file_doc_surface_without_full_reindex(
     assert res.docs_embedded == 1
     assert "a.md" not in idx.paths_missing_doc_vector()
     assert _dense_finds(idx, fake_embedder, "DOCSURFACE updated body.", "a.md")
+    idx.close()
+
+
+def test_converge_doc_surface_refresh_ignores_dirty_working_tree(
+        make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha original.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A\n\nCOMMITTED doc surface.\n", "edit a")
+    (repo / "a.md").write_text("# A\n\nDIRTY doc surface.\n", encoding="utf-8")
+    counting = _CountingEmbedder(fake_embedder)
+
+    res = converge.converge(repo, idx, counting, debounce_seconds=0, embed_budget=10)
+
+    assert res.status == "converged"
+    assert res.replayed == 1 and res.docs_embedded == 1
+    assert any("COMMITTED doc surface" in text for text in counting.texts)
+    assert not any("DIRTY doc surface" in text for text in counting.texts)
     idx.close()
 
 
