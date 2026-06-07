@@ -9,7 +9,8 @@ Properties, all spec:
   is already advancing the index, so a read must never stall.
 - **Never a full reindex** (FR-R32): convergence is delta-replay + a bounded embed;
   it never calls ``reindex_isolated`` (the OOM scar). Full reindex stays manual.
-- **Bounded embed** (FR-R31): at most ``CONVERGE_EMBED_BUDGET`` stale chunks per read.
+- **Bounded embed** (FR-R31): at most ``CONVERGE_EMBED_BUDGET`` stale chunks and
+  at most that many stale doc surfaces per read.
 - **Graceful dense degradation** (FR-R34): a dead/absent embedder still completes the
   lexical/graph catch-up and advances the checkpoint; the result is flagged degraded.
 - **Host-aware** (FR-R29/R30/R35): a serve/replica host projects committed SHAs only;
