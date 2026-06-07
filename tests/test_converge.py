@@ -41,6 +41,19 @@ class _DownEmbedder:
         raise embed_mod.EmbeddingError("API down")
 
 
+class _CountingEmbedder:
+    model = "fake-deterministic"
+    dim = config.EMBED_DIM
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.texts: list[str] = []
+
+    def embed(self, texts):
+        self.texts.extend(texts)
+        return self.wrapped.embed(texts)
+
+
 # --- debounce ---------------------------------------------------------------
 
 def test_debounce_returns_early_without_relocking(make_corpus, fake_embedder):
@@ -72,6 +85,43 @@ def test_catch_up_replays_committed_files_then_embeds(make_corpus, fake_embedder
     assert res.chunks_embedded >= 3
     assert _dense_finds(idx, fake_embedder, "FRESHMARKER body 0.", "n0.md")
     assert not res.degraded
+    idx.close()
+
+
+def test_converge_refreshes_edited_file_doc_surface_without_full_reindex(
+        make_corpus, fake_embedder, monkeypatch):
+    repo = make_corpus({"a.md": "# A\n\nalpha original.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A\n\nDOCSURFACE updated body.\n", "edit a")
+
+    def _boom(*a, **k):
+        raise AssertionError("converge must not call full reindex for edited doc surfaces")
+
+    monkeypatch.setattr(ix, "reindex_isolated", _boom)
+    res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0, embed_budget=10)
+
+    assert res.status == "converged"
+    assert res.replayed == 1
+    assert res.docs_embedded == 1
+    assert "a.md" not in idx.paths_missing_doc_vector()
+    assert _dense_finds(idx, fake_embedder, "DOCSURFACE updated body.", "a.md")
+    idx.close()
+
+
+def test_converge_doc_surface_refresh_ignores_dirty_working_tree(
+        make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha original.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A\n\nCOMMITTED doc surface.\n", "edit a")
+    (repo / "a.md").write_text("# A\n\nDIRTY doc surface.\n", encoding="utf-8")
+    counting = _CountingEmbedder(fake_embedder)
+
+    res = converge.converge(repo, idx, counting, debounce_seconds=0, embed_budget=10)
+
+    assert res.status == "converged"
+    assert res.replayed == 1 and res.docs_embedded == 1
+    assert any("COMMITTED doc surface" in text for text in counting.texts)
+    assert not any("DIRTY doc surface" in text for text in counting.texts)
     idx.close()
 
 
@@ -129,6 +179,22 @@ def test_embedder_failure_completes_lexical_and_advances_checkpoint(make_corpus,
     idx.close()
 
 
+def test_embedder_failure_leaves_edited_doc_surface_missing_for_retry(
+        make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha original.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A\n\nDEGRADED edited body.\n", "edit a")
+
+    res = converge.converge(repo, idx, _DownEmbedder(), debounce_seconds=0)
+
+    assert res.degraded is True
+    assert res.replayed == 1 and res.checkpoint_advanced
+    assert any(idx.get_chunk(c)["path"] == "a.md"
+               for c, _ in idx.lexical_search("DEGRADED", k=10))
+    assert "a.md" in idx.paths_missing_doc_vector()
+    idx.close()
+
+
 def test_none_embedder_is_degraded_not_an_error(make_corpus, fake_embedder):
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     idx = ix.build_index(repo, fake_embedder)
@@ -151,6 +217,10 @@ def test_authoring_host_overlay_indexes_uncommitted_without_advancing_checkpoint
     assert "draft.md" in res.overlay_paths
     assert any(idx.get_chunk(c)["path"] == "draft.md"
                for c, _ in idx.lexical_search("OVERLAYMARKER", k=10))
+    assert res.chunks_embedded == 0 and res.docs_embedded == 0  # overlay is lexical-only
+    assert idx.chunks_for_path("draft.md")
+    assert set(idx.chunks_for_path("draft.md")).issubset(set(idx.stale_chunk_ids()))
+    assert "draft.md" in idx.paths_missing_doc_vector()
     assert idx.get_checkpoint() == cp                    # overlay never advances checkpoint
     idx.close()
 

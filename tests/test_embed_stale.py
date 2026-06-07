@@ -2,9 +2,32 @@
 
 from __future__ import annotations
 
+import subprocess
+
 from hypermnesic import audit_log as al
 from hypermnesic import commit_note as cn
 from hypermnesic import index as ix
+from hypermnesic import ingest
+
+
+class CountingEmbedder:
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.model = wrapped.model
+        self.dim = wrapped.dim
+        self.texts: list[str] = []
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        self.texts.extend(texts)
+        return self.wrapped.embed(texts)
+
+
+def _commit_file(repo, rel, body, msg="edit"):
+    (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / rel).write_text(body, encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", msg],
+                   check=True, capture_output=True)
 
 
 def _log(tmp_path):
@@ -68,4 +91,59 @@ def test_embed_stale_backfills_doc_lane(make_corpus, fake_embedder, tmp_path):
     assert "notes/n.md" in idx.paths_missing_doc_vector()  # commit_note didn't build doc lane
     ix.embed_stale(idx, repo, fake_embedder)
     assert "notes/n.md" not in idx.paths_missing_doc_vector()
+    idx.close()
+
+
+def test_embed_stale_refreshes_only_invalidated_doc_surface(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "a.md": "# A\n\nalpha original.\n",
+        "b.md": "# B\n\nbeta unchanged.\n",
+    })
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A changed\n\nalpha updated surface.\n", "edit a")
+    idx.upsert_lexical(
+        "a.md",
+        ingest.chunks_for_text("a.md", "# A changed\n\nalpha updated surface.\n"),
+    )
+
+    assert idx.paths_missing_doc_vector() == ["a.md"]
+    counting = CountingEmbedder(fake_embedder)
+    res = ix.embed_stale(idx, repo, counting)
+
+    assert res["docs_embedded"] == 1
+    assert idx.paths_missing_doc_vector() == []
+    assert any("alpha updated surface" in text for text in counting.texts)
+    assert not any("beta unchanged" in text for text in counting.texts)
+    res2 = ix.embed_stale(idx, repo, counting)
+    assert res2["chunks_embedded"] == 0 and res2["docs_embedded"] == 0
+    idx.close()
+
+
+def test_embed_stale_budget_resumes_multiple_invalidated_doc_surfaces(
+        make_corpus, fake_embedder):
+    repo = make_corpus({
+        "a.md": "# A\n\nalpha original.\n",
+        "b.md": "# B\n\nbeta original.\n",
+    })
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A changed\n\nalpha updated.\n", "edit a")
+    idx.upsert_lexical(
+        "a.md",
+        ingest.chunks_for_text("a.md", "# A changed\n\nalpha updated.\n"),
+    )
+    _commit_file(repo, "b.md", "# B changed\n\nbeta updated.\n", "edit b")
+    idx.upsert_lexical(
+        "b.md",
+        ingest.chunks_for_text("b.md", "# B changed\n\nbeta updated.\n"),
+    )
+
+    assert idx.paths_missing_doc_vector() == ["a.md", "b.md"]
+    first = ix.embed_stale(idx, repo, fake_embedder, budget=1)
+    assert first["docs_embedded"] == 1
+    assert len(idx.paths_missing_doc_vector()) == 1
+    second = ix.embed_stale(idx, repo, fake_embedder, budget=1)
+    assert second["docs_embedded"] == 1
+    assert idx.paths_missing_doc_vector() == []
+    third = ix.embed_stale(idx, repo, fake_embedder, budget=1)
+    assert third["docs_embedded"] == 0
     idx.close()
