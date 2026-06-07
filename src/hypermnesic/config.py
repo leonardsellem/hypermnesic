@@ -28,7 +28,7 @@ EXPANSION_MODEL = "gpt-4o-mini"
 # a converging read to ~one API round-trip; the debounce coalesces a burst of
 # reads; the delta cap signals a manual reindex rather than an unbounded inline
 # replay when HEAD has jumped far ahead of the checkpoint (e.g. a big merge).
-CONVERGE_EMBED_BUDGET = 128       # max stale chunks embedded per converging read
+CONVERGE_EMBED_BUDGET = 128       # per-lane stale chunk/doc surfaces embedded per read
 CONVERGE_DEBOUNCE_SECONDS = 5.0   # skip re-convergence within this window
 CONVERGE_MAX_DELTA_FILES = 200    # over this many changed md files → signal manual reindex
 

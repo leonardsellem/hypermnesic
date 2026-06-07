@@ -127,8 +127,9 @@ class Index:
         c = self.conn
         for (path, _surface), vec in zip(docs, vectors, strict=True):
             cur = c.execute("INSERT OR IGNORE INTO docs (path) VALUES (?)", (path,))
-            doc_id = cur.lastrowid
-            if not doc_id:  # path already present
+            if cur.rowcount == 1:
+                doc_id = cur.lastrowid
+            else:  # path already present
                 doc_id = c.execute("SELECT doc_id FROM docs WHERE path=?", (path,)).fetchone()[0]
             c.execute("INSERT OR REPLACE INTO vec_docs (doc_id, embedding) VALUES (?, ?)",
                       (doc_id, sqlite_vec.serialize_float32(vec)))
@@ -152,7 +153,8 @@ class Index:
 
         commit_note (U7) calls this synchronously so a written page is findable
         lexically immediately; dense vectors catch up in a later async embed pass
-        (AE5). Removes the path's stale chunk/FTS/vec rows first.
+        (AE5). Removes the path's stale chunk/FTS/vec rows first, and invalidates
+        its doc-surface vector so bounded dense fill refreshes changed docs too.
         """
         c = self.conn
         old = [r[0] for r in c.execute(
@@ -161,6 +163,7 @@ class Index:
             c.execute("DELETE FROM chunks WHERE chunk_id=?", (cid,))
             c.execute("DELETE FROM fts_chunks WHERE rowid=?", (cid,))
             c.execute("DELETE FROM vec_chunks WHERE chunk_id=?", (cid,))
+        self.invalidate_doc_vector(path)
         new_ids = []
         for ch in chunks:
             cur = c.execute(
@@ -175,6 +178,19 @@ class Index:
     def chunks_for_path(self, path: str) -> list[int]:
         return [r[0] for r in self.conn.execute(
             "SELECT chunk_id FROM chunks WHERE path=? ORDER BY chunk_id", (path,)).fetchall()]
+
+    def invalidate_doc_vector(self, path: str) -> bool:
+        """Mark a path's doc-surface vector stale while preserving its docs row.
+
+        Returns True when an existing vec_docs row was deleted. A missing docs row
+        is already stale/missing from paths_missing_doc_vector(), so this is a
+        no-op for never-embedded paths.
+        """
+        row = self.conn.execute("SELECT doc_id FROM docs WHERE path=?", (path,)).fetchone()
+        if not row:
+            return False
+        cur = self.conn.execute("DELETE FROM vec_docs WHERE doc_id=?", (row[0],))
+        return cur.rowcount > 0
 
     def remove_path(self, path: str) -> None:
         """Drop all index rows for a path (chunks/FTS/vec + doc lane)."""
@@ -414,6 +430,27 @@ def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
             "full": not have_cp}
 
 
+def _doc_surface_for_projection(repo: Path, path: str) -> str | None:
+    """Return the doc surface for the committed projection, falling back off-git.
+
+    Git-backed indexes are projections of HEAD, not of a dirty working tree. The
+    fallback preserves embed_stale behavior for non-git/local scratch corpora.
+    """
+    head = _git_head(repo)
+    if head:
+        shown = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
+                                "show", f"{head}:{path}"], capture_output=True, text=True)
+        if shown.returncode != 0:
+            return None
+        raw = shown.stdout
+    else:
+        fp = repo / path
+        if not fp.is_file():
+            return None
+        raw = fp.read_text(encoding="utf-8", errors="replace")
+    return ingest.doc_surface(raw, path) or None
+
+
 def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
                 budget: int | None = None) -> dict:
     """Async embed pass (U13): fill the dense vectors that lag lexical (AE5).
@@ -438,14 +475,17 @@ def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
 
 
 def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
-                       budget: int | None = None) -> dict:
+                       budget: int | None = None,
+                       exclude_paths: set[str] | None = None) -> dict:
     """Lock-free core of :func:`embed_stale` — the caller MUST already hold the
     single-indexer lock (``converge`` holds it for the whole convergence pass, so
     it cannot re-enter the public :func:`embed_stale`, whose own acquire would
     self-conflict across descriptors). Budget semantics: see :func:`embed_stale`.
+    ``exclude_paths`` lets convergence keep authoring-host overlay rows lexical-only.
     """
     config.assert_embedder_agrees(embedder)
     repo = Path(repo)
+    excluded = exclude_paths or set()
     stale = idx.stale_chunk_ids()
     if budget is not None:
         stale = stale[:budget]
@@ -453,10 +493,14 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
     for i in range(0, len(stale), batch):
         ids = stale[i:i + batch]
         rows = idx.conn.execute(
-            f"SELECT chunk_id, text FROM chunks WHERE chunk_id IN "
+            f"SELECT chunk_id, text, path FROM chunks WHERE chunk_id IN "
             f"({','.join('?' * len(ids))})", ids).fetchall()
+        if excluded:
+            rows = [r for r in rows if r[2] not in excluded]
+        if not rows:
+            continue
         vecs = embedder.embed([r[1] for r in rows])
-        for (cid, _text), vec in zip(rows, vecs, strict=True):
+        for (cid, _text, _path), vec in zip(rows, vecs, strict=True):
             idx.conn.execute(
                 "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
                 (cid, sqlite_vec.serialize_float32(vec)))
@@ -475,13 +519,12 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
         doc_batch.clear()
 
     missing_docs = idx.paths_missing_doc_vector()
+    if excluded:
+        missing_docs = [p for p in missing_docs if p not in excluded]
     if budget is not None:
         missing_docs = missing_docs[:budget]
     for path in missing_docs:
-        fp = repo / path
-        if not fp.is_file():
-            continue
-        surface = ingest.doc_surface(fp.read_text(encoding="utf-8", errors="replace"), path)
+        surface = _doc_surface_for_projection(repo, path)
         if surface:
             doc_batch.append((path, surface))
             if len(doc_batch) >= batch:
