@@ -75,6 +75,26 @@ def test_catch_up_replays_committed_files_then_embeds(make_corpus, fake_embedder
     idx.close()
 
 
+def test_converge_refreshes_edited_file_doc_surface_without_full_reindex(
+        make_corpus, fake_embedder, monkeypatch):
+    repo = make_corpus({"a.md": "# A\n\nalpha original.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A\n\nDOCSURFACE updated body.\n", "edit a")
+
+    def _boom(*a, **k):
+        raise AssertionError("converge must not call full reindex for edited doc surfaces")
+
+    monkeypatch.setattr(ix, "reindex_isolated", _boom)
+    res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0, embed_budget=10)
+
+    assert res.status == "converged"
+    assert res.replayed == 1
+    assert res.docs_embedded == 1
+    assert "a.md" not in idx.paths_missing_doc_vector()
+    assert _dense_finds(idx, fake_embedder, "DOCSURFACE updated body.", "a.md")
+    idx.close()
+
+
 # --- KTD2: lock held by another holder → skip, serve current ----------------
 
 def test_lock_held_skips_convergence_index_unchanged(make_corpus, fake_embedder):
@@ -126,6 +146,22 @@ def test_embedder_failure_completes_lexical_and_advances_checkpoint(make_corpus,
     # no zero-vectors written: c.md's chunks remain stale (absent from vec_chunks)
     c_cids = set(idx.chunks_for_path("c.md"))
     assert c_cids and c_cids.issubset(set(idx.stale_chunk_ids()))
+    idx.close()
+
+
+def test_embedder_failure_leaves_edited_doc_surface_missing_for_retry(
+        make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha original.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "a.md", "# A\n\nDEGRADED edited body.\n", "edit a")
+
+    res = converge.converge(repo, idx, _DownEmbedder(), debounce_seconds=0)
+
+    assert res.degraded is True
+    assert res.replayed == 1 and res.checkpoint_advanced
+    assert any(idx.get_chunk(c)["path"] == "a.md"
+               for c, _ in idx.lexical_search("DEGRADED", k=10))
+    assert "a.md" in idx.paths_missing_doc_vector()
     idx.close()
 
 

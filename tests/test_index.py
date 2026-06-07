@@ -227,6 +227,36 @@ def test_doc_lane_table_and_one_row_per_doc(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_upsert_lexical_invalidates_existing_doc_vector_but_preserves_doc_row(
+        make_corpus, fake_embedder):
+    # Incremental replay of a changed file must make the doc surface stale again
+    # without deleting the stable docs row; embed_stale will backfill vec_docs.
+    from hypermnesic import ingest
+
+    repo = make_corpus({"a.md": NOTE_A})
+    idx = index.build_index(repo, fake_embedder)
+    doc_id = idx.conn.execute(
+        "SELECT doc_id FROM docs WHERE path=?", ("a.md",)
+    ).fetchone()[0]
+    assert idx.conn.execute(
+        "SELECT COUNT(*) FROM vec_docs WHERE doc_id=?", (doc_id,)
+    ).fetchone()[0] == 1
+
+    idx.upsert_lexical(
+        "a.md",
+        ingest.chunks_for_text("a.md", "# Changed\n\nNew doc-surface lead.\n"),
+    )
+
+    assert idx.conn.execute(
+        "SELECT doc_id FROM docs WHERE path=?", ("a.md",)
+    ).fetchone()[0] == doc_id
+    assert idx.conn.execute(
+        "SELECT COUNT(*) FROM vec_docs WHERE doc_id=?", (doc_id,)
+    ).fetchone()[0] == 0
+    assert "a.md" in idx.paths_missing_doc_vector()
+    idx.close()
+
+
 def test_doc_dense_search_returns_paths(make_corpus, fake_embedder):
     repo = make_corpus({"a.md": NOTE_A, "b.md": NOTE_B})
     idx = index.build_index(repo, fake_embedder)
