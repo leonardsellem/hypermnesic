@@ -149,7 +149,10 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
         degraded = embedder is None
         if embedder is not None:
             try:
-                emb = index_mod.embed_stale_locked(idx, repo, embedder, budget=budget)
+                emb = index_mod.embed_stale_locked(
+                    idx, repo, embedder, budget=budget,
+                    exclude_paths=set(overlay_paths) if overlay_paths else None,
+                )
                 chunks_embedded = emb["chunks_embedded"]
                 docs_embedded = emb["docs_embedded"]
             except Exception:
