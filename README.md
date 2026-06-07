@@ -158,8 +158,9 @@ and the surfaces built on top:
 - **Hybrid retrieval** — SQLite **FTS5** (lexical) fused with **sqlite-vec** KNN (dense;
   OpenAI `text-embedding-3-large` at **1536 dims**) via RRF, degrading gracefully to
   lexical-only when embeddings are down.
-- **Read-time convergence** — every read first catches the index up to `HEAD` and closes a
-  bounded slice of the dense lag, so recall stays fresh without a manual reindex.
+- **Read-time convergence** — every read first catches the index up to `HEAD`, invalidates
+  doc-surface vectors for changed markdown files, and closes a bounded slice of the dense lag
+  for chunks and doc surfaces, so recall stays fresh without a manual reindex.
 - **Two serving lanes** —
   1. a single **public OAuth MCP endpoint** at `/mcp` (Tailscale-funnel'd HTTPS; OAuth 2.1
      with DCR + PKCE; **read tools always, the gated `commit_note` write tool by scope**),

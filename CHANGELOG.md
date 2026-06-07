@@ -69,6 +69,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   including recipes and the Obsidian companion's read-only role.
 
 ### Fixed
+- Incremental convergence now invalidates stale doc-surface vectors for changed markdown
+  paths and lets the bounded dense fill refresh them without a full-vault reindex.
+- Existing doc-lane rows are now reused reliably when writing refreshed doc-surface vectors.
 - `commit_note` protected-path and write-scope refusals now survive Streamable HTTP structured-output
   validation, so remote clients receive a clean `{committed:false, refused:"..."}` payload instead
   of an MCP output validation error.

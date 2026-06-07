@@ -127,8 +127,9 @@ class Index:
         c = self.conn
         for (path, _surface), vec in zip(docs, vectors, strict=True):
             cur = c.execute("INSERT OR IGNORE INTO docs (path) VALUES (?)", (path,))
-            doc_id = cur.lastrowid
-            if not doc_id:  # path already present
+            if cur.rowcount == 1:
+                doc_id = cur.lastrowid
+            else:  # path already present
                 doc_id = c.execute("SELECT doc_id FROM docs WHERE path=?", (path,)).fetchone()[0]
             c.execute("INSERT OR REPLACE INTO vec_docs (doc_id, embedding) VALUES (?, ?)",
                       (doc_id, sqlite_vec.serialize_float32(vec)))
@@ -152,7 +153,8 @@ class Index:
 
         commit_note (U7) calls this synchronously so a written page is findable
         lexically immediately; dense vectors catch up in a later async embed pass
-        (AE5). Removes the path's stale chunk/FTS/vec rows first.
+        (AE5). Removes the path's stale chunk/FTS/vec rows first, and invalidates
+        its doc-surface vector so bounded dense fill refreshes changed docs too.
         """
         c = self.conn
         old = [r[0] for r in c.execute(
@@ -161,6 +163,7 @@ class Index:
             c.execute("DELETE FROM chunks WHERE chunk_id=?", (cid,))
             c.execute("DELETE FROM fts_chunks WHERE rowid=?", (cid,))
             c.execute("DELETE FROM vec_chunks WHERE chunk_id=?", (cid,))
+        self.invalidate_doc_vector(path)
         new_ids = []
         for ch in chunks:
             cur = c.execute(
@@ -175,6 +178,19 @@ class Index:
     def chunks_for_path(self, path: str) -> list[int]:
         return [r[0] for r in self.conn.execute(
             "SELECT chunk_id FROM chunks WHERE path=? ORDER BY chunk_id", (path,)).fetchall()]
+
+    def invalidate_doc_vector(self, path: str) -> bool:
+        """Mark a path's doc-surface vector stale while preserving its docs row.
+
+        Returns True when an existing vec_docs row was deleted. A missing docs row
+        is already stale/missing from paths_missing_doc_vector(), so this is a
+        no-op for never-embedded paths.
+        """
+        row = self.conn.execute("SELECT doc_id FROM docs WHERE path=?", (path,)).fetchone()
+        if not row:
+            return False
+        cur = self.conn.execute("DELETE FROM vec_docs WHERE doc_id=?", (row[0],))
+        return cur.rowcount > 0
 
     def remove_path(self, path: str) -> None:
         """Drop all index rows for a path (chunks/FTS/vec + doc lane)."""
