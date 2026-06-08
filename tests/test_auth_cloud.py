@@ -377,6 +377,28 @@ def test_build_cloud_server_wires_configured_default_client_scopes(make_corpus, 
     assert srv.settings.auth.client_registration_options.default_scopes == ["read", "write"]
 
 
+def test_cloud_server_metadata_advertises_public_client_token_auth(make_corpus, fake_embedder):
+    from starlette.testclient import TestClient
+
+    from hypermnesic import index, mcp_server
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(
+        db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+        resource=RES_U, public_url=PUBLIC_U,
+        approval_token="op-approval-token-24chars-or-more")
+
+    with TestClient(srv.streamable_http_app()) as client:
+        resp = client.get("/.well-known/oauth-authorization-server")
+
+    assert resp.status_code == 200
+    meta = resp.json()
+    assert "none" in meta["token_endpoint_auth_methods_supported"]
+    assert "none" in meta["revocation_endpoint_auth_methods_supported"]
+
+
 def test_cloud_server_trusts_public_host_behind_proxy(make_corpus, fake_embedder):
     # Regression (live 421): behind the Funnel the forwarded Host is the PUBLIC hostname, not
     # loopback. FastMCP auto-enables DNS-rebinding protection on a 127.0.0.1 bind with a

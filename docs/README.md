@@ -13,7 +13,9 @@ never misleads you.
 - **Serving topology:** **two lanes** — one **public OAuth `/mcp`** endpoint (every remote
   client) + a **tailnet read companion** (`:8848`, read-only). The `:8849`
   client-credentials AS lane is **retired**. Anything describing "tailnet-only" or four
-  lanes is **superseded**.
+  lanes is **superseded**. The public OAuth lane supports both confidential clients and
+  public clients registered without a client secret; its AS metadata advertises that
+  public-client token/revocation method.
 - **First-run path:** local proof comes before endpoint setup. `hypermnesic local-proof`
   validates a git-backed markdown vault, retrieves a source-grounded answer, shows the
   disposable index path, and previews a dry-run write before remote-client concepts enter

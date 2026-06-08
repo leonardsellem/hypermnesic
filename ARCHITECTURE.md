@@ -95,7 +95,9 @@ the write); single-writer **locks** (`serialize.py`); and an **append-only audit
    remote client (ChatGPT/Claude connectors, the Claude Code / Codex plugin, the
    Obsidian companion). OAuth 2.1 with Dynamic Client Registration + PKCE; an
    operator-consent gate issues tokens; tokens are audience-bound (RFC 8707) and
-   revocable. Read tools are always available; the gated `commit_note` write tool
+   revocable. The AS metadata advertises both confidential-client methods and the
+   public-client `none` method because Codex/app connectors may register without a
+   client secret. Read tools are always available; the gated `commit_note` write tool
    requires the `write` scope. Exposed via Tailscale Funnel (HTTPS + auto-TLS).
 2. **Tailnet read companion** (`build_server`, `:8848`, auth-off, **read-only**) — for
    the Obsidian companion and the per-prompt recall hook on tailnet devices; tailnet
