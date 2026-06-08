@@ -18,11 +18,28 @@ Engine tunables live in [`src/hypermnesic/config.py`](../../src/hypermnesic/conf
 | `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` | `serve-cloud` / `setup` | for the public lane | The operator approval token that gates every public connection. Read from the environment **only** (never a CLI flag, so it can't leak via the process table / logs). Enforced minimum length. |
 | `HYPERMNESIC_DEFAULT_CLIENT_SCOPES` | `serve-cloud` / `setup` | optional | Comma- or space-separated OAuth scopes requested by default when a dynamically registered client omits `scope`. Default is `read`; set `read,write` when new connector approvals should request both read access and `commit_note` write access. The consent page still requires the operator approval token and write guards still apply. |
 
-The OpenAI key may also be read from a repo-root `.env` (the only file path searched by
-default); the OAuth consent secret is persisted by `setup` to an owner-only env file
+Repo-addressed commands and servers resolve the OpenAI key in this order:
+
+1. process environment `OPENAI_API_KEY`;
+2. the target repo's gitignored `<repo>/.env`;
+3. no cwd fallback when an explicit repo is known.
+
+Only helper paths with no repo context use the historical cwd `.env` fallback. This means
+`hypermnesic doctor /path/to/vault --json` and MCP serves launched from any working
+directory still use `/path/to/vault/.env` when process env is absent.
+
+The OAuth consent secret is persisted by `setup` to an owner-only env file
 (`~/.config/hypermnesic-cloud/cloud.env`, `chmod 600`), never committed.
 `hypermnesic doctor --env-file PATH` checks only whether that file exists and has
 owner-only permissions; it never reads or prints the secret value.
+
+`doctor` and `status` are offline-friendly by default: they report a discovered dense key
+as `configured_unverified`. Pass `--check-dense-live` to run an explicit OpenAI smoke
+embedding and distinguish `configured_valid` from `configured_invalid` without ever
+printing the key. A configured key is separate from projection health: `index_missing_or_unbuilt`
+means build the disposable index first, while `vectors_stale_or_absent` means run
+`hypermnesic converge /path/to/vault --now --json` (or reindex when convergence reports a
+manual reindex recommendation).
 
 `HYPERMNESIC_DEFAULT_CLIENT_SCOPES` can also be set as an explicit admin flag:
 `hypermnesic serve-cloud ... --default-client-scopes read write` or

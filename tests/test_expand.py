@@ -20,3 +20,26 @@ def test_parse_drops_echo_of_query():
 def test_parse_empty_is_empty():
     assert expand._parse("", "q", 3) == []
     assert expand._parse(None, "q", 3) == []
+
+
+def test_openai_expander_uses_repo_context_for_lazy_key_lookup(monkeypatch, tmp_path):
+    from hypermnesic import config
+
+    repo = tmp_path / "vault"
+    repo.mkdir()
+    seen = {}
+
+    def fake_get_api_key(*, repo=None):
+        seen["repo"] = repo
+        return "env-test-key"
+
+    class FakeClient:
+        def __init__(self, *, api_key):
+            self.api_key = api_key
+
+    monkeypatch.setattr(config, "get_api_key", fake_get_api_key)
+    monkeypatch.setattr("openai.OpenAI", FakeClient)
+
+    expander = expand.OpenAIExpander(repo=repo)
+    assert expander._get_client().api_key == "env-test-key"
+    assert seen["repo"] == repo

@@ -14,6 +14,8 @@ import inspect
 import json
 import subprocess
 
+import pytest
+
 from hypermnesic import graph as graph_mod
 from hypermnesic import index as index_mod
 from hypermnesic import mcp_server
@@ -281,6 +283,42 @@ def test_think_mcp_tool_is_read_only_and_no_write_tool(make_corpus, fake_embedde
                    for kw in ("write", "commit", "delete", "put", "update", "create"))
     for t in tools:
         assert t.annotations is not None and t.annotations.readOnlyHint is True
+
+
+def test_mcp_backend_constructs_embedder_with_derived_repo(make_corpus, fake_embedder,
+                                                           monkeypatch):
+    from hypermnesic import embed
+
+    repo, idx, _g = _built(make_corpus, fake_embedder)
+    db = index_mod.state_dir_for(repo) / "index.db"
+    idx.close()
+    seen = {}
+
+    class RecordingEmbedder:
+        dim = fake_embedder.dim
+        model = fake_embedder.model
+
+        def __init__(self, *, repo=None, **_kw):
+            seen["repo"] = repo
+
+        def embed(self, texts):
+            return fake_embedder.embed(texts)
+
+    monkeypatch.setattr(embed, "OpenAIEmbedder", RecordingEmbedder)
+
+    backend = mcp_server._Backend(db)
+
+    assert backend.repo == repo
+    assert backend.embedder is not None
+    assert seen["repo"] == repo
+
+
+def test_mcp_backend_without_repo_rejects_ambiguous_index_db(tmp_path):
+    db = tmp_path / "custom-state" / "index.db"
+    db.parent.mkdir()
+
+    with pytest.raises(ValueError, match="--repo"):
+        mcp_server._Backend(db)
 
 
 # --- CLI think mirrors the tool shape -----------------------------------------
