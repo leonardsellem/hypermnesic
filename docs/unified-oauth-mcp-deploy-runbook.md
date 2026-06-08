@@ -53,6 +53,12 @@ not-taken alternative.
 Reconfigure the `:8850` service to the unified `/mcp` identity; route both `/mcp` and (transitional)
 `/cloud` to it. Existing connectors' `/cloud/mcp`-audience tokens stop validating → they rediscover
 and re-authorize **once** → `/mcp`-audience tokens. New clients use `/mcp` directly.
+The AS metadata must advertise public-client token/revocation auth support (`none`) as well as
+confidential-client methods, because Codex/app connectors can register without a client secret.
+The cloud service persists DCR client registrations and live bearer/refresh token runtime state
+in owner-only `<repo>/.hypermnesic/cloud-oauth-state.json`, so ordinary deploy restarts should
+not force already-authorized clients through a new browser consent flow. The separate
+`client-grants.json` file remains secret-free owner metadata for listing and revocation.
 
 ```
 # 1. reconfigure + restart the service to the unified identity (write-anywhere, new engine)

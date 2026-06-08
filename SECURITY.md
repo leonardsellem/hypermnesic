@@ -51,7 +51,9 @@ are immutable deltas (a new finding is a new dated review, not an edit).
 - **Serving topology (current):** one **public OAuth `/mcp`** endpoint (OAuth 2.1, DCR
   + PKCE, RFC 8707 audience-bound tokens, operator-consent gate on the `write` scope)
   plus a **tailnet read companion** (`:8848`, auth-off, read-only). The retired
-  `:8849` client-credentials AS lane is gone.
+  `:8849` client-credentials AS lane is gone. The public AS supports both confidential
+  clients and public clients registered without a client secret; write access remains
+  consent- and scope-gated.
 - **Write requires auth:** `write_enabled ⇒ auth-required` on any non-loopback bind
   (mirroring the `0.0.0.0` refusal). `--allow-tailnet-write` is a bounded opt-in that
   accepts tailnet membership as the write boundary, permitted only on a CGNAT bind.
@@ -59,5 +61,7 @@ are immutable deltas (a new finding is a new dated review, not an edit).
   a diff-or-die frontmatter gate, single-writer locks, and an append-only audit log
   (summaries only — never bodies, never credentials).
 - **Credentials** (OpenAI key, OAuth consent secret, tokens) are read from the
-  environment / a gitignored `.env` only — never written to the index, audit log, or
-  any output.
+  environment / gitignored state only — never written to the index, audit log, or
+  any output. Public-lane OAuth DCR/token runtime state lives in owner-only
+  `.hypermnesic/cloud-oauth-state.json` so refresh survives restarts; the owner-facing
+  `client-grants.json` metadata remains secret-free.

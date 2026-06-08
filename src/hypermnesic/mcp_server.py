@@ -404,9 +404,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     # writability), so discovery can never advertise a path commit_note would refuse.
     effective_surface = _effective_write_surface(write_allowlist)
 
-    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
-              description="Hybrid (lexical + dense) search over the read-only index.")
-    def search(query: str, k: int = 10) -> SearchOutput:
+    def _search(query: str, k: int = 10) -> SearchOutput:
         cr = backend.converge()
         res = retrieve.search(backend.idx, query, embedder=backend.embedder, k=k,
                               recency_fn=retrieve.git_commit_recency(backend.repo))
@@ -421,6 +419,16 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 for h in res.hits
             ],
         }
+
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
+              description="Hybrid (lexical + dense) search over the read-only index.")
+    def search(query: str, k: int = 10) -> SearchOutput:
+        return _search(query, k)
+
+    @mcp.tool(name="hypermnesic_search", annotations=ToolAnnotations(readOnlyHint=True),
+              description="Compatibility alias for clients that prefix the search tool name.")
+    def hypermnesic_search(query: str, k: int = 10) -> SearchOutput:
+        return _search(query, k)
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Pages reachable from a page via body wikilinks (in+out edges).")
@@ -728,6 +736,39 @@ def _register_consent_route(mcp: FastMCP, provider) -> None:
                                 headers=_consent_headers(redirect_uri))
 
 
+def _patch_public_client_metadata_route(mcp: FastMCP, provider) -> None:
+    """Advertise the AS metadata contract Hypermnesic actually supports.
+
+    The MCP SDK's generated metadata route currently hard-codes confidential-client
+    token auth methods. Hypermnesic's DCR/token path also accepts public clients
+    (`token_endpoint_auth_method=none`), which Codex app connectors rely on. Insert a
+    first-match route that returns the provider metadata while leaving the SDK token,
+    registration, revocation, and protected-resource routes intact.
+    """
+    from mcp.server.auth.routes import cors_middleware
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
+    original = mcp.streamable_http_app
+
+    async def metadata(_request):
+        return JSONResponse(provider.metadata())
+
+    def streamable_http_app_with_hypermnesic_metadata():
+        app = original()
+        app.routes.insert(
+            0,
+            Route(
+                "/.well-known/oauth-authorization-server",
+                endpoint=cors_middleware(metadata, ["GET", "OPTIONS"]),
+                methods=["GET", "OPTIONS"],
+            ),
+        )
+        return app
+
+    mcp.streamable_http_app = streamable_http_app_with_hypermnesic_metadata
+
+
 def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
                        path: str = DEFAULT_PATH, repo: Path | None = None, embedder=None,
                        resource: str, public_url: str, approval_token: str,
@@ -764,11 +805,14 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
     default_scopes = normalize_default_client_scopes(
         default_client_scopes, scopes_supported=scopes_supported)
 
+    repo_for_state = Path(repo) if repo is not None else _Backend._derive_repo(Path(index_db))
+    state_dir = index_mod.state_dir_for(repo_for_state)
     provider = auth_cloud.CloudAuthProvider(
         resource=resource, public_url=public_url, approval_token=approval_token,
         scopes_supported=list(scopes_supported), token_ttl_seconds=token_ttl_seconds,
         default_scopes=default_scopes,
-        grant_store_path=(client_control.grant_store_path(repo) if repo is not None else None))
+        grant_store_path=client_control.grant_store_path(repo_for_state),
+        oauth_state_path=state_dir / "cloud-oauth-state.json")
     auth = AuthSettings(
         issuer_url=public_url, resource_server_url=resource, required_scopes=None,
         client_registration_options=ClientRegistrationOptions(
@@ -792,9 +836,11 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
                        write_enabled=True, write_allowlist=write_allowlist,
                        audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth,
                        public_hosts=public_hosts)
+    _patch_public_client_metadata_route(mcp, provider)
     _register_consent_route(mcp, provider)
     return mcp
 
 
-READ_TOOL_NAMES = {"search", "build_context", "think", "resolve", "list_folders"}
+READ_TOOL_NAMES = {"search", "hypermnesic_search", "build_context", "think", "resolve",
+                   "list_folders"}
 WRITE_TOOL_NAMES = {"commit_note"}            # registered only when write_enabled (U31)

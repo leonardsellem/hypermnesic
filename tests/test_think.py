@@ -278,7 +278,8 @@ def test_think_mcp_tool_is_read_only_and_no_write_tool(make_corpus, fake_embedde
     tools = asyncio.run(srv.list_tools())
     names = {t.name for t in tools}
     assert "think" in names
-    assert names <= {"search", "build_context", "think", "resolve", "list_folders"}  # U3
+    assert names <= {
+        "search", "hypermnesic_search", "build_context", "think", "resolve", "list_folders"}  # U3
     assert not any(kw in n for t in tools for n in [t.name]
                    for kw in ("write", "commit", "delete", "put", "update", "create"))
     for t in tools:
