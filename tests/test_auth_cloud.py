@@ -395,7 +395,8 @@ def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fak
     assert srv.settings.auth.client_registration_options.default_scopes == ["read"]
     assert srv.settings.auth.revocation_options.enabled is True               # revocation wired
     names = {t.name for t in _aio.run(srv.list_tools())}
-    assert "commit_note" in names and {"search", "resolve"} <= names          # read + write
+    assert "commit_note" in names
+    assert {"search", "hypermnesic_search", "resolve"} <= names               # read + write
     assert "/consent" in [r.path for r in srv._custom_starlette_routes]       # consent route added
 
 
