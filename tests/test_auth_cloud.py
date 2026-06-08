@@ -26,12 +26,13 @@ REDIRECT = "https://chatgpt.com/connector_platform_oauth_redirect"
 
 
 def _provider(now=None, token_ttl=3600, code_ttl=300, refresh_ttl=30 * 24 * 3600,
-              grant_store_path=None, default_scopes=None):
+              grant_store_path=None, default_scopes=None, oauth_state_path=None):
     return auth_cloud.CloudAuthProvider(
         resource=RES, public_url=PUBLIC, approval_token="op-approval-secret",
         scopes_supported=["read", "write"], token_ttl_seconds=token_ttl,
         code_ttl_seconds=code_ttl, refresh_ttl_seconds=refresh_ttl, now=now,
-        grant_store_path=grant_store_path, default_scopes=default_scopes)
+        grant_store_path=grant_store_path, default_scopes=default_scopes,
+        oauth_state_path=oauth_state_path)
 
 
 def _client(scope="read write") -> OAuthClientInformationFull:
@@ -161,6 +162,14 @@ def _redeem(p, scopes=("read", "write")):
     return _run(p.exchange_authorization_code(_client(), auth_code))
 
 
+def _redeem_client(p, client, scopes=("read", "write")):
+    pending = _run(p.authorize(client, _params(scopes=scopes))).split("pending=")[1]
+    redirect = p.finalize_consent(pending, approval_token="op-approval-secret")
+    code = redirect.split("code=")[1].split("&")[0]
+    auth_code = _run(p.load_authorization_code(client, code))
+    return _run(p.exchange_authorization_code(client, auth_code))
+
+
 def test_load_and_exchange_authorization_code_issues_bound_tokens():
     p = _provider()
     _run(p.register_client(_client()))
@@ -281,6 +290,31 @@ def test_grant_store_persists_secret_free_metadata(tmp_path):
     assert "op-approval-secret" not in raw
 
 
+def test_oauth_state_survives_restart_for_public_client_refresh(tmp_path):
+    state = tmp_path / "cloud-oauth-state.json"
+    public_client = OAuthClientInformationFull(
+        client_id="codex-public-client",
+        redirect_uris=[REDIRECT],
+        grant_types=["authorization_code", "refresh_token"],
+        response_types=["code"],
+        scope="read write",
+        client_name="Codex",
+        token_endpoint_auth_method="none",
+    )
+    p = _provider(oauth_state_path=state)
+    _run(p.register_client(public_client))
+    tokens = _redeem_client(p, public_client, scopes=("read", "write"))
+
+    restarted = _provider(oauth_state_path=state)
+    restored_client = _run(restarted.get_client("codex-public-client"))
+    assert restored_client is not None
+    refresh = _run(restarted.load_refresh_token(restored_client, tokens.refresh_token))
+    assert refresh is not None
+    rotated = _run(restarted.exchange_refresh_token(restored_client, refresh, scopes=["read"]))
+    assert rotated.access_token
+    assert _run(restarted.load_refresh_token(restored_client, tokens.refresh_token)) is None
+
+
 def test_refresh_rotates_old_token_invalidated():
     # High: exchanging a refresh token must invalidate the old one (rotation), not leave both live.
     p = _provider()
@@ -397,6 +431,35 @@ def test_cloud_server_metadata_advertises_public_client_token_auth(make_corpus, 
     meta = resp.json()
     assert "none" in meta["token_endpoint_auth_methods_supported"]
     assert "none" in meta["revocation_endpoint_auth_methods_supported"]
+
+
+def test_cloud_server_derives_oauth_state_path_when_repo_omitted(make_corpus, fake_embedder):
+    from starlette.testclient import TestClient
+
+    from hypermnesic import index, mcp_server
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_cloud_server(
+        db, host="127.0.0.1", embedder=fake_embedder,
+        resource=RES_U, public_url=PUBLIC_U,
+        approval_token="op-approval-token-24chars-or-more")
+
+    with TestClient(srv.streamable_http_app()) as client:
+        resp = client.post("/register", json={
+            "redirect_uris": [REDIRECT],
+            "grant_types": ["authorization_code", "refresh_token"],
+            "response_types": ["code"],
+            "token_endpoint_auth_method": "none",
+            "client_name": "Codex",
+        })
+
+    assert resp.status_code == 201
+    state = index.state_dir_for(repo) / "cloud-oauth-state.json"
+    assert state.exists()
+    assert state.stat().st_mode & 0o777 == 0o600
+    assert "Codex" in state.read_text(encoding="utf-8")
 
 
 def test_cloud_server_trusts_public_host_behind_proxy(make_corpus, fake_embedder):

@@ -197,7 +197,8 @@ and the surfaces built on top:
   write using the same guard as `commit_note`.
 - **Client control** — `hypermnesic clients` lists secret-free OAuth grant metadata and
   revokes grants without exposing bearer tokens, refresh tokens, approval credentials, or
-  client secrets.
+  client secrets. The public cloud lane separately stores restart-survivable OAuth runtime
+  state in owner-only `.hypermnesic/cloud-oauth-state.json`.
 - **Security** — operator-consent gates the `write` scope at login; audience-bound tokens
   (RFC 8707); refresh rotation + whole-grant revoke; a per-request consent CSP. See
   `docs/2026-06-03-unified-write-anywhere-security-review.md`.
@@ -257,7 +258,9 @@ uv run python scripts/license_scan.py   # zero AGPL/GPL/SSPL *dependency* gate
 
 The OpenAI key is read from `OPENAI_API_KEY` (env var or a gitignored repo-root `.env`). It is
 never written to the index, the audit log, or any output. The OAuth consent secret lives only in
-an owner-only env file; tokens are never logged or committed.
+an owner-only env file. Public-lane OAuth client/token runtime state is stored in owner-only
+`.hypermnesic/cloud-oauth-state.json` so clients can refresh across service restarts; it is never
+logged or committed.
 
 ## License
 

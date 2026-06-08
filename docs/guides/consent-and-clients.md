@@ -45,6 +45,12 @@ built with a repo. It contains client id/name, redirect information, scopes, iss
 times, expiry times, status, and whether write is enabled. It never stores bearer tokens,
 refresh tokens, approval credentials, client secrets, or token hashes.
 
+The public cloud OAuth runtime also stores restart-survivable Dynamic Client Registration
+and live token state in `.hypermnesic/cloud-oauth-state.json`, written with owner-only
+permissions. That file is not the owner listing surface and must not be committed, logged, or
+shared; it exists so browser-login-once clients can keep refreshing after a service deploy or
+restart.
+
 ## Revoke a grant
 
 Preview first:

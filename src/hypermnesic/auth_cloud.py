@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
+import os
 import secrets
 import time
 from dataclasses import dataclass
@@ -40,6 +42,7 @@ from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 ACCESS_PREFIX = "hmcloud_at_"
 REFRESH_PREFIX = "hmcloud_rt_"
 CODE_PREFIX = "hmcloud_code_"
+OAUTH_STATE_VERSION = 1
 
 PENDING_TTL_SECONDS = 600          # an unconsented /authorize request is short-lived
 MAX_CONSENT_FAILURES = 5           # drop a pending after this many wrong approval-token tries
@@ -78,7 +81,8 @@ class CloudAuthProvider:
                  scopes_supported: list[str], default_scopes: list[str] | None = None,
                  token_ttl_seconds: int = 3600,
                  code_ttl_seconds: int = 300, refresh_ttl_seconds: int = 30 * 24 * 3600,
-                 now=None, grant_store_path: Path | None = None) -> None:
+                 now=None, grant_store_path: Path | None = None,
+                 oauth_state_path: Path | None = None) -> None:
         self._resource = str(resource).rstrip("/")
         self._public = str(public_url).rstrip("/")
         self._approval_hash = _hash(approval_token)        # the operator credential, hashed
@@ -107,6 +111,8 @@ class CloudAuthProvider:
         self._grant_by_token: dict[str, str] = {}
         self._grant_tokens: dict[str, tuple[str, str]] = {}
         self._grant_store_path = Path(grant_store_path) if grant_store_path is not None else None
+        self._oauth_state_path = Path(oauth_state_path) if oauth_state_path is not None else None
+        self._load_oauth_state()
 
     @property
     def public_url(self) -> str:
@@ -117,6 +123,7 @@ class CloudAuthProvider:
     def _sweep(self) -> None:
         """Evict expired/over-cap state — bounds anonymous /authorize + DCR growth (DoS)."""
         now = self._now()
+        before = (len(self._pending), len(self._codes), len(self._access), len(self._refresh))
         self._pending = {k: v for k, v in self._pending.items() if v.expires_at > now}
         self._codes = {k: v for k, v in self._codes.items() if v.expires_at > now}
         self._access = {k: v for k, v in self._access.items()
@@ -128,6 +135,90 @@ class CloudAuthProvider:
             ordered = sorted(self._pending, key=lambda x: self._pending[x].expires_at)
             for k in ordered[:-MAX_PENDING]:
                 self._pending.pop(k, None)
+        after = (len(self._pending), len(self._codes), len(self._access), len(self._refresh))
+        if before != after:
+            self._persist_oauth_state()
+
+    def _load_oauth_state(self) -> None:
+        """Load restart-survivable OAuth state from the owner-only cloud state file.
+
+        ``client-grants.json`` remains the secret-free owner-control surface. This separate
+        file holds the opaque bearer/refresh material needed for OAuth refresh across service
+        restarts, and is written 0600 outside the git tree's committed content.
+        """
+        if self._oauth_state_path is None or not self._oauth_state_path.exists():
+            return
+        data = json.loads(self._oauth_state_path.read_text(encoding="utf-8"))
+        if data.get("version") != OAUTH_STATE_VERSION:
+            raise ValueError(f"unsupported cloud OAuth state version: {data.get('version')}")
+        self._clients = {
+            c["client_id"]: OAuthClientInformationFull.model_validate(c)
+            for c in data.get("clients", [])
+        }
+        self._access = {
+            t["token"]: AccessToken.model_validate(t)
+            for t in data.get("access", [])
+        }
+        self._refresh = {
+            t["token"]: RefreshToken.model_validate(t)
+            for t in data.get("refresh", [])
+        }
+        self._sibling = {
+            str(k): str(v)
+            for k, v in (data.get("sibling") or {}).items()
+            if k and v
+        }
+        self._grants = {
+            g["grant_id"]: dict(g)
+            for g in data.get("grants", [])
+            if g.get("grant_id")
+        }
+        self._grant_by_token = {
+            str(k): str(v)
+            for k, v in (data.get("grant_by_token") or {}).items()
+            if k and v
+        }
+        self._grant_tokens = {
+            str(k): (str(v[0]), str(v[1]))
+            for k, v in (data.get("grant_tokens") or {}).items()
+            if isinstance(v, (list, tuple)) and len(v) == 2
+        }
+
+    def _persist_oauth_state(self) -> None:
+        if self._oauth_state_path is None:
+            return
+        path = self._oauth_state_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "version": OAUTH_STATE_VERSION,
+            "clients": [
+                c.model_dump(mode="json")
+                for c in sorted(self._clients.values(), key=lambda c: c.client_id)
+            ],
+            "access": [
+                t.model_dump(mode="json")
+                for t in sorted(self._access.values(), key=lambda t: t.token)
+            ],
+            "refresh": [
+                t.model_dump(mode="json")
+                for t in sorted(self._refresh.values(), key=lambda t: t.token)
+            ],
+            "sibling": dict(sorted(self._sibling.items())),
+            "grants": [
+                dict(g)
+                for g in sorted(self._grants.values(), key=lambda g: g.get("grant_id") or "")
+            ],
+            "grant_by_token": dict(sorted(self._grant_by_token.items())),
+            "grant_tokens": {
+                k: list(v)
+                for k, v in sorted(self._grant_tokens.items())
+            },
+        }
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+        os.chmod(path, 0o600)
 
     def _persist_grant(self, grant: dict) -> None:
         if self._grant_store_path is None:
@@ -152,6 +243,7 @@ class CloudAuthProvider:
         if status == "revoked":
             grant["revoked_at"] = self._now()
         self._persist_grant(grant)
+        self._persist_oauth_state()
 
     def _sync_grant_statuses(self) -> None:
         for grant_id, grant in list(self._grants.items()):
@@ -190,6 +282,7 @@ class CloudAuthProvider:
 
     async def register_client(self, client_info: OAuthClientInformationFull) -> None:
         self._clients[client_info.client_id] = client_info
+        self._persist_oauth_state()
 
     # --- authorize → operator consent --------------------------------------
     def _grantable(self, requested: list[str] | None) -> tuple[str, ...]:
@@ -294,8 +387,10 @@ class CloudAuthProvider:
     async def exchange_authorization_code(self, client: OAuthClientInformationFull,
                                           authorization_code: AuthorizationCode) -> OAuthToken:
         self._codes.pop(authorization_code.code, None)         # single-use
-        return self._issue(client.client_id, tuple(authorization_code.scopes),
-                           redirect_uri=str(authorization_code.redirect_uri))
+        tokens = self._issue(client.client_id, tuple(authorization_code.scopes),
+                             redirect_uri=str(authorization_code.redirect_uri))
+        self._persist_oauth_state()
+        return tokens
 
     # --- refresh -----------------------------------------------------------
     async def load_refresh_token(self, client: OAuthClientInformationFull,
@@ -325,8 +420,10 @@ class CloudAuthProvider:
             self._sibling.pop(old_access, None)
             self._grant_by_token.pop(old_access, None)
         self._grant_by_token.pop(old, None)
-        return self._issue(client.client_id, granted or tuple(refresh_token.scopes),
-                           redirect_uri=redirect_uri, grant_id=grant_id)
+        tokens = self._issue(client.client_id, granted or tuple(refresh_token.scopes),
+                             redirect_uri=redirect_uri, grant_id=grant_id)
+        self._persist_oauth_state()
+        return tokens
 
     # --- access-token validation (the RS path via ProviderTokenVerifier) ---
     async def load_access_token(self, token: str) -> AccessToken | None:
@@ -359,6 +456,7 @@ class CloudAuthProvider:
         if grant_id:
             self._grant_tokens.pop(grant_id, None)
             self._mark_grant(grant_id, "revoked")
+        self._persist_oauth_state()
 
     def list_grants(self) -> list[dict]:
         self._sweep()
@@ -430,6 +528,7 @@ class CloudAuthProvider:
         }
         self._grants[grant_id] = grant
         self._persist_grant(grant)
+        self._persist_oauth_state()
         return OAuthToken(access_token=access, token_type="Bearer", expires_in=self._token_ttl,
                           scope=" ".join(scopes), refresh_token=refresh)
 
