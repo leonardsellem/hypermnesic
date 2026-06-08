@@ -12,6 +12,7 @@ any structured output.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 # Held equal to gbrain's pinned config (KTD2).
@@ -59,30 +60,86 @@ class ConfigError(RuntimeError):
     """Raised on a model/dim disagreement or a missing credential."""
 
 
+@dataclass(frozen=True)
+class ApiKeyStatus:
+    """Secret-free credential discovery status.
+
+    ``checked`` contains source categories only, never filesystem paths or key values.
+    """
+
+    configured: bool
+    source: str
+    checked: tuple[str, ...]
+    error: str | None = None
+
+
+def _read_dotenv_key_from(path: Path) -> tuple[str | None, str | None]:
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None, None
+    except OSError:
+        return None, "unreadable"
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("OPENAI_API_KEY="):
+            return line.split("=", 1)[1].strip().strip('"').strip("'"), None
+    return None, None
+
+
 def _read_dotenv_key() -> str | None:
     for path in _DOTENV_PATHS:
-        try:
-            text = Path(path).read_text(encoding="utf-8")
-        except (FileNotFoundError, OSError):
-            continue
-        for line in text.splitlines():
-            line = line.strip()
-            if line.startswith("OPENAI_API_KEY="):
-                return line.split("=", 1)[1].strip().strip('"').strip("'")
+        key, _error = _read_dotenv_key_from(Path(path))
+        if key:
+            return key
     return None
 
 
-def get_api_key() -> str:
-    """Return the OpenAI key from env or .env. Raise ConfigError if absent.
+def _api_key_from_sources(repo: Path | str | None = None) -> tuple[str | None, ApiKeyStatus]:
+    import os
+
+    checked: list[str] = ["process_env"]
+    key = os.environ.get("OPENAI_API_KEY")
+    if key:
+        return key, ApiKeyStatus(True, "process_env", tuple(checked))
+
+    if repo is not None:
+        checked.append("repo_dotenv")
+        repo_key, error = _read_dotenv_key_from(Path(repo) / ".env")
+        if repo_key:
+            return repo_key, ApiKeyStatus(True, "repo_dotenv", tuple(checked))
+        return None, ApiKeyStatus(
+            False,
+            "missing",
+            tuple(checked),
+            "repo_dotenv_unreadable" if error else None,
+        )
+
+    checked.append("cwd_dotenv")
+    key = _read_dotenv_key()
+    if key:
+        return key, ApiKeyStatus(True, "cwd_dotenv", tuple(checked))
+    return None, ApiKeyStatus(False, "missing", tuple(checked))
+
+
+def api_key_status(repo: Path | str | None = None) -> ApiKeyStatus:
+    """Return secret-free OpenAI key discovery metadata."""
+    return _api_key_from_sources(repo)[1]
+
+
+def get_api_key(repo: Path | str | None = None) -> str:
+    """Return the OpenAI key from env or approved .env source. Raise ConfigError if absent.
 
     Never logs or echoes the value.
     """
-    import os
-
-    key = os.environ.get("OPENAI_API_KEY") or _read_dotenv_key()
+    key, status = _api_key_from_sources(repo)
     if not key:
+        checked = ", ".join(status.checked)
+        extra = ""
+        if status.error == "repo_dotenv_unreadable":
+            extra = " Repo .env could not be read."
         raise ConfigError(
-            "OPENAI_API_KEY is not set (checked environment and .env). "
+            f"OPENAI_API_KEY is not set (checked {checked}).{extra} "
             "Set it via env var or a gitignored repo-root .env file."
         )
     return key

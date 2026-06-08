@@ -206,7 +206,14 @@ presence/permissions when provided, Tailscale readiness when a public URL is pro
 cloud service-unit presence, OAuth discovery, unauthenticated auth challenge, write
 availability, and client-specific next actions.
 Flags: `--public-url URL`, `--resource URL` (defaults to `--public-url`), `--env-file PATH`
-(check existence/permissions only; never prints contents), `--json`.
+(check existence/permissions only; never prints contents), `--check-dense-live` (opt into a
+live embedding smoke check; skipped by default), `--json`.
+
+Dense diagnostics use process `OPENAI_API_KEY` first, then the target repo's gitignored
+`.env` even when the command is launched from another working directory. JSON output includes
+secret-free dense details such as `key_source`, `dense_state`, `live_check`, and vector coverage.
+`index_missing_or_unbuilt` points to index initialization; `vectors_stale_or_absent` points to
+`hypermnesic converge /path/to/vault --now --json` before resorting to a full reindex.
 
 ### `status <repo>`
 Alias for `doctor <repo>` with the same flags and JSON shape.
@@ -221,6 +228,9 @@ Flags: `--index-db PATH` (required), `--host IP` (required; the Tailscale interf
 (accept tailnet membership as the write boundary — CGNAT bind only), `--allowlist PREFIX`
 (repeatable; narrow the write surface — omit for the blocklist default), `--repo PATH`,
 `--auth-issuer-url URL`, `--auth-resource-url URL`, `--required-scope SCOPE` (repeatable).
+When `--repo` is omitted, `--index-db` must have the standard shape
+`<repo>/.hypermnesic/index.db`; pass `--repo /path/to/vault` for any custom index location so
+dense credential lookup is not guessed from an unrelated parent directory.
 
 ### `serve-cloud`
 Run the **public** cloud OAuth MCP — the unified network lane (DCR + PKCE AS + the
@@ -230,7 +240,8 @@ Flags: `--index-db PATH` (required), `--host` (default 127.0.0.1), `--port N` (d
 8850), `--path /mcp`, `--public-url URL` (required), `--resource URL` (required),
 `--repo PATH`, `--token-ttl N` (default 3600), `--default-client-scopes SCOPE ...`
 (default: `read`; env: `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`), `--allowlist
-PREFIX` (repeatable).
+PREFIX` (repeatable). When `--repo` is omitted, `--index-db` must be
+`<repo>/.hypermnesic/index.db`; pass `--repo` for custom index locations.
 
 ### `setup <repo>`
 One idempotent command to bring the unified public OAuth endpoint online: render + start

@@ -54,6 +54,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   `--default-client-scopes read write`, plus
   `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`, so operators can make newly registered
   clients request both read and write on the first consent screen.
+- **Dense diagnostic live check:** `hypermnesic doctor` / `status` now support
+  `--check-dense-live` to opt into a real embedding smoke check while keeping default
+  diagnostics offline-friendly and secret-free.
 
 ### Changed
 - README and getting-started onboarding now lead with the local proof milestone before
@@ -72,6 +75,13 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - Incremental convergence now invalidates stale doc-surface vectors for changed markdown
   paths and lets the bounded dense fill refresh them without a full-vault reindex.
 - Existing doc-lane rows are now reused reliably when writing refreshed doc-surface vectors.
+- Dense embedding key lookup is now repo-scoped across CLI, setup/install, MCP serve, and
+  diagnostics: process `OPENAI_API_KEY` still wins, but an explicit repo uses that repo's
+  gitignored `.env` instead of depending on the caller's current working directory.
+- Dense diagnostics now distinguish key configuration, opt-in live validation, missing/unbuilt
+  indexes, and stale or absent vector coverage without printing secrets.
+- MCP serving now refuses ambiguous custom `--index-db` paths without `--repo`, preventing
+  dense credential lookup from guessing a vault from an unrelated parent directory.
 - `commit_note` protected-path and write-scope refusals now survive Streamable HTTP structured-output
   validation, so remote clients receive a clean `{committed:false, refused:"..."}` payload instead
   of an MCP output validation error.

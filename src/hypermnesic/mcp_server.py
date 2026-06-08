@@ -228,11 +228,20 @@ class _Backend:
     def __init__(self, index_db: Path, embedder=None, *, repo: Path | None = None,
                  authoring_host: bool = False):
         self.index_db = Path(index_db)
-        self.repo = Path(repo) if repo is not None else self.index_db.parent.parent
+        self.repo = Path(repo) if repo is not None else self._derive_repo(self.index_db)
         self.authoring_host = authoring_host
         self._embedder = embedder
         self._idx = None
         self._graph = None
+
+    @staticmethod
+    def _derive_repo(index_db: Path) -> Path:
+        if index_db.name != "index.db" or index_db.parent.name != index_mod.STATE_DIRNAME:
+            raise ValueError(
+                "cannot derive repo from --index-db; pass --repo /path/to/vault when "
+                "the index path is not <repo>/.hypermnesic/index.db"
+            )
+        return index_db.parent.parent
 
     def converge(self):
         """Bring the index up to HEAD + close a bounded dense slice before serving
@@ -263,7 +272,7 @@ class _Backend:
         if self._embedder is None:
             try:
                 from hypermnesic import embed
-                self._embedder = embed.OpenAIEmbedder()
+                self._embedder = embed.OpenAIEmbedder(repo=self.repo)
             except Exception:
                 self._embedder = False  # sentinel: tried, unavailable
         return self._embedder or None
