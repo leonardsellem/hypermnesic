@@ -518,7 +518,7 @@ def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LO
     if not (repo / ".git").exists():
         raise InstallError(f"setup needs a git repo, but no .git found at {repo}")
     try:
-        config.get_api_key()                                   # engine credential present?
+        config.get_api_key(repo=repo)                           # engine credential present?
     except config.ConfigError as exc:
         raise InstallError(f"setup needs OPENAI_API_KEY (env or gitignored .env): {exc}") from exc
 
@@ -603,9 +603,10 @@ def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAUL
     # --- engine roles: master | single -------------------------------------
     if repo is None:
         raise InstallError(f"role {role!r} requires a repo path")
+    repo = Path(repo).resolve()
     # Verify the credential FIRST — fail loud before writing anything (no half-provision).
     try:
-        config.get_api_key()                       # presence check only; value is discarded
+        config.get_api_key(repo=repo)           # presence check only; value is discarded
     except config.ConfigError as exc:
         raise InstallError(
             f"role {role!r} is an engine role and needs OPENAI_API_KEY (env or gitignored "
@@ -620,7 +621,6 @@ def install(role: str, *, repo=None, bind: str | None = None, port: int = DEFAUL
     if service not in ("systemd", "docker"):
         raise InstallError(f"unknown --service {service!r}; choose systemd|docker")
 
-    repo = Path(repo).resolve()
     # Verify git BEFORE writing any artifact — install_hooks needs .git, and failing
     # here keeps the "nothing half-provisioned on failure" contract (no orphan unit/config).
     if not (repo / ".git").exists():

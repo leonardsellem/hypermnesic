@@ -19,9 +19,11 @@ class OpenAIEmbedder:
     """Calls the OpenAI embeddings API. Validates the returned dimension."""
 
     def __init__(self, api_key: str | None = None,
-                 model: str = config.EMBED_MODEL, dim: int = config.EMBED_DIM):
+                 model: str = config.EMBED_MODEL, dim: int = config.EMBED_DIM,
+                 repo=None):
         self.model = model
         self.dim = dim
+        self.repo = repo
         self._api_key = api_key  # resolved lazily so construction never echoes
         self._client = None
 
@@ -31,7 +33,7 @@ class OpenAIEmbedder:
                 from openai import OpenAI
             except ImportError as exc:  # pragma: no cover
                 raise EmbeddingError(f"openai SDK not importable: {exc}") from exc
-            key = self._api_key or config.get_api_key()
+            key = self._api_key or config.get_api_key(repo=self.repo)
             self._client = OpenAI(api_key=key)
         return self._client
 
@@ -55,17 +57,17 @@ class OpenAIEmbedder:
         return vectors
 
 
-def smoke_embed_or_die(embedder: OpenAIEmbedder | None = None) -> None:
+def smoke_embed_or_die(embedder: OpenAIEmbedder | None = None, repo=None) -> None:
     """Embed one vector at startup; raise EmbeddingError on any failure.
 
     This is the explicit read-vs-set check: it confirms the key is actually
     *read* by the SDK, not merely present in the environment.
     """
     try:
-        key = config.get_api_key()
+        key = config.get_api_key(repo=repo)
     except config.ConfigError as exc:
         raise EmbeddingError(str(exc)) from exc
-    emb = embedder or OpenAIEmbedder(api_key=key)
+    emb = embedder or OpenAIEmbedder(api_key=key, repo=repo)
     vecs = emb.embed(["hypermnesic startup smoke embed"])
     if not vecs or len(vecs[0]) != emb.dim:
         raise EmbeddingError("smoke embed returned no/short vector — refusing to proceed")

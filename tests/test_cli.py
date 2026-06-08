@@ -57,6 +57,39 @@ def test_retrieve_converges_to_head_before_serving(make_corpus, fake_embedder, m
     assert any(h["path"] == "fresh.md" for h in out["hits"])   # lexical catch-up before serving
 
 
+def test_retrieve_cli_constructs_embedder_with_repo_from_different_cwd(
+        make_corpus, fake_embedder, monkeypatch, tmp_path, capsys):
+    from hypermnesic import embed
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(config, "_DOTENV_PATHS", [tmp_path / "absent.env"])
+    repo = make_corpus({"hetzner.md": "# Hetzner\n\nHetzner homelab note.\n"})
+    index.build_index(repo, fake_embedder).close()
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    seen = {}
+
+    class RecordingEmbedder:
+        dim = fake_embedder.dim
+        model = fake_embedder.model
+
+        def __init__(self, *, repo=None, **_kw):
+            seen["repo"] = repo
+
+        def embed(self, texts):
+            return fake_embedder.embed(texts)
+
+    monkeypatch.setattr(embed, "OpenAIEmbedder", RecordingEmbedder)
+
+    rc = cli.main(["retrieve", str(repo), "Hetzner", "--json"])
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert seen["repo"] == repo
+    assert out["degraded_lexical_only"] is False
+
+
 def test_think_converges_to_head_before_serving(make_corpus, fake_embedder, monkeypatch,
                                                 tmp_path, capsys):
     _neutralize_key(monkeypatch, tmp_path)

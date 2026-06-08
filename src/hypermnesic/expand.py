@@ -31,15 +31,16 @@ def _parse(text: str, query: str, n: int) -> list[str]:
 class OpenAIExpander:
     """Callable ``(query, n) -> list[str]``. Returns [] on any failure."""
 
-    def __init__(self, model: str | None = None, api_key: str | None = None):
+    def __init__(self, model: str | None = None, api_key: str | None = None, repo=None):
         self.model = model or config.EXPANSION_MODEL
         self._api_key = api_key
+        self.repo = repo
         self._client = None
 
     def _get_client(self):
         if self._client is None:
             from openai import OpenAI
-            self._client = OpenAI(api_key=self._api_key or config.get_api_key())
+            self._client = OpenAI(api_key=self._api_key or config.get_api_key(repo=self.repo))
         return self._client
 
     def __call__(self, query: str, n: int = 3) -> list[str]:

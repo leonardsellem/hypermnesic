@@ -77,7 +77,13 @@ discovery chain** before reporting success. Re-running it converges to the same 
 It prints milestone checks, your endpoint URL, and login instructions. `--resource`
 defaults to `--public-url`; pass it only when the OAuth resource identifier differs.
 `doctor` and `status` report local index health, remote reach, OAuth discovery, auth
-challenge, write availability, and client-specific next actions without mutating state.
+challenge, write availability, dense key source/state, vector coverage, and client-specific
+next actions without mutating state. Dense key lookup is repo-scoped: process
+`OPENAI_API_KEY` wins, otherwise the target vault's gitignored `.env` is used even when the
+command or MCP server starts from another working directory. Live OpenAI smoke checks stay
+opt-in with `--check-dense-live`. Dense diagnostics keep credential state separate from
+projection state: missing indexes point to initialization, and stale/absent vectors point to
+`hypermnesic converge /path/to/vault --now --json` before a full reindex.
 By default, new OAuth clients request `read`; admins can make new approvals request both
 read and write with `--default-client-scopes read write` or
 `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`.
