@@ -404,9 +404,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
     # writability), so discovery can never advertise a path commit_note would refuse.
     effective_surface = _effective_write_surface(write_allowlist)
 
-    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
-              description="Hybrid (lexical + dense) search over the read-only index.")
-    def search(query: str, k: int = 10) -> SearchOutput:
+    def _search(query: str, k: int = 10) -> SearchOutput:
         cr = backend.converge()
         res = retrieve.search(backend.idx, query, embedder=backend.embedder, k=k,
                               recency_fn=retrieve.git_commit_recency(backend.repo))
@@ -421,6 +419,16 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 for h in res.hits
             ],
         }
+
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
+              description="Hybrid (lexical + dense) search over the read-only index.")
+    def search(query: str, k: int = 10) -> SearchOutput:
+        return _search(query, k)
+
+    @mcp.tool(name="hypermnesic_search", annotations=ToolAnnotations(readOnlyHint=True),
+              description="Compatibility alias for clients that prefix the search tool name.")
+    def hypermnesic_search(query: str, k: int = 10) -> SearchOutput:
+        return _search(query, k)
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Pages reachable from a page via body wikilinks (in+out edges).")
@@ -833,5 +841,6 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
     return mcp
 
 
-READ_TOOL_NAMES = {"search", "build_context", "think", "resolve", "list_folders"}
+READ_TOOL_NAMES = {"search", "hypermnesic_search", "build_context", "think", "resolve",
+                   "list_folders"}
 WRITE_TOOL_NAMES = {"commit_note"}            # registered only when write_enabled (U31)
