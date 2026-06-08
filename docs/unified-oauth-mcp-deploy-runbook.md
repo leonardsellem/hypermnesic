@@ -53,6 +53,8 @@ not-taken alternative.
 Reconfigure the `:8850` service to the unified `/mcp` identity; route both `/mcp` and (transitional)
 `/cloud` to it. Existing connectors' `/cloud/mcp`-audience tokens stop validating → they rediscover
 and re-authorize **once** → `/mcp`-audience tokens. New clients use `/mcp` directly.
+The AS metadata must advertise public-client token/revocation auth support (`none`) as well as
+confidential-client methods, because Codex/app connectors can register without a client secret.
 
 ```
 # 1. reconfigure + restart the service to the unified identity (write-anywhere, new engine)

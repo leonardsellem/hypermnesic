@@ -72,6 +72,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   including recipes and the Obsidian companion's read-only role.
 
 ### Fixed
+- Public OAuth AS metadata now advertises public-client token and revocation auth support
+  (`none`) alongside confidential-client methods, matching the DCR/token behavior and
+  preventing Codex app connectors from staying stuck at 401 after OAuth authorization.
 - Incremental convergence now invalidates stale doc-surface vectors for changed markdown
   paths and lets the bounded dense fill refresh them without a full-vault reindex.
 - Existing doc-lane rows are now reused reliably when writing refreshed doc-surface vectors.

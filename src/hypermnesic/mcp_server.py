@@ -728,6 +728,39 @@ def _register_consent_route(mcp: FastMCP, provider) -> None:
                                 headers=_consent_headers(redirect_uri))
 
 
+def _patch_public_client_metadata_route(mcp: FastMCP, provider) -> None:
+    """Advertise the AS metadata contract Hypermnesic actually supports.
+
+    The MCP SDK's generated metadata route currently hard-codes confidential-client
+    token auth methods. Hypermnesic's DCR/token path also accepts public clients
+    (`token_endpoint_auth_method=none`), which Codex app connectors rely on. Insert a
+    first-match route that returns the provider metadata while leaving the SDK token,
+    registration, revocation, and protected-resource routes intact.
+    """
+    from mcp.server.auth.routes import cors_middleware
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
+    original = mcp.streamable_http_app
+
+    async def metadata(_request):
+        return JSONResponse(provider.metadata())
+
+    def streamable_http_app_with_hypermnesic_metadata():
+        app = original()
+        app.routes.insert(
+            0,
+            Route(
+                "/.well-known/oauth-authorization-server",
+                endpoint=cors_middleware(metadata, ["GET", "OPTIONS"]),
+                methods=["GET", "OPTIONS"],
+            ),
+        )
+        return app
+
+    mcp.streamable_http_app = streamable_http_app_with_hypermnesic_metadata
+
+
 def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
                        path: str = DEFAULT_PATH, repo: Path | None = None, embedder=None,
                        resource: str, public_url: str, approval_token: str,
@@ -792,6 +825,7 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
                        write_enabled=True, write_allowlist=write_allowlist,
                        audit_actor_fn=audit_actor_fn, auth_server_provider=provider, auth=auth,
                        public_hosts=public_hosts)
+    _patch_public_client_metadata_route(mcp, provider)
     _register_consent_route(mcp, provider)
     return mcp
 

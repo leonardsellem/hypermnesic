@@ -95,6 +95,8 @@ Point the app's MCP server at your endpoint URL — that's it. OAuth is automati
 - **Claude / ChatGPT (cloud connectors), Claude Code plugin, Codex:** add the MCP
   server URL `https://<your-host>.ts.net/mcp`. On first connect the app discovers the
   OAuth server, opens a browser once for you to authorize, then silently refreshes.
+  The OAuth metadata supports both confidential clients and public clients registered
+  without a client secret.
 - **Read vs. write:** read access is the default unless the endpoint admin configures
   `--default-client-scopes read write` / `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`.
   To grant the `commit_note` **write** tool, approve **write** on the consent page (type your
