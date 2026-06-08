@@ -36,10 +36,11 @@ def _default_client_scopes(args_value) -> list[str] | None:
 def _cmd_index(args) -> int:
     from hypermnesic import embed, index
 
-    embed.smoke_embed_or_die()  # fail loud before any indexing work
-    embedder = embed.OpenAIEmbedder()
+    repo = Path(args.repo)
+    embed.smoke_embed_or_die(repo=repo)  # fail loud before any indexing work
+    embedder = embed.OpenAIEmbedder(repo=repo)
     state_dir = Path(args.state_dir) if args.state_dir else None
-    idx = index.build_index(Path(args.repo), embedder, rebuild=not args.no_rebuild,
+    idx = index.build_index(repo, embedder, rebuild=not args.no_rebuild,
                             state_dir=state_dir)
     stats = idx.stats()
     idx.close()
@@ -55,10 +56,11 @@ def _cmd_embed(args) -> int:
     """Async embed-stale pass: fill dense vectors that lag lexical (AE5)."""
     from hypermnesic import embed, index
 
-    embed.smoke_embed_or_die()  # fail loud before touching the index
-    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    repo = Path(args.repo)
+    embed.smoke_embed_or_die(repo=repo)  # fail loud before touching the index
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
     idx = index.Index(db)
-    res = index.embed_stale(idx, Path(args.repo), embed.OpenAIEmbedder())
+    res = index.embed_stale(idx, repo, embed.OpenAIEmbedder(repo=repo))
     idx.close()
     if args.json:
         _print_json(res)
@@ -86,13 +88,14 @@ def _cmd_reindex(args) -> int:
     """Broad reindex; --isolated builds in a worktree and swaps atomically (U14)."""
     from hypermnesic import embed, index
 
-    embed.smoke_embed_or_die()
-    embedder = embed.OpenAIEmbedder()
+    repo = Path(args.repo)
+    embed.smoke_embed_or_die(repo=repo)
+    embedder = embed.OpenAIEmbedder(repo=repo)
     state_dir = Path(args.state_dir) if args.state_dir else None
     if args.isolated:
-        res = index.reindex_isolated(Path(args.repo), embedder, state_dir=state_dir)
+        res = index.reindex_isolated(repo, embedder, state_dir=state_dir)
     else:
-        index.build_index(Path(args.repo), embedder, state_dir=state_dir).close()
+        index.build_index(repo, embedder, state_dir=state_dir).close()
         res = {"status": "rebuilt-inplace"}
     _print_json(res) if args.json else print(res["status"])
     return 0
@@ -102,9 +105,10 @@ def _cmd_init(args) -> int:
     """Zero-infra drop-in: index a repo in place (in-repo .hypermnesic/ state)."""
     from hypermnesic import embed, index
 
-    embed.smoke_embed_or_die()
-    embedder = embed.OpenAIEmbedder()
-    idx = index.build_index(Path(args.repo), embedder, rebuild=not args.no_rebuild)
+    repo = Path(args.repo)
+    embed.smoke_embed_or_die(repo=repo)
+    embedder = embed.OpenAIEmbedder(repo=repo)
+    idx = index.build_index(repo, embedder, rebuild=not args.no_rebuild)
     stats = idx.stats()
     idx.close()
     if args.json:
@@ -122,17 +126,18 @@ def _cmd_think(args) -> int:
     from hypermnesic import graph as graph_mod
     from hypermnesic import index, think
 
-    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    repo = Path(args.repo)
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
     idx = index.Index(db)
     try:  # dense channel is optional — degrade to lexical+graph if no key (same as the server)
         from hypermnesic import embed
-        embedder = embed.OpenAIEmbedder()
+        embedder = embed.OpenAIEmbedder(repo=repo)
     except Exception:
         embedder = None
-    converge_mod.converge(Path(args.repo), idx, embedder)   # catch up before reading (U28)
+    converge_mod.converge(repo, idx, embedder)   # catch up before reading (U28)
     g = graph_mod.Graph.from_index(idx)                     # graph after convergence
     r = think.think(idx, args.topic, embedder=embedder, graph=g, k=args.k,
-                    path=args.path, repo=Path(args.repo))
+                    path=args.path, repo=repo)
     idx.close()
     if args.json:
         _print_json(r.as_dict())
@@ -155,19 +160,20 @@ def _cmd_retrieve(args) -> int:
     from hypermnesic import converge as converge_mod
     from hypermnesic import index, retrieve
 
-    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    repo = Path(args.repo)
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
     idx = index.Index(db)
     try:  # dense channel optional — same graceful degradation as `think` / the server
         from hypermnesic import embed
-        embedder = embed.OpenAIEmbedder()
+        embedder = embed.OpenAIEmbedder(repo=repo)
     except Exception:
         embedder = None
     # U1: --now forces a non-debounced converge (debounce_seconds=0) so a self-write
     # committed within the 5 s window is caught in a single `retrieve --now`.
-    cr = converge_mod.converge(Path(args.repo), idx, embedder,
+    cr = converge_mod.converge(repo, idx, embedder,
                                debounce_seconds=(0 if args.now else None))
     res = retrieve.search(idx, args.query, embedder=embedder, k=args.k,
-                          recency_fn=retrieve.git_commit_recency(Path(args.repo)))
+                          recency_fn=retrieve.git_commit_recency(repo))
     idx.close()
     out = {
         "query": args.query,
@@ -193,12 +199,13 @@ def _cmd_local_proof(args) -> int:
     from hypermnesic import local_proof
 
     embedder = None
+    repo = Path(args.repo) if args.repo else None
     if args.dense:
         from hypermnesic import embed
-        embedder = embed.OpenAIEmbedder()
+        embedder = embed.OpenAIEmbedder(repo=repo)
     try:
         result = local_proof.run_local_proof(
-            repo=(Path(args.repo) if args.repo else None),
+            repo=repo,
             demo_dir=(Path(args.demo_dir) if args.demo_dir else None),
             query=args.query,
             seed_sample=args.seed_sample,
@@ -240,14 +247,15 @@ def _cmd_resolve(args) -> int:
     from hypermnesic import graph as graph_mod
     from hypermnesic import index
 
-    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    repo = Path(args.repo)
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
     idx = index.Index(db)
     try:  # dense optional — same graceful degradation as `retrieve` / the server
         from hypermnesic import embed
-        embedder = embed.OpenAIEmbedder()
+        embedder = embed.OpenAIEmbedder(repo=repo)
     except Exception:
         embedder = None
-    converge_mod.converge(Path(args.repo), idx, embedder,
+    converge_mod.converge(repo, idx, embedder,
                           debounce_seconds=(0 if args.now else None))
     g = graph_mod.Graph.from_index(idx)
     resolved = g.resolve(args.name)
@@ -271,14 +279,15 @@ def _cmd_list_folders(args) -> int:
     from hypermnesic import converge as converge_mod
     from hypermnesic import folders, index, mcp_server
 
-    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    repo = Path(args.repo)
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
     idx = index.Index(db)
     try:  # dense optional — same graceful degradation as `resolve` / the server
         from hypermnesic import embed
-        embedder = embed.OpenAIEmbedder()
+        embedder = embed.OpenAIEmbedder(repo=repo)
     except Exception:
         embedder = None
-    cr = converge_mod.converge(Path(args.repo), idx, embedder,
+    cr = converge_mod.converge(repo, idx, embedder,
                                debounce_seconds=(0 if args.now else None))
     # Reuse the server's SOLE coercion so the CLI preview matches the live write surface (and
     # flips with Phase B by construction): None → the engine default; an explicit --allowlist
@@ -371,7 +380,8 @@ def _cmd_converge(args) -> int:
     from hypermnesic import converge as converge_mod
     from hypermnesic import index
 
-    db = Path(args.index_db) if args.index_db else index.state_dir_for(Path(args.repo)) / "index.db"
+    repo = Path(args.repo)
+    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
     if not db.exists():
         out = {"status": "no-index"}
         _print_json(out) if args.json else print("no index yet — run `hypermnesic init` first")
@@ -379,10 +389,10 @@ def _cmd_converge(args) -> int:
     idx = index.Index(db)
     try:  # dense optional — degrade to lexical catch-up if no key (same as the server)
         from hypermnesic import embed
-        embedder = embed.OpenAIEmbedder()
+        embedder = embed.OpenAIEmbedder(repo=repo)
     except Exception:
         embedder = None
-    res = converge_mod.converge(Path(args.repo), idx, embedder,   # U1: --now forces a pass
+    res = converge_mod.converge(repo, idx, embedder,   # U1: --now forces a pass
                                 authoring_host=args.authoring_host,
                                 debounce_seconds=(0 if args.now else None))
     idx.close()
@@ -551,6 +561,7 @@ def _cmd_doctor(args) -> int:
         public_url=args.public_url,
         resource=args.resource,
         env_file=(Path(args.env_file) if args.env_file else None),
+        check_dense_live=args.check_dense_live,
     )
     out = result.as_dict()
     if args.json:
@@ -588,7 +599,7 @@ def _cmd_memory(args) -> int:
     try:
         try:
             from hypermnesic import embed
-            embedder = embed.OpenAIEmbedder()
+            embedder = embed.OpenAIEmbedder(repo=repo)
         except Exception:
             embedder = None
         converge_mod.converge(repo, idx, embedder, debounce_seconds=(0 if args.now else None))
@@ -979,6 +990,8 @@ def build_parser() -> argparse.ArgumentParser:
                             help="OAuth resource identifier; defaults to --public-url")
         p_diag.add_argument("--env-file", default=None,
                             help="owner-only env file to check for existence/permissions")
+        p_diag.add_argument("--check-dense-live", action="store_true",
+                            help="run an opt-in live embedding smoke check for dense retrieval")
         p_diag.add_argument("--json", action="store_true")
         p_diag.set_defaults(func=_cmd_doctor)
 

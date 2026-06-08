@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -83,7 +84,7 @@ class DoctorResult:
 
 
 def run_doctor(repo, *, public_url: str | None = None, resource: str | None = None,
-               env_file=None, ops=None) -> DoctorResult:
+               env_file=None, ops=None, check_dense_live: bool = False) -> DoctorResult:
     """Return setup diagnostics without writing files, services, secrets, or git commits."""
     from hypermnesic import install
 
@@ -120,16 +121,7 @@ def run_doctor(repo, *, public_url: str | None = None, resource: str | None = No
         {"state_path": f"{index_mod.STATE_DIRNAME}/index.db", "fresh": fresh},
     ))
 
-    dense_ok = _has_api_key()
-    checks.append(_check(
-        "dense_retrieval", "local", "pass" if dense_ok else "fail",
-        "Dense retrieval key is configured." if dense_ok else
-        "Dense retrieval is not configured; lexical recall still works.",
-        "none" if dense_ok else "configure_key",
-        "No action needed." if dense_ok else "Set OPENAI_API_KEY when you want dense ranking.",
-        None,
-        "docs/reference/configuration.md",
-    ))
+    checks.append(_dense_retrieval_check(repo, idx_path, check_live=check_dense_live))
 
     checks.append(_env_file_check(env_file))
 
@@ -239,12 +231,126 @@ def _index_fresh(repo: Path, idx_path: Path) -> bool | None:
     return checkpoint == head if head else None
 
 
-def _has_api_key() -> bool:
+def _dense_retrieval_check(repo: Path, idx_path: Path, *, check_live: bool) -> DiagnosticCheck:
+    key_status = config.api_key_status(repo)
+    dense_state = "not_configured"
+    live_check = "skipped"
+    if key_status.configured:
+        dense_state = "configured_unverified"
+        if check_live:
+            from hypermnesic import embed
+            try:
+                embed.smoke_embed_or_die(repo=repo)
+                dense_state = "configured_valid"
+                live_check = "pass"
+            except embed.EmbeddingError:
+                dense_state = "configured_invalid"
+                live_check = "fail"
+
+    detail = {
+        "key_configured": key_status.configured,
+        "key_source": key_status.source,
+        "dense_state": dense_state,
+        "live_check": live_check,
+    }
+    if key_status.error:
+        detail["key_error"] = key_status.error
+
+    coverage = _vector_coverage(idx_path)
+    if coverage is not None:
+        detail["vector_coverage"] = coverage
+        if key_status.configured and dense_state != "configured_invalid" and (
+            coverage["chunks_missing_vectors"] or coverage["docs_missing_vectors"]
+        ):
+            dense_state = "vectors_stale_or_absent"
+            detail["dense_state"] = dense_state
+    elif key_status.configured and dense_state != "configured_invalid":
+        dense_state = "index_missing_or_unbuilt"
+        detail["dense_state"] = dense_state
+
+    if key_status.error == "repo_dotenv_unreadable":
+        status = "fail"
+        summary = "Dense retrieval key file could not be read; lexical recall still works."
+        action_code = "repair_key_file"
+        action_summary = "Fix permissions on the repo .env or set OPENAI_API_KEY."
+        command = None
+    elif not key_status.configured:
+        status = "fail"
+        summary = "Dense retrieval is not configured; lexical recall still works."
+        action_code = "configure_key"
+        action_summary = "Set OPENAI_API_KEY or add it to the gitignored repo .env."
+        command = None
+    elif dense_state == "configured_invalid":
+        status = "fail"
+        summary = "Dense retrieval live check failed; lexical recall still works."
+        action_code = "repair_key"
+        action_summary = "Check the OpenAI key/network or rerun without --check-dense-live."
+        command = None
+    elif dense_state == "index_missing_or_unbuilt":
+        status = "warn"
+        summary = "Dense retrieval key is configured, but the local index is missing."
+        action_code = "initialize_index"
+        action_summary = "Build the disposable index before expecting dense retrieval."
+        command = "hypermnesic local-proof /path/to/vault"
+    elif dense_state == "vectors_stale_or_absent":
+        status = "warn"
+        summary = "Dense retrieval key is configured, but vectors are stale or absent."
+        action_code = "refresh_vectors"
+        action_summary = "Run convergence to fill missing dense vectors."
+        command = "hypermnesic converge /path/to/vault --now --json"
+    else:
+        status = "pass"
+        summary = "Dense retrieval key is configured."
+        action_code = "none"
+        action_summary = "No action needed."
+        command = None
+
+    return _check(
+        "dense_retrieval", "local", status,
+        summary, action_code, action_summary,
+        command, "docs/reference/configuration.md", detail,
+    )
+
+
+def _vector_coverage(idx_path: Path) -> dict | None:
+    if not idx_path.exists():
+        return None
     try:
-        config.get_api_key()
-        return True
-    except config.ConfigError:
-        return False
+        conn = sqlite3.connect(f"file:{idx_path}?mode=ro", uri=True)
+        index_mod._load_vec(conn)
+    except sqlite3.Error:
+        return None
+    try:
+        chunks_total = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+        chunk_vectors = conn.execute(
+            "SELECT COUNT(*) FROM vec_chunks v JOIN chunks c ON c.chunk_id = v.chunk_id"
+        ).fetchone()[0]
+        chunks_missing = conn.execute(
+            "SELECT COUNT(*) FROM chunks WHERE chunk_id NOT IN "
+            "(SELECT chunk_id FROM vec_chunks)"
+        ).fetchone()[0]
+        docs_total = conn.execute("SELECT COUNT(DISTINCT path) FROM chunks").fetchone()[0]
+        doc_vectors = conn.execute(
+            "SELECT COUNT(*) FROM vec_docs v JOIN docs d ON d.doc_id = v.doc_id"
+        ).fetchone()[0]
+        docs_missing = conn.execute(
+            "SELECT COUNT(DISTINCT c.path) FROM chunks c "
+            "LEFT JOIN docs d ON d.path = c.path "
+            "WHERE d.doc_id IS NULL OR d.doc_id NOT IN (SELECT doc_id FROM vec_docs)"
+        ).fetchone()[0]
+    except sqlite3.Error:
+        return None
+    finally:
+        conn.close()
+    return {
+        "chunks_total": chunks_total,
+        "chunk_vectors": chunk_vectors,
+        "chunks_missing_vectors": chunks_missing,
+        "docs_total": docs_total,
+        "doc_vectors": doc_vectors,
+        "docs_missing_vectors": docs_missing,
+        "manual_reindex_recommended": bool(chunks_missing or docs_missing),
+    }
 
 
 def _env_file_check(env_file) -> DiagnosticCheck:

@@ -6,6 +6,11 @@ import subprocess
 from hypermnesic import config, doctor, index
 
 PUBLIC_URL = "https://example.ts.net/mcp"
+_KEY_NAME = "OPENAI_" + "API_KEY"
+
+
+def _dotenv_line(value: str) -> str:
+    return f"{_KEY_NAME}={value}\n"
 
 
 def _head(repo):
@@ -166,6 +171,156 @@ def test_doctor_output_is_secret_free(make_corpus, fake_embedder, monkeypatch, t
     assert "/home/" + "ubuntu" not in text
 
 
+def test_doctor_finds_repo_dotenv_from_different_cwd(make_corpus, fake_embedder,
+                                                     monkeypatch, tmp_path):
+    monkeypatch.delenv(_KEY_NAME, raising=False)
+    monkeypatch.setattr(config, "_DOTENV_PATHS", [tmp_path / "absent.env"])
+    repo_key = "repo-test-key"
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    (repo / ".env").write_text(_dotenv_line(repo_key), encoding="utf-8")
+    _build_index(repo, fake_embedder)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+
+    out = doctor.run_doctor(repo, ops=_DoctorOps()).as_dict()
+    checks = {c["id"]: c for c in out["checks"]}
+    dense = checks["dense_retrieval"]
+
+    assert dense["status"] == "pass"
+    assert dense["detail"]["key_configured"] is True
+    assert dense["detail"]["key_source"] == "repo_dotenv"
+    assert dense["detail"]["dense_state"] == "configured_unverified"
+    assert dense["detail"]["live_check"] == "skipped"
+    assert repo_key not in json.dumps(out)
+
+
+def test_doctor_reports_process_env_precedence(make_corpus, fake_embedder, monkeypatch):
+    repo_key = "repo-test-key"
+    env_key = "env-test-key"
+    monkeypatch.setenv(_KEY_NAME, env_key)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    (repo / ".env").write_text(_dotenv_line(repo_key), encoding="utf-8")
+    _build_index(repo, fake_embedder)
+
+    out = doctor.run_doctor(repo, ops=_DoctorOps()).as_dict()
+    dense = {c["id"]: c for c in out["checks"]}["dense_retrieval"]
+
+    assert dense["detail"]["key_source"] == "process_env"
+    assert env_key not in json.dumps(out)
+    assert repo_key not in json.dumps(out)
+
+
+def test_doctor_dense_detail_reports_vector_coverage(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setenv(_KEY_NAME, "env-test-key")
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    _build_index(repo, fake_embedder)
+
+    out = doctor.run_doctor(repo, ops=_DoctorOps()).as_dict()
+    coverage = {c["id"]: c for c in out["checks"]}[
+        "dense_retrieval"
+    ]["detail"]["vector_coverage"]
+
+    assert coverage["chunks_total"] >= 1
+    assert coverage["chunk_vectors"] >= 1
+    assert coverage["chunks_missing_vectors"] == 0
+    assert coverage["docs_total"] >= 1
+    assert coverage["doc_vectors"] >= 1
+    assert coverage["docs_missing_vectors"] == 0
+    assert "manual_reindex_recommended" in coverage
+
+
+def test_doctor_distinguishes_missing_index_from_missing_key(make_corpus, monkeypatch):
+    monkeypatch.setenv(_KEY_NAME, "env-test-key")
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+
+    dense = {c["id"]: c for c in doctor.run_doctor(repo, ops=_DoctorOps()).as_dict()[
+        "checks"
+    ]}["dense_retrieval"]
+
+    assert dense["detail"]["key_configured"] is True
+    assert dense["detail"]["dense_state"] == "index_missing_or_unbuilt"
+    next_text = dense["next_action"]["command"] or dense["next_action"]["summary"]
+    assert "local-proof" in next_text or "init" in next_text
+
+
+def test_doctor_reports_missing_key_even_when_index_exists(
+        make_corpus, fake_embedder, monkeypatch, tmp_path):
+    monkeypatch.delenv(_KEY_NAME, raising=False)
+    monkeypatch.setattr(config, "_DOTENV_PATHS", [tmp_path / "absent.env"])
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    _build_index(repo, fake_embedder)
+
+    dense = {c["id"]: c for c in doctor.run_doctor(repo, ops=_DoctorOps()).as_dict()[
+        "checks"
+    ]}["dense_retrieval"]
+
+    assert dense["status"] == "fail"
+    assert dense["detail"]["dense_state"] == "not_configured"
+    assert dense["next_action"]["code"] == "configure_key"
+
+
+def test_doctor_reports_vectors_stale_or_absent(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setenv(_KEY_NAME, "env-test-key")
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    idx = index.build_index(repo, fake_embedder)
+    idx.conn.execute("DELETE FROM vec_chunks")
+    idx.conn.execute("DELETE FROM vec_docs")
+    idx.conn.commit()
+    idx.close()
+
+    dense = {c["id"]: c for c in doctor.run_doctor(repo, ops=_DoctorOps()).as_dict()[
+        "checks"
+    ]}["dense_retrieval"]
+
+    assert dense["detail"]["dense_state"] == "vectors_stale_or_absent"
+    assert dense["detail"]["vector_coverage"]["chunks_missing_vectors"] >= 1
+    assert dense["detail"]["vector_coverage"]["docs_missing_vectors"] >= 1
+    next_text = dense["next_action"]["command"] or dense["next_action"]["summary"]
+    assert "converge" in next_text
+
+
+def test_doctor_reports_live_dense_failure(make_corpus, fake_embedder, monkeypatch):
+    from hypermnesic import embed
+
+    monkeypatch.setenv(_KEY_NAME, "env-test-key")
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    _build_index(repo, fake_embedder)
+
+    def fail_smoke(**_kw):
+        raise embed.EmbeddingError("boom")
+
+    monkeypatch.setattr(embed, "smoke_embed_or_die", fail_smoke)
+
+    dense = {c["id"]: c for c in doctor.run_doctor(
+        repo, ops=_DoctorOps(), check_dense_live=True
+    ).as_dict()["checks"]}["dense_retrieval"]
+
+    assert dense["status"] == "fail"
+    assert dense["detail"]["dense_state"] == "configured_invalid"
+    assert dense["detail"]["live_check"] == "fail"
+    assert dense["next_action"]["code"] in {"repair_key", "repair_network", "repair_dense"}
+
+
+def test_doctor_does_not_use_cwd_dotenv_for_different_repo(
+        make_corpus, fake_embedder, monkeypatch, tmp_path):
+    monkeypatch.delenv(_KEY_NAME, raising=False)
+    cwd = tmp_path / "cwd-vault"
+    cwd.mkdir()
+    (cwd / ".env").write_text(_dotenv_line("cwd-test-key"), encoding="utf-8")
+    monkeypatch.chdir(cwd)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    _build_index(repo, fake_embedder)
+
+    dense = {c["id"]: c for c in doctor.run_doctor(repo, ops=_DoctorOps()).as_dict()[
+        "checks"
+    ]}["dense_retrieval"]
+
+    assert dense["status"] == "fail"
+    assert dense["detail"]["key_source"] == "missing"
+    assert dense["detail"]["dense_state"] == "not_configured"
+
+
 def test_doctor_cli_json_and_status_alias(make_corpus, fake_embedder, monkeypatch, capsys):
     from hypermnesic import cli
 
@@ -180,6 +335,22 @@ def test_doctor_cli_json_and_status_alias(make_corpus, fake_embedder, monkeypatc
     assert rc == 0 and rc2 == 0
     assert doctor_out["status"] in {"ready", "needs_attention"}
     assert status_out["checks"] == doctor_out["checks"]
+
+
+def test_doctor_cli_accepts_check_dense_live(make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import cli, embed
+
+    monkeypatch.setenv(_KEY_NAME, "env-test-key")
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    _build_index(repo, fake_embedder)
+    monkeypatch.setattr(embed, "smoke_embed_or_die", lambda repo=None, embedder=None: None)
+
+    rc = cli.main(["doctor", str(repo), "--check-dense-live", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    dense = {c["id"]: c for c in out["checks"]}["dense_retrieval"]
+
+    assert rc == 0
+    assert dense["detail"]["live_check"] == "pass"
 
 
 def test_doctor_human_output_is_actionable(make_corpus, fake_embedder, monkeypatch, capsys):
