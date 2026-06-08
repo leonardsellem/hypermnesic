@@ -797,11 +797,14 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
     default_scopes = normalize_default_client_scopes(
         default_client_scopes, scopes_supported=scopes_supported)
 
+    repo_for_state = Path(repo) if repo is not None else _Backend._derive_repo(Path(index_db))
+    state_dir = index_mod.state_dir_for(repo_for_state)
     provider = auth_cloud.CloudAuthProvider(
         resource=resource, public_url=public_url, approval_token=approval_token,
         scopes_supported=list(scopes_supported), token_ttl_seconds=token_ttl_seconds,
         default_scopes=default_scopes,
-        grant_store_path=(client_control.grant_store_path(repo) if repo is not None else None))
+        grant_store_path=client_control.grant_store_path(repo_for_state),
+        oauth_state_path=state_dir / "cloud-oauth-state.json")
     auth = AuthSettings(
         issuer_url=public_url, resource_server_url=resource, required_scopes=None,
         client_registration_options=ClientRegistrationOptions(

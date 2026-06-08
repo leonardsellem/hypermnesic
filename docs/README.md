@@ -31,7 +31,9 @@ never misleads you.
 - **Consent and client control:** OAuth consent is a plain, script-free trust page that
   explains read/write scopes, redirect origin, reject/cancel, and revocation. `hypermnesic
   clients` lists secret-free grant metadata and revokes grants; write approval only allows
-  `commit_note` requests and never bypasses write guards.
+  `commit_note` requests and never bypasses write guards. The cloud OAuth lane keeps
+  restart-survivable DCR/token runtime state in owner-only
+  `.hypermnesic/cloud-oauth-state.json`; the listed grant metadata remains secret-free.
 - **Plugin hook observability:** the Claude Code / Codex auto-recall hook remains silent and
   non-blocking in prompts, but records non-secret status out-of-band. Owners can inspect stable
   outcome codes or run test recall without reading hook source; MCP OAuth wiring still uses browser

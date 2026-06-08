@@ -61,5 +61,7 @@ are immutable deltas (a new finding is a new dated review, not an edit).
   a diff-or-die frontmatter gate, single-writer locks, and an append-only audit log
   (summaries only — never bodies, never credentials).
 - **Credentials** (OpenAI key, OAuth consent secret, tokens) are read from the
-  environment / a gitignored `.env` only — never written to the index, audit log, or
-  any output.
+  environment / gitignored state only — never written to the index, audit log, or
+  any output. Public-lane OAuth DCR/token runtime state lives in owner-only
+  `.hypermnesic/cloud-oauth-state.json` so refresh survives restarts; the owner-facing
+  `client-grants.json` metadata remains secret-free.
