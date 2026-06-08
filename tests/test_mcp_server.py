@@ -101,7 +101,8 @@ def test_only_read_tools_no_write_tool(built_index, fake_embedder):
     srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     tools = asyncio.run(srv.list_tools())
     names = {t.name for t in tools}
-    assert names == {"search", "build_context", "think", "resolve", "list_folders"}
+    assert names == {
+        "search", "hypermnesic_search", "build_context", "think", "resolve", "list_folders"}
     # read-only is structural: no write-ish tool exists
     assert not any(
         kw in n for t in tools for n in [t.name]
@@ -118,12 +119,14 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     srv = mcp_server.build_server(built_index, host="127.0.0.1", embedder=fake_embedder,
                                   write_enabled=True, repo=built_index.parent.parent)
     schemas = {t.name: t.outputSchema for t in asyncio.run(srv.list_tools())}
-    assert set(schemas) == {"search", "build_context", "think", "resolve", "list_folders",
-                            "commit_note"}
+    assert set(schemas) == {
+        "search", "hypermnesic_search", "build_context", "think", "resolve", "list_folders",
+        "commit_note"}
     for name, sch in schemas.items():
         assert sch and sch.get("properties"), f"{name} has no outputSchema"
     # spot-check the declared shapes match the real returns
     assert "hits" in schemas["search"]["properties"]
+    assert schemas["hypermnesic_search"] == schemas["search"]
     assert "context" in schemas["build_context"]["properties"]
     assert {"resolved", "slug"} <= set(schemas["resolve"]["properties"])
     assert {"questions", "unlinked"} <= set(schemas["think"]["properties"])

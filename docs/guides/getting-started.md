@@ -167,7 +167,9 @@ Point the app's MCP server at your endpoint URL — OAuth is automatic:
 - **Browser login never appears / connection fails:** the app needs OAuth *discovery* —
   confirm the well-knowns (above) resolve. A static `Authorization` header in the wiring
   would suppress discovery; the bundled `.mcp.json` deliberately omits one.
-- **401 after a while:** the token expired and refresh failed; reconnect to re-authorize.
+- **401 after a while:** refresh failed. Check the cloud service is running and that
+  `.hypermnesic/cloud-oauth-state.json` exists with owner-only permissions; reconnect to
+  re-authorize only if the OAuth state file is missing, corrupt, or intentionally rotated.
 - **Write refused with `insufficient_scope`:** reconnect the client and approve write. This
   only allows `commit_note` requests; protected paths, frontmatter, dirty-tree, head-drift,
   audit, and git coordination guards still apply.
