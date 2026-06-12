@@ -44,8 +44,8 @@ Systemd user unit `hypermnesic-cloud.service`:
 ```
 ExecStart=hypermnesic serve-cloud \
   --index-db <repo>/.hypermnesic/index.db --host 127.0.0.1 --port 8850 \
-  --public-url https://homelab.taildabf2.ts.net/cloud \
-  --resource  https://homelab.taildabf2.ts.net/cloud/mcp --repo <repo>
+  --public-url https://<your-host>.ts.net/cloud \
+  --resource  https://<your-host>.ts.net/cloud/mcp --repo <repo>
 EnvironmentFile=-~/.config/hypermnesic-cloud/cloud.env   # HYPERMNESIC_CLOUD_APPROVAL_TOKEN
 ```
 `systemctl --user enable --now hypermnesic-cloud`. (Loopback bind; the funnel terminates TLS and
@@ -57,8 +57,8 @@ Expose the cloud path publicly (as honcho is exposed). On the path the connector
 ```
 tailscale funnel --set-path /cloud http://127.0.0.1:8850
 # verify publicly: the AS metadata + RFC 9728 protected-resource metadata resolve over HTTPS
-curl -s https://homelab.taildabf2.ts.net/cloud/.well-known/oauth-authorization-server | jq .grant_types_supported
-curl -s -o /dev/null -w '%{http_code}\n' https://homelab.taildabf2.ts.net/cloud/.well-known/oauth-protected-resource/mcp
+curl -s https://<your-host>.ts.net/cloud/.well-known/oauth-authorization-server | jq .grant_types_supported
+curl -s -o /dev/null -w '%{http_code}\n' https://<your-host>.ts.net/cloud/.well-known/oauth-protected-resource/mcp
 ```
 Confirm the existing honcho `/honcho` funnel route is untouched (per-path funnel, not hostname-wide).
 - **Rollback (one inverse op):** `tailscale funnel --set-path /cloud off` — removes public reach;
@@ -66,7 +66,7 @@ Confirm the existing honcho `/honcho` funnel route is untouched (per-path funnel
 
 ## Step 4 — install the connector in ChatGPT + Claude (operator)
 In each app's connector/MCP settings, add the remote MCP server URL:
-`https://homelab.taildabf2.ts.net/cloud/mcp`. The app runs DCR → opens hypermnesic's `/consent` in
+`https://<your-host>.ts.net/cloud/mcp`. The app runs DCR → opens hypermnesic's `/consent` in
 your browser → **you enter your approval token + confirm the client/scopes shown** → the app gets a
 token. Then memory `search`/`build_context`/`think`/`resolve` (read) and `commit_note` (write,
 lands in `captures/`) are available from the app, including mobile.
