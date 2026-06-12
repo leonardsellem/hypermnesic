@@ -166,4 +166,4 @@ only over the MCP network protocol with no shared or statically-linked code; the
 review confirms that framing and the keep-it-true invariant. Until signed off, the
 self-authored README assertion stands and the flip is gated on this item.
 
-`decision:` legal sanity-check before flip   `signed_off:` _____
+`decision:` legal sanity-check before flip   `signed_off:` 2026-06-12 (operator)
