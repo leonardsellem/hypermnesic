@@ -38,7 +38,7 @@ private keys, bearer tokens, or unreviewed sensitive material.
 
 Before writing, preserve raw evidence. Cite source paths when consolidating; do not replace raw
 captures with generated summaries. If the destination is unclear, call `list_folders` first and use
-the returned writable folders. Refusals are control signals: do not bypass protected-path,
+the returned writable folders and root-local agent guidance. Refusals are control signals: do not bypass protected-path,
 frontmatter, dirty-tree, head-drift, consent, or scope refusals.
 
 ## The tools (MCP)
@@ -58,7 +58,10 @@ is recall-able without a manual reindex.
 - **`list_folders(root="", depth=1)`** — discover the vault's folder taxonomy + writable
   locations before placing a note: child folders under `root` (drill-down to `depth` levels), each
   with its `writable` flag (matching exactly what `commit_note` accepts), `protected_reason`, and
-  recursive `note_count`. Read-only. Narrow `root` to drill deeper when `truncated` is true.
+  recursive `note_count`. The result also carries `agent_instruction`: `{source, content}` for a
+  direct `AGENTS.md` at `root`, fallback direct `CLAUDE.md`, or `null` when neither exists. It does
+  not bubble child-folder instruction files into parent listings. Read-only. Narrow `root` to drill
+  deeper when `truncated` is true.
 
 Tool routing:
 
@@ -66,7 +69,8 @@ Tool routing:
 - Use `build_context` after a promising hit when neighboring wikilinked notes matter.
 - Use `think` for note-grounded exploration and related-but-unlinked pairs; it never writes.
 - Use `resolve` before wikilinking a named entity; do not guess when it returns null.
-- Use `list_folders` before writes when the path or writable surface is unclear.
+- Use `list_folders` before writes when the path, writable surface, or local `AGENTS.md` /
+  `CLAUDE.md` guidance is unclear.
 - Use `commit_note` only for explicit durable writes that pass the taxonomy above.
 
 Daily workflow routing:

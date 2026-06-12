@@ -445,12 +445,41 @@ def test_list_folders_cli_json_shape_matches_mcp(make_corpus, fake_embedder,
     out = json.loads(capsys.readouterr().out)
     # exact parity with the MCP ListFoldersOutput shape
     assert set(out) == {"root", "depth", "folders", "truncated", "omitted",
-                        "manual_reindex_recommended"}
+                        "manual_reindex_recommended", "agent_instruction"}
+    assert out["agent_instruction"] is None
     by = {e["path"]: e for e in out["folders"]}
     assert {"notes/", "projects/"} <= set(by)
     assert {"path", "writable", "protected_reason", "note_count"} <= set(by["notes/"])
     assert by["notes/"]["writable"] is True                # Phase A: 4-prefix default
     assert by["notes/"]["note_count"] == 1
+
+
+def test_list_folders_cli_json_includes_root_agents_instruction(make_corpus, fake_embedder,
+                                                               monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({
+        "AGENTS.md": "# Agent rules\n\nUse repo-local guidance.\n",
+        "notes/n.md": "# N\n\nbody.\n",
+    })
+    index.build_index(repo, fake_embedder).close()
+    rc = cli.main(["list-folders", str(repo), "--json"])
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["agent_instruction"] == {
+        "source": "AGENTS.md",
+        "content": "# Agent rules\n\nUse repo-local guidance.\n",
+    }
+
+
+def test_list_folders_cli_json_omits_instruction_payload_when_absent(
+        make_corpus, fake_embedder, monkeypatch, tmp_path, capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"notes/n.md": "# N\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    rc = cli.main(["list-folders", str(repo), "--json"])
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["agent_instruction"] is None
 
 
 def test_list_folders_cli_drill_down(make_corpus, fake_embedder, monkeypatch, tmp_path, capsys):
@@ -480,11 +509,16 @@ def test_list_folders_cli_allowlist_preview_narrows(make_corpus, fake_embedder,
 def test_list_folders_cli_human_output_is_nonempty(make_corpus, fake_embedder,
                                                   monkeypatch, tmp_path, capsys):
     _neutralize_key(monkeypatch, tmp_path)
-    repo = make_corpus({"notes/n.md": "# N\n\nbody.\n"})
+    repo = make_corpus({
+        "AGENTS.md": "# Agent rules\n\nUse repo-local guidance.\n",
+        "notes/n.md": "# N\n\nbody.\n",
+    })
     index.build_index(repo, fake_embedder).close()
     rc = cli.main(["list-folders", str(repo)])                 # non-JSON path
     assert rc == 0
-    assert "notes/" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "agent instructions: AGENTS.md" in out
+    assert "notes/" in out
 
 
 # --- U2: serve OAuth2 flags plumb a verifier + AuthSettings into build_server --

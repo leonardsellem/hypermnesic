@@ -132,6 +132,11 @@ class FolderEntry(TypedDict):
     note_count: int                    # indexed notes at/under this folder (recursive)
 
 
+class AgentInstruction(TypedDict):
+    source: str                         # "AGENTS.md" or fallback "CLAUDE.md"
+    content: str                        # full direct root-local instruction file content
+
+
 class ListFoldersOutput(TypedDict):
     root: str                          # the normalized root the listing is under ("" = vault root)
     depth: int                         # the (clamped) drill-down depth
@@ -139,6 +144,7 @@ class ListFoldersOutput(TypedDict):
     truncated: bool                    # the node cap was hit (drill deeper by narrowing root)
     omitted: int                       # folders dropped by the cap
     manual_reindex_recommended: bool   # convergence signal, surfaced like the other read tools
+    agent_instruction: AgentInstruction | None  # null when no direct root-local guidance exists
 # Loopback binds are exempt from the write_enabled⇒auth-required invariant (U2): a
 # localhost serve is reachable only by the local user — never the tailnet.
 _LOCALHOST_BINDS = {"127.0.0.1", "::1", "localhost"}
@@ -465,24 +471,31 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
               description="Discover the vault's folder taxonomy + writable locations before "
                           "placing a note: child folders under `root` (drill-down) to `depth` "
                           "levels, each with its writability, protected reason, and recursive "
-                          "note count. Read-only; the `writable` flag matches what `commit_note` "
+                          "note count, plus direct root-local AGENTS.md/CLAUDE.md guidance when "
+                          "present. Read-only; the `writable` flag matches what `commit_note` "
                           "accepts. Narrow `root` to drill deeper when `truncated` is true.")
     def list_folders(root: str = "", depth: int = 1) -> ListFoldersOutput:
         cr = backend.converge()
+        instruction = None
         try:
             listing = folders_mod.derive_folders(
                 backend.idx.all_paths(), root=root, depth=depth,
                 effective_surface=effective_surface,
                 max_nodes=config.LIST_FOLDERS_MAX_NODES,
                 max_depth=config.LIST_FOLDERS_MAX_DEPTH)
+            instruction = folders_mod.agent_instruction_for_root(backend.repo, listing["root"])
         except ValueError:
             # an absolute / traversal root is rejected at the boundary — return an empty,
             # leak-free listing (never out-of-vault paths) rather than an error to the client.
             listing = {"root": "", "depth": 1, "folders": [], "truncated": False, "omitted": 0}
-        return {"root": listing["root"], "depth": listing["depth"],
-                "folders": listing["folders"], "truncated": listing["truncated"],
-                "omitted": listing["omitted"],
-                "manual_reindex_recommended": cr.manual_reindex_recommended}
+        out: ListFoldersOutput = {
+            "root": listing["root"], "depth": listing["depth"],
+            "folders": listing["folders"], "truncated": listing["truncated"],
+            "omitted": listing["omitted"],
+            "manual_reindex_recommended": cr.manual_reindex_recommended,
+            "agent_instruction": instruction,
+        }
+        return out
 
     if write_enabled:
         # The one sanctioned write path, exposed over MCP only on a write-enabled

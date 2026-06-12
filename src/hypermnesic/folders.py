@@ -17,7 +17,7 @@ excludes the leaf, so a bare prefix would mis-read ``projects/scripts/`` as writ
 
 from __future__ import annotations
 
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 from hypermnesic import config, serialize
 
@@ -25,6 +25,7 @@ from hypermnesic import config, serialize
 # would write, so the flag answers "can a note land directly here". Never collides with
 # a real path; classified by serialize.writable_reason like any other write target.
 _PROBE = "__probe__.md"
+_INSTRUCTION_CANDIDATES = ("AGENTS.md", "CLAUDE.md")
 
 
 def normalize_root(root: str | None) -> str:
@@ -41,6 +42,22 @@ def normalize_root(root: str | None) -> str:
     if any(seg == ".." for seg in parts):
         raise ValueError(f"root must not contain '..' traversal: {root!r}")
     return "/".join(parts) + "/" if parts else ""
+
+
+def agent_instruction_for_root(repo: Path, root: str | None) -> dict | None:
+    """Return the direct instruction file for ``root`` if present.
+
+    Precedence is root-local ``AGENTS.md`` first, then root-local ``CLAUDE.md``.
+    Descendant instruction files are deliberately ignored: callers should narrow
+    ``root`` when they want guidance for a child folder.
+    """
+    root_prefix = normalize_root(root)
+    base = Path(repo) / root_prefix
+    for name in _INSTRUCTION_CANDIDATES:
+        candidate = base / name
+        if candidate.is_file():
+            return {"source": name, "content": candidate.read_text(encoding="utf-8")}
+    return None
 
 
 def derive_folders(paths, *, root: str = "", depth: int = 1,

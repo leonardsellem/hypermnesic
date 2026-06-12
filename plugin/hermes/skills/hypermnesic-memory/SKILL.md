@@ -31,7 +31,8 @@ All read commands converge the index before answering and support `--json`.
 - `hypermnesic resolve <repo> <name> --json` — resolve a name to an existing note
   path and slug, or return null when missing or ambiguous.
 - `hypermnesic list-folders <repo> --json` — inspect folder taxonomy and writable
-  locations before placing a note.
+  locations before placing a note. JSON also returns `agent_instruction`: direct
+  `AGENTS.md` guidance for the requested root, fallback direct `CLAUDE.md`, or null.
 
 Tool routing:
 
@@ -39,7 +40,8 @@ Tool routing:
 - Use `think` for note-grounded exploration and related-but-unlinked pairs; it never
   writes.
 - Use `resolve` before wikilinking a named entity; do not guess when it returns null.
-- Use `list-folders` before writes when the path or writable surface is unclear.
+- Use `list-folders` before writes when the path, writable surface, or local
+  `AGENTS.md` / `CLAUDE.md` guidance is unclear.
 
 ## Writing
 
@@ -53,7 +55,8 @@ should be an explicit CLI action.
 
 Before writing, preserve raw evidence. Cite source paths when consolidating; do not
 replace raw captures with generated summaries. If the destination is unclear, call
-`list-folders` first and use the returned writable folders. Refusals are control signals: do not bypass protected-path, frontmatter, dirty-tree, head-drift, consent, or
+`list-folders` first and use the returned writable folders and root-local agent guidance.
+Refusals are control signals: do not bypass protected-path, frontmatter, dirty-tree, head-drift, consent, or
 scope refusals.
 
 ## Model
