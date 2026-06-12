@@ -1,7 +1,7 @@
 ---
 title: "feat: Surface agent instructions in list_folders"
 type: feat
-status: active
+status: completed
 date: 2026-06-12
 origin: docs/brainstorms/2026-06-12-list-folders-agent-instructions-requirements.md
 ---
@@ -10,9 +10,13 @@ origin: docs/brainstorms/2026-06-12-list-folders-agent-instructions-requirements
 
 ## Summary
 
-Extend the existing folder-discovery contract with an optional root-level instruction payload, using
-the same additive result shape for MCP and CLI callers. Keep the folder taxonomy and writability
-logic unchanged, and thread the new payload through tests and user-facing documentation.
+Extend the existing folder-discovery contract with a root-level instruction payload, using the same
+additive result shape for MCP and CLI callers. Keep the folder taxonomy and writability logic
+unchanged, and thread the new payload through tests and user-facing documentation.
+
+Implementation note: the shipped shape uses `agent_instruction: {source, content} | null` rather
+than omitting the field when absent, because FastMCP structured-output validation requires the
+declared schema property to be present. `null` is the no-active-payload state.
 
 ---
 

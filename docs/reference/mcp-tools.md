@@ -75,9 +75,14 @@ what `commit_note` accepts (they share one write-surface coercion). Narrow `root
 drill deeper when `truncated` is true.
 
 **Returns** `{ root, depth, folders: [ { path, writable, protected_reason, note_count } ],
-truncated, omitted, manual_reindex_recommended }`. `protected_reason` is null when
-writable, else the reason (protected class or allowlist miss); `omitted` counts folders
-dropped by the node cap.
+truncated, omitted, manual_reindex_recommended, agent_instruction }`.
+`agent_instruction` is `{ source, content }` when the requested root has a direct
+root-local instruction file, otherwise `null`. `source` is `AGENTS.md` when present, falling
+back to `CLAUDE.md` only when `AGENTS.md` is absent at the same requested root. Child-folder
+instruction files are not aggregated into parent listings; narrow `root` to that child to read
+its local guidance. Invalid traversal or absolute roots still return a leak-free empty listing
+with `agent_instruction: null`. `protected_reason` is null when writable, else the reason
+(protected class or allowlist miss); `omitted` counts folders dropped by the node cap.
 
 Use `list_folders` before writing when the destination is unclear. Folder discovery is
 part of the memory taxonomy: durable project memory belongs in Hypermnesic, while

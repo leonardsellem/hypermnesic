@@ -76,6 +76,13 @@ Flags: `--root PREFIX` (default vault root), `--depth N` (default 1), `--index-d
 `--now`, `--allowlist PREFIX` (repeatable; preview writability under a narrowed surface),
 `--json`.
 
+JSON output includes `root`, `depth`, `folders`, `truncated`, `omitted`,
+`manual_reindex_recommended`, and `agent_instruction`. `agent_instruction` is `{source,
+content}` when the requested root has a direct `AGENTS.md` file, falls back to direct
+`CLAUDE.md` when `AGENTS.md` is absent, and is `null` when neither exists. Child-folder
+instruction files are not returned for a parent listing; pass that child path as `--root` to
+read its local guidance.
+
 Use this before writes when the destination is unclear. Durable project memory belongs in
 Hypermnesic; behavioural preference/session memory belongs in Honcho or an equivalent adjacent
 layer by default.

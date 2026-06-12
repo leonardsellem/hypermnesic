@@ -61,6 +61,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 ### Changed
 - README and getting-started onboarding now lead with the local proof milestone before
   endpoint setup or remote-client connection.
+- `list_folders` and `hypermnesic list-folders --json` now include an `agent_instruction`
+  field. It is `{source, content}` for direct root-local `AGENTS.md` guidance, falls back to
+  direct `CLAUDE.md`, and is `null` when neither file exists at the requested root.
 - `hypermnesic setup --resource` now defaults to `--public-url` for the common endpoint
   shape, while preserving explicit resource overrides for advanced deployments.
 - OAuth consent now explains read/write scope consequences, generic-client warnings,
