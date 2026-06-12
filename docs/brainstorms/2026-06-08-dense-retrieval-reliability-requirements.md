@@ -42,9 +42,9 @@ The following commands were run during investigation; no secret values were prin
 
 | Check | Result | Meaning |
 |---|---:|---|
-| `uv run hypermnesic doctor <home>/dev/hypermnesic --json` from the repo cwd | `dense_retrieval=pass`; `local_index=fail` | The repo `.env` is discoverable only when cwd is the repo. The source checkout has no `.hypermnesic/index.db`, which is a separate local-index issue. |
-| Same doctor command launched from `/tmp` with `uv --project <home>/dev/hypermnesic ...` | `dense_retrieval=fail` | Merely changing cwd is enough to reproduce the reported dense failure despite passing the same repo path. |
-| Installed `<home>/.local/bin/hypermnesic` launched from `/tmp` | `dense_retrieval=fail` | The installed console script does not currently inject `OPENAI_API_KEY`; ad-hoc invocations outside the repo depend on cwd-sensitive `.env` lookup. |
+| `uv run hypermnesic doctor /path/to/dev/hypermnesic --json` from the repo cwd | `dense_retrieval=pass`; `local_index=fail` | The repo `.env` is discoverable only when cwd is the repo. The source checkout has no `.hypermnesic/index.db`, which is a separate local-index issue. |
+| Same doctor command launched from `/tmp` with `uv --project /path/to/dev/hypermnesic ...` | `dense_retrieval=fail` | Merely changing cwd is enough to reproduce the reported dense failure despite passing the same repo path. |
+| Installed `/path/to/.local/bin/hypermnesic` launched from `/tmp` | `dense_retrieval=fail` | The installed console script does not currently inject `OPENAI_API_KEY`; ad-hoc invocations outside the repo depend on cwd-sensitive `.env` lookup. |
 | Repo cwd environment check | process `OPENAI_API_KEY` absent; repo `.env` present; `.hypermnesic/index.db` absent | The key exists as a repo-local secret file, but not as a global process env var. |
 | 1Password field existence check | OpenAI field available in vault `hermes-agent` | The operator has a usable secret source, but Hypermnesic itself does not read 1Password. |
 | `uv run python -c 'from hypermnesic.embed import smoke_embed_or_die; smoke_embed_or_die()'` from repo cwd | `smoke_embed=pass` | The configured key is valid and the OpenAI embedding API returns the pinned vector shape from the repo context. |

@@ -7,7 +7,7 @@ a new minimal AS** (which U12 does, gbrain-independent).
 ## What was evaluated
 
 `honcho-oauth-proxy.service` — a custom OAuth 2.1 proxy on the homelab, live at
-`127.0.0.1:8788`, public issuer `https://homelab.<tailnet-host>.ts.net/honcho/`. Source:
+`127.0.0.1:8788`, public issuer `https://<your-host>.ts.net/honcho/`. Source:
 `~/.honcho/oauth-proxy/honcho_oauth_proxy.py` (607 lines, stdlib HTTP, JSON state file). Its
 discovery advertises `authorization_endpoint`, `token_endpoint`, `revocation_endpoint`,
 `registration_endpoint` (DCR), and `scopes_supported: [read, write]`.
@@ -21,9 +21,9 @@ discovery advertises `authorization_endpoint`, `token_endpoint`, `revocation_end
    404). A separate Resource Server (hypermnesic) therefore has **no way to validate** an honcho
    token — neither by introspection nor by JWT signature.
 2. **Audience hardwired to honcho's own resource.** `protected_resource_metadata()` returns
-   `resource = public_url + "/mcp"` → `homelab.<tailnet-host>.ts.net/honcho/mcp`. Issuance does not
+   `resource = public_url + "/mcp"` → `<your-host>.ts.net/honcho/mcp`. Issuance does not
    honor a per-request RFC 8707 `resource` indicator, so honcho **cannot mint an audience-bound
-   token for `homelab.<tailnet-host>.ts.net/mcp`** (hypermnesic's resource). Every honcho token is, in
+   token for `<your-host>.ts.net/mcp`** (hypermnesic's resource). Every honcho token is, in
    effect, for honcho's own MCP.
 3. **Shared-service blast radius.** honcho is a live reverse-proxy fronting honcho's MCP for
    another integration. Adding introspection + a second resource audience would be surgery on a

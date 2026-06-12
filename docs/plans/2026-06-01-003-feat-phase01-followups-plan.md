@@ -11,7 +11,7 @@ tags: [hypermnesic, plan, kernel, indexing, dogfood]
 
 # feat: Phase-0/1 follow-ups — async embed, worktree isolation, dogfood preview
 
-**Target repo:** `hypermnesic` (`<home>/dev/hypermnesic`). Paths are
+**Target repo:** `hypermnesic` (`/path/to/dev/hypermnesic`). Paths are
 repo-relative unless prefixed `gbrain-brain:` (the read-only corpus). Builds on
 the completed kernel **U1–U12** (Phase 0 validated, U5 parity PASS; Phase 1
 write kernel shipped). **U-IDs continue the kernel sequence (U13+)** so `ce-work`

@@ -12,7 +12,7 @@ so the plugin must be reinstalled from the branch rather than your earlier local
 
 ```text
 You are a fresh Claude Code session on a MacBook that is a Tailscale tailnet peer (the homelab is
-`homelab` / 100.64.0.55). A homelab agent finished Phase A of the gbrain→hypermnesic decommission
+`homelab` / <your-host>.ts.net). A homelab agent finished Phase A of the gbrain→hypermnesic decommission
 on GitHub repo leonardsellem/hypermnesic, branch `claude/condescending-sutherland-4d9b29` (HEAD
 b51c94f, pushed — it INCLUDES the plugin load-defect fix 69e0096). Your job: produce the three
 Mac-side Gate-A evidence items and a paste-back report. Work ONLY on this Mac; never touch the
@@ -26,7 +26,7 @@ SETUP
   Confirm `git rev-parse --short HEAD` is b51c94f or later (it must contain commit 69e0096 —
   `git log --oneline | grep 69e0096` must hit; that is the plugin fix).
 - Read for context: docs/gate-artifacts/2026-06-02-gate-A-plugin-and-oauth.md (the checklist).
-- Confirm the tailnet: `tailscale status | grep homelab` shows 100.64.0.55.
+- Confirm the tailnet: `tailscale status | grep homelab` shows <your-host>.ts.net.
 
 HARD CONSTRAINTS
 - NEVER print, echo, log, or commit any OAuth token or client secret. Read the Mac client secret
@@ -35,8 +35,8 @@ HARD CONSTRAINTS
   Change nothing else on this Mac.
 
 PREREQ CHECK (stop and tell the operator which unit is down if any fails)
-  curl -s -o /dev/null -w 'AS    :8849 -> %{http_code}\n' http://100.64.0.55:8849/.well-known/oauth-authorization-server
-  curl -s -o /dev/null -w 'master:8851 -> %{http_code}\n' http://100.64.0.55:8851/mcp   # expect 401
+  curl -s -o /dev/null -w 'AS    :8849 -> %{http_code}\n' http://<your-host>.ts.net:8849/.well-known/oauth-authorization-server
+  curl -s -o /dev/null -w 'master:8851 -> %{http_code}\n' http://<your-host>.ts.net:8851/mcp   # expect 401
 Both must answer (AS 200, master 401). If they don't, STOP — the homelab services are down.
 
 TASK 1 — Gate-A criterion 5: authenticated round-trip from this 2nd tailnet peer
@@ -44,23 +44,23 @@ TASK 1 — Gate-A criterion 5: authenticated round-trip from this 2nd tailnet pe
    - On the homelab: `cat ~/.config/hypermnesic-as/mac.env` → copy the HYPERMNESIC_AS_CLIENT_SECRET
      value and, in THIS Mac session, `export MAC_SECRET='<that value>'` (do not commit/print it).
   MINT (token stays in the shell var, never printed):
-   export HYPERMNESIC_MCP_TOKEN=$(curl -s -X POST http://100.64.0.55:8849/token \
+   export HYPERMNESIC_MCP_TOKEN=$(curl -s -X POST http://<your-host>.ts.net:8849/token \
      -d grant_type=client_credentials -d client_id=mac \
      --data-urlencode client_secret="$MAC_SECRET" \
-     --data-urlencode resource=https://homelab.<tailnet-host>.ts.net/mcp -d scope=write \
+     --data-urlencode resource=https://<your-host>.ts.net/mcp -d scope=write \
      | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
   VERIFY (this is the criterion-5 evidence — capture the HTTP codes + the tool list, NOT the token):
    # negative: unauthenticated must 401 with an RFC 9728 WWW-Authenticate header
-   curl -s -i -X POST http://100.64.0.55:8851/mcp -H 'Content-Type: application/json' \
+   curl -s -i -X POST http://<your-host>.ts.net:8851/mcp -H 'Content-Type: application/json' \
      -H 'Accept: application/json, text/event-stream' \
      -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | grep -iE 'HTTP/|www-authenticate'
    # positive: authenticated tools/list -> 200 with the full toolset
-   curl -s -X POST http://100.64.0.55:8851/mcp \
+   curl -s -X POST http://<your-host>.ts.net:8851/mcp \
      -H "Authorization: Bearer $HYPERMNESIC_MCP_TOKEN" -H 'Content-Type: application/json' \
      -H 'Accept: application/json, text/event-stream' \
      -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
    # positive: a real authenticated search returns hits
-   curl -s -X POST http://100.64.0.55:8851/mcp \
+   curl -s -X POST http://<your-host>.ts.net:8851/mcp \
      -H "Authorization: Bearer $HYPERMNESIC_MCP_TOKEN" -H 'Content-Type: application/json' \
      -H 'Accept: application/json, text/event-stream' \
      -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search","arguments":{"query":"gbrain decommission","k":3}}}'
@@ -100,7 +100,7 @@ TASK 3 — produce the paste-back Gate-A evidence report (Markdown)
   (criterion 5 row + the session-update section) and back to the homelab agent.
 
 OPTIONAL (NOT part of Gate A — only if you also want mobile now): add the cloud connector. In
-ChatGPT and Claude, add the remote MCP server https://homelab.<tailnet-host>.ts.net/cloud/mcp ; it opens
+ChatGPT and Claude, add the remote MCP server https://<your-host>.ts.net/cloud/mcp ; it opens
 a consent page in your browser where you type the cloud approval token (retrieve once on the
 homelab: `cat ~/.config/hypermnesic-cloud/cloud.env`). This lane is live and independent of the gate.
 
