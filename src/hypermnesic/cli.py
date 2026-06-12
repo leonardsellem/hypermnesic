@@ -273,7 +273,8 @@ def _cmd_list_folders(args) -> int:
     """Folder discovery (read-only): the vault's writable folder taxonomy — the CLI twin of
     the MCP ``list_folders`` tool (same output shape). Converges first (``--now`` forces a
     non-debounced pass), then derives child folders under ``--root`` to ``--depth`` levels,
-    each with its writability, protected reason, and recursive note count. ``--allowlist``
+    each with its writability, protected reason, and recursive note count. JSON output also
+    includes direct root-local ``AGENTS.md``/``CLAUDE.md`` guidance when present. ``--allowlist``
     previews writability under a narrowed surface; omit it for the engine default. Reads the
     on-disk index with no OAuth (CLI-for-engine-host-local). Degrades to lexical if no key."""
     from hypermnesic import converge as converge_mod
@@ -296,18 +297,25 @@ def _cmd_list_folders(args) -> int:
     try:
         listing = folders.derive_folders(idx.all_paths(), root=args.root, depth=args.depth,
                                          effective_surface=effective_surface)
+        instruction = folders.agent_instruction_for_root(repo, listing["root"])
     except ValueError as exc:
         idx.close()
         print(f"list-folders failed: {exc}", file=sys.stderr)   # bad --root (absolute/..)
         return 1
     idx.close()
-    out = {**listing, "manual_reindex_recommended": cr.manual_reindex_recommended}
+    out = {
+        **listing,
+        "manual_reindex_recommended": cr.manual_reindex_recommended,
+        "agent_instruction": instruction,
+    }
     if args.json:
         _print_json(out)
     else:
         header = out["root"] or "(vault root)"
         print(f"# folders under {header}  (depth={out['depth']}"
               f"{', truncated' if out['truncated'] else ''})")
+        if instruction is not None:
+            print(f"  (agent instructions: {instruction['source']})")
         for e in out["folders"]:
             flag = "w" if e["writable"] else "-"
             reason = "" if e["writable"] else f"  [{e['protected_reason']}]"
