@@ -130,7 +130,9 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     assert "context" in schemas["build_context"]["properties"]
     assert {"resolved", "slug"} <= set(schemas["resolve"]["properties"])
     assert {"questions", "unlinked"} <= set(schemas["think"]["properties"])
-    assert {"folders", "truncated", "omitted"} <= set(schemas["list_folders"]["properties"])
+    assert {"folders", "truncated", "omitted", "agent_instruction"} <= set(
+        schemas["list_folders"]["properties"]
+    )
     assert {"committed", "refused"} <= set(schemas["commit_note"]["properties"])
 
 
@@ -477,6 +479,84 @@ def test_list_folders_returns_taxonomy_and_schema_shape(make_corpus, fake_embedd
     assert by["projects/"]["protected_reason"] is None
 
 
+def test_list_folders_returns_root_agents_md_instruction(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "AGENTS.md": "# Agent rules\n\nUse repo-local guidance.\n",
+        "notes/n.md": "# N\n\nbody.\n",
+    })
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert "notes/" in _folders_by_path(out)
+    assert out["agent_instruction"] == {
+        "source": "AGENTS.md",
+        "content": "# Agent rules\n\nUse repo-local guidance.\n",
+    }
+
+
+def test_list_folders_falls_back_to_root_claude_md_instruction(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "CLAUDE.md": "# Claude rules\n\nFallback guidance.\n",
+        "projects/acme/a.md": "# A\n\nbody.\n",
+    })
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert "projects/" in _folders_by_path(out)
+    assert out["agent_instruction"] == {
+        "source": "CLAUDE.md",
+        "content": "# Claude rules\n\nFallback guidance.\n",
+    }
+
+
+def test_list_folders_omits_instruction_payload_when_absent(make_corpus, fake_embedder):
+    repo = make_corpus({"people/alice/n.md": "# N\n\nbody.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "people/", "depth": 1})
+    assert "people/alice/" in _folders_by_path(out)
+    assert out["agent_instruction"] is None
+
+
+def test_list_folders_prefers_agents_md_over_claude_md(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "AGENTS.md": "# Agent rules\n\nPreferred.\n",
+        "CLAUDE.md": "# Claude rules\n\nNot preferred.\n",
+        "notes/n.md": "# N\n\nbody.\n",
+    })
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    out = _call(srv, "list_folders", {"root": "", "depth": 1})
+    assert out["agent_instruction"] == {
+        "source": "AGENTS.md",
+        "content": "# Agent rules\n\nPreferred.\n",
+    }
+
+
+def test_list_folders_reads_only_direct_instruction_file_for_requested_root(make_corpus,
+                                                                            fake_embedder):
+    repo = make_corpus({
+        "projects/acme/AGENTS.md": "# Child rules\n\nDo not bubble up.\n",
+        "projects/acme/a.md": "# A\n\nbody.\n",
+    })
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+    parent = _call(srv, "list_folders", {"root": "projects/", "depth": 1})
+    assert "projects/acme/" in _folders_by_path(parent)
+    assert parent["agent_instruction"] is None
+
+    child = _call(srv, "list_folders", {"root": "projects/acme/", "depth": 1})
+    assert child["agent_instruction"] == {
+        "source": "AGENTS.md",
+        "content": "# Child rules\n\nDo not bubble up.\n",
+    }
+
+
 def test_list_folders_is_read_tool_and_converges(make_corpus, fake_embedder):
     repo = make_corpus({"notes/a.md": "# A\n\nalpha.\n"})
     index.build_index(repo, fake_embedder).close()
@@ -533,6 +613,7 @@ def test_list_folders_rejects_traversal_root_without_leak(make_corpus, fake_embe
     for bad in ("../etc", "/etc/passwd"):
         out = _call(srv, "list_folders", {"root": bad, "depth": 1})
         assert out["folders"] == []                            # no out-of-vault leakage
+        assert out["agent_instruction"] is None
 
 
 def test_list_folders_bounds_payload(make_corpus, fake_embedder, monkeypatch):

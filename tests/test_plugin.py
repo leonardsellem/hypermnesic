@@ -164,6 +164,7 @@ def test_skill_routes_durable_memory_and_rejects_preference_memory():
     assert "honcho" in text and "behavioural" in text
     assert "do not write" in text and "secrets" in text and "credentials" in text
     assert "list_folders" in text and "writable" in text
+    assert "agent_instruction" in text and "agents.md" in text and "claude.md" in text
     assert "source paths" in text and "preserve raw evidence" in text
     assert "refusals are control signals" in text
 
