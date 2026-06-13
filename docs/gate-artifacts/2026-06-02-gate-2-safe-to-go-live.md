@@ -9,7 +9,7 @@
 
 ## U5 — Dry-run dogfood on the LIVE vault (read-only, `dry_run=True` throughout)
 
-Run as two passes via `harness/dogfood_commit_note.py --repo /home/ubuntu/gbrain-brain`.
+Run as two passes via `harness/dogfood_commit_note.py --repo /path/to/gbrain-brain`.
 
 ### Pass 1 — cutover set (the intended Phase-1 writes) → **`safe_to_cut_over: true`, 0 blocked**
 | Input | Verdict |

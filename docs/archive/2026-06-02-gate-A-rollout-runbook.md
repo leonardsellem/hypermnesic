@@ -23,11 +23,11 @@ agent) and `uv tool install` / reinstall the engine on the homelab first.
 ## Step 1 — deploy the AS (new isolated service; zero impact on the live stack)
 1. `mkdir -p ~/.config/hypermnesic-as && chmod 700 ~/.config/hypermnesic-as`
 2. Enroll the RS introspection client + the two homelab identities (secrets → owner-only files):
-   - `hypermnesic auth-add-client --state ~/.config/hypermnesic-as/state.json --client-id hypermnesic-rs --rs --secret-out ~/.config/hypermnesic-as/rs.env --resource https://homelab.taildabf2.ts.net/mcp`
-   - `… --client-id homelab-claude --scope read --scope write --secret-out ~/.config/hypermnesic-as/homelab-claude.env --resource https://homelab.taildabf2.ts.net/mcp`
-   - `… --client-id homelab-codex  --scope read --scope write --secret-out ~/.config/hypermnesic-as/homelab-codex.env --resource https://homelab.taildabf2.ts.net/mcp`
+   - `hypermnesic auth-add-client --state ~/.config/hypermnesic-as/state.json --client-id hypermnesic-rs --rs --secret-out ~/.config/hypermnesic-as/rs.env --resource https://<your-host>.ts.net/mcp`
+   - `… --client-id homelab-claude --scope read --scope write --secret-out ~/.config/hypermnesic-as/homelab-claude.env --resource https://<your-host>.ts.net/mcp`
+   - `… --client-id homelab-codex  --scope read --scope write --secret-out ~/.config/hypermnesic-as/homelab-codex.env --resource https://<your-host>.ts.net/mcp`
    - **(operator, off-homelab):** `… --client-id mac` on the Mac's behalf, secret delivered to the Mac's secret store out of band.
-3. Systemd user unit `hypermnesic-as.service`: `ExecStart=hypermnesic serve-auth --host 127.0.0.1 --port 8849 --public-url http://127.0.0.1:8849 --resource https://homelab.taildabf2.ts.net/mcp --state ~/.config/hypermnesic-as/state.json --token-ttl 3600`. `systemctl --user enable --now hypermnesic-as`.
+3. Systemd user unit `hypermnesic-as.service`: `ExecStart=hypermnesic serve-auth --host 127.0.0.1 --port 8849 --public-url http://127.0.0.1:8849 --resource https://<your-host>.ts.net/mcp --state ~/.config/hypermnesic-as/state.json --token-ttl 3600`. `systemctl --user enable --now hypermnesic-as`.
 4. **Verify:** `curl -s http://127.0.0.1:8849/.well-known/oauth-authorization-server | jq .introspection_endpoint`.
 - **Rollback:** `systemctl --user disable --now hypermnesic-as`; the live stack never depended on it.
 - **Mirror:** new `gbrain-brain/projects/homelab/services/hypermnesic-as.md` + `LOG.md` entry.
@@ -43,7 +43,7 @@ the secret stays in the `chmod 600` env file, the token in an owner-only file.) 
 ## Step 3 — install the plugin (homelab)
 - Claude: add the in-repo marketplace, install the `hypermnesic` plugin.
 - Codex: install via `.codex-plugin` (skills shared); the hooks fire `--host codex`.
-- The plugin's `.mcp.json` points at `homelab.taildabf2.ts.net/mcp` (post-Step-4) — or the direct
+- The plugin's `.mcp.json` points at `<your-host>.ts.net/mcp` (post-Step-4) — or the direct
   authenticated bind until Step 4 lands.
 - **(operator):** same on the Mac.
 - **Rollback:** uninstall the plugin.
@@ -62,9 +62,9 @@ the secret stays in the `chmod 600` env file, the token in an owner-only file.) 
 
 **No-gap order (never leave the write master reachable auth-off, never lock out live agents):**
 1. AS up (Step 1) + every consumer holds a verified token (Step 2 + companion per the chosen option).
-2. Bring up the auth-on master on its bind (`serve --enable-write --host 100.103.0.55 --auth-issuer-url http://127.0.0.1:8849 --auth-resource-url https://homelab.taildabf2.ts.net/mcp --required-scope write`, with `HYPERMNESIC_RS_CLIENT_ID/SECRET` in its env from `rs.env`) **while gbrain's endpoint still answers**.
+2. Bring up the auth-on master on its bind (`serve --enable-write --host <your-host>.ts.net --auth-issuer-url http://127.0.0.1:8849 --auth-resource-url https://<your-host>.ts.net/mcp --required-scope write`, with `HYPERMNESIC_RS_CLIENT_ID/SECRET` in its env from `rs.env`) **while gbrain's endpoint still answers**.
 3. Verify each consumer reaches it (real `tools/list`+`search`, authenticated).
-4. **Then** flip `tailscale serve` `/mcp` → hypermnesic `100.103.0.55:8848` (tailnet-internal, not Funnel), leaving honcho's `/honcho` + `.well-known/*` routes intact.
+4. **Then** flip `tailscale serve` `/mcp` → hypermnesic `<your-host>.ts.net:8848` (tailnet-internal, not Funnel), leaving honcho's `/honcho` + `.well-known/*` routes intact.
 - **Rollback (one inverse op):** flip `tailscale serve` back + restore gbrain's reach + revert the master unit to the Phase-1 auth-off read path. DB/gbrain intact.
 - **Mirror:** `services/{hypermnesic,gbrain}.md` + `infrastructure/network.md` (the serve-map change) + `LOG.md`, **before** Gate A is declared closed.
 
