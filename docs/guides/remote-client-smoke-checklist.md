@@ -45,8 +45,12 @@ Run this for ChatGPT, Claude, Claude Code, and Codex when those clients are in s
 1. Connect with read scope only.
 2. Call a read tool such as `search`, `think`, `resolve`, `build_context`, or `list_folders`.
 3. Confirm the response includes repo-relative source paths and never includes local absolute paths,
-   endpoint secrets, approval credentials, refresh tokens, or credential file bodies.
-4. Attempt a memory write and confirm write refusal without write scope.
+   private or `/mcp` endpoint URLs, endpoint secrets, approval credentials, refresh tokens, or
+   credential file bodies. Ordinary public source-of-truth links may appear when they are note
+   content rather than host coordinates.
+4. Attempt exactly one low-risk memory write and confirm write refusal without write scope.
+   If the client aborts before Hypermnesic returns an explicit missing-write-scope refusal, record
+   the row as `INCONCLUSIVE/FAIL`, do not retry in the same grant, and preserve the client error.
 
 Required result: read succeeds; write refusal without write scope is explicit and actionable.
 
@@ -60,8 +64,11 @@ This is the write-scoped client gate.
 2. Write one low-risk test note using `commit_note` into an ordinary writable folder.
 3. Confirm a git commit exists, audit metadata exists, and a follow-up `search` can recall the new
    note after convergence.
-4. Attempt a protected-path write such as an agent instruction file and confirm the write guard
-   refuses it.
+4. Attempt exactly one protected-path write to `scripts/<smoke-id>-protected-refusal.md` and confirm
+   the write guard refuses it. Use `scripts/` rather than an agent instruction file when a hosted
+   client applies its own safety layer to `AGENTS.md` / `CLAUDE.md`; the release row must prove the
+   MCP refusal, not a client-side preflight refusal. If the client blocks before MCP returns a
+   refusal, record `INCONCLUSIVE/FAIL` and preserve the client error.
 
 Required result: write-scoped client can request `commit_note`, but write guards still block
 protected paths and unsafe changes.

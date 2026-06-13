@@ -25,6 +25,10 @@ def test_remote_client_smoke_checklist_is_operator_runnable():
         "Codex",
         "Obsidian",
         "https://<your-host>.ts.net/mcp",
+        "scripts/<smoke-id>-protected-refusal.md",
+        "local absolute paths",
+        "private or `/mcp` endpoint URLs",
+        "INCONCLUSIVE/FAIL",
         "tests/test_product_remote_smoke.py",
         "scripts/product_smoke.py",
     ]
