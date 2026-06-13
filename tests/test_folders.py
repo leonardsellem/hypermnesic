@@ -123,6 +123,31 @@ def test_allowlist_surface_marks_outside_folders_non_writable():
     assert by["projects/"]["protected_reason"] == "not in writable allowlist"
 
 
+def test_agent_instruction_redacts_local_paths_and_endpoint_urls(tmp_path):
+    repo = tmp_path
+    (repo / "AGENTS.md").write_text(
+        "# Rules\n\n"
+        "Use /Users/alice/private/vault and /Volumes/Private/Secrets.\n"
+        "Connect to http://198.51.100.55:8848/mcp or https://example.invalid/mcp.\n"
+        "Keep public links like https://github.com/leonardsellem/hypermnesic.\n"
+        "Keep repo-relative docs/reference/cli.md visible.\n",
+        encoding="utf-8",
+    )
+
+    out = folders.agent_instruction_for_root(repo, "")
+
+    assert out == {
+        "source": "AGENTS.md",
+        "content": (
+            "# Rules\n\n"
+            "Use <local-path> and <local-path>.\n"
+            "Connect to <endpoint-url> or <endpoint-url>.\n"
+            "Keep public links like https://github.com/leonardsellem/hypermnesic.\n"
+            "Keep repo-relative docs/reference/cli.md visible.\n"
+        ),
+    }
+
+
 def test_index_derived_paths_never_surface_skip_dirs(make_corpus, fake_embedder):
     # AE5: the taxonomy is structurally limited to indexed markdown — .obsidian/ (a
     # skip dir) never reaches all_paths(), so it can never be discovered.

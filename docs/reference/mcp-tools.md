@@ -51,12 +51,16 @@ Pages reachable from `path` via body `[[wikilinks]]` (incoming + outgoing edges)
 
 **Returns** `{ start, depth, context: [page paths], manual_reindex_recommended }`.
 
-### `think(topic: str, k: int = 8, depth: int = 1)`
+### `think(topic: str, k: int = 8, depth: int = 1, path: str | null = null)`
 
-Thinking-mode: related notes + Socratic prompts + tensions. **Read-only by construction**
-— `wrote` is always `false`; it never writes.
+Thinking-mode: related notes, Socratic prompts, and structured unlinked pairs.
+**Read-only by construction** — `wrote` is always `false`; it never writes.
+Pass the active note's repo-relative `path` to exclude it from its own results. If
+self-exclusion removes the only retrieval hit, `think` falls back to the active note's
+explicit graph context, surfacing linked neighbours as low-confidence `graph` channel
+related notes instead of returning a blank thinking surface.
 
-**Returns** `{ topic, wrote: false, related, context, questions, tensions,
+**Returns** `{ topic, wrote: false, related, context, questions, unlinked,
 degraded_lexical_only, note, manual_reindex_recommended }`.
 
 ### `resolve(name: str)`
@@ -80,9 +84,11 @@ truncated, omitted, manual_reindex_recommended, agent_instruction }`.
 root-local instruction file, otherwise `null`. `source` is `AGENTS.md` when present, falling
 back to `CLAUDE.md` only when `AGENTS.md` is absent at the same requested root. Child-folder
 instruction files are not aggregated into parent listings; narrow `root` to that child to read
-its local guidance. Invalid traversal or absolute roots still return a leak-free empty listing
-with `agent_instruction: null`. `protected_reason` is null when writable, else the reason
-(protected class or allowlist miss); `omitted` counts folders dropped by the node cap.
+its local guidance. `content` is sanitized before leaving the read surface: local absolute paths
+and endpoint URLs are replaced with placeholders while repo-relative paths remain intact. Invalid
+traversal or absolute roots still return a leak-free empty listing with `agent_instruction: null`.
+`protected_reason` is null when writable, else the reason (protected class or allowlist miss);
+`omitted` counts folders dropped by the node cap.
 
 Use `list_folders` before writing when the destination is unclear. Folder discovery is
 part of the memory taxonomy: durable project memory belongs in Hypermnesic, while

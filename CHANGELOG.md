@@ -61,6 +61,13 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 ### Changed
 - README and getting-started onboarding now lead with the local proof milestone before
   endpoint setup or remote-client connection.
+- The remote-client smoke checklist now makes read-scope leak checks explicit for local absolute
+  paths and private or `/mcp` endpoint URLs, records client-side write-refusal blocks as
+  `INCONCLUSIVE/FAIL`, and uses a protected `scripts/<smoke-id>-protected-refusal.md` write so
+  hosted clients can prove the MCP guard without tripping their own `AGENTS.md` safety layer first.
+- The remote-client smoke checklist now records hosted ChatGPT and Claude as operator-approved
+  read+write clients: true read-only grant refusal is N/A for those hosted clients, while
+  read-scoped principal behavior remains covered by automated MCP/auth contract tests.
 - `list_folders` and `hypermnesic list-folders --json` now include an `agent_instruction`
   field. It is `{source, content}` for direct root-local `AGENTS.md` guidance, falls back to
   direct `CLAUDE.md`, and is `null` when neither file exists at the requested root.
@@ -101,6 +108,12 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   row outlives its backing chunk row during projection churn.
 - Degraded lexical recall now self-heals older FTS projections that omitted markdown headings,
   so committed notes remain recallable by title/body queries even when embeddings are unavailable.
+- `think(topic, path=...)` now falls back to the active note's graph context when
+  self-exclusion removes the only lexical hit, so well-linked notes still surface related
+  material in degraded lexical-only clients such as the Obsidian companion.
+- `list_folders` / `hypermnesic list-folders` now redact local absolute paths and endpoint URLs
+  from returned `agent_instruction.content`, preventing read-only remote clients from receiving
+  private host coordinates embedded in root-local guidance files.
 
 ## [0.0.6] — 2026-06-03
 

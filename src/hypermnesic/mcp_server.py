@@ -134,7 +134,8 @@ class FolderEntry(TypedDict):
 
 class AgentInstruction(TypedDict):
     source: str                         # "AGENTS.md" or fallback "CLAUDE.md"
-    content: str                        # full direct root-local instruction file content
+    # direct root-local instruction content, with host coordinates redacted
+    content: str
 
 
 class ListFoldersOutput(TypedDict):

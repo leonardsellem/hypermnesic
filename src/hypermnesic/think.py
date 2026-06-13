@@ -124,6 +124,32 @@ def _unlinked_pairs(graph, hits, title_of) -> list[dict]:
     return out[:3]
 
 
+def _graph_fallback_hits(idx, graph, path: str | None, depth: int) -> list[retrieve.Hit]:
+    """When retrieval self-excludes the only lexical hit, preserve the active
+    note's explicit graph context as low-confidence related material.
+
+    This keeps ``path`` out of its own related list while avoiding a blank
+    Obsidian thinking surface for well-linked notes whose exact query text lives
+    only in the active note.
+    """
+    if graph is None or path is None:
+        return []
+    out: list[retrieve.Hit] = []
+    for nb in graph_mod.build_context(graph, path, depth=depth):
+        if nb == path:
+            continue
+        cids = idx.chunks_for_path(nb)
+        if not cids:
+            continue
+        try:
+            ch = idx.get_chunk(cids[0])
+        except KeyError:
+            continue
+        out.append(retrieve.Hit(chunk_id=ch["chunk_id"], path=ch["path"], heading=ch["heading"],
+                                text=ch["text"], score=0.0, channels={"graph"}))
+    return out
+
+
 def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int = 1,
           path: str | None = None, repo=None) -> ThinkResult:
     """Surface a thinking-partner view of ``topic`` over the read-only index.
@@ -143,6 +169,7 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
     """
     topic = _normalize_topic(topic)        # U43: no stray '# ' in topic or prompts
     res = retrieve.search(idx, topic, embedder=embedder, k=k, exclude_path=path)
+    hits = res.hits or _graph_fallback_hits(idx, graph, path, depth)[:k]
     title_cache: dict[str, str] = {}
 
     def title_of(p: str) -> str:           # U44: note identity, not chunk heading
@@ -152,16 +179,17 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
         {"path": h.path, "heading": h.heading, "title": title_of(h.path),
          "score": round(h.score, 6), "channels": sorted(h.channels),
          "snippet": h.text[:280]}
-        for h in res.hits
+        for h in hits
     ]
     context: list[str] = []
-    if graph is not None and res.hits:
-        context = graph_mod.build_context(graph, res.hits[0].path, depth=depth)
+    if graph is not None and hits:
+        context_start = path if path is not None and not res.hits else hits[0].path
+        context = graph_mod.build_context(graph, context_start, depth=depth)
 
-    questions = _socratic(res.hits, title_of)
-    unlinked = _unlinked_pairs(graph, res.hits, title_of)
+    questions = _socratic(hits, title_of)
+    unlinked = _unlinked_pairs(graph, hits, title_of)
     note = "" if related else "nothing relevant yet — the index has no close match"
 
     return ThinkResult(topic=topic, wrote=False, related=related, context=context,
                        questions=questions, unlinked=unlinked, degraded=res.degraded,
-                       note=note, _hits=res.hits)
+                       note=note, _hits=hits)
