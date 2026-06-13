@@ -481,7 +481,11 @@ def test_list_folders_returns_taxonomy_and_schema_shape(make_corpus, fake_embedd
 
 def test_list_folders_returns_root_agents_md_instruction(make_corpus, fake_embedder):
     repo = make_corpus({
-        "AGENTS.md": "# Agent rules\n\nUse repo-local guidance.\n",
+        "AGENTS.md": (
+            "# Agent rules\n\n"
+            "Use repo-local guidance from docs/reference/mcp-tools.md.\n"
+            "Do not echo /Users/alice/private or http://198.51.100.55:8848/mcp.\n"
+        ),
         "notes/n.md": "# N\n\nbody.\n",
     })
     index.build_index(repo, fake_embedder).close()
@@ -491,7 +495,11 @@ def test_list_folders_returns_root_agents_md_instruction(make_corpus, fake_embed
     assert "notes/" in _folders_by_path(out)
     assert out["agent_instruction"] == {
         "source": "AGENTS.md",
-        "content": "# Agent rules\n\nUse repo-local guidance.\n",
+        "content": (
+            "# Agent rules\n\n"
+            "Use repo-local guidance from docs/reference/mcp-tools.md.\n"
+            "Do not echo <local-path> or <endpoint-url>.\n"
+        ),
     }
 
 

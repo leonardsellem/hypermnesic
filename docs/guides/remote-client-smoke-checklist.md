@@ -30,7 +30,9 @@ Evidence to record: client name, redirect origin, requested scopes, pass/fail, r
 | Client | Step | Expected evidence | Recorded result | Pass/fail | Reviewer | Date |
 |---|---|---|---|---|---|---|
 | ChatGPT | OAuth discovery | Metadata discovered; consent page appears. | Pending. | Pending. | Pending. | Pending. |
-| Claude | Read-scoped client | Read tool succeeds; output is source-grounded and secret-free. | Pending. | Pending. | Pending. | Pending. |
+| ChatGPT | Hosted read+write client | Safe read, low-risk write, recall, protected-path refusal, and revocation. | Pending. | Pending. | Pending. | Pending. |
+| Claude | Hosted read+write client | Safe read, low-risk write, recall, protected-path refusal, and revocation. | Pending. | Pending. | Pending. | Pending. |
+| Any true read-only client | Read-scoped client | Read tool succeeds; `commit_note` refusal names missing write scope. | Pending. | Pending. | Pending. | Pending. |
 | Claude Code | Write refusal without write scope | `commit_note` refusal names missing write scope. | Pending. | Pending. | Pending. | Pending. |
 | Codex | Write-scoped client | Safe write commits; protected path remains refused. | Pending. | Pending. | Pending. | Pending. |
 | Obsidian | Read-only companion | Read tools work; no write path is exposed. | Pending. | Pending. | Pending. | Pending. |
@@ -40,15 +42,44 @@ Evidence to record: client name, redirect origin, requested scopes, pass/fail, r
 
 This is the read-scoped client gate.
 
-Run this for ChatGPT, Claude, Claude Code, and Codex when those clients are in scope.
+Run this for clients where a read-only grant is part of the release claim. Hosted ChatGPT and
+Claude are **N/A by operator decision** for this row when Hypermnesic is being validated as a
+personal, operator-approved read+write app. For those hosted clients, use the hosted read+write
+gate below instead. True read-scoped principal behavior remains covered by
+`tests/test_product_remote_smoke.py` and the MCP/auth contract tests.
 
 1. Connect with read scope only.
 2. Call a read tool such as `search`, `think`, `resolve`, `build_context`, or `list_folders`.
 3. Confirm the response includes repo-relative source paths and never includes local absolute paths,
-   endpoint secrets, approval credentials, refresh tokens, or credential file bodies.
-4. Attempt a memory write and confirm write refusal without write scope.
+   private or `/mcp` endpoint URLs, endpoint secrets, approval credentials, refresh tokens, or
+   credential file bodies. Ordinary public source-of-truth links may appear when they are note
+   content rather than host coordinates.
+4. Attempt exactly one low-risk memory write and confirm write refusal without write scope.
+   If the client aborts before Hypermnesic returns an explicit missing-write-scope refusal, record
+   the row as `INCONCLUSIVE/FAIL`, do not retry in the same grant, and preserve the client error.
 
 Required result: read succeeds; write refusal without write scope is explicit and actionable.
+
+## Hosted ChatGPT and Claude
+
+This is the hosted-client gate for ChatGPT and Claude when the operator-approved use case is
+read+write by default.
+
+1. Connect or reconnect and approve the requested read+write scope.
+2. Call a read tool such as `search`, `think`, `resolve`, `build_context`, or `list_folders`.
+3. Confirm the response includes repo-relative source paths and never includes local absolute paths,
+   private or `/mcp` endpoint URLs, endpoint secrets, approval credentials, refresh tokens, or
+   credential file bodies. Ordinary public source-of-truth links may appear when they are note
+   content rather than host coordinates.
+4. Write one low-risk test note using `commit_note` into an ordinary writable folder.
+5. Confirm a follow-up `search` can recall the new note after convergence.
+6. Attempt exactly one protected-path write to `scripts/<smoke-id>-protected-refusal.md` and confirm
+   the write guard refuses it.
+7. After operator-triggered revocation, confirm the client can no longer read or write until it
+   reconnects and reauthorizes.
+
+Required result: hosted ChatGPT and Claude operate as operator-approved read+write clients; true
+read-only grant refusal is not required from these clients and is recorded as N/A.
 
 ## Write-scoped client
 
@@ -60,8 +91,11 @@ This is the write-scoped client gate.
 2. Write one low-risk test note using `commit_note` into an ordinary writable folder.
 3. Confirm a git commit exists, audit metadata exists, and a follow-up `search` can recall the new
    note after convergence.
-4. Attempt a protected-path write such as an agent instruction file and confirm the write guard
-   refuses it.
+4. Attempt exactly one protected-path write to `scripts/<smoke-id>-protected-refusal.md` and confirm
+   the write guard refuses it. Use `scripts/` rather than an agent instruction file when a hosted
+   client applies its own safety layer to `AGENTS.md` / `CLAUDE.md`; the release row must prove the
+   MCP refusal, not a client-side preflight refusal. If the client blocks before MCP returns a
+   refusal, record `INCONCLUSIVE/FAIL` and preserve the client error.
 
 Required result: write-scoped client can request `commit_note`, but write guards still block
 protected paths and unsafe changes.
