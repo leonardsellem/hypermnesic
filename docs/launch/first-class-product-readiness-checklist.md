@@ -14,14 +14,14 @@ unreviewed docs drift, secret-scan findings, or a failed remote-client smoke are
 
 | Sprint unit | Expected evidence | Recorded result | Pass/fail | Reviewer | Date | Release-blocking |
 |---|---|---|---|---|---|---|
-| U1 Local-first value proof | `hypermnesic local-proof` and local product smoke prove source-grounded recall plus dry-run write preview. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| U2 Setup doctor/status | `setup`, `doctor`, and `status` contracts distinguish local, remote, OAuth, auth, write, and next-action states without mutation. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| U3 Memory control center | Memory list/inspect/export/forget/revert/audit/write-scope flows are covered by tests and docs. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| U4 Consent/client trust | Consent page, client grant listing, scope refusal, write approval, and revocation are covered by tests and docs. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| U5 Plugin hook observability | Hook status/test-recall surfaces stable non-secret outcomes and disable controls. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| U6 Memory taxonomy/agent guidance | Docs and plugin skills route durable project memory to Hypermnesic and preferences/session state elsewhere. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| U7 Daily human workflows | Capture, triage, recall, write, review, and cleanup compose into `hypermnesic daily-review` and docs. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| U8 Product proof/launch readiness | Local smoke, offline remote contracts, manual remote-client smoke, docs, scans, and full suite are current. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
+| U1 Local-first value proof | `hypermnesic local-proof` and local product smoke prove source-grounded recall plus dry-run write preview. | `uv run python scripts/product_smoke.py --work-dir /tmp/hypermnesic-pr5-smoke --json` returned JSON `status: pass`; `uv run pytest tests/test_local_proof.py tests/test_smoke.py -q` passed with 16 tests. | Pass | Codex | 2026-06-12 | Yes |
+| U2 Setup doctor/status | `setup`, `doctor`, and `status` contracts distinguish local, remote, OAuth, auth, write, and next-action states without mutation. | `uv run pytest tests/test_install.py tests/test_doctor.py tests/test_connect.py -q` passed with 63 tests. | Pass | Codex | 2026-06-12 | Yes |
+| U3 Memory control center | Memory list/inspect/export/forget/revert/audit/write-scope flows are covered by tests and docs. | `uv run pytest tests/test_memory_control.py tests/test_audit_log.py tests/test_frontmatter_gate.py -q` passed with 26 tests. | Pass | Codex | 2026-06-12 | Yes |
+| U4 Consent/client trust | Consent page, client grant listing, scope refusal, write approval, and revocation are covered by tests and docs. | `uv run pytest tests/test_auth_cloud.py tests/test_client_control.py tests/test_product_remote_smoke.py -q` passed with 49 tests. | Pass | Codex | 2026-06-12 | Yes |
+| U5 Plugin hook observability | Hook status/test-recall surfaces stable non-secret outcomes and disable controls. | `uv run pytest tests/test_plugin_hook.py tests/test_hermes_plugin_hook.py -q` passed with 36 tests. | Pass | Codex | 2026-06-12 | Yes |
+| U6 Memory taxonomy/agent guidance | Docs and plugin skills route durable project memory to Hypermnesic and preferences/session state elsewhere. | `uv run pytest tests/test_plugin.py tests/test_hermes_plugin.py tests/test_folders.py tests/test_mcp_server.py::test_list_folders_returns_taxonomy_and_schema_shape -q` passed with 33 tests. | Pass | Codex | 2026-06-12 | Yes |
+| U7 Daily human workflows | Capture, triage, recall, write, review, and cleanup compose into `hypermnesic daily-review` and docs. | `uv run pytest tests/test_daily_review.py tests/test_capture.py tests/test_nav_surface.py -q` passed with 16 tests. | Pass | Codex | 2026-06-12 | Yes |
+| U8 Product proof/launch readiness | Local smoke, offline remote contracts, manual remote-client smoke, docs, scans, and full suite are current. | Automated local smoke, offline remote contracts, docs, scans, and full suite are current in this checklist; manual remote-client smoke is tracked in PR-6 / LS-1675 and is release-blocked by LS-1707 until the live Codex write/recall smoke is rerun after the recall fix lands. | Blocked | Codex | 2026-06-13 | Yes |
 
 ## Automated command gates
 
