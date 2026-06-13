@@ -29,6 +29,9 @@ def test_remote_client_smoke_checklist_is_operator_runnable():
         "local absolute paths",
         "private or `/mcp` endpoint URLs",
         "INCONCLUSIVE/FAIL",
+        "Hosted ChatGPT and Claude",
+        "N/A by operator decision",
+        "operator-approved read+write clients",
         "tests/test_product_remote_smoke.py",
         "scripts/product_smoke.py",
     ]
