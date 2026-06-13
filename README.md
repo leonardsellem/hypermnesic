@@ -210,7 +210,7 @@ and the surfaces built on top:
 ## Benchmarks
 
 On **LongMemEval V1** (the `_s` 500-question set), hypermnesic's end-to-end QA accuracy is
-**88.6% overall / 89.7% task-averaged** with a GPT-4.1 reader, and **83.2 / 86.6** with a
+**88.6% overall / 90.2% task-averaged** with a GPT-4.1 reader, and **83.6 / 87.1** with a
 GPT-4o reader — both graded by the canonical `gpt-4o-2024-08-06` judge. Session-level retrieval
 `recall@10` is **0.949** (every gold session in the top-10 for 94.9% of questions).
 
@@ -220,7 +220,7 @@ Observational Memory (84.2)**, **+12 over Zep (71.2)**, and **+23 over the no-me
 full-context floor (60.2)**. They are **not** comparable to the GPT-4.1-*judged* ~95%
 leaderboard rows — that gap is judge leniency, not memory quality. The full methodology,
 comparability envelope, per-ability tables, corrections log, and a re-runnable harness
-(pinned dataset hash; ~$31 to reproduce) are in
+(pinned dataset hash; `bench` extra required for the paid reader path) are in
 [`harness/BENCHMARKS.md`](harness/BENCHMARKS.md).
 
 LongMemEval measures retrieval quality. It does not prove setup, consent, memory control, or remote-client operability. Product operability is gated by the local product smoke
