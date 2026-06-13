@@ -99,6 +99,28 @@ def test_degraded_lexical_search_handles_hyphenated_noncontiguous_terms(
     idx.close()
 
 
+def test_search_skips_orphaned_lexical_candidates(make_corpus, fake_embedder):
+    repo = make_corpus({
+        "stale.md": "# Stale\n\nORPHANMARKER stale projection row.\n",
+        "fresh.md": "# Fresh\n\nORPHANMARKER live projection row.\n",
+    })
+    idx = index.build_index(repo, fake_embedder)
+    idx.conn.execute("DELETE FROM chunks WHERE path=?", ("stale.md",))
+    idx.conn.commit()
+
+    class DownEmbedder:
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            raise embed_mod.EmbeddingError("API down")
+
+    res = retrieve.search(idx, "ORPHANMARKER", embedder=DownEmbedder(), k=3)
+
+    assert [h.path for h in res.hits] == ["fresh.md"]
+    assert res.hits[0].channels == {"lexical"}
+    idx.close()
+
+
 def test_collapses_exact_content_duplicates(make_corpus, fake_embedder):
     # Mirror-flooding: the same content at two paths must not consume two result
     # slots — collapse to the highest-ranked representative so distinct docs
