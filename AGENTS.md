@@ -1,5 +1,12 @@
 # AGENTS.md
 
+## Linear Task Creation
+
+Every Linear task or subtask created by an agent must be fully documented at creation time with a state-of-the-art description: context, intent, acceptance criteria, validation plan, and handoff/deployment notes when relevant.
+
+Required creation metadata is non-negotiable: effort estimate, priority, and dependency relations (`blockedBy` / `blocks`) mapped from the plan, parent issue, or nearest sibling. If a connector cannot set one of those fields during creation, state the gap immediately and fill it through the next available Linear surface before handoff.
+
+
 Contract for AI coding agents (Claude Code, Codex, and similar) working in this
 repository. Humans: see [`CONTRIBUTING.md`](CONTRIBUTING.md) — the two are consistent;
 this file states the parts an autonomous agent most needs up front.
