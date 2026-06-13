@@ -101,6 +101,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   row outlives its backing chunk row during projection churn.
 - Degraded lexical recall now self-heals older FTS projections that omitted markdown headings,
   so committed notes remain recallable by title/body queries even when embeddings are unavailable.
+- `think(topic, path=...)` now falls back to the active note's graph context when
+  self-exclusion removes the only lexical hit, so well-linked notes still surface related
+  material in degraded lexical-only clients such as the Obsidian companion.
 
 ## [0.0.6] — 2026-06-03
 

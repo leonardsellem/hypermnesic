@@ -69,6 +69,30 @@ def test_think_excludes_active_note(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_think_falls_back_to_active_note_graph_when_self_match_was_only_hit(
+        make_corpus, fake_embedder):
+    repo = make_corpus({
+        "active.md": "# Active\n\nPROJECTSTATUS canonical update linked to [[related]].\n",
+        "related.md": "# Related\n\nOperational context that does not repeat the marker.\n",
+    })
+    idx = index_mod.build_index(repo, fake_embedder)
+    g = graph_mod.Graph.from_index(idx)
+
+    # No embedder means degraded lexical-only. The marker exists only in the
+    # active note, so retrieval self-exclusion would otherwise leave Obsidian
+    # with no relations despite an explicit vault link.
+    r = think_mod.think(idx, "PROJECTSTATUS", embedder=None, graph=g, repo=repo,
+                        path="active.md")
+
+    assert r.wrote is False
+    assert r.degraded is True
+    assert [h["path"] for h in r.related] == ["related.md"]
+    assert r.related[0]["channels"] == ["graph"]
+    assert "active.md" not in {h["path"] for h in r.related}
+    assert "related.md" in r.context
+    idx.close()
+
+
 def test_think_surfaces_graph_context(make_corpus, fake_embedder):
     repo, idx, g = _built(make_corpus, fake_embedder)
     r = think_mod.think(idx, "Hetzner", embedder=fake_embedder, graph=g)
