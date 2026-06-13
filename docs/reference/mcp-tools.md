@@ -84,9 +84,11 @@ truncated, omitted, manual_reindex_recommended, agent_instruction }`.
 root-local instruction file, otherwise `null`. `source` is `AGENTS.md` when present, falling
 back to `CLAUDE.md` only when `AGENTS.md` is absent at the same requested root. Child-folder
 instruction files are not aggregated into parent listings; narrow `root` to that child to read
-its local guidance. Invalid traversal or absolute roots still return a leak-free empty listing
-with `agent_instruction: null`. `protected_reason` is null when writable, else the reason
-(protected class or allowlist miss); `omitted` counts folders dropped by the node cap.
+its local guidance. `content` is sanitized before leaving the read surface: local absolute paths
+and endpoint URLs are replaced with placeholders while repo-relative paths remain intact. Invalid
+traversal or absolute roots still return a leak-free empty listing with `agent_instruction: null`.
+`protected_reason` is null when writable, else the reason (protected class or allowlist miss);
+`omitted` counts folders dropped by the node cap.
 
 Use `list_folders` before writing when the destination is unclear. Folder discovery is
 part of the memory taxonomy: durable project memory belongs in Hypermnesic, while

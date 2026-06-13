@@ -104,6 +104,9 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - `think(topic, path=...)` now falls back to the active note's graph context when
   self-exclusion removes the only lexical hit, so well-linked notes still surface related
   material in degraded lexical-only clients such as the Obsidian companion.
+- `list_folders` / `hypermnesic list-folders` now redact local absolute paths and endpoint URLs
+  from returned `agent_instruction.content`, preventing read-only remote clients from receiving
+  private host coordinates embedded in root-local guidance files.
 
 ## [0.0.6] — 2026-06-03
 
