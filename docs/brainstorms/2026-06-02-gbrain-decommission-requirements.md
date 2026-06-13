@@ -13,7 +13,7 @@ Retire gbrain entirely and make hypermnesic the single memory layer for the home
 
 ## Problem Frame
 
-Phase 1 (`docs/plans/2026-06-02-008-feat-homelab-dogfood-cutover-plan.md`) deployed hypermnesic as a *coexisting* disk-first committer on the shared vault `<home>/gbrain-brain`, leaving gbrain untouched. Coexistence is steady-state-stable but it is not the destination: the homelab now runs **two** memory layers over the same git tree — hypermnesic's git-projection index and gbrain's Supabase DB — and the agent stack still depends on gbrain for reads (entity resolution) and indexing.
+Phase 1 (`docs/plans/2026-06-02-008-feat-homelab-dogfood-cutover-plan.md`) deployed hypermnesic as a *coexisting* disk-first committer on the shared vault `/path/to/gbrain-brain`, leaving gbrain untouched. Coexistence is steady-state-stable but it is not the destination: the homelab now runs **two** memory layers over the same git tree — hypermnesic's git-projection index and gbrain's Supabase DB — and the agent stack still depends on gbrain for reads (entity resolution) and indexing.
 
 That duplication carries ongoing cost. gbrain's DB→disk **restore cron** is a tombstone-respecting safety net that has repeatedly bitten (the 2026-05-30 rename-orphan-resurrection scar, the `manageGitignore` `db_only` rewrite scar), and every agent/operator touching the vault has to hold the DB-first lane, the tombstone discipline, and the `GBRAIN_NO_GITIGNORE` pins in their head. The DB also carries **336 DB-only orphans** today (pages in Supabase with no file on disk; ~249 are tombstone-zombies — deleted on disk, lingering in the DB), so the two stores are measurably out of sync.
 
@@ -24,7 +24,7 @@ Critically, the original "Phase 2 = migrate DB-first writers to disk-first" fram
 ## Actors
 
 - A1. hypermnesic — the git-native engine + tailnet MCP master; becomes the sole memory layer (search/recall + the gated `commit_note`).
-- A2. gbrain — the outgoing layer: Supabase DB, the homelab MCP server (`https://homelab.<tailnet-host>.ts.net/mcp`), the `gbrain` CLI, the restore cron; decommissioned at the end.
+- A2. gbrain — the outgoing layer: Supabase DB, the homelab MCP server (`https://<your-host>.ts.net/mcp`), the `gbrain` CLI, the restore cron; decommissioned at the end.
 - A3. Hermes ingest fleet — the cron jobs + their scripts + skills that write disk-first today but read/index via gbrain; the consumers to cut over.
 - A4. Coding agents (Claude Code, Codex; homelab + Mac) — consume memory; the adoption target for the plugin.
 - A5. Operator — approves the staged gates and runs the final, irreversible gbrain teardown.
@@ -132,7 +132,7 @@ flowchart TB
 
 ## Dependencies / Assumptions
 
-- **Assumption (tailnet reach):** the Mac and the homelab agents are both on the tailnet, so hypermnesic at `100.64.0.55:8848` is reachable from every consumer that uses gbrain today. If any consumer is off-tailnet, the deferred OAuth/remote reach becomes a prerequisite.
+- **Assumption (tailnet reach):** the Mac and the homelab agents are both on the tailnet, so hypermnesic at `<your-host>.ts.net:8848` is reachable from every consumer that uses gbrain today. If any consumer is off-tailnet, the deferred OAuth/remote reach becomes a prerequisite.
 - **Assumption (read parity holds):** hypermnesic's `search`/`build_context` (same embedding model + dims as gbrain) are good enough for the jobs' entity resolution. To be validated against the actual `gbrain search`→slug patterns the jobs rely on.
 - **Dependency (reconciliation gate):** retiring the restore depends on `gbrain_supabase_orphan_audit.py` reading zero — a real data-reconciliation effort whose size depends on the tombstone-zombie vs genuine-DB-only breakdown.
 - **Dependency (Phase 1 shipped):** builds on the live hypermnesic master (PR #10 merged) — read tools, convergence, and the gated `commit_note` are in place.
@@ -151,4 +151,4 @@ flowchart TB
 - [Affects R7][Needs research] Break down the 336 `db_only` orphans: how many are tombstone-zombies (safe to purge), genuine DB-only content (must materialize), vs case-mismatch noise (the 127 case-collisions / 157 phantom-pairs)? Sizes the reconciliation track.
 - [Affects R1][Technical] Does hypermnesic's search return results in a shape the jobs' entity-resolution code can consume (resolve to a `.md`-stripped slug for a wikilink), or is a thin adapter/CLI verb needed?
 - [Affects R3][Technical] Auto-query hook mechanism: Claude Code hooks + the Codex equivalent — how the plugin makes hypermnesic querying automatic without being noisy.
-- [Affects R5][Needs research] Beyond the cron fleet, enumerate every gbrain consumer (the homelab remote MCP `homelab.<tailnet-host>.ts.net/mcp`, manual `gbrain` CLI use, the Mac) so cutover is complete before teardown.
+- [Affects R5][Needs research] Beyond the cron fleet, enumerate every gbrain consumer (the homelab remote MCP `<your-host>.ts.net/mcp`, manual `gbrain` CLI use, the Mac) so cutover is complete before teardown.

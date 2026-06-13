@@ -97,6 +97,10 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 - `commit_note` protected-path and write-scope refusals now survive Streamable HTTP structured-output
   validation, so remote clients receive a clean `{committed:false, refused:"..."}` payload instead
   of an MCP output validation error.
+- Retrieval now skips orphaned disposable-index candidates instead of crashing when an FTS/vector
+  row outlives its backing chunk row during projection churn.
+- Degraded lexical recall now self-heals older FTS projections that omitted markdown headings,
+  so committed notes remain recallable by title/body queries even when embeddings are unavailable.
 
 ## [0.0.6] — 2026-06-03
 

@@ -18,12 +18,12 @@ drop `/cloud` + `/honcho`).
 
 | Funnel path (:443) | → backend | Service | Disposition |
 | --- | --- | --- | --- |
-| `/mcp` | `100.64.0.55:8851/mcp` | `hypermnesic-master-auth` (write master) | **repoint → unified; retire service** |
+| `/mcp` | `<your-host>.ts.net:8851/mcp` | `hypermnesic-master-auth` (write master) | **repoint → unified; retire service** |
 | `/cloud` (+ `/cloud` well-knowns) | `127.0.0.1:8850` | `hypermnesic-cloud` (cloud OAuth) | **becomes the unified endpoint** |
 | `/honcho` (+ `/honcho` well-knowns), `:8443` | `127.0.0.1:8788` | honcho | **untouched** |
 | `/`, `:3131` | `127.0.0.1:3131` | gbrain | unaffected (decommission owns it) |
-| (tailnet) | `100.64.0.55:8848` | `hypermnesic` (read master) | **retain (read companion)** |
-| (tailnet) | `100.64.0.55:8849` | `hypermnesic-as` (client_credentials AS) | **retire (U7)** |
+| (tailnet) | `<your-host>.ts.net:8848` | `hypermnesic` (read master) | **retain (read companion)** |
+| (tailnet) | `<your-host>.ts.net:8849` | `hypermnesic-as` (client_credentials AS) | **retire (U7)** |
 | — | — | `hypermnesic-token.timer/.service` | **retire (minted :8851 RS tokens)** |
 
 `inet gbrain_watch` nft counter: **preserve** (still the gbrain Gate-B signal).
@@ -63,8 +63,8 @@ not force already-authorized clients through a new browser consent flow. The sep
 ```
 # 1. reconfigure + restart the service to the unified identity (write-anywhere, new engine)
 #    ExecStart=hypermnesic serve-cloud --index-db <repo>/.hypermnesic/index.db --host 127.0.0.1 \
-#      --port 8850 --public-url https://homelab.<tailnet-host>.ts.net/mcp \
-#      --resource https://homelab.<tailnet-host>.ts.net/mcp --repo <repo> \
+#      --port 8850 --public-url https://<your-host>.ts.net/mcp \
+#      --resource https://<your-host>.ts.net/mcp --repo <repo> \
 #      --default-client-scopes read write
 #    (or: hypermnesic setup <repo> --public-url …/mcp --resource …/mcp \
 #      --default-client-scopes read write  — renders+starts+funnels+verifies)
@@ -86,8 +86,8 @@ unified instance for `/mcp` on a fresh loopback port via `setup`, funnel `/mcp` 
 endpoint later when `/cloud` is retired. Zero re-auth, two instances transitionally.
 
 ```
-hypermnesic setup <repo> --public-url https://homelab.<tailnet-host>.ts.net/mcp \
-  --resource https://homelab.<tailnet-host>.ts.net/mcp --port 8852   # distinct unit/port
+hypermnesic setup <repo> --public-url https://<your-host>.ts.net/mcp \
+  --resource https://<your-host>.ts.net/mcp --port 8852   # distinct unit/port
 # setup configures the /mcp funnel + well-knowns and verifies discovery; /cloud:8850 stays as-is
 ```
 
@@ -104,11 +104,11 @@ systemctl --user disable --now hypermnesic-token.timer hypermnesic-token.service
 
 ```
 # unified endpoint: discovery chain resolves over HTTPS to hypermnesic
-curl -s -o /dev/null -w '%{http_code}\n' https://homelab.<tailnet-host>.ts.net/.well-known/oauth-protected-resource/mcp   # 200
-curl -s https://homelab.<tailnet-host>.ts.net/.well-known/oauth-authorization-server/mcp | jq .token_endpoint            # non-null
+curl -s -o /dev/null -w '%{http_code}\n' https://<your-host>.ts.net/.well-known/oauth-protected-resource/mcp   # 200
+curl -s https://<your-host>.ts.net/.well-known/oauth-authorization-server/mcp | jq .token_endpoint            # non-null
 # an unauth tools/list is 401 with a WWW-Authenticate; an authed tools/list (after re-auth) is 200 / 5 tools
 # coexistence (AE5): /cloud + /honcho still public; honcho discovery unaffected
-curl -s -o /dev/null -w '%{http_code}\n' https://homelab.<tailnet-host>.ts.net/honcho/.well-known/oauth-authorization-server  # 200
+curl -s -o /dev/null -w '%{http_code}\n' https://<your-host>.ts.net/honcho/.well-known/oauth-authorization-server  # 200
 # the gbrain Gate-B counter still increments on a gbrain hit
 sudo nft list counter inet gbrain_watch conns
 ```
@@ -121,7 +121,7 @@ sudo nft list counter inet gbrain_watch conns
 #!/usr/bin/env bash
 set -euo pipefail
 # point /mcp back at the :8851 write master, drop the unified well-known mounts
-sudo tailscale funnel --bg --https=443 --set-path /mcp http://100.64.0.55:8851/mcp
+sudo tailscale funnel --bg --https=443 --set-path /mcp http://<your-host>.ts.net:8851/mcp
 sudo tailscale funnel --https=443 --set-path /.well-known/oauth-protected-resource/mcp off
 sudo tailscale funnel --https=443 --set-path /.well-known/oauth-authorization-server/mcp off
 systemctl --user enable --now hypermnesic-master-auth hypermnesic-as

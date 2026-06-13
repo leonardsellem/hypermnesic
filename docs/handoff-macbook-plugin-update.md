@@ -6,7 +6,7 @@ auto-recall hook (one `UserPromptSubmit` event, no SessionStart preamble, no Bas
 content) and the latest fixes. Reversible (`claude/codex plugin remove`). Secrets are never printed.
 
 ```text
-You are a Claude Code session on a MacBook (a Tailscale tailnet peer; homelab = 100.64.0.55).
+You are a Claude Code session on a MacBook (a Tailscale tailnet peer; homelab = <your-host>.ts.net).
 Update the locally-installed `hypermnesic` plugin to the latest branch and verify it. Work ONLY on
 this Mac. Never print or commit any token or secret.
 
@@ -37,7 +37,7 @@ this Mac. Never print or commit any token or secret.
    The slim hook is silent unless BOTH HYPERMNESIC_MCP_URL and HYPERMNESIC_MCP_TOKEN are in the
    environment (otherwise it no-ops, never blocking a turn). To turn it on for this Mac, export
    in your shell profile (the token is short-lived; mint it as in the Gate-A handoff):
-     export HYPERMNESIC_MCP_URL=http://100.64.0.55:8851/mcp
+     export HYPERMNESIC_MCP_URL=http://<your-host>.ts.net:8851/mcp
      # export HYPERMNESIC_MCP_TOKEN=...   # minted from the AS; never commit it
    Then a memory-relevant prompt injects top hits; everything else stays silent.
 
@@ -50,7 +50,7 @@ this Mac. Never print or commit any token or secret.
 
 NOTE (separate from the plugin — the cloud mobile connector): the consent-form bug is now FIXED on
 the homelab (commit 5ecfb7d). In ChatGPT and Claude, REMOVE any existing "Hypermnesic" connector
-and re-add it with the EXACT URL https://homelab.<tailnet-host>.ts.net/cloud/mcp (NOT the bare /mcp —
+and re-add it with the EXACT URL https://<your-host>.ts.net/cloud/mcp (NOT the bare /mcp —
 that is a different app). The browser will open the consent page; type your cloud approval token
 (homelab: `cat ~/.config/hypermnesic-cloud/cloud.env`) and Approve. It now completes the grant.
 ```
