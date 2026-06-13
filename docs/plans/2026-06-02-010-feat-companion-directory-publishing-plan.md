@@ -251,7 +251,7 @@ with the v0.3.0 plugin at the repo root, building from a clean clone.
 **Approach:**
 - Fresh standalone repo with **no inherited git history**. Do **not** use
   `git subtree split` or any history-preserving export: the monorepo history carries
-  the pre-scrub homelab IP (`100.103.0.55`) in old plugin-source commits, and
+  the pre-scrub homelab IP (`<your-host>.ts.net`) in old plugin-source commits, and
   inheriting it would publish that private address irreversibly.
 - Create the repo **private**, land U1–U5 together (extraction + license + packaging
   + read-only proof + green CI), then flip it public. This closes the window where a
@@ -368,7 +368,7 @@ the plugin repo so the trust-critical invariant is proven where the code lives.
   4. `src/surfaces/reference.ts` imports no `@codemirror/view` or `@codemirror/state`
      (structurally incapable of an editor write).
   5. Empty opt-in default endpoint: `mcpUrl: ""` in `src/types.ts`, the `!url.trim()`
-     guard in `src/core.ts`, and no `100.103.0.55` anywhere in source.
+     guard in `src/core.ts`, and no `<your-host>.ts.net` anywhere in source.
   6. UI guidelines: no `.innerHTML` / `.outerHTML` / `.insertAdjacentHTML(` /
      `console.log(` / `console.debug(` in source.
   7. Build scaffolding present (`package.json`, `esbuild.config.mjs`, `tsconfig.json`).

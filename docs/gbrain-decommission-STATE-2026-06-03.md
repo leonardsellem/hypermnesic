@@ -7,7 +7,7 @@ change to `gbrain-brain/projects/homelab/{services,LOG.md}`. Never echo/commit s
 
 ## Branches / HEADs
 - hypermnesic repo, branch `claude/condescending-sutherland-4d9b29`, worktree
-  `/home/ubuntu/dev/hypermnesic/.claude/worktrees/condescending-sutherland-4d9b29`. **HEAD `0a40510`** (U6).
+  `/path/to/dev/hypermnesic/.claude/worktrees/condescending-sutherland-4d9b29`. **HEAD `0a40510`** (U6).
   PR #15 merged to `origin/main` (`e368cf7`) = Phase A + U12. Post-#15 commits (slim hook 993bdd9,
   cloud fixes c164bd8/5ecfb7d, output schemas 42e2ec5, U6 0a40510) are NOT yet on main.
 - vault `gbrain-brain` (hot multi-writer, on `main`): **HEAD `53a1c738`** (U7). Path-scoped commits + rebase.
@@ -19,10 +19,10 @@ DEPLOYED + working on ChatGPT + Claude after 3 browser fixes (consent form actio
 form-action redirect `c164bd8`, per-tool output schemas `42e2ec5`).
 
 ## Live homelab services (systemd --user)
-- `hypermnesic-as.service` — AS, **100.103.0.55:8849**, client_credentials + RFC8707 + introspection. WORKTREE-pinned.
-- `hypermnesic-master-auth.service` — **write master AUTH-ON, 100.103.0.55:8851**, introspects the AS. WORKTREE-pinned.
-- `hypermnesic.service` — **read companion AUTH-OFF, 100.103.0.55:8848**. Runs the **installed canonical engine** `~/.local/bin/hypermnesic` (reinstalled from `origin/main` e368cf7 → has `resolve`).
-- `hypermnesic-cloud.service` — **public cloud OAuth MCP, 127.0.0.1:8850**, Funnel `/cloud`. WORKTREE-pinned. In-memory grants (restart wipes → must reconnect). Approval token: `~/.config/hypermnesic-cloud/cloud.env` (0600). Connector URL: `https://homelab.taildabf2.ts.net/cloud/mcp`.
+- `hypermnesic-as.service` — AS, **<your-host>.ts.net:8849**, client_credentials + RFC8707 + introspection. WORKTREE-pinned.
+- `hypermnesic-master-auth.service` — **write master AUTH-ON, <your-host>.ts.net:8851**, introspects the AS. WORKTREE-pinned.
+- `hypermnesic.service` — **read companion AUTH-OFF, <your-host>.ts.net:8848**. Runs the **installed canonical engine** `~/.local/bin/hypermnesic` (reinstalled from `origin/main` e368cf7 → has `resolve`).
+- `hypermnesic-cloud.service` — **public cloud OAuth MCP, 127.0.0.1:8850**, Funnel `/cloud`. WORKTREE-pinned. In-memory grants (restart wipes → must reconnect). Approval token: `~/.config/hypermnesic-cloud/cloud.env` (0600). Connector URL: `https://<your-host>.ts.net/cloud/mcp`.
 - `hypermnesic-token.timer` — mints `HYPERMNESIC_MCP_TOKEN` (45-min) to `~/.config/hypermnesic/token.env` (0600).
 - Engine note: master-auth/as/cloud run the **worktree** `.venv/bin/hypermnesic`; companion runs the **installed** canonical engine. Re-pin everything to `main` once the post-#15 commits merge.
 
@@ -45,7 +45,7 @@ form-action redirect `c164bd8`, per-tool output schemas `42e2ec5`).
   (bun) is gbrain or another app, and which exact endpoint string each consumer calls. **U8 plan:**
   (a) instrument `gbrain-mcp-http` (request counter/access log) for the Gate-B zero-traffic signal;
   (b) no-gap cutover — AS up + every consumer holds a valid token + verified → THEN
-  `sudo tailscale serve --set-path /mcp http://100.103.0.55:8851` (auth-on master), tailnet-only NOT funnel;
+  `sudo tailscale serve --set-path /mcp http://<your-host>.ts.net:8851` (auth-on master), tailnet-only NOT funnel;
   (c) reversible single inverse op (`tailscale serve --set-path /mcp off`). NB: Mac consumers already use the
   direct IP `:8851`; the plugin `.mcp.json` uses the hostname `/mcp` (so it benefits from the repoint).
 - **U13 (consumer sweep): NOT STARTED.** Homelab registrations/healthcheck (`gbrain stats` job `ff85e57bdf9d`

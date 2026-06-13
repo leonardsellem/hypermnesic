@@ -27,15 +27,15 @@ unreviewed docs drift, secret-scan findings, or a failed remote-client smoke are
 
 | Command | Expected evidence | Recorded result | Pass/fail | Reviewer | Date | Release-blocking |
 |---|---|---|---|---|---|---|
-| `uv sync --extra dev` | Dependency environment resolves. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `uv run python scripts/product_smoke.py --work-dir /tmp/hypermnesic-smoke --json` | JSON status is `pass`; no private absolute paths or secrets in output. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `uv run pytest tests/test_smoke.py tests/test_product_remote_smoke.py` | Local product smoke and offline remote contracts pass. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `uv run ruff check .` | Lint passes. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `uv run python scripts/check_version_consistency.py` | Version authority and manifests agree. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `uv run pytest` | Full deterministic suite passes. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `uv run python scripts/license_scan.py` | Dependency license gate passes. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `uv run python scripts/preflight_public_scan.py` | Public-surface scan has no operator secret or host findings. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
-| `git diff --check` | No whitespace errors. | Pending for release run. | Pending. | Pending. | Pending. | Yes |
+| `uv sync --extra dev` | Dependency environment resolves. | Resolved 157 packages and checked the dev environment for the rebased release evidence run. | Pass | Codex | 2026-06-13 | Yes |
+| `uv run python scripts/product_smoke.py --work-dir /tmp/hypermnesic-smoke --json` | JSON status is `pass`; no private absolute paths or secrets in output. | After clearing `/tmp/hypermnesic-smoke`, rerun returned JSON `status: pass` with all seven first-class loop stages passing and lexical-only degradation explicitly reported. | Pass | Codex | 2026-06-13 | Yes |
+| `uv run pytest tests/test_smoke.py tests/test_product_remote_smoke.py` | Local product smoke and offline remote contracts pass. | 8 passed. | Pass | Codex | 2026-06-13 | Yes |
+| `uv run ruff check .` | Lint passes. | `All checks passed!` | Pass | Codex | 2026-06-13 | Yes |
+| `uv run python scripts/check_version_consistency.py` | Version authority and manifests agree. | All 5 version slots agree with `pyproject.toml = 0.0.6`. | Pass | Codex | 2026-06-13 | Yes |
+| `uv run pytest` | Full deterministic suite passes. | 705 passed, 1 skipped, 1 warning. | Pass | Codex | 2026-06-13 | Yes |
+| `uv run python scripts/license_scan.py` | Dependency license gate passes. | 46 packages scanned; 0 AGPL/GPL/SSPL findings. | Pass | Codex | 2026-06-13 | Yes |
+| `uv run python scripts/preflight_public_scan.py` | Public-surface scan has no operator secret or host findings. | Default scan checked 159 files with 59 deferred; no operator secret or host findings. | Pass | Codex | 2026-06-13 | Yes |
+| `git diff --check` | No whitespace errors. | No whitespace errors. | Pass | Codex | 2026-06-13 | Yes |
 
 ## Manual remote-client gate
 
