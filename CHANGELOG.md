@@ -61,6 +61,10 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 ### Changed
 - README and getting-started onboarding now lead with the local proof milestone before
   endpoint setup or remote-client connection.
+- The remote-client smoke checklist now makes read-scope leak checks explicit for local absolute
+  paths and private or `/mcp` endpoint URLs, records client-side write-refusal blocks as
+  `INCONCLUSIVE/FAIL`, and uses a protected `scripts/<smoke-id>-protected-refusal.md` write so
+  hosted clients can prove the MCP guard without tripping their own `AGENTS.md` safety layer first.
 - `list_folders` and `hypermnesic list-folders --json` now include an `agent_instruction`
   field. It is `{source, content}` for direct root-local `AGENTS.md` guidance, falls back to
   direct `CLAUDE.md`, and is `null` when neither file exists at the requested root.
