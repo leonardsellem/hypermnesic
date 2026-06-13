@@ -374,6 +374,13 @@ change is recorded here, in the open.
   reproducibility doc gap: the paid reader path imports `tiktoken`, which lives in the
   `bench` extra, so the reproduction commands now install `uv sync --extra dev --extra
   bench` and use `--batch` to match the recorded run mode.
+- **2026-06-13 — later maintenance-impact review; no third paid rerun.** After the
+  public-release evidence refresh, follow-on release work fixed stale/orphaned lexical
+  projections in persistent indexes and refreshed contributor docs. That maintenance does
+  not change the LongMemEval dataset, materialization, prompts, scoring, model snapshots,
+  frozen retrieval params, or the benchmark's fresh isolated per-instance index build. The
+  two completed 2026-06-13 benchmark runs therefore remain the release evidence; a third
+  paid Batch API rerun would add cost without changing the measured benchmark surface.
 
 ---
 
