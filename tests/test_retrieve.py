@@ -121,6 +121,50 @@ def test_search_skips_orphaned_lexical_candidates(make_corpus, fake_embedder):
     idx.close()
 
 
+def test_degraded_lexical_search_repairs_old_body_only_fts_projection(
+        make_corpus, fake_embedder):
+    repo = make_corpus({
+        "captures/smoke.md": (
+            "# LS-1675 Codex client smoke\n\n"
+            "Approved commit_note write for the public-release milestone.\n"
+        ),
+    })
+    idx = index.build_index(repo, fake_embedder)
+    row = idx.conn.execute(
+        "SELECT chunk_id, text FROM chunks WHERE path='captures/smoke.md'"
+    ).fetchone()
+    idx.conn.execute("DELETE FROM fts_chunks WHERE rowid=?", (row[0],))
+    idx.conn.execute(
+        "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)",
+        (row[0], row[1]),
+    )
+    idx.conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES ('fts_text_version', '1')"
+    )
+    db_path = idx.db_path
+    idx.conn.commit()
+    idx.close()
+
+    idx = index.Index(db_path)
+
+    class DownEmbedder:
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            raise embed_mod.EmbeddingError("API down")
+
+    res = retrieve.search(
+        idx,
+        "LS-1675 public-release milestone",
+        embedder=DownEmbedder(),
+        k=3,
+    )
+
+    assert res.degraded is True
+    assert [h.path for h in res.hits] == ["captures/smoke.md"]
+    idx.close()
+
+
 def test_collapses_exact_content_duplicates(make_corpus, fake_embedder):
     # Mirror-flooding: the same content at two paths must not consume two result
     # slots — collapse to the highest-ranked representative so distinct docs
