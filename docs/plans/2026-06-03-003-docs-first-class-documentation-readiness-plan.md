@@ -354,7 +354,7 @@ noted.
   names the two prerequisites that are NOT mechanical and must be resolved before
   the flip: (1) the `license_scan.py` self-exclusion (U6) — without it the flip
   breaks the CI license gate; (2) the **git-history strategy** — the real homelab
-  IP `100.103.0.55` and hostname `homelab.taildabf2.ts.net` persist in ~24–25
+  IP `<your-host>.ts.net` and hostname `<your-host>.ts.net` persist in ~24–25
   historical commit diffs that a public push exposes, so the runbook must record an
   explicit, signed-off decision: `git-filter-repo` redaction (rewrites all SHAs —
   breaks existing clones/forks) vs. a documented accept-as-residual (the node is
@@ -447,7 +447,7 @@ noted.
     working-tree file set **and** `git log -p --all`)
   - `src/hypermnesic/cli.py` + the test fixtures (remediation: neutralize the live
     operator hostname — `cli.py:580` help example uses
-    `homelab.taildabf2.ts.net`, and ~7 test files hardcode it; replace with a
+    `<your-host>.ts.net`, and ~7 test files hardcode it; replace with a
     documentation placeholder, mirroring the CGNAT-range fix in #21 and the
     existing `tests/test_plugin.py` assertion that the hostname must NOT leak)
   - `docs/launch/public-launch-checklist.md` (new — the human checklist:
@@ -456,8 +456,8 @@ noted.
   - `.github/workflows/ci.yml` (preflight step wired to fail the build on a hit)
   - `tests/test_preflight_public_scan.py` (new)
 - **Approach:** Three realities the original framing missed, all code-verified:
-  (1) **Git history**, not just the working tree — `100.103.0.55` appears in ~25
-  commits and `homelab.taildabf2.ts.net` in ~24; the #6/#21 scrubs only cleaned the
+  (1) **Git history**, not just the working tree — `<your-host>.ts.net` appears in ~25
+  commits and `<your-host>.ts.net` in ~24; the #6/#21 scrubs only cleaned the
   tree, so a public push still exposes them via `git log -p`. The scan must cover
   history, and U5's runbook records the rewrite-vs-accept decision. (2) **`src/`
   and `tests/` are in the to-be-public set** — the operator hostname is live in
@@ -866,7 +866,7 @@ prerequisite, not optional.
   the README or only in the flip runbook — depends on whether shields.io endpoints
   resolve for a private repo's CI.
 - **Git-history strategy (U5/U8) — decide before the flip, not at it:** the real
-  homelab IP `100.103.0.55` (~25 commits) and hostname `homelab.taildabf2.ts.net`
+  homelab IP `<your-host>.ts.net` (~25 commits) and hostname `<your-host>.ts.net`
   (~24 commits) persist in historical commit diffs. Choose `git-filter-repo`
   redaction (rewrites all SHAs — breaks existing clones/forks) vs. a documented
   accept-as-residual (the node is Tailscale-only, non-routable externally). This is

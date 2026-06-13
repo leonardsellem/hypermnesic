@@ -12,6 +12,7 @@ brute-force ``ORDER BY vec_distance_*`` (KTD3, ~200× slower at scale).
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -24,6 +25,11 @@ from hypermnesic import config, ingest, serialize
 
 STATE_DIRNAME = ".hypermnesic"
 _BATCH = 128
+_FTS_TEXT_VERSION = "2"
+_LEXICAL_FALLBACK_STOPWORDS = {
+    "a", "an", "and", "are", "about", "do", "for", "in", "is", "it", "of", "on",
+    "or", "the", "to", "what", "we",
+}
 
 
 def state_dir_for(repo: Path) -> Path:
@@ -45,6 +51,10 @@ def _git_head(repo: Path) -> str | None:
         return out or None
     except (FileNotFoundError, subprocess.CalledProcessError):
         return None
+
+
+def _fts_text(ch: ingest.Chunk) -> str:
+    return f"{ch.heading}\n{ch.text}" if ch.heading else ch.text
 
 
 def ensure_ignored(repo: Path) -> None:
@@ -74,6 +84,7 @@ class Index:
         self.db_path = Path(db_path)
         self.conn = sqlite3.connect(self.db_path)
         _load_vec(self.conn)
+        self.refresh_fts_projection_if_needed()
 
     def create_schema(self) -> None:
         c = self.conn
@@ -101,6 +112,44 @@ class Index:
         )
         c.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
         c.commit()
+        self.refresh_fts_projection_if_needed()
+
+    def refresh_fts_projection_if_needed(self) -> bool:
+        """Keep the disposable lexical projection aligned with ``chunks`` rows.
+
+        Older indexes stored only chunk body text in FTS. Rebuilding FTS from the
+        already-indexed ``chunks`` table is cheap, deterministic, and requires no
+        embeddings, so degraded lexical recall can self-heal on open.
+        """
+        tables = {
+            row[0] for row in self.conn.execute(
+                "SELECT name FROM sqlite_master WHERE type IN ('table', 'virtual table')"
+            ).fetchall()
+        }
+        if not {"chunks", "fts_chunks", "meta"}.issubset(tables):
+            return False
+        row = self.conn.execute(
+            "SELECT value FROM meta WHERE key='fts_text_version'"
+        ).fetchone()
+        if row and row[0] == _FTS_TEXT_VERSION:
+            return False
+        chunk_rows = self.conn.execute(
+            "SELECT chunk_id, heading, text FROM chunks ORDER BY chunk_id"
+        ).fetchall()
+        self.conn.execute("DELETE FROM fts_chunks")
+        self.conn.executemany(
+            "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)",
+            [
+                (cid, f"{heading}\n{text}" if heading else text)
+                for cid, heading, text in chunk_rows
+            ],
+        )
+        self.conn.execute(
+            "INSERT OR REPLACE INTO meta (key, value) VALUES ('fts_text_version', ?)",
+            (_FTS_TEXT_VERSION,),
+        )
+        self.conn.commit()
+        return True
 
     def add_documents(self, chunks: list[ingest.Chunk],
                       vectors: list[list[float]]) -> None:
@@ -117,7 +166,7 @@ class Index:
                 (cid, sqlite_vec.serialize_float32(vec)),
             )
             c.execute(
-                "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, ch.text)
+                "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, _fts_text(ch))
             )
         c.commit()
 
@@ -170,7 +219,7 @@ class Index:
                 "INSERT INTO chunks (path, ord, heading, text) VALUES (?, ?, ?, ?)",
                 (ch.path, ch.ord, ch.heading, ch.text))
             cid = cur.lastrowid
-            c.execute("INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, ch.text))
+            c.execute("INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, _fts_text(ch)))
             new_ids.append(cid)
         c.commit()
         return new_ids
@@ -259,8 +308,10 @@ class Index:
         # Phrase-match the query tokens. This is precise for exact/proper-noun
         # queries and gracefully no-ops on free-form NL questions (the dense
         # channel carries those). Measured: OR-of-terms floods the candidate set
-        # with weak common-term matches and degrades fused ranking, so we keep
-        # the precise phrase form and let dense own semantic recall.
+        # with weak common-term matches and degrades fused ranking. If the exact
+        # phrase misses, fall back to an explicit AND over salient tokens so
+        # lexical-only degraded mode can still recall hyphenated/non-contiguous
+        # identifiers such as LS-1675 public-release smoke notes.
         q = query_text.replace('"', " ").strip()
         if not q:
             return []
@@ -268,6 +319,20 @@ class Index:
             "SELECT rowid, bm25(fts_chunks) FROM fts_chunks "
             "WHERE fts_chunks MATCH ? ORDER BY bm25(fts_chunks) LIMIT ?",
             (f'"{q}"', k),
+        ).fetchall()
+        if rows:
+            return rows
+        tokens = [
+            tok for tok in re.findall(r"\w+", q, flags=re.UNICODE)
+            if tok.lower() not in _LEXICAL_FALLBACK_STOPWORDS
+        ]
+        if len(tokens) < 2:
+            return rows
+        fallback = " AND ".join(f'"{tok}"' for tok in tokens)
+        rows = self.conn.execute(
+            "SELECT rowid, bm25(fts_chunks) FROM fts_chunks "
+            "WHERE fts_chunks MATCH ? ORDER BY bm25(fts_chunks) LIMIT ?",
+            (fallback, k),
         ).fetchall()
         return rows
 

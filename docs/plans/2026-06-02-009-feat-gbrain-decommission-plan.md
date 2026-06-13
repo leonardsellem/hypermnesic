@@ -11,8 +11,8 @@ deepened: 2026-06-02
 
 **Target repo:** `hypermnesic` (this repo, repo root). Engine + plugin `**Files:**`
 paths are repo-relative. Operational units act on the **homelab**
-(`homelab-hetzner-staging`, tailnet `100.103.0.55`) and the shared vault
-`/home/ubuntu/gbrain-brain` (*the vault*) — those targets are written as `~/…` or
+(`homelab-hetzner-staging`, tailnet `<your-host>.ts.net`) and the shared vault
+`/path/to/gbrain-brain` (*the vault*) — those targets are written as `~/…` or
 `gbrain-brain/…` (host/vault locations, not repo files). Execution pauses at **four
 operator gates**. This is **Phase 2** — it builds on Phase 1
 (`docs/plans/2026-06-02-008-feat-homelab-dogfood-cutover-plan.md`, completed), which
@@ -98,8 +98,8 @@ R-IDs R1–R11 mirror the origin requirements doc; R12 is **plan-added per user 
 **Authenticated reach (plan-added)**
 - R12. hypermnesic's MCP is exposed as an **OAuth2-authenticated** endpoint (the engine as
   an OAuth 2.1 Resource Server, U2; a tailnet-internal Authorization Server, U12) and reachable
-  at the preserved hostname `homelab.taildabf2.ts.net/mcp` via a **tailnet-internal
-  `tailscale serve`** (not Funnel) pointed at hypermnesic on `100.103.0.55:8848`. The
+  at the preserved hostname `<your-host>.ts.net/mcp` via a **tailnet-internal
+  `tailscale serve`** (not Funnel) pointed at hypermnesic on `<your-host>.ts.net:8848`. The
   **write-enabled master must run auth-on** (engine invariant), the AS is **independent of
   gbrain's `--enable-dcr`**, and this supersedes the engine's "OAuth is a deferred seam"
   posture (`mcp_server.py` docstring; threat model — rewritten in U2, not merely annotated).
@@ -193,8 +193,8 @@ gbrain's graph/timeline/code tools).
   (`gbrain export --restore-only`, tombstone-respecting).
 - **gbrain serving:** `~/.config/systemd/user/gbrain-mcp-http.service` (`gbrain serve --http
   --port 3131 --enable-dcr`), exposed via **Tailscale Funnel** at
-  `homelab.taildabf2.ts.net/mcp`. hypermnesic: `~/.config/systemd/user/hypermnesic.service`
-  (`100.103.0.55:8848`, no auth, **not** behind the Funnel).
+  `<your-host>.ts.net/mcp`. hypermnesic: `~/.config/systemd/user/hypermnesic.service`
+  (`<your-host>.ts.net:8848`, no auth, **not** behind the Funnel).
 - **Other consumers:** Codex `~/.codex/config.toml` `[mcp_servers.gbrain]` (stdio) + Codex
   hooks `~/.codex/hooks.json` (`gbrain-agent-hook`); Claude project-scoped `gbrain serve` in
   `~/.claude.json`; chezmoi `~/.local/share/chezmoi/dot_codex/config.toml.tmpl` (a
@@ -276,7 +276,7 @@ gbrain's graph/timeline/code tools).
   endpoint — otherwise U11 (which tears down gbrain's AS) would silently lock out hypermnesic
   after the irreversible delete. Proven at U10 (auth still works with gbrain's AS stopped). (U2, U12)
 - **Preserve the hostname via tailnet-internal `tailscale serve`, not Funnel.** Keep
-  `homelab.taildabf2.ts.net/mcp` resolving to hypermnesic:8848, tailnet-only (no public
+  `<your-host>.ts.net/mcp` resolving to hypermnesic:8848, tailnet-only (no public
   Funnel), OAuth2-fronted. Consumers keep their endpoint string; only the backend + auth
   change. (U8, R12) *(call-out, confirmed)*
 - **The plugin lives in-repo as a marketplace.** A `plugin/` marketplace alongside
@@ -322,7 +322,7 @@ gbrain's graph/timeline/code tools).
 ### Deferred to Implementation
 
 - [Affects R12][Needs research] **Can `honcho-oauth-proxy` mint audience-bound (RFC 8707) tokens
-  for `resource_server_url = homelab.taildabf2.ts.net/mcp` with the required scope?** If yes, U12
+  for `resource_server_url = <your-host>.ts.net/mcp` with the required scope?** If yes, U12
   is an *enrollment* unit (reuse); if no, it deploys a new minimal AS — settled by the U12
   native-primitive evaluation/spike before Gate A. Token lifetime ceiling + revocation values are
   tuned at impl.
@@ -533,7 +533,7 @@ unauthenticated build unchanged.
 
 ```python
 # build_server(..., token_verifier=None, auth=None) → FastMCP
-# CLI: serve --auth-issuer-url https://…/ --auth-resource-url https://homelab.taildabf2.ts.net/mcp
+# CLI: serve --auth-issuer-url https://…/ --auth-resource-url https://<your-host>.ts.net/mcp
 #               --required-scope memory
 mcp = FastMCP("hypermnesic", host=host, port=port, streamable_http_path=path,
               json_response=True,
@@ -588,9 +588,9 @@ and Gate A (no Gate-A criterion is achievable without a live AS).
 - **Native-primitive first (non-negotiable): evaluate reusing `honcho-oauth-proxy`.** An OAuth 2.1
   AS already runs on this homelab — `honcho-oauth-proxy.service` (127.0.0.1:8788) serving
   `/.well-known/oauth-authorization-server`, `/register` (DCR), `/authorize`, `/token`, `/revoke`,
-  and read/write scopes on the same `homelab.taildabf2.ts.net` hostname (documented in
+  and read/write scopes on the same `<your-host>.ts.net` hostname (documented in
   `gbrain-brain/projects/homelab/services/honcho.md`). If it can mint **audience-bound** (RFC 8707)
-  tokens for `resource_server_url = homelab.taildabf2.ts.net/mcp` with the required scope, **U12
+  tokens for `resource_server_url = <your-host>.ts.net/mcp` with the required scope, **U12
   collapses to enrollment** (the three identities + a hypermnesic protected-resource discovery
   route) — no new server. Building a new AS is justified **only** if honcho cannot satisfy the
   audience/scope requirements, and that finding must be recorded. This also de-risks Gate A:
@@ -756,7 +756,7 @@ U4 (hooks).
 **Approach:**
 - **Resolve the dangling-target window:** the preserved hostname still resolves to gbrain until
   U8. So at Gate A the plugin points at the **authenticated direct endpoint**
-  (`100.103.0.55:8848`), and U8 repoints both the hostname and the plugin's configured target to
+  (`<your-host>.ts.net:8848`), and U8 repoints both the hostname and the plugin's configured target to
   it — OR U8's atomic repoint is pulled forward as a Gate-A dependency so the hostname means
   hypermnesic from Gate A onward (preferred; the repoint is reversible). Either way the plugin
   never points at a hostname that still serves gbrain. `_install_client` grows an OAuth-aware
@@ -901,14 +901,14 @@ step; the revert path is proven to restore the gbrain lane for this job alone.
 
 > **SUPERSEDED (2026-06-03) by the unified-OAuth-endpoint plan**
 > (`docs/plans/2026-06-03-001-feat-unified-oauth-endpoint-and-setup-plan.md`, its U8). The reach +
-> auth repoint of `homelab.taildabf2.ts.net/mcp` is now owned by that plan: `/mcp` points at the
+> auth repoint of `<your-host>.ts.net/mcp` is now owned by that plan: `/mcp` points at the
 > single public OAuth endpoint (read+write by scope, write-anywhere-under-guards), not the tailnet
 > `:8848` backend this unit named. The `inet gbrain_watch` nft counter (this unit's zero-traffic
 > signal) is preserved across that cutover. Do **not** execute this unit's repoint — it is replaced.
 > Resume the decommission at **U13** (the consumer + docs sweep) against the unified endpoint per the
 > CLI-for-engine-host-local / MCP-for-remote split. See the unified plan's U9 handoff.
 
-**Goal:** Repoint `homelab.taildabf2.ts.net/mcp` from gbrain to the OAuth2-authenticated
+**Goal:** Repoint `<your-host>.ts.net/mcp` from gbrain to the OAuth2-authenticated
 hypermnesic backend in one atomic, reversible flip — and start observing gbrain so a missed
 consumer becomes visible (zero-traffic proof), not silent.
 
@@ -921,7 +921,7 @@ off gbrain).
 - **Record the live serve map first** (`tailscale serve/funnel status`): today gbrain is at the
   hostname **root `/`** (→ `127.0.0.1:3131`, Funnel on), `honcho` co-tenants at `/honcho` +
   `.well-known/*`, and `/mcp` is currently free. The repoint is therefore a **per-path serve
-  change** — point `/mcp` (or the path consumers actually use) → hypermnesic `100.103.0.55:8848`
+  change** — point `/mcp` (or the path consumers actually use) → hypermnesic `<your-host>.ts.net:8848`
   and move gbrain off `/` — **not** a hostname-wide Funnel toggle that would disrupt honcho's routes
 - Instrument gbrain: enable an access log / request counter on `gbrain-mcp-http.service` (and,
   if cheap, log any request still arriving at `:3131` directly) for all of Phase B — the
@@ -950,7 +950,7 @@ off gbrain).
 Funnel) for tailnet-internal hostname mapping.
 
 **Test scenarios:**
-- Happy path: after the repoint, a call to `homelab.taildabf2.ts.net/mcp` reaches hypermnesic
+- Happy path: after the repoint, a call to `<your-host>.ts.net/mcp` reaches hypermnesic
   (OAuth2-authenticated), not gbrain.
 - Error path: the flip fails / auth not ready → the inverse operation restores gbrain reach
   cleanly (no consumer stranded).
@@ -1245,7 +1245,7 @@ teardown, verify the single-layer end state and that the standing guard is live.
 
 ## System-Wide Impact
 
-- **Interaction graph (what changes):** the preserved hostname `homelab.taildabf2.ts.net/mcp`
+- **Interaction graph (what changes):** the preserved hostname `<your-host>.ts.net/mcp`
   moves backend from gbrain:3131 (Funnel) → hypermnesic:8848 (tailnet-internal `tailscale serve`,
   OAuth2). content-distill stops calling gbrain (reads → hypermnesic, index step removed). The
   auto-query hook (Claude+Codex) calls hypermnesic, not gbrain. The healthcheck probes
