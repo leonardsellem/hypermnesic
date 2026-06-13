@@ -142,7 +142,8 @@ sensitive material should not be written at all.
 Before writing, preserve raw evidence or cite source paths. If the destination is unclear, discover
 writable locations first (`list_folders` / `hypermnesic list-folders`); that discovery also returns
 direct root-local `AGENTS.md` guidance, or fallback `CLAUDE.md` guidance, for the requested root
-when present. See the [memory taxonomy guide](docs/guides/memory-taxonomy.md).
+when present, with local absolute paths and endpoint URLs redacted from the returned guidance.
+See the [memory taxonomy guide](docs/guides/memory-taxonomy.md).
 
 ### F. Run the daily loop
 
