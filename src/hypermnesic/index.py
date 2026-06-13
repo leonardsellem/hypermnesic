@@ -12,6 +12,7 @@ brute-force ``ORDER BY vec_distance_*`` (KTD3, ~200× slower at scale).
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -24,6 +25,10 @@ from hypermnesic import config, ingest, serialize
 
 STATE_DIRNAME = ".hypermnesic"
 _BATCH = 128
+_LEXICAL_FALLBACK_STOPWORDS = {
+    "a", "an", "and", "are", "about", "do", "for", "in", "is", "it", "of", "on",
+    "or", "the", "to", "what", "we",
+}
 
 
 def state_dir_for(repo: Path) -> Path:
@@ -45,6 +50,10 @@ def _git_head(repo: Path) -> str | None:
         return out or None
     except (FileNotFoundError, subprocess.CalledProcessError):
         return None
+
+
+def _fts_text(ch: ingest.Chunk) -> str:
+    return f"{ch.heading}\n{ch.text}" if ch.heading else ch.text
 
 
 def ensure_ignored(repo: Path) -> None:
@@ -117,7 +126,7 @@ class Index:
                 (cid, sqlite_vec.serialize_float32(vec)),
             )
             c.execute(
-                "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, ch.text)
+                "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, _fts_text(ch))
             )
         c.commit()
 
@@ -170,7 +179,7 @@ class Index:
                 "INSERT INTO chunks (path, ord, heading, text) VALUES (?, ?, ?, ?)",
                 (ch.path, ch.ord, ch.heading, ch.text))
             cid = cur.lastrowid
-            c.execute("INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, ch.text))
+            c.execute("INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, _fts_text(ch)))
             new_ids.append(cid)
         c.commit()
         return new_ids
@@ -259,8 +268,10 @@ class Index:
         # Phrase-match the query tokens. This is precise for exact/proper-noun
         # queries and gracefully no-ops on free-form NL questions (the dense
         # channel carries those). Measured: OR-of-terms floods the candidate set
-        # with weak common-term matches and degrades fused ranking, so we keep
-        # the precise phrase form and let dense own semantic recall.
+        # with weak common-term matches and degrades fused ranking. If the exact
+        # phrase misses, fall back to an explicit AND over salient tokens so
+        # lexical-only degraded mode can still recall hyphenated/non-contiguous
+        # identifiers such as LS-1675 public-release smoke notes.
         q = query_text.replace('"', " ").strip()
         if not q:
             return []
@@ -268,6 +279,20 @@ class Index:
             "SELECT rowid, bm25(fts_chunks) FROM fts_chunks "
             "WHERE fts_chunks MATCH ? ORDER BY bm25(fts_chunks) LIMIT ?",
             (f'"{q}"', k),
+        ).fetchall()
+        if rows:
+            return rows
+        tokens = [
+            tok for tok in re.findall(r"\w+", q, flags=re.UNICODE)
+            if tok.lower() not in _LEXICAL_FALLBACK_STOPWORDS
+        ]
+        if len(tokens) < 2:
+            return rows
+        fallback = " AND ".join(f'"{tok}"' for tok in tokens)
+        rows = self.conn.execute(
+            "SELECT rowid, bm25(fts_chunks) FROM fts_chunks "
+            "WHERE fts_chunks MATCH ? ORDER BY bm25(fts_chunks) LIMIT ?",
+            (fallback, k),
         ).fetchall()
         return rows
 
