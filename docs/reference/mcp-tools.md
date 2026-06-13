@@ -51,12 +51,16 @@ Pages reachable from `path` via body `[[wikilinks]]` (incoming + outgoing edges)
 
 **Returns** `{ start, depth, context: [page paths], manual_reindex_recommended }`.
 
-### `think(topic: str, k: int = 8, depth: int = 1)`
+### `think(topic: str, k: int = 8, depth: int = 1, path: str | null = null)`
 
-Thinking-mode: related notes + Socratic prompts + tensions. **Read-only by construction**
-— `wrote` is always `false`; it never writes.
+Thinking-mode: related notes, Socratic prompts, and structured unlinked pairs.
+**Read-only by construction** — `wrote` is always `false`; it never writes.
+Pass the active note's repo-relative `path` to exclude it from its own results. If
+self-exclusion removes the only retrieval hit, `think` falls back to the active note's
+explicit graph context, surfacing linked neighbours as low-confidence `graph` channel
+related notes instead of returning a blank thinking surface.
 
-**Returns** `{ topic, wrote: false, related, context, questions, tensions,
+**Returns** `{ topic, wrote: false, related, context, questions, unlinked,
 degraded_lexical_only, note, manual_reindex_recommended }`.
 
 ### `resolve(name: str)`
