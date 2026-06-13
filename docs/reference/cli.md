@@ -81,7 +81,8 @@ JSON output includes `root`, `depth`, `folders`, `truncated`, `omitted`,
 content}` when the requested root has a direct `AGENTS.md` file, falls back to direct
 `CLAUDE.md` when `AGENTS.md` is absent, and is `null` when neither exists. Child-folder
 instruction files are not returned for a parent listing; pass that child path as `--root` to
-read its local guidance.
+read its local guidance. The returned content redacts local absolute paths and endpoint URLs
+before printing JSON, while preserving repo-relative paths.
 
 Use this before writes when the destination is unclear. Durable project memory belongs in
 Hypermnesic; behavioural preference/session memory belongs in Honcho or an equivalent adjacent
