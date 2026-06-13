@@ -17,7 +17,10 @@ excludes the leaf, so a bare prefix would mis-read ``projects/scripts/`` as writ
 
 from __future__ import annotations
 
+import re
+from ipaddress import ip_address, ip_network
 from pathlib import Path, PurePosixPath
+from urllib.parse import urlsplit
 
 from hypermnesic import config, serialize
 
@@ -26,6 +29,14 @@ from hypermnesic import config, serialize
 # a real path; classified by serialize.writable_reason like any other write target.
 _PROBE = "__probe__.md"
 _INSTRUCTION_CANDIDATES = ("AGENTS.md", "CLAUDE.md")
+_URL_RE = re.compile(r"https?://[^\s<>()\"'`]+")
+_LOCAL_ABSPATH_RE = re.compile(
+    r"(?<![\w.-])/"
+    r"(?:Users|home|root|var|etc|opt|srv|mnt|Volumes|tmp|run|private)"
+    r"(?:/[^\s<>()\"'`]+)+"
+)
+_TRAILING_PUNCT = ".,;:!?"
+_TAILNET_CGNAT = ip_network("100.64.0.0/10")
 
 
 def normalize_root(root: str | None) -> str:
@@ -44,6 +55,45 @@ def normalize_root(root: str | None) -> str:
     return "/".join(parts) + "/" if parts else ""
 
 
+def _sanitize_instruction_content(content: str) -> str:
+    """Keep repo guidance useful while removing host-local coordinates.
+
+    Instruction files can legitimately mention local deployment paths or private
+    MCP endpoints. `list_folders` is a remote read surface, so those coordinates
+    must not be echoed to ChatGPT/Claude clients as raw metadata.
+    """
+    def split_token(match: re.Match[str]) -> tuple[str, str]:
+        suffix = ""
+        token = match.group(0)
+        while token and token[-1] in _TRAILING_PUNCT:
+            suffix = token[-1] + suffix
+            token = token[:-1]
+        return token, suffix
+
+    def is_private_host(host: str) -> bool:
+        if host in {"localhost", "127.0.0.1", "::1"} or host.endswith(".ts.net"):
+            return True
+        try:
+            addr = ip_address(host.strip("[]"))
+        except ValueError:
+            return False
+        return addr.is_private or addr.is_loopback or addr in _TAILNET_CGNAT
+
+    def redact_url(match: re.Match[str]) -> str:
+        token, suffix = split_token(match)
+        parts = urlsplit(token)
+        if parts.path.rstrip("/") == "/mcp" or is_private_host(parts.hostname or ""):
+            return f"<endpoint-url>{suffix}"
+        return f"{token}{suffix}"
+
+    def redact_path(match: re.Match[str]) -> str:
+        _, suffix = split_token(match)
+        return f"<local-path>{suffix}"
+
+    content = _URL_RE.sub(redact_url, content)
+    return _LOCAL_ABSPATH_RE.sub(redact_path, content)
+
+
 def agent_instruction_for_root(repo: Path, root: str | None) -> dict | None:
     """Return the direct instruction file for ``root`` if present.
 
@@ -56,7 +106,8 @@ def agent_instruction_for_root(repo: Path, root: str | None) -> dict | None:
     for name in _INSTRUCTION_CANDIDATES:
         candidate = base / name
         if candidate.is_file():
-            return {"source": name, "content": candidate.read_text(encoding="utf-8")}
+            content = candidate.read_text(encoding="utf-8")
+            return {"source": name, "content": _sanitize_instruction_content(content)}
     return None
 
 
