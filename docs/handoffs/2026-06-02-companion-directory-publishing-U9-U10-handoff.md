@@ -66,7 +66,7 @@ link resolves and directory users have something to run.
   - `trufflehog git file://. --branch=all` (or `trufflehog git <url> --only-verified`)
 - **Pass criterion:** zero live credentials **and** zero private IPs outside IANA
   documentation ranges. Known specific risk: the pre-scrub homelab Tailscale IP
-  **`100.64.0.55`** in old plugin-source commits.
+  **`<your-host>.ts.net`** in old plugin-source commits.
 - **Remediation:** `git-filter-repo` history rewrite, or prefer a **fresh
   clean-history public repo** if the rewrite scope is large.
 - Treat the public flip as **permanent disclosure**.

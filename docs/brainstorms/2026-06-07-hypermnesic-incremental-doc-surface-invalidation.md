@@ -8,7 +8,7 @@ That is too expensive and product-wise wrong: a single edited file should not re
 
 ## Evidence From Current Implementation
 
-Source inspected in `<home>/.hermes/plugins/hypermnesic` on `main` with a clean worktree.
+Source inspected in `/path/to/.hermes/plugins/hypermnesic` on `main` with a clean worktree.
 
 Relevant current behavior:
 
@@ -297,7 +297,7 @@ Do not use the production `gbrain-brain` index as the only verification surface.
 
 ## Recommended Next Step
 
-Run `/ce-plan` to turn this into an implementation plan against `<home>/.hermes/plugins/hypermnesic`, with a TDD sequence:
+Run `/ce-plan` to turn this into an implementation plan against `/path/to/.hermes/plugins/hypermnesic`, with a TDD sequence:
 
 1. Add failing tests for existing-doc edit invalidation.
 2. Implement minimal `vec_docs` invalidation on changed-path lexical upsert.

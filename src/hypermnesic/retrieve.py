@@ -180,7 +180,13 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
     hits: list[Hit] = []
     seen_text: set[str] = set()
     for cid, score in ranked[:candidate_k]:
-        ch = idx.get_chunk(cid)
+        try:
+            ch = idx.get_chunk(cid)
+        except KeyError:
+            # A concurrent projection update can leave stale FTS/vector candidates
+            # visible to a reader briefly. The git tree remains source of truth, so
+            # ignore orphaned index rows instead of failing recall.
+            continue
         if exclude_path is not None and ch["path"] == exclude_path:
             continue                       # self-exclusion (U42); never its own match
         if collapse_duplicates:
