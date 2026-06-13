@@ -21,6 +21,21 @@ the environment or a gitignored repo-root `.env`); without it, retrieval degrade
 lexical-only — which is also how the test suite runs (the key is neutralized so tests
 are deterministic and offline).
 
+The cold release-verification path was checked on 2026-06-13 from a fresh clone with
+no repo `.env`, an empty `HOME`, an empty `UV_CACHE_DIR`, and `OPENAI_API_KEY` unset.
+Use these as ballpark wall-clock expectations on a Linux runner with Python 3.11:
+
+| Step | Expected runtime |
+|---|---:|
+| `uv sync --extra dev` | < 1 minute from an empty uv cache |
+| `uv run ruff check .` | < 1 minute |
+| `uv run python scripts/check_version_consistency.py` | < 1 minute |
+| `uv run pytest` | about 3 minutes |
+| `uv run python scripts/license_scan.py` | < 1 minute |
+| `uv run python scripts/preflight_public_scan.py` | < 1 minute |
+
+The full local gate loop should fit comfortably under 5 minutes on that class of machine.
+
 ## The gates (run these before every PR)
 
 CI runs one job, `lint-test-license`, which is exactly the following steps. Run them
