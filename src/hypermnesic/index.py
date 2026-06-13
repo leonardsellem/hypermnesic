@@ -25,6 +25,7 @@ from hypermnesic import config, ingest, serialize
 
 STATE_DIRNAME = ".hypermnesic"
 _BATCH = 128
+_FTS_TEXT_VERSION = "2"
 _LEXICAL_FALLBACK_STOPWORDS = {
     "a", "an", "and", "are", "about", "do", "for", "in", "is", "it", "of", "on",
     "or", "the", "to", "what", "we",
@@ -83,6 +84,7 @@ class Index:
         self.db_path = Path(db_path)
         self.conn = sqlite3.connect(self.db_path)
         _load_vec(self.conn)
+        self.refresh_fts_projection_if_needed()
 
     def create_schema(self) -> None:
         c = self.conn
@@ -110,6 +112,44 @@ class Index:
         )
         c.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
         c.commit()
+        self.refresh_fts_projection_if_needed()
+
+    def refresh_fts_projection_if_needed(self) -> bool:
+        """Keep the disposable lexical projection aligned with ``chunks`` rows.
+
+        Older indexes stored only chunk body text in FTS. Rebuilding FTS from the
+        already-indexed ``chunks`` table is cheap, deterministic, and requires no
+        embeddings, so degraded lexical recall can self-heal on open.
+        """
+        tables = {
+            row[0] for row in self.conn.execute(
+                "SELECT name FROM sqlite_master WHERE type IN ('table', 'virtual table')"
+            ).fetchall()
+        }
+        if not {"chunks", "fts_chunks", "meta"}.issubset(tables):
+            return False
+        row = self.conn.execute(
+            "SELECT value FROM meta WHERE key='fts_text_version'"
+        ).fetchone()
+        if row and row[0] == _FTS_TEXT_VERSION:
+            return False
+        chunk_rows = self.conn.execute(
+            "SELECT chunk_id, heading, text FROM chunks ORDER BY chunk_id"
+        ).fetchall()
+        self.conn.execute("DELETE FROM fts_chunks")
+        self.conn.executemany(
+            "INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)",
+            [
+                (cid, f"{heading}\n{text}" if heading else text)
+                for cid, heading, text in chunk_rows
+            ],
+        )
+        self.conn.execute(
+            "INSERT OR REPLACE INTO meta (key, value) VALUES ('fts_text_version', ?)",
+            (_FTS_TEXT_VERSION,),
+        )
+        self.conn.commit()
+        return True
 
     def add_documents(self, chunks: list[ingest.Chunk],
                       vectors: list[list[float]]) -> None:
