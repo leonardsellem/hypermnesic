@@ -69,7 +69,7 @@ The single canary `commit_note` ran through the live master and validated end-to
 | Committed | `801fcc69` — `created:true, noop:false` |
 | On `origin/main` (U11 push) | ✅ `origin/main == 801fcc69` (no local-ahead) |
 | **Path-scoped** (no foreign sweep) | ✅ commit contains *only* `sources/hypermnesic-canary-2026-06-02.md` |
-| Audited | ✅ 1 entry — `verb=create`, server-set actor `tailnet:homelab.<tailnet-host>.ts.net` |
+| Audited | ✅ 1 entry — `verb=create`, server-set actor `tailnet:<your-host>.ts.net` |
 | Ingested (live Supabase) | ✅ `gbrain sync 6e1c6718..801fcc69` imported it (slug row confirmed) |
 | **U12 `.gitignore` stable** | ✅ byte-identical across the sync (`GBRAIN_NO_GITIGNORE=1` held) |
 | Recall-able | ✅ gbrain (DB row) **and** hypermnesic dense MCP search (`recalled=True, degraded=False`) |

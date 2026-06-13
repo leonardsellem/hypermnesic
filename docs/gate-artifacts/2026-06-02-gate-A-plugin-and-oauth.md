@@ -41,10 +41,10 @@ Gate-A criterion is GREEN; only the operator's explicit approval remains.**
 The homelab Gate-A rollout is **live** (option-2, companion-safe; mirrored to
 `gbrain-brain/projects/homelab/services/hypermnesic-as.md` + `LOG.md`):
 
-- **AS** `hypermnesic-as.service` — `100.64.0.55:8849`, `client_credentials` + RFC 8707 audience
+- **AS** `hypermnesic-as.service` — `<your-host>.ts.net:8849`, `client_credentials` + RFC 8707 audience
   + RFC 7662 introspection + DCR-locked. 4 identities enrolled (homelab-claude, homelab-codex,
   Mac, RS); secrets in `~/.config/hypermnesic-as/*.env` (0600).
-- **Write master (auth-on)** `hypermnesic-master-auth.service` — `100.64.0.55:8851`, write-enabled,
+- **Write master (auth-on)** `hypermnesic-master-auth.service` — `<your-host>.ts.net:8851`, write-enabled,
   introspects the AS. **Live-verified: unauth `commit_note` → 401, authed `search` → 200.**
 - **Companion preserved** — `:8848` flipped to **read-only auth-off** (`tools/list` =
   `[search, build_context, think]`, `commit_note` retired, reads → 200). The Obsidian companion
@@ -69,7 +69,7 @@ ephemeral-proven (the live `:8851` uses the same `StrictResourceTokenVerifier`).
 | 0 | `uv run pytest tests/` exit 0 | ✅ PASS | **465 passed, 1 skipped** (this session); ruff clean. Named set test_cli/graph/mcp_server/converge/auth/install/plugin/plugin_hook all green (+ test_auth_server/auth_cloud). |
 | 1 | Unauth `tools/call` to **commit_note** rejected | ✅ PASS (live) | Ephemeral HTTP proof: `commit_note` unauthenticated → **HTTP 401**. Unit: `test_mcp_server` auth suite. |
 | 2 | Wrong-audience token rejected (RFC 8707) | ✅ PASS (live) | Ephemeral proof: token minted for `…/other` → **HTTP 401** against the `…/mcp` RS. Unit: `test_auth::test_wrong_audience_rejected_rfc8707`. |
-| 3 | Write-master refuses to start auth-off | ✅ PASS (live) | `serve --enable-write --host 100.64.0.55` (no auth) → **exit 1**, clear message. Unit: `test_mcp_server::test_write_enabled_without_auth_refused`. |
+| 3 | Write-master refuses to start auth-off | ✅ PASS (live) | `serve --enable-write --host <your-host>.ts.net` (no auth) → **exit 1**, clear message. Unit: `test_mcp_server::test_write_enabled_without_auth_refused`. |
 | 4 | Live AS issues a token; full AS→RS loop works | ✅ PASS (live, homelab) | Ephemeral proof: AS `client_credentials` mint → valid token → `commit_note` **HTTP 200** (introspection + audience check over the wire). Unit end-to-end: `test_auth_server::test_end_to_end_as_token_validates_through_rs_verifier`. |
 | 5 | AS round-trip from a **2nd tailnet peer (the Mac)** | ✅ PASS (operator evidence in, 2026-06-03) | Mac (HEAD `254b3c7`, 69e0096 present): token minted on-Mac via `:8849` (client_id=mac, aud `…/mcp`, scope=write, never printed). unauth `:8851`→**401** (RFC 9728 `resource_metadata=…/oauth-protected-resource/mcp`); authed `tools/list`→**200** `[build_context, commit_note, resolve, search, think]`; authed `search "gbrain decommission"`→**200, 3 hits**. Plugin reinstalled from the branch: Claude **✔ enabled**, Codex **installed, enabled**, clean tree, hook **silent on missing token** (live). |
 | 6 | All **three identities** provisioned (homelab Claude, homelab Codex, Mac) | ✅ PASS | All three enrolled (secrets in chmod-600 env files, never echoed); the Mac minted + round-tripped a `write` token. |
