@@ -1,5 +1,4 @@
 # Source copy used by the public-flip PR for root CITATION.cff.
-# Set `date-released` when the first public release tag is cut.
 cff-version: 1.2.0
 message: "If you use hypermnesic in your research or work, please cite it as below."
 title: hypermnesic
@@ -17,7 +16,8 @@ authors:
     given-names: Leonard
     email: leonard@sellem.me
 license: AGPL-3.0-only
-version: 0.0.6
+version: 0.1.0
+date-released: 2026-06-14
 repository-code: "https://github.com/leonardsellem/hypermnesic"
 url: "https://github.com/leonardsellem/hypermnesic"
 keywords:
