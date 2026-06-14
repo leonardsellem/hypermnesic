@@ -59,6 +59,7 @@ class ThinkResult:
     questions: list[str]
     unlinked: list[dict]        # related-but-not-yet-linked pairs (U45, was prose "tensions")
     degraded: bool
+    degraded_reason: str | None = None
     note: str = ""
     _hits: list = field(default_factory=list, repr=False)
 
@@ -71,6 +72,7 @@ class ThinkResult:
             "questions": self.questions,
             "unlinked": self.unlinked,
             "degraded_lexical_only": self.degraded,
+            "degraded_reason": self.degraded_reason,
             "note": self.note,
         }
 
@@ -192,4 +194,4 @@ def think(idx, topic: str, *, embedder=None, graph=None, k: int = 8, depth: int 
 
     return ThinkResult(topic=topic, wrote=False, related=related, context=context,
                        questions=questions, unlinked=unlinked, degraded=res.degraded,
-                       note=note, _hits=hits)
+                       degraded_reason=res.degraded_reason, note=note, _hits=hits)

@@ -33,6 +33,10 @@ CONVERGE_EMBED_BUDGET = 128       # per-lane stale chunk/doc surfaces embedded p
 CONVERGE_DEBOUNCE_SECONDS = 5.0   # skip re-convergence within this window
 CONVERGE_MAX_DELTA_FILES = 200    # over this many changed md files → signal manual reindex
 
+# Cool down OpenAI embedding calls after a rate-limit/quota 429 so remote clients
+# keep serving lexical/graph results without hammering the provider on every read.
+EMBED_FAILURE_COOLDOWN_SECONDS = 300.0
+
 # --- list_folders discovery bounds (U2) ----------------------------------------
 # Mirror the CONVERGE_MAX_DELTA_FILES "cap + emit a signal" precedent: a large vault
 # returns a bounded folder payload (sorted before the cap → a deterministic tail is

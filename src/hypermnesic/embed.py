@@ -8,11 +8,27 @@ proceeds with zero-vectors.
 
 from __future__ import annotations
 
+import time
+
 from hypermnesic import config
 
 
 class EmbeddingError(RuntimeError):
     """Raised when embedding fails — never swallowed, never zero-filled."""
+
+    def __init__(self, message: str, *, reason: str = "embedding_error"):
+        super().__init__(message)
+        self.reason = reason
+
+
+def _embedding_failure_reason(exc: Exception) -> str:
+    """Classify provider failures without depending on a concrete SDK response body."""
+    status = getattr(exc, "status_code", None)
+    if status == 429 or exc.__class__.__name__ == "RateLimitError":
+        return "rate_limited"
+    if status is not None:
+        return "api_error"
+    return "embedding_error"
 
 
 class OpenAIEmbedder:
@@ -20,12 +36,19 @@ class OpenAIEmbedder:
 
     def __init__(self, api_key: str | None = None,
                  model: str = config.EMBED_MODEL, dim: int = config.EMBED_DIM,
-                 repo=None):
+                 repo=None, cooldown_seconds: float | None = None, now_fn=None):
         self.model = model
         self.dim = dim
         self.repo = repo
         self._api_key = api_key  # resolved lazily so construction never echoes
         self._client = None
+        self.cooldown_seconds = (
+            config.EMBED_FAILURE_COOLDOWN_SECONDS
+            if cooldown_seconds is None else cooldown_seconds
+        )
+        self._now = now_fn or time.time
+        self._cooldown_until = 0.0
+        self._cooldown_reason: str | None = None
 
     def _get_client(self):
         if self._client is None:
@@ -40,14 +63,27 @@ class OpenAIEmbedder:
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
+        now = self._now()
+        if self._cooldown_until > now:
+            remaining = max(0.0, self._cooldown_until - now)
+            reason = self._cooldown_reason or "embedding_error"
+            raise EmbeddingError(
+                f"embedding temporarily disabled after {reason}; "
+                f"retry after {remaining:.0f}s",
+                reason="cooldown",
+            )
         try:
             resp = self._get_client().embeddings.create(
                 model=self.model, input=texts, dimensions=self.dim,
             )
         except config.ConfigError as exc:
-            raise EmbeddingError(str(exc)) from exc
+            raise EmbeddingError(str(exc), reason="configuration") from exc
         except Exception as exc:  # surface as a clear top-level error
-            raise EmbeddingError(f"embedding request failed: {exc}") from exc
+            reason = _embedding_failure_reason(exc)
+            if reason == "rate_limited" and self.cooldown_seconds > 0:
+                self._cooldown_until = now + self.cooldown_seconds
+                self._cooldown_reason = reason
+            raise EmbeddingError(f"embedding request failed: {exc}", reason=reason) from exc
         vectors = [d.embedding for d in resp.data]
         for v in vectors:
             if len(v) != self.dim:
