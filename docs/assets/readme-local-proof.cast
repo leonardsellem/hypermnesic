@@ -1,0 +1,7 @@
+{"version": 2, "width": 80, "height": 24, "timestamp": 1781454168, "env": {"SHELL": "/bin/bash", "TERM": "dumb"}, "title": "Hypermnesic local proof"}
+[0.005997, "o", "$ hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo\r\n"]
+[5.352997, "o", "Local memory works\r\n  source: memory/local-proof-memory.md\r\n  index: .hypermnesic/index.db (disposable projection)\r\n  recall: Local proof memory\r\n  preview: memory/local-proof-preview.md (dry-run, no commit)\r\n  note: Local memory still works from exact text in your markdown files; embeddings improve ranking and fuzzy recall when configured.\r\n  next: Local memory works. Next, connect remote clients after running setup diagnostics from the next sprint.\r\n"]
+[17.36636, "o", "\r\n$ git -C /tmp/hypermnesic-demo status --short\r\n"]
+[32.397233, "o", "\r\n$ head -8 /tmp/hypermnesic-demo/memory/local-proof-memory.md\r\n"]
+[37.402193, "o", "# Local proof memory\r\n\r\nQuestion answered: what should Hypermnesic remember about the demo vault\r\n\r\nHypermnesic remembers that markdown files are the source of truth, git keeps provenance, and the disposable index makes those files searchable.\r\n"]
+[65.406116, "o", "\r\n# Result: source-grounded recall + dry-run write preview, with markdown and git as truth.\r\n"]
