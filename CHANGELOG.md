@@ -27,6 +27,8 @@ its own changelog and version.
 
 ### Changed
 - GitHub repository description and topics were applied for the public release presentation pass.
+- Directory-submission prep now reflects the current MCP Registry schema constraint,
+  the open awesome-mcp-servers PR, and the Obsidian PR permission handoff.
 
 ## [0.1.0] — 2026-06-14
 
