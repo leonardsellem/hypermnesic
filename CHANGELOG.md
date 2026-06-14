@@ -21,6 +21,7 @@ its own changelog and version.
 - PyPI publication decision memo for the one-command install gate.
 - Launch-week first-contact response SLO checklist and baseline.
 - Launch narrative and channel-specific post drafts tied to readiness evidence.
+- Launch sequencing plan and public-launch retro template.
 - GitHub Discussions welcome and public roadmap prep for the contribution funnel.
 
 ### Changed
