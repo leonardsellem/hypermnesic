@@ -201,7 +201,27 @@ def test_reads_degrade_to_lexical_when_embedder_down(make_corpus, fake_embedder)
     srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=_DownEmbedder(), repo=repo)
     out = _call(srv, "search", {"query": "DOWNMARKER"})
     assert out["degraded_lexical_only"] is True            # dense channel absent, flagged
+    assert out["degraded_reason"] == "embedding_error"
     assert any(h["path"] == "a.md" for h in out["hits"])   # lexical still answers; no error
+
+
+def test_think_surfaces_rate_limit_degraded_reason(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nRATELIMITMARKER alpha homelab.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+
+    class RateLimitedEmbedder:
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            raise embed_mod.EmbeddingError("quota exhausted", reason="rate_limited")
+
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=RateLimitedEmbedder(), repo=repo)
+    out = _call(srv, "think", {"topic": "RATELIMITMARKER"})
+
+    assert out["degraded_lexical_only"] is True
+    assert out["degraded_reason"] == "rate_limited"
+    assert any(h["path"] == "a.md" for h in out["related"])
 
 
 def test_search_response_carries_recency_field(make_corpus, fake_embedder):

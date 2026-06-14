@@ -178,6 +178,7 @@ def _cmd_retrieve(args) -> int:
     out = {
         "query": args.query,
         "degraded_lexical_only": res.degraded or cr.degraded,
+        "degraded_reason": cr.degraded_reason or res.degraded_reason,
         "manual_reindex_recommended": cr.manual_reindex_recommended,   # U1: surface (was dropped)
         "hits": [
             {"path": h.path, "heading": h.heading, "score": round(h.score, 6),

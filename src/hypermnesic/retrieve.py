@@ -86,6 +86,7 @@ class SearchResult:
     hits: list[Hit]
     dense_used: bool
     lexical_used: bool
+    degraded_reason: str | None = None
 
     @property
     def degraded(self) -> bool:
@@ -151,15 +152,18 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
 
     # dense channel (graceful degradation on embedding failure), fused across variants
     dense_used = False
+    degraded_reason: str | None = "missing_embedder" if embedder is None else None
     orig_qvec = None
     for n, qi in enumerate(queries):
         try:
             qvec = embedder.embed([qi])[0] if embedder is not None else None
-        except embed_mod.EmbeddingError:
+        except embed_mod.EmbeddingError as exc:
+            degraded_reason = exc.reason
             qvec = None
         if qvec is None:
             continue
         dense_used = True
+        degraded_reason = None
         if n == 0:
             orig_qvec = qvec
         for rank, (cid, _dist) in enumerate(idx.dense_search(qvec, k=candidate_k)):
@@ -205,4 +209,11 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
         tail = [h for h in hits if h.chunk_id not in seen]
         hits = head + tail
 
-    return SearchResult(hits=hits[:k], dense_used=dense_used, lexical_used=lexical_used)
+    if not dense_used and degraded_reason is None:
+        degraded_reason = "embedding_error"
+    return SearchResult(
+        hits=hits[:k],
+        dense_used=dense_used,
+        lexical_used=lexical_used,
+        degraded_reason=degraded_reason,
+    )

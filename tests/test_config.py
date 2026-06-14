@@ -149,6 +149,59 @@ def test_openai_embedder_uses_repo_context_for_lazy_key_lookup(monkeypatch, tmp_
     assert seen["repo"] == repo
 
 
+def test_openai_embedder_rate_limit_enters_cooldown(monkeypatch):
+    from hypermnesic.embed import EmbeddingError, OpenAIEmbedder
+
+    calls = {"n": 0}
+    now = {"t": 1000.0}
+
+    class RateLimited(Exception):
+        status_code = 429
+
+    class FakeEmbeddings:
+        def create(self, **_kwargs):
+            calls["n"] += 1
+            raise RateLimited("quota exhausted")
+
+    class FakeClient:
+        def __init__(self, *, api_key):
+            self.api_key = api_key
+            self.embeddings = FakeEmbeddings()
+
+    monkeypatch.setattr("openai.OpenAI", FakeClient)
+
+    emb = OpenAIEmbedder(
+        api_key="env-test-key",
+        cooldown_seconds=60.0,
+        now_fn=lambda: now["t"],
+    )
+
+    try:
+        emb.embed(["first"])
+    except EmbeddingError as exc:
+        assert exc.reason == "rate_limited"
+    else:  # pragma: no cover - assertion clarity
+        raise AssertionError("expected rate-limit failure")
+
+    try:
+        emb.embed(["second"])
+    except EmbeddingError as exc:
+        assert exc.reason == "cooldown"
+        assert "rate_limited" in str(exc)
+    else:  # pragma: no cover - assertion clarity
+        raise AssertionError("expected cooldown failure")
+
+    assert calls["n"] == 1
+
+    now["t"] = 1061.0
+    try:
+        emb.embed(["third"])
+    except EmbeddingError as exc:
+        assert exc.reason == "rate_limited"
+
+    assert calls["n"] == 2
+
+
 def test_smoke_embed_or_die_uses_repo_context(monkeypatch, tmp_path):
     from hypermnesic import embed
 
