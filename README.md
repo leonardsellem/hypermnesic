@@ -1,11 +1,8 @@
 # hypermnesic
 
-<!-- Badges are STAGED — they 404 on a private repo (shields.io needs a public repo), and the
-     license badge presumes the AGPL flip. The public-flip PR activates them (docs/launch/).
 [![CI](https://github.com/leonardsellem/hypermnesic/actions/workflows/ci.yml/badge.svg)](https://github.com/leonardsellem/hypermnesic/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/tag/leonardsellem/hypermnesic?label=version)](CHANGELOG.md)
--->
 
 **The git-native memory layer for AI agents.** A self-hosted second brain where your
 markdown files are the **single source of truth** and the search index is a disposable,
@@ -25,8 +22,9 @@ Product proof is tracked separately: use the
 [first-class product readiness checklist](docs/launch/first-class-product-readiness-checklist.md)
 before claiming release readiness.
 
-> **Status:** private, pre-release. The public open-source license (AGPL-3.0) is **staged,
-> not yet live** — see [`docs/launch/`](docs/launch/).
+> **Status:** private, pre-release. The engine is now licensed under **AGPL-3.0-only**;
+> repository visibility, git-history rewrite, and public release steps remain gated by
+> [`docs/launch/`](docs/launch/).
 
 ---
 
@@ -268,19 +266,17 @@ logged or committed.
 
 ## License
 
-Proprietary / private (pre-release). See [LICENSE](LICENSE). The public open-source license is a
-staged, pre-public decision — the planned engine license is **AGPL-3.0** (the staged text + a
-one-PR flip runbook live in `docs/launch/`).
+Hypermnesic is licensed under **AGPL-3.0-only**. See [LICENSE](LICENSE).
 
 The `scripts/license_scan.py` "zero AGPL/GPL/SSPL" gate is **dependency-scoped**: it governs
 hypermnesic's *third-party dependencies*, keeping the dependency tree copyleft-free. It does **not**
-govern — and is not contradicted by — the engine's own (planned-AGPL) license: the gate excludes the
+govern — and is not contradicted by — the engine's own AGPL license: the gate excludes the
 project's own distribution before classifying, so it stays green when the engine itself is licensed
 AGPL-3.0. Third-party dependencies are permissive and verified copyleft-free on every CI run.
 
 **Engine ↔ companion license boundary.** The Obsidian companion ships from a separate repository
-under **GPL-3.0**; the engine's planned license is **AGPL-3.0**. Neither is a derivative of the
-other — and that holds **because** they are separate processes that communicate only at arm's
+under **GPL-3.0**; the engine is licensed under **AGPL-3.0-only**. Neither is a derivative of the
+other, and that holds **because** they are separate processes that communicate only at arm's
 length over the MCP network protocol (`search` / `build_context` / `think`), with no shared or
 statically-linked code. The boundary stays true only while the **companion does not vendor,
 import, or statically link engine source** (the read-only-over-the-wire invariant). Keep that
