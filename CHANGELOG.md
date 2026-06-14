@@ -23,6 +23,7 @@ its own changelog and version.
 - Launch narrative and channel-specific post drafts tied to readiness evidence.
 - Launch sequencing plan and public-launch retro template.
 - GitHub Discussions welcome and public roadmap prep for the contribution funnel.
+- Live GitHub Discussions links in README/docs for the welcome thread and public roadmap.
 
 ### Changed
 - GitHub repository description and topics were applied for the public release presentation pass.

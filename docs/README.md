@@ -48,6 +48,10 @@ never misleads you.
 - **License:** the engine is **AGPL-3.0-only**. The repository is public after the
   history-rewrite, license-flip, release, and visibility-flip gates recorded in
   [`launch/`](launch/).
+- **Public roadmap/community:** GitHub Discussions are the public community surface:
+  [welcome](https://github.com/leonardsellem/hypermnesic/discussions/73) and
+  [roadmap](https://github.com/leonardsellem/hypermnesic/discussions/74). The roadmap
+  discussion is the public direction pin; this docs index remains the reference truth pin.
 
 ## Durable reference (start here)
 
@@ -72,6 +76,7 @@ never misleads you.
 | Changelog | [`../CHANGELOG.md`](../CHANGELOG.md) |
 | Deploy (current) | [`unified-oauth-mcp-deploy-runbook.md`](unified-oauth-mcp-deploy-runbook.md) |
 | Agent plugins and hook status | [`../plugin/README.md`](../plugin/README.md) |
+| Public community and roadmap | [Welcome discussion](https://github.com/leonardsellem/hypermnesic/discussions/73), [roadmap discussion](https://github.com/leonardsellem/hypermnesic/discussions/74) |
 | Product/design reports | [`reports/2026-06-04-hypermnesic-product-design-review.md`](reports/2026-06-04-hypermnesic-product-design-review.md) |
 | Security reviews (dated deltas) | [`2026-06-03-unified-write-anywhere-security-review.md`](2026-06-03-unified-write-anywhere-security-review.md), [`2026-06-03-blocklist-write-surface-security-review.md`](2026-06-03-blocklist-write-surface-security-review.md) |
 
