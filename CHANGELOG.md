@@ -18,6 +18,7 @@ its own changelog and version.
 - Repository social-preview asset for the public GitHub presentation.
 - Directory-submission prep for the official MCP Registry, awesome-mcp-servers, and
   Obsidian community plugin directory.
+- GitHub Discussions welcome and public roadmap prep for the contribution funnel.
 
 ### Changed
 - GitHub repository description and topics were applied for the public release presentation pass.
