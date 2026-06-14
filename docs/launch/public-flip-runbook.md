@@ -89,10 +89,11 @@ are recorded below).
 - [x] `gh repo edit <owner>/hypermnesic --visibility public`
 - [x] Enable GitHub **private vulnerability reporting** (off by default for
       repos that were private) so `SECURITY.md`'s reporting channel is live.
-- [ ] Confirm the community profile is 100% (LICENSE, CODE_OF_CONDUCT, CONTRIBUTING,
+- [x] Confirm the community profile is 100% (LICENSE, CODE_OF_CONDUCT, CONTRIBUTING,
       SECURITY, issue/PR templates all detected).
-      Post-flip verification reports 85%; final repository description, topics, and
-      social preview are tracked by PR-13 / LS-1682.
+- [ ] Upload `docs/assets/social-preview.png` in GitHub Settings -> Social preview.
+      GitHub documents this as a manual PNG/JPG/GIF upload flow; there is no supported
+      REST or GraphQL upload endpoint.
 
 ---
 

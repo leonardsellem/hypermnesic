@@ -61,13 +61,15 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 ## 7. Community profile
 
-- [ ] GitHub community profile reads 100%: LICENSE, CODE_OF_CONDUCT, CONTRIBUTING,
+- [x] GitHub community profile reads 100%: LICENSE, CODE_OF_CONDUCT, CONTRIBUTING,
       SECURITY, issue templates, PR template all detected.
-      As of PR-10 post-flip verification the API reports 85%; final repo description,
-      topics, and social preview are tracked by PR-13 / LS-1682.
+      Confirmed after PR-13 / LS-1682 repo description/topics were applied.
+- [ ] Upload `docs/assets/social-preview.png` in GitHub Settings -> Social preview.
+      GitHub documents this as a manual PNG/JPG/GIF upload flow; there is no supported
+      REST or GraphQL upload endpoint.
 
 ## 8. Visibility (runbook Step 8 — last)
 
 - [x] `gh repo edit <owner>/hypermnesic --visibility public`.
 - [x] Smoke-check: README badges resolve; benchmark link works; community profile checked.
-      Community profile 100% remains pending PR-13 repo positioning.
+      Custom Social preview remains pending the manual GitHub Settings upload.
