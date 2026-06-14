@@ -277,6 +277,11 @@ Start with the [documentation index](docs/README.md). Highlights:
   — the write-path threat model and the public write-surface review.
 - `implementation-notes.md` — running log of decisions and deviations.
 
+## Community
+
+- [Welcome discussion](https://github.com/leonardsellem/hypermnesic/discussions/73) — project overview, support boundaries, and contribution entry points.
+- [Public roadmap](https://github.com/leonardsellem/hypermnesic/discussions/74) — near-term launch work, contribution funnel, and current non-goals.
+
 ## Develop
 
 ```sh
