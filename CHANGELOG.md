@@ -19,6 +19,7 @@ its own changelog and version.
 - Directory-submission prep for the official MCP Registry, awesome-mcp-servers, and
   Obsidian community plugin directory.
 - PyPI publication decision memo for the one-command install gate.
+- Launch-week first-contact response SLO checklist and baseline.
 - GitHub Discussions welcome and public roadmap prep for the contribution funnel.
 
 ### Changed
