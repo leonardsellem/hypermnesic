@@ -40,6 +40,16 @@ Do not submit from this document without operator approval.
 
 - Companion `versions.json` contains `"0.3.0": "1.5.0"`.
 - Official MCP Registry search for `hypermnesic` currently returns no entries.
+- Official `mcp-publisher validate` passes for the staged registry draft after the
+  description was shortened to the current <=100 character schema limit.
+- Official MCP Registry publication is blocked in this environment until an operator
+  completes `mcp-publisher login github`.
+- `punkpeye/awesome-mcp-servers` PR opened:
+  `https://github.com/punkpeye/awesome-mcp-servers/pull/8056`.
+- Obsidian community-plugin submission branch is prepared:
+  `https://github.com/leonardsellem/obsidian-releases/tree/add-hypermnesic-companion`.
+  Creating the upstream PR from this environment failed because the current GitHub token
+  lacks `CreatePullRequest` permission for `obsidianmd/obsidian-releases`.
 
 ## Target 1: official MCP Registry
 
@@ -70,7 +80,7 @@ Draft `server.json` for a self-hosted remote-template listing is stored at
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.leonardsellem/hypermnesic",
   "title": "Hypermnesic",
-  "description": "Git-first memory for AI agents: Markdown files are truth, the index is disposable, and writes are reviewable commits.",
+  "description": "Git-first Markdown memory for AI agents with reviewable commits and a disposable search index.",
   "repository": {
     "url": "https://github.com/leonardsellem/hypermnesic",
     "source": "github"
@@ -90,6 +100,9 @@ Draft `server.json` for a self-hosted remote-template listing is stored at
   ]
 }
 ```
+
+The official MCP Registry currently enforces `description` length <= 100
+characters; keep the draft below that limit.
 
 Approval-gated commands:
 
@@ -147,6 +160,11 @@ Approval-gated actions:
 1. Submit/claim Hypermnesic in Glama if required.
 2. Open the `punkpeye/awesome-mcp-servers` PR.
 
+Current submission state: PR
+`https://github.com/punkpeye/awesome-mcp-servers/pull/8056` is open. Glama search did
+not yet return a Hypermnesic listing at submission time, so the entry does not include a
+Glama score badge yet.
+
 ## Target 3: Obsidian community plugin directory
 
 Source checked:
@@ -183,13 +201,18 @@ The engine README demo and 5-minute proof are at https://github.com/leonardselle
 
 Approval-gated action: open the `obsidianmd/obsidian-releases` PR.
 
+Current submission state: branch
+`https://github.com/leonardsellem/obsidian-releases/tree/add-hypermnesic-companion`
+is pushed and verified. The manual compare URL is
+`https://github.com/obsidianmd/obsidian-releases/compare/master...leonardsellem:obsidian-releases:add-hypermnesic-companion?expand=1`.
+
 ## Readiness checklist
 
-- [ ] Operator approves external official MCP Registry publication.
+- [x] Operator approves external official MCP Registry publication.
 - [ ] Official MCP Registry entry published and search result recorded.
-- [ ] Operator approves Glama / awesome-mcp-servers submission path.
-- [ ] Awesome list PR opened or merged; link recorded.
-- [ ] Operator approves Obsidian community plugin directory submission.
+- [x] Operator approves Glama / awesome-mcp-servers submission path.
+- [x] Awesome list PR opened or merged; link recorded.
+- [x] Operator approves Obsidian community plugin directory submission.
 - [ ] Obsidian submission PR opened; link recorded.
 
 ## Verification after submission
