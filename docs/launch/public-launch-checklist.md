@@ -73,3 +73,8 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 - [x] `gh repo edit <owner>/hypermnesic --visibility public`.
 - [x] Smoke-check: README badges resolve; benchmark link works; community profile checked.
       Custom Social preview remains pending the manual GitHub Settings upload.
+
+## 9. Directories
+
+- [ ] External directory submissions are prepared in `docs/launch/directory-submission-prep.md`.
+      Submit only after the PR-14 operator approval gate.
