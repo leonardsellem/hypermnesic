@@ -94,3 +94,9 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 - [ ] Launch-week response SLO is tracked in `docs/launch/launch-week-response-slo.md`.
       Keep LS-1688 comments as the append-only check log during the launch window.
+
+## 13. Launch narrative
+
+- [ ] Launch narrative and per-channel drafts are staged in
+      `docs/launch/launch-narrative-drafts.md`.
+      Post externally only after the PR-20 operator approval gate.
