@@ -41,6 +41,11 @@ means build the disposable index first, while `vectors_stale_or_absent` means ru
 `hypermnesic converge /path/to/vault --now --json` (or reindex when convergence reports a
 manual reindex recommendation).
 
+When the embedding provider returns a rate-limit/quota response, Hypermnesic opens an
+in-process cooldown before another embedding attempt. Reads continue in lexical/graph mode and
+surface `degraded_reason` (`rate_limited` for the triggering call, `cooldown` during the cooldown)
+so operators can distinguish provider pressure from index corruption.
+
 `HYPERMNESIC_DEFAULT_CLIENT_SCOPES` can also be set as an explicit admin flag:
 `hypermnesic serve-cloud ... --default-client-scopes read write` or
 `hypermnesic setup ... --default-client-scopes read write`. Unsupported scopes fail
@@ -55,6 +60,7 @@ variable, not the model. A dimension mismatch fails fast at startup.
 |---|---|---|
 | `EMBED_MODEL` | `text-embedding-3-large` | The dense embedding model. |
 | `EMBED_DIM` | `1536` | Embedding dimensions (sent explicitly to the API; asserted at startup). |
+| `EMBED_FAILURE_COOLDOWN_SECONDS` | `300.0` | In-process cooldown after an embedding 429, preventing every read from hammering the provider while lexical/graph fallback serves. |
 | `EXPANSION_MODEL` | `gpt-4o-mini` | Optional multi-query expansion (a ranking aid); opt-in, degrades gracefully if unavailable. |
 
 ## Read-time convergence tunables

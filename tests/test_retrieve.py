@@ -65,8 +65,25 @@ def test_graceful_degradation_when_embedding_down(make_corpus, fake_embedder):
     res = retrieve.search(idx, "Hetzner", embedder=DownEmbedder(), k=3)
     assert res.dense_used is False
     assert res.degraded is True          # harness must VOID, not FAIL
+    assert res.degraded_reason == "embedding_error"
     assert res.lexical_used is True
     assert any(h.path == "en.md" for h in res.hits)  # lexical still answers
+    idx.close()
+
+
+def test_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder):
+    idx = _idx(make_corpus, fake_embedder)
+
+    class RateLimitedEmbedder:
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            raise embed_mod.EmbeddingError("quota exhausted", reason="rate_limited")
+
+    res = retrieve.search(idx, "Hetzner", embedder=RateLimitedEmbedder(), k=3)
+
+    assert res.degraded is True
+    assert res.degraded_reason == "rate_limited"
     idx.close()
 
 

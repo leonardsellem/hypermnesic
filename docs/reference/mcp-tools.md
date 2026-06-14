@@ -34,11 +34,13 @@ tool.
 
 Hybrid (lexical + dense) search over the index.
 
-**Returns** `{ query, degraded_lexical_only, manual_reindex_recommended, hits: [ { path,
-heading, score, channels, snippet, recency } ] }`. `channels` records which retrieval
-lanes matched (lexical/dense); `recency` is the epoch-seconds of the most recent commit
+**Returns** `{ query, degraded_lexical_only, degraded_reason, manual_reindex_recommended,
+hits: [ { path, heading, score, channels, snippet, recency } ] }`. `channels` records which
+retrieval lanes matched (lexical/dense); `recency` is the epoch-seconds of the most recent commit
 touching the hit's path (or null if untracked). `degraded_lexical_only` is true when the
-dense channel was unavailable.
+dense channel was unavailable. `degraded_reason` is `null` when dense contributed; otherwise it
+names the provider/config state (`missing_embedder`, `configuration`, `rate_limited`,
+`cooldown`, `api_error`, or `embedding_error`).
 
 ### `hypermnesic_search(query: str, k: int = 10)`
 
@@ -61,7 +63,7 @@ explicit graph context, surfacing linked neighbours as low-confidence `graph` ch
 related notes instead of returning a blank thinking surface.
 
 **Returns** `{ topic, wrote: false, related, context, questions, unlinked,
-degraded_lexical_only, note, manual_reindex_recommended }`.
+degraded_lexical_only, degraded_reason, note, manual_reindex_recommended }`.
 
 ### `resolve(name: str)`
 

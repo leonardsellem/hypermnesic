@@ -290,6 +290,8 @@ client, revocation, or daily-workflow evidence.
 
 Dense retrieval is optional. With no `OPENAI_API_KEY` (or the embedding API
 unreachable), every read still answers from **lexical (FTS5) + graph** and flags
-`degraded_lexical_only`. Reads also stay fresh without a manual reindex: each one
-converges the lexical index up to `HEAD` first (the dense lag fills in the background as
-the key/API recover). This is the same mode the test suite runs in.
+`degraded_lexical_only` plus a `degraded_reason`. A 429 from the embedding provider opens a
+short in-process cooldown so repeated reads do not hammer the API; during that window reads
+continue to serve lexical/graph results with `degraded_reason: "cooldown"`. Reads also stay fresh
+without a manual reindex: each one converges the lexical index up to `HEAD` first (the dense lag
+fills in the background as the key/API recover). This is the same mode the test suite runs in.

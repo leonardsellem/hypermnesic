@@ -72,6 +72,7 @@ class SearchHit(TypedDict):
 class SearchOutput(TypedDict):
     query: str
     degraded_lexical_only: bool
+    degraded_reason: str | None
     manual_reindex_recommended: bool
     hits: list[SearchHit]
 
@@ -98,6 +99,7 @@ class ThinkOutput(TypedDict):
     questions: list[str]
     unlinked: list[dict]               # not-yet-linked pairs: {a_path, a_title, b_path, b_title}
     degraded_lexical_only: bool
+    degraded_reason: str | None
     note: str
     manual_reindex_recommended: bool
 
@@ -418,6 +420,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         return {
             "query": query,
             "degraded_lexical_only": res.degraded or cr.degraded,
+            "degraded_reason": cr.degraded_reason or res.degraded_reason,
             "manual_reindex_recommended": cr.manual_reindex_recommended,
             "hits": [
                 {"path": h.path, "heading": h.heading, "score": round(h.score, 6),
@@ -465,6 +468,7 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         out = think_mod.think(backend.idx, topic, embedder=backend.embedder,
                               graph=backend.graph, k=k, depth=depth, path=path,
                               repo=backend.repo).as_dict()
+        out["degraded_reason"] = cr.degraded_reason or out.get("degraded_reason")
         out["manual_reindex_recommended"] = cr.manual_reindex_recommended
         return out
 
