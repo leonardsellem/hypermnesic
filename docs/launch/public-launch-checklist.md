@@ -78,3 +78,9 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 - [ ] External directory submissions are prepared in `docs/launch/directory-submission-prep.md`.
       Submit only after the PR-14 operator approval gate.
+
+## 10. Discussions and roadmap
+
+- [ ] GitHub Discussions welcome and roadmap posts are prepared in
+      `docs/launch/discussions-roadmap-prep.md`.
+      Enable Discussions and pin official posts only after the PR-17 operator approval gate.
