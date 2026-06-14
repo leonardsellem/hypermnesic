@@ -26,6 +26,32 @@ before claiming release readiness.
 > repository visibility, git-history rewrite, and public release steps remain gated by
 > [`docs/launch/`](docs/launch/).
 
+![Terminal demo: hypermnesic local-proof shows source-grounded recall and a dry-run write diff](docs/assets/readme-local-proof.svg)
+
+The demo source is an [asciinema cast](docs/assets/readme-local-proof.cast). It uses only a
+generated `/tmp/hypermnesic-demo` vault and placeholder-safe paths.
+
+**Try it in under 5 minutes:**
+
+```sh
+uv tool install git+https://github.com/leonardsellem/hypermnesic
+hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo
+```
+
+That creates a tiny markdown git repo, projects it into the disposable index, recalls the
+repo-relative source note, and previews the exact `commit_note` diff without writing it.
+
+**How it compares:** hosted memory layers such as Mem0, Zep, and OpenAI memory optimize for
+managed convenience. Hypermnesic optimizes for owned files, auditable writes, and self-hosted
+agent access:
+
+| Question | Hypermnesic | Hosted memory layers |
+| --- | --- | --- |
+| Source of truth | Markdown files in your git repo | Service-managed memory store |
+| Write model | Git-first commits and dry-run previews | API/application-managed writes |
+| Operations | Self-hosted CLI + MCP endpoint | Managed service or app feature |
+| Evidence | LongMemEval retrieval benchmark plus product smoke gates | Varies by product; compare claims by benchmark and setup scope |
+
 ---
 
 ## Quick start

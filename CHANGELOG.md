@@ -82,6 +82,8 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   including recipes and the Obsidian companion's read-only role.
 - README and launch docs now point to the public `hypermnesic-companion` repository and
   its first `0.3.0` release instead of the private-until-release staging language.
+- README now opens with a local-proof demo asset, a 5-minute quickstart, and a scoped
+  comparison against hosted memory layers.
 
 ### Fixed
 - Public OAuth AS metadata now advertises public-client token and revocation auth support
