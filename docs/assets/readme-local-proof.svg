@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="438" viewBox="0 0 1040 438" role="img" aria-labelledby="title desc">
+  <title id="title">Hypermnesic local proof terminal demo</title>
+  <desc id="desc">Terminal transcript showing source-grounded recall and a dry-run write preview from hypermnesic local-proof.</desc>
+  <rect width="1040" height="438" rx="12" fill="#0f172a"/>
+  <rect x="0" y="0" width="1040" height="44" rx="12" fill="#111827"/>
+  <circle cx="28" cy="22" r="6" fill="#f87171"/>
+  <circle cx="50" cy="22" r="6" fill="#fbbf24"/>
+  <circle cx="72" cy="22" r="6" fill="#34d399"/>
+  <text x="96" y="28" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">hypermnesic local proof</text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">
+  <text x="28" y="68" fill="#7dd3fc">$ hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo</text>
+  <text x="28" y="92" fill="#d1d5db">Local memory works</text>
+  <text x="28" y="116" fill="#d1d5db">  source: memory/local-proof-memory.md</text>
+  <text x="28" y="140" fill="#d1d5db">  index: .hypermnesic/index.db (disposable projection)</text>
+  <text x="28" y="164" fill="#d1d5db">  recall: Local proof memory</text>
+  <text x="28" y="188" fill="#d1d5db">  preview: memory/local-proof-preview.md (dry-run, no commit)</text>
+  <text x="28" y="212" fill="#d1d5db">  note: Local memory still works from exact text in your markdown files; embeddings improve ranking and fuzzy...</text>
+  <text x="28" y="236" fill="#d1d5db">  next: Local memory works. Next, connect remote clients after running setup diagnostics from the next sprint.</text>
+  <text x="28" y="260" fill="#d1d5db"></text>
+  <text x="28" y="284" fill="#7dd3fc">$ git -C /tmp/hypermnesic-demo status --short</text>
+  <text x="28" y="308" fill="#d1d5db"></text>
+  <text x="28" y="332" fill="#7dd3fc">$ head -8 /tmp/hypermnesic-demo/memory/local-proof-memory.md</text>
+  <text x="28" y="356" fill="#7dd3fc"># Local proof memory</text>
+  <text x="28" y="380" fill="#d1d5db"></text>
+  <text x="28" y="404" fill="#d1d5db">Question answered: what should Hypermnesic remember about the demo vault</text>
+  </g>
+</svg>
