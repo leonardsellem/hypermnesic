@@ -79,7 +79,12 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 - [ ] External directory submissions are prepared in `docs/launch/directory-submission-prep.md`.
       Submit only after the PR-14 operator approval gate.
 
-## 10. Discussions and roadmap
+## 10. PyPI
+
+- [ ] PyPI publication decision is prepared in `docs/launch/pypi-publication-decision.md`.
+      Claim the name or activate publishing only after the PR-15 operator go/no-go gate.
+
+## 11. Discussions and roadmap
 
 - [ ] GitHub Discussions welcome and roadmap posts are prepared in
       `docs/launch/discussions-roadmap-prep.md`.

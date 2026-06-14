@@ -18,6 +18,7 @@ its own changelog and version.
 - Repository social-preview asset for the public GitHub presentation.
 - Directory-submission prep for the official MCP Registry, awesome-mcp-servers, and
   Obsidian community plugin directory.
+- PyPI publication decision memo for the one-command install gate.
 - GitHub Discussions welcome and public roadmap prep for the contribution funnel.
 
 ### Changed
