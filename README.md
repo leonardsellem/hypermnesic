@@ -110,8 +110,11 @@ Point the app's MCP server at your endpoint URL — that's it. OAuth is automati
   carries no host or token. See `plugin/README.md`.
 - **Obsidian companion:** read-only over your tailnet — point it at the tailnet read
   route `http://<tailnet-ip>:8848/mcp` (no OAuth; tailnet membership is the boundary). It
-  ships from a **separate repository under GPL-3.0** (private until its first release) —
-  see [`obsidian-plugin/README.md`](obsidian-plugin/README.md) and the license boundary below.
+  ships from the public
+  [`hypermnesic-companion`](https://github.com/leonardsellem/hypermnesic-companion)
+  repository under **GPL-3.0-or-later**; the first companion release is
+  [`0.3.0`](https://github.com/leonardsellem/hypermnesic-companion/releases/tag/0.3.0).
+  See [`obsidian-plugin/README.md`](obsidian-plugin/README.md) and the license boundary below.
 
 ### D. Use it locally (on the engine host)
 

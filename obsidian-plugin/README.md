@@ -4,15 +4,14 @@ The Obsidian companion plugin now lives in its own repository:
 
 > **https://github.com/leonardsellem/hypermnesic-companion**
 >
-> _The repository is **private until the companion's first community-directory release**;
-> this link becomes public when that ships._
+> Public repository. First release: **0.3.0**.
 
 This monorepo no longer carries the plugin source or its read-only proof. The
 plugin builds, runs its tests — including the static **read-only invariant** scan
 (`test/read-only.test.ts`, ported from the former `tests/test_obsidian_plugin.py`
-here) — and ships from that repo under **GPL-3.0**.
+here) — and ships from that repo under **GPL-3.0-or-later**.
 
-The engine in this repo (planned **AGPL-3.0**) and the companion (**GPL-3.0**) communicate
+The engine in this repo (**AGPL-3.0-only**) and the companion (**GPL-3.0-or-later**) communicate
 only at arm's length over the read-only MCP wire protocol (`search` / `build_context` /
 `think`); neither is a derivative of the other. That holds **because** they are separate
 processes with no shared or statically-linked code — and stays true only while the companion

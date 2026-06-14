@@ -59,8 +59,8 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 ## 6. Companion
 
-- [ ] Make `hypermnesic-companion` public / cut its first release.
-- [ ] `obsidian-plugin/README.md` updated from private-until-release → public (U22).
+- [x] Make `hypermnesic-companion` public / cut its first release.
+- [x] `obsidian-plugin/README.md` updated from private-until-release → public (U22).
 
 ## 7. Community profile
 
