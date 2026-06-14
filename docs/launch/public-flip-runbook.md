@@ -1,20 +1,20 @@
 ---
 title: "Public flip runbook (AGPL-3.0)"
-status: staged
+status: steps-1-5-applied
 audience: operator
 note: >
-  This directory is STAGED. Nothing here changes the live license or repository
-  visibility. The flip itself is a future, separate, reviewable PR driven by this
-  runbook. Until then the repo stays PRIVATE and the live LICENSE stays proprietary.
+  Steps 1-5 were applied in the LS-1677 public-flip PR: the live license metadata,
+  root LICENSE, README license text, badges, and CITATION.cff now reflect AGPL-3.0.
+  The repo still stays PRIVATE until the later history-rewrite and visibility gates.
 ---
 
 # Public flip runbook — engine → public AGPL-3.0
 
-This runbook makes the public flip a single mechanical, reviewable PR. Every
+This runbook makes the public flip a staged sequence of mechanical, reviewable PRs. Every
 *non-mechanical* prerequisite is resolved here first (the license-scan
 self-exclusion already shipped; the git-history decision and the legal sanity-check
-are recorded below). Do **not** run any of this until the decision to go public is
-made.
+are recorded below). Steps 1-5 have been applied by LS-1677; do **not** run later
+steps until their dedicated gates are reached.
 
 > **Reverse op (abort/rollback):** every step below is reverted by restoring the
 > proprietary `LICENSE`, resetting `pyproject.toml` `license = { text = "Proprietary" }`,
@@ -43,36 +43,36 @@ made.
 
 ## Step 1 — Swap the license text
 
-- [ ] Replace the root `LICENSE` with the staged AGPL-3.0 text:
+- [x] Replace the root `LICENSE` with the staged AGPL-3.0 text:
       `cp docs/launch/LICENSE-AGPL-3.0.txt LICENSE`
-- [ ] (canonical AGPL-3.0; `sha256 0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0`)
+- [x] (canonical AGPL-3.0; `sha256 0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0`)
 
 ## Step 2 — Set the package license field
 
-- [ ] `pyproject.toml`: `license = { text = "Proprietary" }` → `license = "AGPL-3.0-only"`
+- [x] `pyproject.toml`: `license = { text = "Proprietary" }` → `license = "AGPL-3.0-only"`
       (SPDX expression), and add the matching `License :: OSI Approved :: GNU Affero
       General Public License v3` classifier if classifiers are added.
-- [ ] Confirm the license gate still passes (self-exclusion):
+- [x] Confirm the license gate still passes (self-exclusion):
       `uv run python scripts/license_scan.py` → exit 0.
 
 ## Step 3 — Reconcile the README license section
 
-- [ ] Swap "Proprietary / private (pre-release)" → an AGPL-3.0 statement.
-- [ ] Keep the **dependency-scoped** clarification of `scripts/license_scan.py`
+- [x] Swap "Proprietary / private (pre-release)" → an AGPL-3.0 statement.
+- [x] Keep the **dependency-scoped** clarification of `scripts/license_scan.py`
       (it governs third-party deps, not the project's own license) — it is already
       written to be correct post-flip.
-- [ ] Keep the **engine ↔ companion boundary** paragraph (AGPL engine ↔ GPL-3.0
+- [x] Keep the **engine ↔ companion boundary** paragraph (AGPL engine ↔ GPL-3.0
       companion, arm's-length over the MCP wire, no-vendoring/no-linking invariant).
 
 ## Step 4 — Enable the staged badges
 
-- [ ] Activate the CI / license / version badges in the README hero (staged
+- [x] Activate the CI / license / version badges in the README hero (staged
       commented in U18). They resolve only once the repo is public (shields.io 404s
       on a private repo), so they go live with this flip, not before.
 
 ## Step 5 — Land the citation file
 
-- [ ] `cp docs/launch/CITATION.cff CITATION.cff` (carries the AGPL license field;
+- [x] `cp docs/launch/CITATION.cff CITATION.cff` (carries the AGPL license field;
       staged because it presumes the public license).
 
 ## Step 6 — Execute the git-history decision (see "Decisions" below)
