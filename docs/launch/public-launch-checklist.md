@@ -89,3 +89,8 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 - [ ] GitHub Discussions welcome and roadmap posts are prepared in
       `docs/launch/discussions-roadmap-prep.md`.
       Enable Discussions and pin official posts only after the PR-17 operator approval gate.
+
+## 12. Launch response SLO
+
+- [ ] Launch-week response SLO is tracked in `docs/launch/launch-week-response-slo.md`.
+      Keep LS-1688 comments as the append-only check log during the launch window.
