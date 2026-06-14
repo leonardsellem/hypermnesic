@@ -2,8 +2,8 @@
 
 All notable changes to **hypermnesic** (the engine) are recorded here. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project is
-pre-1.0, so it uses `0.0.x` semantics — minor and patch are not yet distinguished,
-and any release may carry breaking changes while the kernel stabilizes.
+pre-1.0, so it uses `0.x` semantics — any release may carry breaking changes while the
+kernel stabilizes.
 
 `pyproject.toml` `[project].version` is the single source of truth for the version;
 the plugin manifests and `src/hypermnesic/__init__.__version__` are kept in lockstep
@@ -13,6 +13,10 @@ The Obsidian companion (`obsidian-plugin/`, shipped as a separate repository) ca
 its own changelog and version.
 
 ## [Unreleased]
+
+No changes yet.
+
+## [0.1.0] — 2026-06-14
 
 First-class product track and public-launch readiness. Adds the community-health and
 technical-reference documents (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, ARCHITECTURE,
@@ -210,6 +214,8 @@ Phase 0 → Phase 2.5 foundation (pre-public, internal milestones).
 - **LongMemEval benchmark harness** (`harness/`) and a French/English retrieval-parity
   harness.
 
-[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.6...v0.1.0
+[0.0.6]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/leonardsellem/hypermnesic/releases/tag/v0.0.5
 [0.0.4]: https://github.com/leonardsellem/hypermnesic/releases/tag/v0.0.4

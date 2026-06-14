@@ -1,6 +1,6 @@
 [project]
 name = "hypermnesic"
-version = "0.0.6"
+version = "0.1.0"
 description = "A markdown-native, git-as-source-of-truth memory layer: a disposable, rebuildable retrieval index over any repository, served over one OAuth-secured MCP endpoint (read tools always; a gated, git-first commit_note write tool by scope) plus a tailnet read companion."
 requires-python = ">=3.11"
 license = "AGPL-3.0-only"

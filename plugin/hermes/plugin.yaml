@@ -1,5 +1,5 @@
 name: hypermnesic
-version: "0.0.6"
+version: "0.1.0"
 description: "Hermes Agent plugin for hypermnesic CLI memory recall and skills."
 provides_hooks:
   - pre_llm_call

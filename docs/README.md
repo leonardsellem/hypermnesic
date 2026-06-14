@@ -77,10 +77,11 @@ never misleads you.
 ## Public-launch staging
 
 [`launch/`](launch/) holds the remaining public-flip gates — the one-PR flip runbook,
-the launch checklist, and the staged copies used to land the live AGPL license and
-`CITATION.cff`. The live root `LICENSE` and `CITATION.cff` now reflect the AGPL flip,
-but repository visibility remains private until the later history-rewrite and visibility
-steps complete. See [`launch/public-flip-runbook.md`](launch/public-flip-runbook.md).
+the launch checklist, the `v0.1.0` GitHub Release note draft, and the staged copies used
+to land the live AGPL license and `CITATION.cff`. The live root `LICENSE` and
+`CITATION.cff` now reflect the AGPL flip, but repository visibility remains private until
+the later history-rewrite and visibility steps complete. See
+[`launch/public-flip-runbook.md`](launch/public-flip-runbook.md).
 
 ## Process history (how we got here — not current truth)
 

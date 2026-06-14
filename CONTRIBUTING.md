@@ -51,7 +51,7 @@ uv run python scripts/preflight_public_scan.py        # no operator secret/host 
 
 - **Lint:** `ruff` with `select = ["E", "F", "I", "UP", "B"]`, line length 100.
 - **Version consistency:** `pyproject.toml` `[project].version` is the single source of
-  truth; the three plugin manifests + `src/hypermnesic/__init__.__version__` must match.
+  truth; package, plugin, and citation metadata versions must match.
 - **Tests:** `pytest` with `--import-mode=importlib`; tests under `tests/`. New
   production behavior gets a test (the project is test-first — see `AGENTS.md`).
 - **License gate:** verifies the dependency tree stays free of AGPL/GPL/SSPL. It is
@@ -97,12 +97,11 @@ public issue — see [`SECURITY.md`](SECURITY.md).
 
 ## Releasing
 
-The engine is pre-1.0 and uses `0.0.x` semantics (any release may carry breaking
+The engine is pre-1.0 and uses `0.x` semantics (any release may carry breaking
 changes while the kernel stabilizes).
 
 1. Bump `version` in `pyproject.toml` (the single source of truth) and sync
-   `src/hypermnesic/__init__.__version__` + the three plugin manifests
-   (`plugin/.claude-plugin/marketplace.json` and the two `plugin.json` files).
+   `src/hypermnesic/__init__.__version__`, plugin manifests, and citation metadata.
    `scripts/check_version_consistency.py` enforces this — run it.
 2. Add a dated section to [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog format).
 3. Tag the release `vX.Y.Z` and push the tag.
