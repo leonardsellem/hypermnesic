@@ -80,6 +80,8 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   Honcho or an equivalent adjacent layer by default.
 - Daily workflow docs now teach capture -> triage -> recall -> write -> review -> clean up,
   including recipes and the Obsidian companion's read-only role.
+- README and launch docs now point to the public `hypermnesic-companion` repository and
+  its first `0.3.0` release instead of the private-until-release staging language.
 
 ### Fixed
 - Public OAuth AS metadata now advertises public-client token and revocation auth support

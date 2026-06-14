@@ -82,9 +82,8 @@ steps until their dedicated gates are reached.
 
 ## Step 7 — Publish the companion (separate repo)
 
-- [ ] Make the `hypermnesic-companion` repo public / cut its first
-      community-directory release. Update `obsidian-plugin/README.md` to state the
-      repo is now public (it currently states private-until-release — see U22).
+- [x] Make the `hypermnesic-companion` repo public / cut its first
+      release. Update `obsidian-plugin/README.md` to state the repo is now public.
 
 ## Step 8 — Flip repository visibility (last; irreversible-ish)
 
