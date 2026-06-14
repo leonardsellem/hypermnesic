@@ -100,3 +100,9 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 - [ ] Launch narrative and per-channel drafts are staged in
       `docs/launch/launch-narrative-drafts.md`.
       Post externally only after the PR-20 operator approval gate.
+
+## 14. Launch sequencing
+
+- [ ] Launch sequence is staged in `docs/launch/launch-sequencing.md`.
+      Post externally only after the PR-21 operator approval gate and record the
+      retro under `docs/reports/`.
