@@ -3,8 +3,9 @@
 
 One authority — ``pyproject.toml`` ``[project].version`` — and every distributed
 version string must agree with it: the in-package mirror
-(``src/hypermnesic/__init__.__version__``) and each plugin manifest
-(``marketplace.json`` ``plugins[].version`` + the two ``plugin.json`` files).
+(``src/hypermnesic/__init__.__version__``), each plugin manifest
+(``marketplace.json`` ``plugins[].version`` + the two ``plugin.json`` files),
+and citation metadata.
 
 The 0.0.4 ↔ 0.0.5 split happened because a release bump touched only the Python
 package; the three plugin manifests drifted. This gate fails the build on any such
@@ -42,6 +43,10 @@ MANIFESTS = (
     ROOT / "plugin" / "plugins" / "hypermnesic" / ".codex-plugin" / "plugin.json",
     ROOT / "plugin" / "hermes" / "plugin.yaml",
 )
+CITATION_FILES = (
+    ROOT / "docs" / "launch" / "CITATION.cff",
+    ROOT / "CITATION.cff",
+)
 
 
 def authority_version(path: Path = AUTHORITY) -> str:
@@ -74,6 +79,16 @@ def manifest_versions(path: Path) -> list[str]:
     return out
 
 
+def citation_version(path: Path) -> str | None:
+    """The CFF software version, if the citation metadata exists and declares one."""
+    path = Path(path)
+    if not path.exists():
+        return None
+    data = YAML(typ="safe").load(path.read_text(encoding="utf-8")) or {}
+    version = data.get("version")
+    return version if isinstance(version, str) else None
+
+
 def collect(root: Path = ROOT) -> list[tuple[str, str | None]]:
     """``(label, version)`` for the in-package mirror + every manifest version slot.
 
@@ -90,6 +105,9 @@ def collect(root: Path = ROOT) -> list[tuple[str, str | None]]:
             items.append((rel, None))
         else:
             items.extend((rel, v) for v in versions)
+    for citation in CITATION_FILES:
+        if citation.exists():
+            items.append((citation.relative_to(root).as_posix(), citation_version(citation)))
     return items
 
 

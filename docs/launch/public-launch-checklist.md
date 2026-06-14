@@ -34,13 +34,13 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 ## 2. License flip (mechanical — runbook Steps 1–5)
 
-- [ ] `LICENSE` ← staged AGPL-3.0 text.
-- [ ] `pyproject.toml` `license` → `AGPL-3.0-only`; license gate still green
+- [x] `LICENSE` ← staged AGPL-3.0 text.
+- [x] `pyproject.toml` `license` → `AGPL-3.0-only`; license gate still green
       (self-exclusion shipped in U6).
-- [ ] README license section reconciled (AGPL statement; dependency-gate clarification
+- [x] README license section reconciled (AGPL statement; dependency-gate clarification
       kept; engine ↔ companion boundary kept).
-- [ ] Staged badges activated (they 404 on a private repo, so only now).
-- [ ] `CITATION.cff` landed from `docs/launch/CITATION.cff`.
+- [x] Staged badges activated (they 404 on a private repo, so only now).
+- [x] `CITATION.cff` landed from `docs/launch/CITATION.cff`.
 
 ## 3. Contributor IP (D2 in the runbook)
 

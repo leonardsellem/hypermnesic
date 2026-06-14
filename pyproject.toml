@@ -3,7 +3,7 @@ name = "hypermnesic"
 version = "0.0.6"
 description = "A markdown-native, git-as-source-of-truth memory layer: a disposable, rebuildable retrieval index over any repository, served over one OAuth-secured MCP endpoint (read tools always; a gated, git-first commit_note write tool by scope) plus a tailnet read companion."
 requires-python = ">=3.11"
-license = { text = "Proprietary" }
+license = "AGPL-3.0-only"
 authors = [{ name = "Leonard Sellem" }]
 # Permissive primitives only (KTD1). The U1 license gate (scripts/license_scan.py)
 # fails the build on any AGPL / GPL / SSPL transitive dependency.
