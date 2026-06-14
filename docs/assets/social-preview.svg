@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Hypermnesic repository social preview</title>
+  <desc id="desc">Hypermnesic as git-first memory for AI agents: markdown files are truth, the index is disposable, and writes are reviewable commits.</desc>
+  <rect width="1280" height="640" fill="#101820"/>
+  <rect x="70" y="72" width="1140" height="496" rx="28" fill="#f6f2e8"/>
+  <rect x="70" y="72" width="1140" height="496" rx="28" fill="none" stroke="#d4c7ad" stroke-width="2"/>
+
+  <text x="126" y="166" fill="#101820" font-family="Inter, DejaVu Sans, Arial, sans-serif" font-size="78" font-weight="800">Hypermnesic</text>
+  <text x="132" y="218" fill="#31424f" font-family="Inter, DejaVu Sans, Arial, sans-serif" font-size="31">Git-first memory for AI agents</text>
+
+  <g font-family="Inter, DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700">
+    <rect x="132" y="282" width="262" height="98" rx="16" fill="#ffffff" stroke="#c9d6df" stroke-width="2"/>
+    <text x="162" y="322" fill="#101820">Markdown files</text>
+    <text x="162" y="356" fill="#527080" font-size="22" font-weight="500">source of truth</text>
+
+    <text x="420" y="340" fill="#527080" font-size="35" font-family="DejaVu Sans Mono, monospace">-&gt;</text>
+
+    <rect x="468" y="282" width="226" height="98" rx="16" fill="#ffffff" stroke="#c9d6df" stroke-width="2"/>
+    <text x="498" y="322" fill="#101820">Git commits</text>
+    <text x="498" y="356" fill="#527080" font-size="22" font-weight="500">reviewable writes</text>
+
+    <text x="720" y="340" fill="#527080" font-size="35" font-family="DejaVu Sans Mono, monospace">-&gt;</text>
+
+    <rect x="768" y="282" width="282" height="98" rx="16" fill="#ffffff" stroke="#c9d6df" stroke-width="2"/>
+    <text x="798" y="322" fill="#101820">Disposable index</text>
+    <text x="798" y="356" fill="#527080" font-size="22" font-weight="500">rebuildable projection</text>
+  </g>
+
+  <rect x="132" y="438" width="402" height="58" rx="29" fill="#1f6f78"/>
+  <text x="166" y="476" fill="#ffffff" font-family="Inter, DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700">MCP + Obsidian + CLI</text>
+
+  <rect x="560" y="438" width="566" height="58" rx="29" fill="#c75f35"/>
+  <text x="594" y="476" fill="#ffffff" font-family="Inter, DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700">read-only recall, guarded writes</text>
+
+  <text x="132" y="536" fill="#53616b" font-family="Inter, DejaVu Sans, Arial, sans-serif" font-size="23">Markdown remains inspectable. Retrieval can be rebuilt. Every write leaves a commit.</text>
+</svg>
