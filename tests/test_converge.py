@@ -168,6 +168,7 @@ def test_embedder_failure_completes_lexical_and_advances_checkpoint(make_corpus,
     head = _git(repo, "rev-parse", "HEAD")
     res = converge.converge(repo, idx, _DownEmbedder(), debounce_seconds=0)
     assert res.degraded is True
+    assert res.degraded_reason == "embedding_error"
     assert res.replayed == 1 and res.checkpoint_advanced
     assert idx.get_checkpoint() == head                  # lexical/graph caught up
     # findable lexically despite the dead embedder
@@ -176,6 +177,24 @@ def test_embedder_failure_completes_lexical_and_advances_checkpoint(make_corpus,
     # no zero-vectors written: c.md's chunks remain stale (absent from vec_chunks)
     c_cids = set(idx.chunks_for_path("c.md"))
     assert c_cids and c_cids.issubset(set(idx.stale_chunk_ids()))
+    idx.close()
+
+
+def test_converge_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "c.md", "# C\n\nRATELIMITMARKER gamma.\n", "add c")
+
+    class RateLimitedEmbedder:
+        dim = config.EMBED_DIM
+
+        def embed(self, texts):
+            raise embed_mod.EmbeddingError("quota exhausted", reason="rate_limited")
+
+    res = converge.converge(repo, idx, RateLimitedEmbedder(), debounce_seconds=0)
+
+    assert res.degraded is True
+    assert res.degraded_reason == "rate_limited"
     idx.close()
 
 

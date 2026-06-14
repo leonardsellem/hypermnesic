@@ -30,6 +30,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from hypermnesic import config, serialize
+from hypermnesic import embed as embed_mod
 from hypermnesic import index as index_mod
 
 _STAMP_NAME = "converge.stamp"
@@ -47,6 +48,7 @@ class ConvergeResult:
     chunks_embedded: int = 0
     docs_embedded: int = 0
     degraded: bool = False
+    degraded_reason: str | None = None
     manual_reindex_recommended: bool = False
     overlay_paths: list[str] = field(default_factory=list)
     head: str | None = None
@@ -59,6 +61,7 @@ class ConvergeResult:
             "chunks_embedded": self.chunks_embedded,
             "docs_embedded": self.docs_embedded,
             "degraded_lexical_only": self.degraded,
+            "degraded_reason": self.degraded_reason,
             "manual_reindex_recommended": self.manual_reindex_recommended,
             "overlay_paths": self.overlay_paths,
             "head": self.head,
@@ -147,6 +150,7 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
         # never zero placeholders.
         chunks_embedded = docs_embedded = 0
         degraded = embedder is None
+        degraded_reason = "missing_embedder" if embedder is None else None
         if embedder is not None:
             try:
                 emb = index_mod.embed_stale_locked(
@@ -155,13 +159,18 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
                 )
                 chunks_embedded = emb["chunks_embedded"]
                 docs_embedded = emb["docs_embedded"]
-            except Exception:
+            except Exception as exc:
                 degraded = True                   # FR-R34: dense down, serve lexical/graph
+                degraded_reason = (
+                    exc.reason if isinstance(exc, embed_mod.EmbeddingError)
+                    else "embedding_error"
+                )
 
         _write_stamp(idx)
         return ConvergeResult(status="converged", replayed=replayed,
                               chunks_embedded=chunks_embedded, docs_embedded=docs_embedded,
-                              degraded=degraded, overlay_paths=overlay_paths,
+                              degraded=degraded, degraded_reason=degraded_reason,
+                              overlay_paths=overlay_paths,
                               head=head, checkpoint_advanced=advanced)
     finally:
         lock.release()
