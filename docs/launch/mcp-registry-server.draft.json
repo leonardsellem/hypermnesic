@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.leonardsellem/hypermnesic",
+  "title": "Hypermnesic",
+  "description": "Git-first memory for AI agents: Markdown files are truth, the index is disposable, and writes are reviewable commits.",
+  "repository": {
+    "url": "https://github.com/leonardsellem/hypermnesic",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://{host}/mcp",
+      "variables": {
+        "host": {
+          "description": "Public HTTPS host for your Hypermnesic deployment, without the /mcp path.",
+          "isRequired": true
+        }
+      }
+    }
+  ]
+}

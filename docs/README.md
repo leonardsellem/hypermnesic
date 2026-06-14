@@ -45,8 +45,9 @@ never misleads you.
 - **Product proof:** benchmark quality and product operability are separate gates. LongMemEval
   measures retrieval quality; first-class product claims also require local product smoke, offline
   remote contracts, the remote-client smoke checklist, and the first-class product readiness checklist.
-- **License:** the engine is **AGPL-3.0-only**. The repository remains private until the
-  separate history-rewrite and visibility-flip gates in [`launch/`](launch/) are completed.
+- **License:** the engine is **AGPL-3.0-only**. The repository is public after the
+  history-rewrite, license-flip, release, and visibility-flip gates recorded in
+  [`launch/`](launch/).
 
 ## Durable reference (start here)
 
@@ -76,12 +77,12 @@ never misleads you.
 
 ## Public-launch staging
 
-[`launch/`](launch/) holds the remaining public-flip gates — the one-PR flip runbook,
-the launch checklist, the `v0.1.0` GitHub Release note draft, and the staged copies used
-to land the live AGPL license and `CITATION.cff`. The live root `LICENSE` and
-`CITATION.cff` now reflect the AGPL flip, but repository visibility remains private until
-the later history-rewrite and visibility steps complete. See
-[`launch/public-flip-runbook.md`](launch/public-flip-runbook.md).
+[`launch/`](launch/) records the completed public-flip gates, the remaining public-surface
+follow-ups, the `v0.1.0` GitHub Release notes, and the staged copies used to land the live
+AGPL license and `CITATION.cff`. The live root `LICENSE` and `CITATION.cff` now reflect
+the AGPL flip, and repository visibility is public. See
+[`launch/public-flip-runbook.md`](launch/public-flip-runbook.md) and
+[`launch/public-launch-checklist.md`](launch/public-launch-checklist.md).
 
 ## Process history (how we got here — not current truth)
 
@@ -100,8 +101,8 @@ they conflict with the "current truth" above, the pins above win.
   [`../CHANGELOG.md`](../CHANGELOG.md).
 
 > **Note for the public flip.** Several process-history docs (handoffs, deploy runbooks,
-> gate artifacts, dated reviews, and the archived docs) still contain operator-specific
-> homelab values. They are inert while the repo is private; before the public flip they
-> are scrubbed or pruned per [`launch/public-launch-checklist.md`](launch/public-launch-checklist.md)
-> (the `scripts/preflight_public_scan.py --strict` gate covers them, including
-> `archive/`). The full taxonomy relocation of the history tree is deferred follow-up.
+> gate artifacts, dated reviews, and the archived docs) previously contained
+> operator-specific homelab values. They were scrubbed or pruned per
+> [`launch/public-launch-checklist.md`](launch/public-launch-checklist.md), and the
+> `scripts/preflight_public_scan.py --strict` gate covers them, including `archive/`.
+> The full taxonomy relocation of the history tree is deferred follow-up.

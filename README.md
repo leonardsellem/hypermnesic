@@ -22,9 +22,10 @@ Product proof is tracked separately: use the
 [first-class product readiness checklist](docs/launch/first-class-product-readiness-checklist.md)
 before claiming release readiness.
 
-> **Status:** private, pre-release. The engine is now licensed under **AGPL-3.0-only**;
-> repository visibility, git-history rewrite, and public release steps remain gated by
-> [`docs/launch/`](docs/launch/).
+> **Status:** public v0.1.0 release. The engine is licensed under **AGPL-3.0-only**;
+> the companion plugin ships from the separate GPL-3.0
+> [`hypermnesic-companion`](https://github.com/leonardsellem/hypermnesic-companion)
+> repository.
 
 ![Terminal demo: hypermnesic local-proof shows source-grounded recall and a dry-run write diff](docs/assets/readme-local-proof.svg)
 
