@@ -130,6 +130,17 @@ there is an hour the rule below would have saved.
 - **Found drift you didn't cause? Fix it or file it.** Same rule as a failing test — a
   doc that contradicts the code is a defect, not background noise.
 
+## Linear
+
+- Use `linear-safe` / `linear-ls` for routine interactive issue reads,
+  comments, branch starts, and status changes. Keep Linear MCP as a
+  fallback/lifecycle surface only when a task explicitly requires MCP behavior
+  or wrapper healthchecks fail.
+- The repo-root `.linear.toml` pins `workspace = "ls-ventures"` and
+  `team_id = "LS"` only as a human/raw-CLI fallback. It is not the agent safety
+  boundary because ambient Linear env vars override `.linear.toml`; wrappers
+  remain the agent default.
+
 ## How this repo plans and ships work
 
 - **Plans** live under `docs/plans/` (`YYYY-MM-DD-NNN-<type>-<slug>-plan.md`) and are the
