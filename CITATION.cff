@@ -1,5 +1,5 @@
-# Source copy used by the public-flip PR for root CITATION.cff.
-# Set `date-released` when the first public release tag is cut.
+# Live citation metadata for the AGPL-3.0 engine. Set `date-released` when the first
+# public release tag is cut.
 cff-version: 1.2.0
 message: "If you use hypermnesic in your research or work, please cite it as below."
 title: hypermnesic

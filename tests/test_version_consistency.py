@@ -1,7 +1,7 @@
 """U1 (R2/R20) — one version authority, every distributed manifest + __init__ agree.
 
 ``pyproject.toml`` ``[project].version`` is the source of truth; the in-package
-``__version__`` and the three plugin manifests must match it. A CI step
+``__version__``, plugin manifests, and citation metadata must match it. A CI step
 (``scripts/check_version_consistency.py``) fails the build on drift, naming the
 diverging file and both versions.
 """
@@ -36,13 +36,16 @@ def test_main_exits_zero_on_the_real_tree():
     assert cvc.main([]) == 0
 
 
-def test_collect_covers_init_and_all_distributed_manifests():
+def test_collect_covers_init_all_distributed_manifests_and_citation_metadata():
     labels = {label for label, _ in cvc.collect()}
     assert "src/hypermnesic/__init__.py" in labels
     assert "plugin/.claude-plugin/marketplace.json" in labels
     assert "plugin/plugins/hypermnesic/.claude-plugin/plugin.json" in labels
     assert "plugin/plugins/hypermnesic/.codex-plugin/plugin.json" in labels
     assert "plugin/hermes/plugin.yaml" in labels
+    assert "docs/launch/CITATION.cff" in labels
+    if (ROOT / "CITATION.cff").exists():
+        assert "CITATION.cff" in labels
 
 
 def test_diverging_manifest_is_flagged_with_file_and_both_versions():

@@ -45,8 +45,8 @@ never misleads you.
 - **Product proof:** benchmark quality and product operability are separate gates. LongMemEval
   measures retrieval quality; first-class product claims also require local product smoke, offline
   remote contracts, the remote-client smoke checklist, and the first-class product readiness checklist.
-- **License:** proprietary/private today; the public license (**AGPL-3.0**) is **staged,
-  not live** — see [`launch/`](launch/).
+- **License:** the engine is **AGPL-3.0-only**. The repository remains private until the
+  separate history-rewrite and visibility-flip gates in [`launch/`](launch/) are completed.
 
 ## Durable reference (start here)
 
@@ -76,10 +76,11 @@ never misleads you.
 
 ## Public-launch staging
 
-[`launch/`](launch/) holds everything gated on the public flip — the staged AGPL-3.0
-license text, the one-PR flip runbook, the launch checklist, and the staged
-`CITATION.cff`. Nothing there is live; the live `LICENSE` stays proprietary until the
-flip PR. See [`launch/public-flip-runbook.md`](launch/public-flip-runbook.md).
+[`launch/`](launch/) holds the remaining public-flip gates — the one-PR flip runbook,
+the launch checklist, and the staged copies used to land the live AGPL license and
+`CITATION.cff`. The live root `LICENSE` and `CITATION.cff` now reflect the AGPL flip,
+but repository visibility remains private until the later history-rewrite and visibility
+steps complete. See [`launch/public-flip-runbook.md`](launch/public-flip-runbook.md).
 
 ## Process history (how we got here — not current truth)
 
