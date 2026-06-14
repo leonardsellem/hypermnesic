@@ -1,20 +1,19 @@
 ---
 title: "Public flip runbook (AGPL-3.0)"
-status: steps-1-5-applied
+status: live
 audience: operator
 note: >
-  Steps 1-5 were applied in the LS-1677 public-flip PR: the live license metadata,
-  root LICENSE, README license text, badges, and CITATION.cff now reflect AGPL-3.0.
-  The repo still stays PRIVATE until the later history-rewrite and visibility gates.
+  The public flip is live: license metadata, root LICENSE, README license text,
+  badges, CITATION.cff, companion publication, history rewrite, visibility, and
+  private vulnerability reporting reflect the public launch state.
 ---
 
 # Public flip runbook — engine → public AGPL-3.0
 
-This runbook makes the public flip a staged sequence of mechanical, reviewable PRs. Every
+This runbook records the staged sequence used for the public flip. Every
 *non-mechanical* prerequisite is resolved here first (the license-scan
 self-exclusion already shipped; the git-history decision and the legal sanity-check
-are recorded below). Steps 1-5 have been applied by LS-1677; do **not** run later
-steps until their dedicated gates are reached.
+are recorded below).
 
 > **Reverse op (abort/rollback):** every step below is reverted by restoring the
 > proprietary `LICENSE`, resetting `pyproject.toml` `license = { text = "Proprietary" }`,
@@ -26,18 +25,18 @@ steps until their dedicated gates are reached.
 
 ## Step 0 — Confirm preconditions (gate; do not skip)
 
-- [ ] **The repo is still PRIVATE** and you intend to make it public in this session.
-- [ ] CI is green on `main` (`ruff`, version-consistency, tests, license gate,
+- [x] **The repo is public** after the approved visibility flip.
+- [x] CI is green on `main` (`ruff`, version-consistency, tests, license gate,
       preflight public scan).
-- [ ] The license-scan self-exclusion is in place (shipped in U6): with the engine's
+- [x] The license-scan self-exclusion is in place (shipped in U6): with the engine's
       own license set to `AGPL-3.0-only`, `scripts/license_scan.py` still exits 0
       because it excludes the project's own distribution. **Verify:**
       `uv run pytest tests/test_license_scan.py`.
-- [ ] The **git-history decision** (below) is signed off.
-- [ ] The **AGPL §13 ↔ GPL-3.0 legal sanity-check** (below) is signed off.
-- [ ] The **contributor-IP (DCO) decision** (below) is in effect in `CONTRIBUTING.md`
+- [x] The **git-history decision** (below) is signed off.
+- [x] The **AGPL §13 ↔ GPL-3.0 legal sanity-check** (below) is signed off.
+- [x] The **contributor-IP (DCO) decision** (below) is in effect in `CONTRIBUTING.md`
       + the PR template.
-- [ ] The **strict** preflight scan + the process-doc scrub (see
+- [x] The **strict** preflight scan + the process-doc scrub (see
       `public-launch-checklist.md`) are resolved:
       `uv run python scripts/preflight_public_scan.py --strict` exits 0.
 
@@ -87,11 +86,13 @@ steps until their dedicated gates are reached.
 
 ## Step 8 — Flip repository visibility (last; irreversible-ish)
 
-- [ ] `gh repo edit <owner>/hypermnesic --visibility public`
-- [ ] Enable GitHub **private vulnerability reporting** (off by default for
+- [x] `gh repo edit <owner>/hypermnesic --visibility public`
+- [x] Enable GitHub **private vulnerability reporting** (off by default for
       repos that were private) so `SECURITY.md`'s reporting channel is live.
 - [ ] Confirm the community profile is 100% (LICENSE, CODE_OF_CONDUCT, CONTRIBUTING,
       SECURITY, issue/PR templates all detected).
+      Post-flip verification reports 85%; final repository description, topics, and
+      social preview are tracked by PR-13 / LS-1682.
 
 ---
 

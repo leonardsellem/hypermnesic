@@ -1,10 +1,9 @@
 ---
 title: "Public launch checklist"
-status: staged
+status: live
 audience: operator
 note: >
-  STAGED. A human checklist for the public flip. It does not perform the flip;
-  it enumerates every prerequisite so nothing is missed. Pair with
+  LIVE. This checklist records the public flip state. Pair with
   public-flip-runbook.md (the ordered mechanical steps).
 ---
 
@@ -15,20 +14,18 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 ## 1. Repository hygiene
 
-- [ ] CI green on `main`: `ruff`, version-consistency, tests, license gate, preflight
+- [x] CI green on `main`: `ruff`, version-consistency, tests, license gate, preflight
       public scan (default).
-- [ ] **Strict** preflight passes: `uv run python scripts/preflight_public_scan.py --strict`
+- [x] **Strict** preflight passes: `uv run python scripts/preflight_public_scan.py --strict`
       exits 0. This is stricter than the CI default — it also scans the inherited
       *process-exhaust* docs (handoffs, gate-artifacts, brainstorms, plans, deploy
-      runbooks, dated security reviews, threat model, gbrain-decommission state), which
-      the default gate defers. **These still contain the operator hostname/IP today**
-      (the default gate reports the deferred count). Resolve them before the flip:
-  - [ ] Scrub or prune the operator hostname/IP from the process-exhaust docs. Note
+      runbooks, dated security reviews, threat model, gbrain-decommission state).
+  - [x] Scrub or prune the operator hostname/IP from the process-exhaust docs. Note
         `--strict` scans `docs/archive/` too, so archiving a doc (U21) tidies the IA but
         does **not** clear the gate — decide scrub-vs-consciously-accept for each,
         mirroring the git-history decision (D1).
-  - [ ] Re-run `--strict` → exit 0.
-- [ ] **Git history** decision (D1 in the runbook) is signed off and executed
+  - [x] Re-run `--strict` → exit 0.
+- [x] **Git history** decision (D1 in the runbook) is signed off and executed
       (filter-repo rewrite) or consciously accepted-as-residual. Audit with
       `uv run python scripts/preflight_public_scan.py --history`.
 
@@ -44,17 +41,17 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 ## 3. Contributor IP (D2 in the runbook)
 
-- [ ] DCO `Signed-off-by:` attestation documented in `CONTRIBUTING.md` and present as a
+- [x] DCO `Signed-off-by:` attestation documented in `CONTRIBUTING.md` and present as a
       checkbox in `.github/PULL_REQUEST_TEMPLATE.md` (CLA deferred).
 
 ## 4. Legal (D3 in the runbook)
 
-- [ ] AGPL §13 ↔ GPL-3.0 companion arm's-length boundary sanity-checked and signed off
+- [x] AGPL §13 ↔ GPL-3.0 companion arm's-length boundary sanity-checked and signed off
       (rests on the no-vendoring / no-linking invariant in U7).
 
 ## 5. Security reporting
 
-- [ ] After visibility flip, enable GitHub **private vulnerability reporting** (off by
+- [x] After visibility flip, enable GitHub **private vulnerability reporting** (off by
       default for repos that were private) so `SECURITY.md`'s channel is functional.
 
 ## 6. Companion
@@ -66,8 +63,11 @@ Run top-to-bottom. Each box is a hard gate; the flip PR (see
 
 - [ ] GitHub community profile reads 100%: LICENSE, CODE_OF_CONDUCT, CONTRIBUTING,
       SECURITY, issue templates, PR template all detected.
+      As of PR-10 post-flip verification the API reports 85%; final repo description,
+      topics, and social preview are tracked by PR-13 / LS-1682.
 
 ## 8. Visibility (runbook Step 8 — last)
 
-- [ ] `gh repo edit <owner>/hypermnesic --visibility public`.
-- [ ] Smoke-check: README badges resolve; benchmark link works; community profile 100%.
+- [x] `gh repo edit <owner>/hypermnesic --visibility public`.
+- [x] Smoke-check: README badges resolve; benchmark link works; community profile checked.
+      Community profile 100% remains pending PR-13 repo positioning.
