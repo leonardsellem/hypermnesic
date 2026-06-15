@@ -39,6 +39,18 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
 `docs/launch/` without flipping the live license or repository visibility.
 
 ### Added
+- **Launch demo assets (`media/`)**: a receipts-first asset set for promotion. The README
+  now leads (above the fold) with the hero "receipt loop" GIF — an agent writes a memory
+  through the real MCP `commit_note` tool, `git log` shows the resulting real commit, and a
+  fresh session recalls and cites it — and the `## Benchmarks` section embeds a committed
+  LongMemEval chart (judge-axis labeled, numbers from `harness/BENCHMARKS.md`). Assets live
+  under `media/` (engine: scripted VHS `.tape` sources + a loopback MCP-client helper, a
+  committed benchmark SVG, a connector montage, and per-community carousels; companion:
+  PKM fixture vault + recording setup), run against disposable fixture vaults with a fixed
+  fixture committer identity, and pass a two-gate leak check — an automatic text scan
+  (`scripts/preflight_public_scan.py`, now also catching macOS `/Users/` and `/var/folders/`
+  paths) plus a manual frame-review checklist (`docs/guides/demo-asset-frame-review-checklist.md`)
+  with a committed sign-off log (`media/.review-log.md`).
 - **`hypermnesic local-proof`**: a local-first value proof that validates or creates a
   git-backed markdown vault, projects committed files into the disposable index, retrieves
   a natural-language question with the repo-relative source path, explains lexical-only
