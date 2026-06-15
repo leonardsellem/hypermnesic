@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" width="800" height="540" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">LongMemEval V1 answer accuracy — hypermnesic vs comparable systems</title>
+  <desc id="desc">Horizontal bar chart on the gpt-4o-2024-08-06 judge axis: full-context no-memory 60.2, Zep 71.2, Mastra Observational Memory 84.2, hypermnesic anchor 83.2 (GPT-4o reader), hypermnesic lead 88.6 (GPT-4.1 reader). Two GPT-4.1-judged rows (OMEGA 95.4, Mastra 94.9) are shown separately as not directly comparable. Numbers from harness/BENCHMARKS.md.</desc>
+  <style>
+    .card{fill:#ffffff;stroke:#d0d7de;stroke-width:1}
+    .h1{fill:#1f2328;font-size:21px;font-weight:700}
+    .sub{fill:#57606a;font-size:13px}
+    .axis{stroke:#d8dee4;stroke-width:1}
+    .axislbl{fill:#8c959f;font-size:11px;text-anchor:middle}
+    .sys{fill:#1f2328;font-size:13.5px;font-weight:600;text-anchor:end}
+    .reader{fill:#6e7781;font-size:11px;text-anchor:end}
+    .val{fill:#1f2328;font-size:13.5px;font-weight:700}
+    .hyp{fill:#6f42c1}
+    .hyp2{fill:#a371f7}
+    .peer{fill:#8c959f}
+    .nc{fill:#eaeef2;stroke:#afb8c1;stroke-width:1;stroke-dasharray:4 3}
+    .ncval{fill:#6e7781;font-size:13px;font-weight:600}
+    .zonehdr{fill:#57606a;font-size:12.5px;font-weight:600}
+    .foot{fill:#6e7781;font-size:10.5px}
+  </style>
+
+  <rect class="card" x="1" y="1" width="798" height="538" rx="14"/>
+
+  <text class="h1" x="32" y="40">LongMemEval V1 (_s) — answer accuracy (%)</text>
+  <text class="sub" x="32" y="61">Comparable axis: every bar below is graded by the canonical <tspan font-weight="700">gpt-4o-2024-08-06</tspan> judge. Reader model labeled per row.</text>
+
+  <!-- gridlines + axis ticks: x = 260 + value*4.2 (0→260 .. 100→680) -->
+  <g class="axis">
+    <line x1="260" y1="86" x2="260" y2="330"/>
+    <line x1="365" y1="86" x2="365" y2="330"/>
+    <line x1="470" y1="86" x2="470" y2="330"/>
+    <line x1="575" y1="86" x2="575" y2="330"/>
+    <line x1="680" y1="86" x2="680" y2="330"/>
+  </g>
+  <g class="axislbl">
+    <text x="260" y="346">0</text>
+    <text x="365" y="346">25</text>
+    <text x="470" y="346">50</text>
+    <text x="575" y="346">75</text>
+    <text x="680" y="346">100</text>
+  </g>
+
+  <!-- Comparable bars (gpt-4o judge). Row pitch 42, bar height 26, top y=95. -->
+  <!-- r0: hypermnesic lead 88.6 -> w=372.1 -->
+  <text class="sys" x="250" y="113">hypermnesic — lead</text>
+  <text class="reader" x="250" y="127">GPT-4.1 reader</text>
+  <rect class="hyp" x="260" y="98" width="372.1" height="26" rx="3"/>
+  <text class="val" x="640.1" y="116">88.6</text>
+
+  <!-- r1: Mastra Observational Memory 84.2 -> w=353.6 -->
+  <text class="sys" x="250" y="155">Mastra Obs. Memory</text>
+  <text class="reader" x="250" y="169">GPT-4o reader</text>
+  <rect class="peer" x="260" y="140" width="353.6" height="26" rx="3"/>
+  <text class="val" x="621.6" y="158">84.2</text>
+
+  <!-- r2: hypermnesic anchor 83.2 -> w=349.4 -->
+  <text class="sys" x="250" y="197">hypermnesic — anchor</text>
+  <text class="reader" x="250" y="211">GPT-4o reader</text>
+  <rect class="hyp2" x="260" y="182" width="349.4" height="26" rx="3"/>
+  <text class="val" x="617.4" y="200">83.2</text>
+
+  <!-- r3: Zep 71.2 -> w=299.0 -->
+  <text class="sys" x="250" y="239">Zep</text>
+  <text class="reader" x="250" y="253">GPT-4o reader</text>
+  <rect class="peer" x="260" y="224" width="299.0" height="26" rx="3"/>
+  <text class="val" x="567.0" y="242">71.2</text>
+
+  <!-- r4: Full context (no memory) 60.2 -> w=252.8 -->
+  <text class="sys" x="250" y="281">Full context</text>
+  <text class="reader" x="250" y="295">no memory · GPT-4o reader</text>
+  <rect class="peer" x="260" y="266" width="252.8" height="26" rx="3"/>
+  <text class="val" x="520.8" y="284">60.2</text>
+
+  <!-- separation: not-comparable zone -->
+  <line x1="32" y1="372" x2="768" y2="372" stroke="#d0d7de" stroke-width="1"/>
+  <text class="zonehdr" x="32" y="396">Different judge — NOT directly comparable</text>
+  <text class="sub" x="32" y="414" font-size="11.5px">These rows use a <tspan font-weight="700">GPT-4.1 judge</tspan> (more lenient) — shown only to scope the judge axis, not the same measurement.</text>
+
+  <!-- non-comparable bars, muted + dashed, same x-scale -->
+  <text class="reader" x="250" y="445" font-size="12px" font-weight="600">OMEGA</text>
+  <text class="reader" x="250" y="459">GPT-4.1 judge</text>
+  <rect class="nc" x="260" y="432" width="400.7" height="22" rx="3"/>
+  <text class="ncval" x="668.7" y="449">95.4</text>
+
+  <text class="reader" x="250" y="487" font-size="12px" font-weight="600">Mastra (OMEGA board)</text>
+  <text class="reader" x="250" y="501">GPT-4.1 judge</text>
+  <rect class="nc" x="260" y="474" width="398.6" height="22" rx="3"/>
+  <text class="ncval" x="666.6" y="491">94.9</text>
+
+  <text class="foot" x="32" y="528">Source: harness/BENCHMARKS.md (re-verified 2026-06-02). Comparable anchors are original-release `_s`; hypermnesic is cleaned-2025-09.</text>
+</svg>
