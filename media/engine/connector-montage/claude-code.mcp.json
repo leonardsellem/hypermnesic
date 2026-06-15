@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hypermnesic": {
+      "type": "streamable-http",
+      "url": "${HYPERMNESIC_MCP_URL:-https://<your-host>.ts.net/mcp}"
+    }
+  }
+}
