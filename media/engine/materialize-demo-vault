@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# materialize-demo-vault (U2) — copy the committed engine demo seed into a scratch
+# git repo with a DETERMINISTIC FIXTURE identity, ready for `hypermnesic init` and the
+# hero/recovery recordings.
+#
+#   media/engine/materialize-demo-vault [DEST]
+#
+# DEST defaults to a fresh mktemp dir. The seed lives beside this script as plain files
+# (no nested .git), so it never confuses the engine repo's own git tree.
+#
+# WHY THE EXPLICIT IDENTITY MATTERS: the hero GIF films `git log`. If the scratch repo
+# inherited the operator's global git config (or an exported GIT_AUTHOR_* env var), the
+# operator's REAL name + email would appear on screen. So this script pins the committer
+# identity to a fixture value via BOTH local `git config` AND exported GIT_* env vars
+# (env overrides config, so we set both), and pins commit dates for a reproducible log.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SEED_DIR="${SCRIPT_DIR}/demo-vault-seed"
+
+# Fixture identity — NEVER the operator's real git name/email. `.invalid` is a reserved,
+# non-resolvable TLD (RFC 2606), so it is unmistakably a placeholder.
+export GIT_AUTHOR_NAME="hypermnesic demo"
+export GIT_AUTHOR_EMAIL="demo@hypermnesic.invalid"
+export GIT_COMMITTER_NAME="hypermnesic demo"
+export GIT_COMMITTER_EMAIL="demo@hypermnesic.invalid"
+
+DEST="${1:-$(mktemp -d "${TMPDIR:-/tmp}/hypermnesic-demo.XXXXXX")}"
+
+if [[ ! -d "$SEED_DIR" ]]; then
+  echo "materialize-demo-vault: seed not found at $SEED_DIR" >&2
+  exit 1
+fi
+mkdir -p "$DEST"
+# Refuse to clobber existing data (mirrors local_proof._prepare_demo).
+if [[ -e "$DEST/.git" ]] || { [[ -n "$(ls -A "$DEST" 2>/dev/null)" ]]; }; then
+  echo "materialize-demo-vault: $DEST is not empty — choose an empty dir so the demo cannot overwrite data" >&2
+  exit 1
+fi
+
+# Copy the seed notes (contents only, not the seed dir itself).
+cp -R "$SEED_DIR"/. "$DEST"/
+
+git -C "$DEST" init -q -b main
+# Belt-and-suspenders: local config also pins the identity for this repo.
+git -C "$DEST" config user.name  "$GIT_AUTHOR_NAME"
+git -C "$DEST" config user.email "$GIT_AUTHOR_EMAIL"
+
+# Two commits with pinned dates → a small, reproducible history under the live write.
+GIT_AUTHOR_DATE="2026-05-06T09:00:00" GIT_COMMITTER_DATE="2026-05-06T09:00:00" \
+  bash -c '
+    git -C "$1" add projects people
+    git -C "$1" commit -q -m "Seed projects and people notes"
+  ' _ "$DEST"
+GIT_AUTHOR_DATE="2026-05-11T09:00:00" GIT_COMMITTER_DATE="2026-05-11T09:00:00" \
+  bash -c '
+    git -C "$1" add decisions
+    git -C "$1" commit -q -m "Record the sqlite-vec dense-retrieval decision"
+  ' _ "$DEST"
+
+# Last stdout line is the vault path, so a .tape can capture it.
+echo "$DEST"
