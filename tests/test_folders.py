@@ -127,7 +127,7 @@ def test_agent_instruction_redacts_local_paths_and_endpoint_urls(tmp_path):
     repo = tmp_path
     (repo / "AGENTS.md").write_text(
         "# Rules\n\n"
-        "Use /Users/alice/private/vault and /Volumes/Private/Secrets.\n"
+        "Use /Volumes/Work/private/vault and /Volumes/Private/Secrets.\n"
         "Connect to http://198.51.100.55:8848/mcp or https://example.invalid/mcp.\n"
         "Keep public links like https://github.com/leonardsellem/hypermnesic.\n"
         "Keep repo-relative docs/reference/cli.md visible.\n",
