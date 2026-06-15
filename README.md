@@ -4,6 +4,8 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/tag/leonardsellem/hypermnesic?label=version)](CHANGELOG.md)
 
+![An agent writes a memory through the MCP commit_note tool, git log shows the resulting real commit, and a fresh session recalls and cites it](media/engine/hero-receipt-loop.gif)
+
 **The git-native memory layer for AI agents.** A self-hosted second brain where your
 markdown files are the **single source of truth** and the search index is a disposable,
 rebuildable projection of the git tree. Every agent you use — ChatGPT, Claude, the Claude
@@ -239,6 +241,8 @@ and the surfaces built on top:
   multi-format sidecar extraction (PDF/DOCX/XLSX/PPTX/PNG), and a read-only Obsidian companion.
 
 ## Benchmarks
+
+![LongMemEval V1 accuracy on the comparable gpt-4o-2024-08-06 judge axis: no-memory 60.2, Zep 71.2, Mastra 84.2, hypermnesic 83.2 with a GPT-4o reader and 88.6 with a GPT-4.1 reader; the GPT-4.1-judged rows OMEGA 95.4 and Mastra 94.9 are shown separately as not directly comparable](media/engine/benchmark-longmemeval.svg)
 
 On **LongMemEval V1** (the `_s` 500-question set), hypermnesic's end-to-end QA accuracy is
 **88.6% overall / 90.2% task-averaged** with a GPT-4.1 reader, and **83.6 / 87.1** with a
