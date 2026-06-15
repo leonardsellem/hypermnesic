@@ -48,3 +48,31 @@ the passive read surface that exposes only read controls (AE5: shown, not captio
   Obsidian profile.
 - Companion endpoint shown only as `127.0.0.1` (local) or `<your-host>.ts.net` (placeholder).
 - Then OCR-sweep + eyeball every frame and sign off in `../.review-log.md`.
+
+## 5. Marketplace assets (U12) — manual GUI capture
+
+**Prerequisite (met 2026-06-15):** the `hypermnesic-companion` repo is public and its gates
+are green (CI + Release `success` on the latest push), so these land in *that* repo — no
+deferral. The captures themselves are Obsidian GUI screenshots; flag for manual capture, do
+not fabricate.
+
+Target the [Obsidian community-plugin directory conventions](https://docs.obsidian.md/Plugins/Releasing/Submission+requirements+for+plugins):
+a clear top-of-README **demo GIF or hero screenshot**, then feature screenshots. The
+companion README currently has **no images** — these fill that gap.
+
+Capture against `/tmp/companion-demo-vault` (sanitized per §4), then add to the
+**`hypermnesic-companion` repo** README (its own conventions + gates):
+
+| Asset (in `hypermnesic-companion`) | Shows |
+|---|---|
+| `docs/media/demo.gif` (top of README) | Pause-triggered recall: type, pause, related notes appear in the status-bar popover. |
+| `docs/media/thinking-mode.png` | The dockable thinking-mode panel — related notes, Socratic questions, the `wrote: false` badge. |
+| `docs/media/sidebar.png` | The opt-in sidebar with first-class `internal-link` references + hover page-preview. |
+| `docs/media/reinvention-nudge.png` | The interrogable reinvention nudge expanded to its matched snippet. |
+
+Plus the **r/ObsidianMD still** in this repo: `media/companion/obsidianmd-still.png` — the
+vault + **graph view** + an **agent-written note** together (one frame; reuse the
+`companion-hero.gif` end-state).
+
+Wiring the captured images into the companion README is a small cross-repo follow-up once
+the frames exist + pass review.
