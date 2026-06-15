@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 580" width="1040" height="580" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">One endpoint, every client</title>
+  <desc id="d">Claude Code, ChatGPT, and Claude mobile all connect to the same hypermnesic MCP endpoint https://&lt;your-host&gt;.ts.net/mcp.</desc>
+  <style>
+    .card{fill:#ffffff;stroke:#d0d7de;stroke-width:1.5}
+    .h1{fill:#1f2328;font-size:26px;font-weight:700;text-anchor:middle}
+    .sub{fill:#57606a;font-size:14px;text-anchor:middle}
+    .client{fill:#1f2328;font-size:16px;font-weight:700;text-anchor:middle}
+    .step{fill:#57606a;font-size:12.5px;text-anchor:middle}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;fill:#1f2328}
+    .pill{fill:#1f2328}
+    .pilltxt{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:17px;fill:#ffffff;font-weight:600;text-anchor:middle}
+    .wire{stroke:#a371f7;stroke-width:2.5;fill:none}
+    .badge{fill:#6f42c1}
+  </style>
+
+  <rect x="1" y="1" width="1038" height="578" rx="16" fill="#ffffff" stroke="#d0d7de"/>
+
+  <text class="h1" x="520" y="52">One endpoint. Every client.</text>
+  <text class="sub" x="520" y="78">The same hypermnesic master serves every MCP client — read for all, write for the approved.</text>
+
+  <!-- Card 1: Claude Code -->
+  <rect class="card" x="38" y="108" width="300" height="216" rx="12"/>
+  <text class="client" x="188" y="140">Claude Code</text>
+  <text class="step" x="188" y="162">project .mcp.json</text>
+  <rect x="60" y="178" width="256" height="120" rx="8" fill="#f6f8fa" stroke="#eaeef2"/>
+  <text class="mono" x="74" y="200">{ "mcpServers": {</text>
+  <text class="mono" x="74" y="220">    "hypermnesic": {</text>
+  <text class="mono" x="74" y="240">      "type":</text>
+  <text class="mono" x="148" y="240">"streamable-http",</text>
+  <text class="mono" x="74" y="260">      "url": "…/mcp" } } }</text>
+
+  <!-- Card 2: ChatGPT -->
+  <rect class="card" x="370" y="108" width="300" height="216" rx="12"/>
+  <text class="client" x="520" y="140">ChatGPT</text>
+  <text class="step" x="520" y="162">Settings → Connectors</text>
+  <rect x="392" y="178" width="256" height="120" rx="8" fill="#f6f8fa" stroke="#eaeef2"/>
+  <text class="step" x="520" y="214">Add → Custom connector</text>
+  <text class="step" x="520" y="238">Paste the endpoint URL</text>
+  <text class="step" x="520" y="262">Approve on first connect</text>
+
+  <!-- Card 3: Claude mobile/web -->
+  <rect class="card" x="702" y="108" width="300" height="216" rx="12"/>
+  <text class="client" x="852" y="140">Claude (mobile / web)</text>
+  <text class="step" x="852" y="162">Settings → Connectors</text>
+  <rect x="724" y="178" width="256" height="120" rx="8" fill="#f6f8fa" stroke="#eaeef2"/>
+  <text class="step" x="852" y="214">Add custom connector</text>
+  <text class="step" x="852" y="238">Paste the endpoint URL</text>
+  <text class="step" x="852" y="262">Approve on first connect</text>
+
+  <!-- wires from each card to the shared endpoint pill -->
+  <path class="wire" d="M188 324 C188 380, 520 380, 520 452"/>
+  <path class="wire" d="M520 324 L520 452"/>
+  <path class="wire" d="M852 324 C852 380, 520 380, 520 452"/>
+
+  <!-- shared endpoint pill -->
+  <rect class="pill" x="288" y="452" width="464" height="56" rx="28"/>
+  <circle class="badge" cx="324" cy="480" r="9"/>
+  <text class="pilltxt" x="532" y="486">https://&lt;your-host&gt;.ts.net/mcp</text>
+
+  <text class="sub" x="520" y="544">Loopback (127.0.0.1) for local demos; a Tailscale host for your tailnet — placeholder shown.</text>
+</svg>
