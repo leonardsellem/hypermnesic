@@ -16,6 +16,7 @@ patterns).
 from __future__ import annotations
 
 import importlib.util
+import subprocess as _sp
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -125,3 +126,83 @@ def test_gate_excludes_its_own_script_and_test():
 def test_mask_does_not_reprint_full_secret():
     masked = pf._mask(_OP_HOST)
     assert masked != _OP_HOST and _OP_HOST not in masked
+
+
+# --- U3 (LS-1768): macOS path deny-set + media/ .tape/caption scan lock --------------
+#
+# The deny-set only matched Linux ``/home/<user>/``; the operator is on macOS, where an
+# absolute home is ``/Users/<name>/`` and scratch dirs (mktemp, the materialize helper)
+# live under ``/var/folders/...``. These would ride into a rendered ``.tape``/caption and
+# past the text scanner. Synthetic paths only (this test file is excluded from the scan).
+
+# Built from fragments to keep the file's "no contiguous operator literal" convention.
+_MACOS_HOME = "/Users/" + "alice/dev/hypermnesic"          # synthetic macOS home
+_MACOS_SCRATCH = "/var/folders/" + "ab/cd1234ef/T/hypermnesic-demo.AbCdEf"
+
+
+def _git_repo_with(tmp_path, files: dict[str, str]):
+    """A throwaway git repo with STAGED files (no commit needed — git ls-files sees the
+    index), so ``pf.scan(root=repo)`` exercises the real end-to-end scan over a synthetic
+    ``media/`` asset rather than the live tree."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _sp.run(["git", "-C", str(repo), "init", "-q"], check=True)
+    for rel, body in files.items():
+        p = repo / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(body, encoding="utf-8")
+    _sp.run(["git", "-C", str(repo), "add", "-A"], check=True)
+    return repo
+
+
+def test_planted_macos_home_path_detected():
+    hits = pf.scan_text(f"cd {_MACOS_HOME}")
+    assert any(label == "operator-macos-home-path" for label, _ in hits)
+
+
+def test_planted_var_folders_scratch_path_detected():
+    hits = pf.scan_text(f"materialize -> {_MACOS_SCRATCH}")
+    assert any(label == "macos-scratch-path" for label, _ in hits)
+
+
+def test_macos_home_in_media_tape_flagged_end_to_end(tmp_path):
+    repo = _git_repo_with(tmp_path, {"media/engine/hero.tape": f'Type "cd {_MACOS_HOME}"\n'})
+    res = pf.scan(root=repo)
+    assert res["passed"] is False
+    assert any(f["pattern"] == "operator-macos-home-path" for f in res["findings"])
+
+
+def test_var_folders_in_media_tape_flagged_end_to_end(tmp_path):
+    repo = _git_repo_with(tmp_path, {"media/engine/hero.tape": f'Type "ls {_MACOS_SCRATCH}"\n'})
+    res = pf.scan(root=repo)
+    assert res["passed"] is False
+    assert any(f["pattern"] == "macos-scratch-path" for f in res["findings"])
+
+
+def test_caption_with_planted_jwt_flagged_end_to_end(tmp_path):
+    jwt = "eyJ" + "h" * 14 + "." + "p" * 14 + "." + "s" * 14
+    repo = _git_repo_with(tmp_path, {"media/engine/caption.md": f"token {jwt}\n"})
+    res = pf.scan(root=repo)
+    assert res["passed"] is False
+    assert any(f["pattern"] == "jwt" for f in res["findings"])
+
+
+def test_placeholder_only_media_tape_passes(tmp_path):
+    # The canonical placeholders must NOT false-positive — a clean asset ships.
+    repo = _git_repo_with(tmp_path, {"media/engine/hero.tape": (
+        'Type "hypermnesic serve --host 127.0.0.1 --enable-write"\n'
+        'Type "# endpoint https://<your-host>.ts.net/mcp"\n'
+        'Type "# vault /path/to/your/vault"\n'
+        'Type "# tailnet 100.64.0.1"\n'
+    )})
+    res = pf.scan(root=repo)
+    assert res["passed"] is True, res["findings"]
+
+
+def test_macos_placeholders_not_flagged():
+    # Placeholder/bare forms must stay clean (anchored on a real path char after the slash).
+    assert pf.scan_text("/Users/<name>/vault") == []
+    assert pf.scan_text("/Users/<you>/...") == []
+    assert pf.scan_text("/var/folders/...") == []
+    assert pf.scan_text("/var/folders/<...>/T") == []
+    assert pf.scan_text("/path/to/your/vault") == []
