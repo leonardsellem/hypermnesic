@@ -39,25 +39,25 @@ Show
 
 # ---- the recovery proof (visible) ----
 Type "# Your memory is plain markdown in git; the index is a disposable projection" Enter
-Sleep 700ms
+Sleep 500ms
 Type "ls" Enter
-Sleep 1400ms
+Sleep 900ms
 Type "ls .hypermnesic" Enter
-Sleep 1600ms
+Sleep 1100ms
 
 Type "# Delete the entire index" Enter
-Sleep 400ms
+Sleep 300ms
 Type "rm -rf .hypermnesic" Enter
-Sleep 600ms
+Sleep 400ms
 Type "ls   # the markdown files are untouched -- files are the truth" Enter
-Sleep 1800ms
+Sleep 1200ms
 
 Type "# Rebuild the index from the committed markdown" Enter
-Sleep 400ms
+Sleep 300ms
 Type "hypermnesic init ." Enter
-Sleep 2200ms
+Sleep 1700ms
 Type "hypermnesic retrieve . 'vector-search extension'   # recall restored" Enter
-Sleep 3000ms
+Sleep 5600ms
 
 # ---- hidden teardown ----
 Hide
