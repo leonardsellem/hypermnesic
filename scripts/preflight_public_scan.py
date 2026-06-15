@@ -62,6 +62,12 @@ _DENY: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("inline-token-value",
      re.compile(r"[A-Z0-9_]*" r"TOKEN" r"\s*=\s*[\"']?[A-Za-z0-9][A-Za-z0-9_\-]{11,}")),
     ("operator-home-path", re.compile(r"/home/[a-z][a-z0-9_-]*/")),
+    # macOS equivalents (the operator is on macOS): an absolute home is /Users/<name>/
+    # and mktemp / the demo materialize helper scratch under /var/folders/<2-char>/...
+    # Both would ride into a rendered .tape or caption. Anchored on a real path char after
+    # the slash so the canonical placeholders (/Users/<name>/, /var/folders/...) don't trip.
+    ("operator-macos-home-path", re.compile(r"/Users/[A-Za-z][A-Za-z0-9._-]*/")),
+    ("macos-scratch-path", re.compile(r"/var/folders/[A-Za-z0-9]{2}/")),
 )
 
 # Always excluded — both default and --strict:
