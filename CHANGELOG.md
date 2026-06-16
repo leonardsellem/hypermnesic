@@ -19,6 +19,10 @@ its own changelog and version.
 - Directory-submission prep for the official MCP Registry, awesome-mcp-servers, and
   Obsidian community plugin directory.
 - PyPI publication decision memo for the one-command install gate.
+- PyPI Trusted-Publishing release workflow (`.github/workflows/release.yml`): OIDC,
+  no stored API token, triggered on `v*.*.*` tags or manual dispatch — enables
+  `uv tool install hypermnesic` once the project's trusted publisher is configured
+  and `0.1.0` is published.
 - Launch-week first-contact response SLO checklist and baseline.
 - Launch narrative and channel-specific post drafts tied to readiness evidence.
 - Launch sequencing plan and public-launch retro template.
