@@ -37,7 +37,7 @@ generated `/tmp/hypermnesic-demo` vault and placeholder-safe paths.
 **Try it in under 5 minutes:**
 
 ```sh
-uv tool install git+https://github.com/leonardsellem/hypermnesic
+uv tool install hypermnesic
 hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo
 ```
 
@@ -66,8 +66,8 @@ notes. Dense embeddings improve ranking when `OPENAI_API_KEY` is configured, but
 proof also works offline in lexical mode.
 
 ```sh
-# 1. install the engine (from a clone of this repo)
-uv tool install .
+# 1. install the engine from PyPI
+uv tool install hypermnesic
 
 # 2. prove recall from your own markdown files, with a dry-run write preview
 hypermnesic local-proof /path/to/your/vault
