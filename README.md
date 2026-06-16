@@ -1,8 +1,8 @@
 # hypermnesic
 
 [![CI](https://github.com/leonardsellem/hypermnesic/actions/workflows/ci.yml/badge.svg)](https://github.com/leonardsellem/hypermnesic/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/hypermnesic)](https://pypi.org/project/hypermnesic/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/v/tag/leonardsellem/hypermnesic?label=version)](CHANGELOG.md)
 
 ![An agent writes a memory through the MCP commit_note tool, git log shows the resulting real commit, and a fresh session recalls and cites it](media/engine/hero-receipt-loop.gif)
 
