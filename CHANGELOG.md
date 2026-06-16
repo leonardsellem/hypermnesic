@@ -46,6 +46,9 @@ its own changelog and version.
   the open awesome-mcp-servers PR, and the Obsidian PR permission handoff.
 - README and getting-started quickstart now install from PyPI (`uv tool install hypermnesic`)
   instead of a clone / git URL, now that `0.1.0` is published to PyPI.
+- README header shows a PyPI version badge (replacing the git-tag version badge); added PyPI
+  Trove classifiers to `pyproject.toml` (Intended Audience, Python 3.11–3.13, AI / indexing
+  topics) for richer project metadata and a Python-versions badge from the next release.
 
 ## [0.1.0] — 2026-06-14
 

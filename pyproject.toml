@@ -5,6 +5,17 @@ description = "A markdown-native, git-as-source-of-truth memory layer: a disposa
 requires-python = ">=3.11"
 license = "AGPL-3.0-only"
 authors = [{ name = "Leonard Sellem" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Text Processing :: Indexing",
+]
 # Permissive primitives only (KTD1). The U1 license gate (scripts/license_scan.py)
 # fails the build on any AGPL / GPL / SSPL transitive dependency.
 dependencies = [
