@@ -31,7 +31,7 @@ prerequisites, verification, and failure modes for the four ways to run hypermne
 Run this first on the machine that holds your vault:
 
 ```sh
-uv tool install .                              # install the `hypermnesic` CLI (from a clone)
+uv tool install hypermnesic                    # install the `hypermnesic` CLI from PyPI
 hypermnesic local-proof /path/to/your/vault    # no network or client setup required
 ```
 
