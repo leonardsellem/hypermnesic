@@ -66,12 +66,11 @@ Show
 Type "# Claude Code, pointed at the same hypermnesic MCP endpoint (127.0.0.1:8765/mcp):" Enter
 Sleep 900ms
 # Start the TUI with an initial prompt that exercises search -> think -> a real commit_note.
-Type "claude --dangerously-skip-permissions 'Use the hypermnesic search tool to find the sqlite-vec decision, use think to reflect, then commit_note a short note at decisions/ship-receipts-first.md that links [[decisions/use-sqlite-vec]].'" Enter
-# Block until the write tool is actually invoked, then until it lands — tolerant of model latency.
-Wait+Screen /commit_note/
-Sleep 1500ms
-Wait+Screen /committed|wrote|✓/
-Sleep 3500ms
+Type "claude --dangerously-skip-permissions 'Use the hypermnesic search tool to find the sqlite-vec decision, then commit_note a short note at decisions/ship-receipts-first.md that links [[decisions/use-sqlite-vec]]. Be brief.'" Enter
+# The TUI collapses tool calls as "Called hypermnesic (ctrl+o to expand)" — wait on THAT (with a
+# long timeout for model latency), then give the search -> commit_note -> summary time to finish.
+Wait+Screen@120s /Called hypermnesic/
+Sleep 12s
 # Leave the TUI cleanly.
 Ctrl+C
 Sleep 400ms
