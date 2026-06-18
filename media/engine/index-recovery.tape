@@ -25,16 +25,21 @@ Set TypingSpeed 18ms
 Set PlaybackSpeed 1.0
 
 # ---- hidden setup ----
+# NB: VHS does not block on shell commands, and `clear` is a no-op in its headless terminal
+# (no terminfo). Each SLOW step gets a VHS `Sleep`, and the screen is wiped with an ANSI `printf`
+# against an idle shell right before Show — else Show leaks the hidden materialize/init scrollback.
 Hide
 Type "REPO=$PWD" Enter
 Type "source $REPO/.venv/bin/activate 2>/dev/null || true" Enter
 Type "export PS1='demo$ '" Enter
-Type "clear" Enter
 Type "rm -rf /tmp/hypermnesic-recovery" Enter
 Type "$REPO/media/engine/materialize-demo-vault /tmp/hypermnesic-recovery >/dev/null" Enter
+Sleep 1500ms
 Type "cd /tmp/hypermnesic-recovery" Enter
 Type "hypermnesic init . >/dev/null 2>&1" Enter
-Type "clear" Enter
+Sleep 5s
+Type "printf '\033[3J\033[2J\033[H'" Enter
+Sleep 600ms
 Show
 
 # ---- the recovery proof (visible) ----

@@ -6,6 +6,8 @@
 
 ![An agent writes a memory through the MCP commit_note tool, git log shows the resulting real commit, and a fresh session recalls and cites it](media/engine/hero-receipt-loop.gif)
 
+![An agent writes a memory through the MCP commit_note tool, git log shows the resulting real commit, and a fresh session recalls and cites it](media/engine/hero-receipt-loop.gif)
+
 **The git-native memory layer for AI agents.** A self-hosted second brain where your
 markdown files are the **single source of truth** and the search index is a disposable,
 rebuildable projection of the git tree. Every agent you use — ChatGPT, Claude, the Claude

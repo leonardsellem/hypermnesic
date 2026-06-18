@@ -1,9 +1,19 @@
-# Companion recording setup (U10) — Obsidian, GUI, manual
+# Companion recording setup (U10) — Obsidian
 
-The companion assets (U11, U12) are **Obsidian GUI screen recordings**. Obsidian is not a
-terminal, so these are **not `.tape`-scriptable** — this file is the reproducibility
-substitute (origin R10 is exempt-by-medium for companion recordings). Anyone can re-record
-by following these steps; review every frame against
+> **UPDATE 2026-06-18 (LS-1778): the STILLS are now scripted, not manual.** Obsidian's official
+> CLI (`dev:screenshot`, GA installer 1.12.4) screenshots its own window via CDP — TCC-free and
+> repeatable. [`capture-obsidian-stills.sh`](capture-obsidian-stills.sh) materializes a disposable
+> vault, wires the companion to a loopback master, opens it, drives each surface, and captures
+> `thinking-mode.png` / `sidebar.png` / `reinvention-nudge.png` / `obsidianmd-still.png` plus the
+> read-only-proof companion still. Prereq: Obsidian **installer ≥ 1.12.4** (the in-app "Check for
+> updates" only bumps the asar — reinstall from https://obsidian.md/download). `read-only-proof.gif`
+> is the scripted terminal `.tape` composited (`ffmpeg vstack`) with that companion still.
+> **Only the live-motion GIFs remain manual**: `companion-hero.gif` (graph edge animating) and
+> the marketplace `demo.gif` (status-bar popover on pause) need real window *video* — see §3.
+
+The remaining manual assets are **Obsidian GUI screen recordings**; this file is the
+reproducibility substitute (origin R10 is exempt-by-medium for companion recordings). Review every
+frame against
 [`../../docs/guides/demo-asset-frame-review-checklist.md`](../../docs/guides/demo-asset-frame-review-checklist.md)
 and sign off in [`../.review-log.md`](../.review-log.md).
 
@@ -49,12 +59,14 @@ the passive read surface that exposes only read controls (AE5: shown, not captio
 - Companion endpoint shown only as `127.0.0.1` (local) or `<your-host>.ts.net` (placeholder).
 - Then OCR-sweep + eyeball every frame and sign off in `../.review-log.md`.
 
-## 5. Marketplace assets (U12) — manual GUI capture
+## 5. Marketplace assets (U12) — scripted via `capture-obsidian-stills.sh`
 
 **Prerequisite (met 2026-06-15):** the `hypermnesic-companion` repo is public and its gates
 are green (CI + Release `success` on the latest push), so these land in *that* repo — no
-deferral. The captures themselves are Obsidian GUI screenshots; flag for manual capture, do
-not fabricate.
+deferral. The screenshots are produced by [`capture-obsidian-stills.sh`](capture-obsidian-stills.sh)
+(Obsidian CLI `dev:screenshot`, installer ≥ 1.12.4) — captured, not fabricated — except the
+top-of-README **`demo.gif`** (pause-triggered status-bar recall popover), which is live motion and
+still needs a real screen recording.
 
 Target the [Obsidian community-plugin directory conventions](https://docs.obsidian.md/Plugins/Releasing/Submission+requirements+for+plugins):
 a clear top-of-README **demo GIF or hero screenshot**, then feature screenshots. The
