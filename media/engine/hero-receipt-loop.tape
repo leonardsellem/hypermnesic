@@ -32,19 +32,25 @@ Set TypingSpeed 18ms
 Set PlaybackSpeed 1.0
 
 # ---- hidden setup: build a clean disposable vault + loopback write-enabled master ----
+# NB: VHS does not block on shell commands, and `clear` is a no-op in its headless terminal
+# (no terminfo). So each SLOW step gets a VHS `Sleep` (else later input buffers behind it), and
+# the screen is wiped with an ANSI `printf` against an idle shell right before Show — otherwise
+# Show captures the hidden materialize/serve scrollback and leaks it into the first frames.
 Hide
 Type "REPO=$PWD" Enter
 Type "source $REPO/.venv/bin/activate 2>/dev/null || true" Enter
 Type "export PS1='demo$ '" Enter
-Type "clear" Enter
 Type "rm -rf /tmp/hypermnesic-hero" Enter
 Type "$REPO/media/engine/materialize-demo-vault /tmp/hypermnesic-hero >/dev/null" Enter
+Sleep 1500ms
 Type "cp $REPO/media/engine/hero_commit.py /tmp/hypermnesic-hero/agent_write.py" Enter
 Type "cd /tmp/hypermnesic-hero" Enter
 Type "hypermnesic init . >/dev/null 2>&1" Enter
+Sleep 5s
 Type "hypermnesic serve --enable-write --host 127.0.0.1 --port 8765 --index-db .hypermnesic/index.db --repo . >/tmp/hero-serve.log 2>&1 &" Enter
-Type "sleep 3" Enter
-Type "clear" Enter
+Sleep 3s
+Type "printf '\033[3J\033[2J\033[H'" Enter
+Sleep 600ms
 Show
 
 # ---- the receipt loop (visible) ----
