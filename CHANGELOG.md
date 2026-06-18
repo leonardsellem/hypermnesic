@@ -14,14 +14,6 @@ its own changelog and version.
 
 ## [Unreleased]
 
-## [0.1.0] — 2026-06-18
-
-First-class product track and public-launch readiness. Adds the community-health and
-technical-reference documents (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, ARCHITECTURE,
-references, guides, glossary, GitHub templates), reconciles doc↔code drift from the
-0.0.5 PR set, and stages the AGPL-3.0 license + public-flip runbook under
-`docs/launch/` without flipping the live license or repository visibility.
-
 ### Added
 - Repository social-preview asset for the public GitHub presentation.
 - Directory-submission prep for the official MCP Registry, awesome-mcp-servers, and
@@ -47,14 +39,41 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   the automatic text scan (`scripts/preflight_public_scan.py`, now also catching macOS
   `/Users/` and `/var/folders/` paths) plus a manual frame-review checklist
   (`docs/guides/demo-asset-frame-review-checklist.md`) with a sign-off log (`media/.review-log.md`).
-- **Flagged binary captures (LS-1778)**: the deliberately-flagged binary renders, now
-  captured, frame-reviewed, and signed off `pass` in `media/.review-log.md` — the Claude Code
-  client GIF (live TUI → MCP → a real `commit_note`), the companion read-only-proof composite,
-  the live-graph companion-hero GIF, the Obsidian marketplace stills + `demo.gif` (in the
-  separate companion repo), and the r/ObsidianMD `obsidianmd-still.png`. Adds
+- **Flagged binary captures (LS-1778)**: the demo set's deliberately-flagged binary renders,
+  now captured, frame-reviewed, and signed off `pass` in `media/.review-log.md` — the Claude Code
+  client GIF (live TUI → MCP → a real `commit_note`), the companion read-only-proof composite, the
+  live-graph companion-hero GIF, the Obsidian marketplace stills + `demo.gif` (in the separate
+  companion repo), and the r/ObsidianMD `obsidianmd-still.png`; plus
   `media/companion/capture-obsidian-stills.sh` (reproducible Obsidian-CLI capture, TCC-free via
   `dev:screenshot`). Re-rendered the hero + index-recovery GIFs to fix a hidden-setup leak
   (`clear` is a no-op in VHS's headless terminal).
+
+### Changed
+- GitHub repository description and topics were applied for the public release presentation pass.
+- Directory-submission prep now reflects the current MCP Registry schema constraint,
+  the open awesome-mcp-servers PR, and the Obsidian PR permission handoff.
+- README and getting-started quickstart now install from PyPI (`uv tool install hypermnesic`)
+  instead of a clone / git URL, now that `0.1.0` is published to PyPI.
+- README header shows a PyPI version badge (replacing the git-tag version badge); added PyPI
+  Trove classifiers to `pyproject.toml` (Intended Audience, Python 3.11–3.13, AI / indexing
+  topics) for richer project metadata and a Python-versions badge from the next release.
+
+### Fixed
+- README: removed a duplicated hero "receipt loop" GIF (embedded twice after the launch-assets
+  merge) and activated the previously bare Docs-section links
+  (`docs/unified-oauth-mcp-deploy-runbook.md`, `plugin/README.md`, `docs/plans/`,
+  `docs/threat-model-commit-note.md`, the write-anywhere security review, and
+  `implementation-notes.md`).
+
+## [0.1.0] — 2026-06-14
+
+First-class product track and public-launch readiness. Adds the community-health and
+technical-reference documents (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, ARCHITECTURE,
+references, guides, glossary, GitHub templates), reconciles doc↔code drift from the
+0.0.5 PR set, and stages the AGPL-3.0 license + public-flip runbook under
+`docs/launch/` without flipping the live license or repository visibility.
+
+### Added
 - **`hypermnesic local-proof`**: a local-first value proof that validates or creates a
   git-backed markdown vault, projects committed files into the disposable index, retrieves
   a natural-language question with the repo-relative source path, explains lexical-only
@@ -93,14 +112,6 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   diagnostics offline-friendly and secret-free.
 
 ### Changed
-- GitHub repository description and topics were applied for the public release presentation pass.
-- Directory-submission prep now reflects the current MCP Registry schema constraint,
-  the open awesome-mcp-servers PR, and the Obsidian PR permission handoff.
-- README and getting-started quickstart now install from PyPI (`uv tool install hypermnesic`)
-  instead of a clone / git URL.
-- README header shows a PyPI version badge (replacing the git-tag version badge); added PyPI
-  Trove classifiers to `pyproject.toml` (Intended Audience, Python 3.11–3.13, AI / indexing
-  topics) for richer project metadata and a Python-versions badge from the next release.
 - README and getting-started onboarding now lead with the local proof milestone before
   endpoint setup or remote-client connection.
 - The remote-client smoke checklist now makes read-scope leak checks explicit for local absolute
@@ -128,11 +139,6 @@ references, guides, glossary, GitHub templates), reconciles doc↔code drift fro
   comparison against hosted memory layers.
 
 ### Fixed
-- README: removed a duplicated hero "receipt loop" GIF (embedded twice after the launch-assets
-  merge) and activated the previously bare Docs-section links
-  (`docs/unified-oauth-mcp-deploy-runbook.md`, `plugin/README.md`, `docs/plans/`,
-  `docs/threat-model-commit-note.md`, the write-anywhere security review, and
-  `implementation-notes.md`).
 - Public OAuth AS metadata now advertises public-client token and revocation auth support
   (`none`) alongside confidential-client methods, matching the DCR/token behavior and
   preventing Codex app connectors from staying stuck at 401 after OAuth authorization.
