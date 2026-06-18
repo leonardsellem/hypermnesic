@@ -1,8 +1,10 @@
 # hypermnesic
 
 [![CI](https://github.com/leonardsellem/hypermnesic/actions/workflows/ci.yml/badge.svg)](https://github.com/leonardsellem/hypermnesic/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/hypermnesic)](https://pypi.org/project/hypermnesic/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/v/tag/leonardsellem/hypermnesic?label=version)](CHANGELOG.md)
+
+![An agent writes a memory through the MCP commit_note tool, git log shows the resulting real commit, and a fresh session recalls and cites it](media/engine/hero-receipt-loop.gif)
 
 ![An agent writes a memory through the MCP commit_note tool, git log shows the resulting real commit, and a fresh session recalls and cites it](media/engine/hero-receipt-loop.gif)
 
@@ -37,7 +39,7 @@ generated `/tmp/hypermnesic-demo` vault and placeholder-safe paths.
 **Try it in under 5 minutes:**
 
 ```sh
-uv tool install git+https://github.com/leonardsellem/hypermnesic
+uv tool install hypermnesic
 hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo
 ```
 
@@ -66,8 +68,8 @@ notes. Dense embeddings improve ranking when `OPENAI_API_KEY` is configured, but
 proof also works offline in lexical mode.
 
 ```sh
-# 1. install the engine (from a clone of this repo)
-uv tool install .
+# 1. install the engine from PyPI
+uv tool install hypermnesic
 
 # 2. prove recall from your own markdown files, with a dry-run write preview
 hypermnesic local-proof /path/to/your/vault

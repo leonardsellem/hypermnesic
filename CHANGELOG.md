@@ -19,6 +19,10 @@ its own changelog and version.
 - Directory-submission prep for the official MCP Registry, awesome-mcp-servers, and
   Obsidian community plugin directory.
 - PyPI publication decision memo for the one-command install gate.
+- PyPI Trusted-Publishing release workflow (`.github/workflows/release.yml`): OIDC,
+  no stored API token, triggered on `v*.*.*` tags or manual dispatch — enables
+  `uv tool install hypermnesic` once the project's trusted publisher is configured
+  and `0.1.0` is published.
 - Launch-week first-contact response SLO checklist and baseline.
 - Launch narrative and channel-specific post drafts tied to readiness evidence.
 - Launch sequencing plan and public-launch retro template.
@@ -40,6 +44,11 @@ its own changelog and version.
 - GitHub repository description and topics were applied for the public release presentation pass.
 - Directory-submission prep now reflects the current MCP Registry schema constraint,
   the open awesome-mcp-servers PR, and the Obsidian PR permission handoff.
+- README and getting-started quickstart now install from PyPI (`uv tool install hypermnesic`)
+  instead of a clone / git URL, now that `0.1.0` is published to PyPI.
+- README header shows a PyPI version badge (replacing the git-tag version badge); added PyPI
+  Trove classifiers to `pyproject.toml` (Intended Audience, Python 3.11–3.13, AI / indexing
+  topics) for richer project metadata and a Python-versions badge from the next release.
 
 ## [0.1.0] — 2026-06-14
 
