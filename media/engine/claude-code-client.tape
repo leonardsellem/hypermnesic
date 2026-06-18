@@ -6,25 +6,19 @@
 # LS-1778 research corrected that — VHS runs real commands in a real shell, so it drives a live
 # Claude Code -> loopback-MCP session, and `Wait+Screen` makes it latency-tolerant (R10 recovered).
 #
-# ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-# │ STATUS: SETUP VALIDATED · VISIBLE TUI SECTION RENDER-PENDING.                               │
-# │ The hidden setup (materialize → init → serve → `claude mcp add --transport http`) is        │
-# │ smoke-tested working. The visible Claude Code TUI section could NOT be render-validated in   │
-# │ the build env because a standalone `claude` invocation returns 401 (the agent session's      │
-# │ Anthropic auth is a harness-managed OAuth token bound to a custom ANTHROPIC_BASE_URL; a      │
-# │ fresh subprocess can't use it, and ~/.claude/.credentials.json is stale).                    │
-# │ TO RENDER: run `claude login` first, then `vhs media/engine/claude-code-client.tape`.        │
-# │ Model wording is non-deterministic — re-render until clean; the `Wait+Screen` patterns below │
-# │ may need timing tweaks on first real render. Then frame-review + sign off media/.review-log. │
-# └──────────────────────────────────────────────────────────────────────────────────────────┘
-#
+# RE-RECORD:  claude login  (once), then  vhs media/engine/claude-code-client.tape  (repo root).
 # REQUIRES:   vhs + ffmpeg + ttyd; `hypermnesic` importable; the `claude` CLI authenticated
 #             (`claude login`); OPENAI_API_KEY in the environment (read at record time, never
 #             written into this tape) so the hidden `hypermnesic init` can build the index.
+#             Model wording is non-deterministic — re-render until the search → commit_note flow
+#             is shown cleanly, then frame-review + sign off media/.review-log.md.
 # SAFETY:     loopback master only (127.0.0.1, no auth → no OAuth issuer/consent on screen);
 #             fixture identity via materialize-demo-vault; sanitized `demo$` prompt; the MCP
-#             endpoint shows only 127.0.0.1. The Claude Code TUI must show NO account badge/avatar
-#             and NO window-title path bar — use a clean profile/crop. Review EVERY frame against
+#             endpoint shows only 127.0.0.1; the cwd shows only the generic `/tmp/...` path.
+#             NOTE: the Claude Code TUI welcome box shows the logged-in account name — that is
+#             ACCEPTED for this asset (the project ships under the maintainer's real name on
+#             GitHub; operator decision 2026-06-18). Still scrub every frame for any OTHER leak
+#             (real tailnet host, /Users|/home paths, tokens) per
 #             docs/guides/demo-asset-frame-review-checklist.md before publishing.
 
 Require git
@@ -67,9 +61,14 @@ Type "# Claude Code, pointed at the same hypermnesic MCP endpoint (127.0.0.1:876
 Sleep 900ms
 # Start the TUI with an initial prompt that exercises search -> think -> a real commit_note.
 Type "claude --dangerously-skip-permissions 'Use the hypermnesic search tool to find the sqlite-vec decision, then commit_note a short note at decisions/ship-receipts-first.md that links [[decisions/use-sqlite-vec]]. Be brief.'" Enter
-# The TUI collapses tool calls as "Called hypermnesic (ctrl+o to expand)" — wait on THAT (with a
-# long timeout for model latency), then give the search -> commit_note -> summary time to finish.
+Sleep 3s
+# Skip the model's long initial "thinking" spinner (dead time): hide until the first tool call,
+# so the GIF jumps from prompt-submitted straight to the action. (Waiting on the model's summary
+# wording is too brittle — it varies per run — so hold with a fixed Sleep instead.)
+Hide
 Wait+Screen@120s /Called hypermnesic/
+Show
+# Hold through search-result -> commit_note -> the "Done. Committed … (sha …)" summary.
 Sleep 12s
 # Leave the TUI cleanly.
 Ctrl+C
