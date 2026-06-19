@@ -47,6 +47,10 @@ its own changelog and version.
   `media/companion/capture-obsidian-stills.sh` (reproducible Obsidian-CLI capture, TCC-free via
   `dev:screenshot`). Re-rendered the hero + index-recovery GIFs to fix a hidden-setup leak
   (`clear` is a no-op in VHS's headless terminal).
+- MCP `read_note(path)` read tool — fetches a located note's full markdown content by
+  repo-relative path, bounded to indexed notes (a `../` traversal, an absolute path, or a
+  non-note file returns `found: false` with `content: null`, never an out-of-vault read).
+- `glama.json` server-metadata file (maintainers) for the Glama MCP directory.
 
 ### Changed
 - GitHub repository description and topics were applied for the public release presentation pass.
@@ -62,6 +66,9 @@ its own changelog and version.
   raising the Glama Tool Definition Quality Score; `hypermnesic_search` now states it is the
   prefixed alias of `search`. A connector-quality test guards against regressing to terse
   descriptions.
+- Every MCP tool parameter now carries a schema description (previously 0% coverage), so clients
+  and directory scorers see documented inputs — addressing the Glama TDQS "Parameters" dimension
+  across all read tools and the gated `commit_note` write tool.
 
 ### Fixed
 - README: removed a duplicated hero "receipt loop" GIF (embedded twice after the launch-assets

@@ -33,9 +33,11 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from pathlib import Path
+from typing import Annotated
 
 from mcp.server.fastmcp import FastMCP
 from mcp.types import CallToolResult, TextContent, ToolAnnotations
+from pydantic import Field
 
 # Pydantic (the SDK's schema generator) requires typing_extensions.TypedDict on Python < 3.12.
 from typing_extensions import TypedDict
@@ -75,6 +77,13 @@ class SearchOutput(TypedDict):
     degraded_reason: str | None
     manual_reindex_recommended: bool
     hits: list[SearchHit]
+
+
+class ReadNoteOutput(TypedDict):
+    path: str
+    found: bool
+    content: str | None
+    manual_reindex_recommended: bool
 
 
 class BuildContextOutput(TypedDict):
@@ -287,6 +296,21 @@ class _Backend:
         return self._embedder or None
 
 
+def _read_indexed_note(idx, repo: Path, path: str) -> tuple[bool, str | None]:
+    """Read an indexed note's content. Index membership IS the security boundary: only
+    committed, in-vault markdown notes appear in ``all_paths()``, so traversal (``../``),
+    absolute paths, and non-note files (``.env``, ``.git/``) are absent and return
+    ``(False, None)``. A resolved-within-repo check adds defense in depth."""
+    if path not in idx.all_paths():
+        return False, None
+    try:
+        fp = (repo / path).resolve()
+        fp.relative_to(repo.resolve())
+        return True, fp.read_text(encoding="utf-8", errors="replace")
+    except (OSError, ValueError):
+        return False, None
+
+
 def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                  path: str = DEFAULT_PATH, embedder=None, repo: Path | None = None,
                  authoring_host: bool = False, write_enabled: bool = False,
@@ -439,7 +463,10 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                           "and git recency) so an agent can recall facts, notes, and "
                           "decisions from the vault by a natural-language query. `k` caps "
                           "the number of hits (default 10).")
-    def search(query: str, k: int = 10) -> SearchOutput:
+    def search(
+        query: Annotated[str, Field(description="Natural-language query to recall notes by.")],
+        k: Annotated[int, Field(description="Maximum number of ranked hits to return.")] = 10,
+    ) -> SearchOutput:
         return _search(query, k)
 
     @mcp.tool(name="hypermnesic_search", annotations=ToolAnnotations(readOnlyHint=True),
@@ -452,12 +479,19 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                           "score, channels, snippet, git recency). Prefer `search`; reach "
                           "for this alias only when your client requires the prefixed name. "
                           "`k` caps the number of hits (default 10).")
-    def hypermnesic_search(query: str, k: int = 10) -> SearchOutput:
+    def hypermnesic_search(
+        query: Annotated[str, Field(description="Natural-language query to recall notes by.")],
+        k: Annotated[int, Field(description="Maximum number of ranked hits to return.")] = 10,
+    ) -> SearchOutput:
         return _search(query, k)
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
               description="Pages reachable from a page via body wikilinks (in+out edges).")
-    def build_context(path: str, depth: int = 1) -> BuildContextOutput:
+    def build_context(
+        path: Annotated[str, Field(description="Repo-relative path of the note to expand from.")],
+        depth: Annotated[int, Field(
+            description="Number of wikilink hops to traverse (in + out edges).")] = 1,
+    ) -> BuildContextOutput:
         cr = backend.converge()
         reachable = graph_mod.build_context(backend.graph, path, depth=depth)
         return {"start": path, "depth": depth, "context": reachable,
@@ -467,7 +501,9 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
               description="Entity resolution: resolve a name to an existing page path "
                           "(gbrain's `get` role), or null if ambiguous/missing. The caller "
                           "strips `.md` (use `slug`) to form a wikilink target.")
-    def resolve(name: str) -> ResolveOutput:
+    def resolve(
+        name: Annotated[str, Field(description="Entity or page name to resolve to a vault path.")],
+    ) -> ResolveOutput:
         cr = backend.converge()
         resolved = backend.graph.resolve(name)
         slug = resolved[:-3] if resolved and resolved.endswith(".md") else resolved
@@ -478,7 +514,14 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
               description="Thinking-mode: related notes + Socratic prompts + "
                           "related-but-not-yet-linked pairs. Pass the active note's `path` to "
                           "exclude it from its own results. Never writes (wrote: false).")
-    def think(topic: str, k: int = 8, depth: int = 1, path: str | None = None) -> ThinkOutput:
+    def think(
+        topic: Annotated[str, Field(description="Topic or question to explore.")],
+        k: Annotated[int, Field(description="Maximum number of related notes to return.")] = 8,
+        depth: Annotated[int, Field(description="Graph hops used to expand related notes.")] = 1,
+        path: Annotated[str | None, Field(
+            description="Repo-relative path of the active note to exclude from its own "
+                        "results.")] = None,
+    ) -> ThinkOutput:
         cr = backend.converge()
         out = think_mod.think(backend.idx, topic, embedder=backend.embedder,
                               graph=backend.graph, k=k, depth=depth, path=path,
@@ -494,7 +537,11 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                           "note count, plus direct root-local AGENTS.md/CLAUDE.md guidance when "
                           "present. Read-only; the `writable` flag matches what `commit_note` "
                           "accepts. Narrow `root` to drill deeper when `truncated` is true.")
-    def list_folders(root: str = "", depth: int = 1) -> ListFoldersOutput:
+    def list_folders(
+        root: Annotated[str, Field(
+            description="Repo-relative folder to drill down from ('' = vault root).")] = "",
+        depth: Annotated[int, Field(description="Number of folder levels to descend.")] = 1,
+    ) -> ListFoldersOutput:
         cr = backend.converge()
         instruction = None
         try:
@@ -517,6 +564,23 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         }
         return out
 
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
+              description="Read the full markdown content of a single note by its repo-relative "
+                          "path (typically a `path` returned by `search`, `resolve`, or "
+                          "`build_context`). Read-only and bounded to indexed notes: a path that "
+                          "is not a committed note in the vault returns `found: false` with "
+                          "`content: null`, never an out-of-vault or traversal read. Use it to "
+                          "fetch a note's body after locating it with the other read tools.")
+    def read_note(
+        path: Annotated[str, Field(
+            description="Repo-relative path of the note to read, e.g. 'notes/topic.md' "
+                        "(typically a `path` from a search/resolve/build_context result).")],
+    ) -> ReadNoteOutput:
+        cr = backend.converge()
+        found, content = _read_indexed_note(backend.idx, backend.repo, path)
+        return {"path": path, "found": found, "content": content,
+                "manual_reindex_recommended": cr.manual_reindex_recommended}
+
     if write_enabled:
         # The one sanctioned write path, exposed over MCP only on a write-enabled
         # (master) server. Git-first: file → git commit → index follows. Reuses
@@ -530,9 +594,17 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                   description="Git-first write: commit a single note on the master "
                               "(guard → diff-or-die gate → git commit → audit; never merges). "
                               "The index follows as a projection — a reindex never loses it.")
-        def commit_note(path: str, body: str | None = None,
-                        set_fields: dict | None = None,
-                        summary: str | None = None) -> CommitNoteOutput:
+        def commit_note(
+            path: Annotated[str, Field(
+                description="Repo-relative path of the note to write, e.g. 'notes/x.md'.")],
+            body: Annotated[str | None, Field(
+                description="Full markdown body to commit; omit to only set frontmatter "
+                            "fields on an existing note.")] = None,
+            set_fields: Annotated[dict | None, Field(
+                description="Frontmatter fields to set or merge (a YAML mapping).")] = None,
+            summary: Annotated[str | None, Field(
+                description="Optional commit-message summary for the git write.")] = None,
+        ) -> CommitNoteOutput:
             # V14 / security-review fix: when auth is on, the write tool self-enforces the
             # write scope — independent of the transport's (misconfigurable, global)
             # required_scopes. The HTTP auth middleware guarantees a principal for any
@@ -875,5 +947,5 @@ def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = D
 
 
 READ_TOOL_NAMES = {"search", "hypermnesic_search", "build_context", "think", "resolve",
-                   "list_folders"}
+                   "list_folders", "read_note"}
 WRITE_TOOL_NAMES = {"commit_note"}            # registered only when write_enabled (U31)
