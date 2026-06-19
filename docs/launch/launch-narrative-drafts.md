@@ -3,7 +3,7 @@ title: "Launch narrative drafts"
 status: drafted
 audience: operator
 linear: LS-1689
-last_checked: 2026-06-14
+last_checked: 2026-06-19
 ---
 
 # Launch narrative drafts
@@ -14,10 +14,21 @@ story and channel-specific post drafts.
 Do not post any text from this document to Hacker News, Reddit, X, Bluesky,
 Discord, or any other external channel without operator approval.
 
+**Refreshed 2026-06-19** — two proof points strengthened since the first draft:
+PyPI `0.1.0` is published, so every engine draft now leads with the one-command
+`uv tool install hypermnesic`; and the server is listed on Glama with a passing
+automated build check and an **A** tool-definition-quality grade, cited as a
+third-party signal. The official-MCP-registry and awesome-list listings are still
+not live, and those "listed" claims remain off-limits until they land.
+
 ## Evidence links every draft may use
 
 - README and quick start:
   `https://github.com/leonardsellem/hypermnesic#quick-start`
+- PyPI package (v0.1.0 published):
+  `https://pypi.org/project/hypermnesic/`
+- Glama listing (passing build check, Tool Definition Quality A):
+  `https://glama.ai/mcp/servers/ak6x81u3rr`
 - Local-proof demo:
   `https://github.com/leonardsellem/hypermnesic/blob/main/docs/assets/readme-local-proof.svg`
 - Architecture:
@@ -38,6 +49,9 @@ Discord, or any other external channel without operator approval.
   rebuildable.
 - Memory writes go through reviewable Git commits.
 - The project exposes MCP, CLI, and a read-only Obsidian companion.
+- Installable from PyPI today: `uv tool install hypermnesic` (v0.1.0 published).
+- Listed on Glama with a passing automated build check and an A grade for
+  tool-definition quality (a third-party directory, not the official MCP registry).
 - Benchmarks exist and are documented with caveats.
 - Product readiness is tracked separately from benchmark quality.
 - The companion is public and read-only.
@@ -45,8 +59,10 @@ Discord, or any other external channel without operator approval.
 ## Claims to avoid
 
 - Do not claim hosted SaaS, multi-tenant service, or managed cloud availability.
-- Do not claim PyPI install until LS-1684 is decided and publication is complete.
-- Do not claim official directory listing until LS-1683 submissions/listings land.
+- Do not claim the official MCP registry listing or an awesome-list listing as live
+  yet: the registry submission is not filed and the awesome-mcp-servers PR is still
+  open (not merged). Citing the live Glama listing is fine; calling it an "official
+  registry" listing is not.
 - Do not claim Discussions/community forum availability until LS-1686 is complete.
 - Do not imply the Obsidian companion can write to a vault.
 - Do not imply dense retrieval is always available; degraded lexical-only mode is a
@@ -62,9 +78,9 @@ rebuildable projection, and every memory write is a Git commit you can review.
 Agents get recall over your notes through MCP and CLI surfaces, while humans keep
 plain files, diffs, history, and the option to rebuild the index from scratch.
 
-The public v0.1.0 release focuses on making that loop inspectable: local-proof
-demo, reference docs, product-readiness gates, benchmark notes, OAuth MCP work, and
-a separate read-only Obsidian companion.
+The public v0.1.0 release focuses on making that loop inspectable: a one-command
+PyPI install, a local-proof demo, reference docs, product-readiness gates, benchmark
+notes, OAuth MCP work, and a separate read-only Obsidian companion.
 
 It is not a hosted memory service. It is a self-hosted, git-backed memory layer for
 people who want agents to remember without turning the index into the source of
@@ -86,19 +102,29 @@ Hi HN,
 I built Hypermnesic, a self-hosted memory layer for AI agents where Markdown files
 remain the source of truth and the retrieval index is disposable.
 
+Try it in two commands - no account, no service:
+
+    uv tool install hypermnesic
+    hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo
+
+That builds a tiny Markdown git repo, projects it into the disposable index, recalls
+the source note, and previews the exact commit_note write diff without writing it.
+
 The design constraint is that a reindex should never be able to lose a memory. Agent
 writes are Git commits, so they are reviewable, revertible, and visible in normal
 repo history. The index is just a projection over the files.
 
 The v0.1.0 release includes:
 
-- MCP server and CLI surfaces
+- MCP server (OAuth) and CLI surfaces; read tools (search, read_note, build_context,
+  resolve, think, list_folders) plus a guarded commit_note write
 - a local-proof demo for recall + dry-run write flow
 - hybrid lexical/dense retrieval with visible degraded states
-- guarded writes through commit_note
-- product readiness docs and remote-client smoke evidence
 - a separate read-only Obsidian companion
 - benchmark notes with caveats
+
+It's also listed on Glama with a passing automated build check and an A grade for
+tool-definition quality: https://glama.ai/mcp/servers/ak6x81u3rr
 
 Repo: https://github.com/leonardsellem/hypermnesic
 Quick start: https://github.com/leonardsellem/hypermnesic#quick-start
@@ -108,7 +134,7 @@ Benchmarks/caveats: https://github.com/leonardsellem/hypermnesic/blob/main/harne
 Honest limitations:
 
 - It is self-hosted, not a managed service.
-- PyPI install and directory listings are not live unless the linked docs say they are.
+- Directory listings (official MCP registry / awesome lists) are not live yet.
 - Dense retrieval can degrade to lexical-only when embeddings are unavailable.
 - The Obsidian companion is read-only by design.
 - Benchmark quality and product readiness are tracked separately.
@@ -126,6 +152,11 @@ I released Hypermnesic v0.1.0, a self-hosted memory layer for AI agents.
 The main idea: your Markdown files are the source of truth. The retrieval index can
 be deleted and rebuilt. If an agent writes memory, it leaves a Git commit.
 
+Install and prove it locally in two commands:
+
+    uv tool install hypermnesic
+    hypermnesic local-proof /path/to/your/vault
+
 Links:
 
 - Repo and quick start: https://github.com/leonardsellem/hypermnesic#quick-start
@@ -133,7 +164,9 @@ Links:
 - Product readiness checklist: https://github.com/leonardsellem/hypermnesic/blob/main/docs/launch/first-class-product-readiness-checklist.md
 
 It exposes MCP and CLI surfaces, supports self-hosted OAuth MCP deployment, and has
-a separate read-only Obsidian companion.
+a separate read-only Obsidian companion. It is also listed on Glama with a passing
+build check and an A tool-definition-quality grade:
+https://glama.ai/mcp/servers/ak6x81u3rr
 
 Limitations: this is not hosted SaaS; setup still assumes you are comfortable with a
 repo, Python/uv, and self-hosting. Dense retrieval can degrade to lexical-only if
@@ -152,8 +185,9 @@ related notes/questions and displays them in Obsidian.
 Companion repo: https://github.com/leonardsellem/hypermnesic-companion
 Engine repo and setup: https://github.com/leonardsellem/hypermnesic#quick-start
 
-The engine is built around a file-first invariant: Markdown files are truth, the
-retrieval index is disposable, and agent writes are reviewable Git commits.
+The engine installs in one command (`uv tool install hypermnesic`) and is built
+around a file-first invariant: Markdown files are truth, the retrieval index is
+disposable, and agent writes are reviewable Git commits.
 
 Limitations: the companion requires a running Hypermnesic engine/MCP endpoint, and
 semantic retrieval can visibly degrade to lexical-only if the embedding channel is
@@ -166,6 +200,9 @@ unavailable.
 Hypermnesic is a self-hosted memory layer for AI agents where the source of truth is
 plain Markdown in your own Git repo.
 
+Install: `uv tool install hypermnesic` (then `hypermnesic local-proof --demo-dir
+/tmp/hypermnesic-demo` to see recall plus a dry-run write on a throwaway vault).
+
 Why it may be interesting here:
 
 - the index is disposable and rebuildable from files
@@ -177,6 +214,7 @@ Why it may be interesting here:
 
 Repo: https://github.com/leonardsellem/hypermnesic
 Benchmarks/caveats: https://github.com/leonardsellem/hypermnesic/blob/main/harness/BENCHMARKS.md
+Glama listing (passing build, Tool Definition Quality A): https://glama.ai/mcp/servers/ak6x81u3rr
 
 It is not a local model runtime. It is a memory substrate you can connect to MCP
 clients and agent workflows when you want the memory layer to stay inspectable.
@@ -190,6 +228,8 @@ clients and agent workflows when you want the memory layer to stay inspectable.
 It is git-first memory for AI agents: Markdown files are truth, the retrieval index
 is disposable, and every memory write is a reviewable Git commit.
 
+  uv tool install hypermnesic
+
 https://github.com/leonardsellem/hypermnesic
 
 2/ The invariant: a reindex must never be able to lose a memory.
@@ -198,7 +238,7 @@ Files are the durable source of truth. The index can be rebuilt from the repo.
 
 3/ Surfaces in v0.1.0:
 
-- MCP server
+- MCP server (OAuth)
 - CLI
 - local-proof demo
 - guarded commit_note writes
@@ -210,8 +250,10 @@ Files are the durable source of truth. The index can be rebuilt from the repo.
 Dense retrieval can degrade to lexical-only. The Obsidian companion is read-only.
 Benchmark quality and product readiness are tracked separately.
 
-5/ Quick start and docs:
+5/ Listed on Glama with a passing build check and an A tool-definition-quality grade:
+https://glama.ai/mcp/servers/ak6x81u3rr
 
+Quick start and docs:
 https://github.com/leonardsellem/hypermnesic#quick-start
 ```
 
@@ -221,14 +263,19 @@ https://github.com/leonardsellem/hypermnesic#quick-start
 I released Hypermnesic v0.1.0, a git-first memory MCP server for AI agents.
 
 The memory source of truth is Markdown in a Git repo; the index is rebuildable, and
-agent writes are reviewable commits. The release includes MCP/CLI surfaces,
+agent writes are reviewable commits. The release includes MCP (OAuth) / CLI surfaces,
 guarded writes, a local-proof demo, and a separate read-only Obsidian companion.
+
+Install: uv tool install hypermnesic
 
 Repo and quick start:
 https://github.com/leonardsellem/hypermnesic#quick-start
 
 MCP tools reference:
 https://github.com/leonardsellem/hypermnesic/blob/main/docs/reference/mcp-tools.md
+
+It is listed on Glama with a passing automated build check and an A
+tool-definition-quality grade: https://glama.ai/mcp/servers/ak6x81u3rr
 
 I would especially appreciate MCP client compatibility reports and feedback on the
 write guard / OAuth flow.
@@ -238,9 +285,13 @@ write guard / OAuth flow.
 
 - [ ] The target channel is still appropriate.
 - [ ] The post links the README quick start or demo.
+- [ ] The post leads with the PyPI install (`uv tool install hypermnesic`).
 - [ ] Benchmark claims link `harness/BENCHMARKS.md`.
 - [ ] Product-readiness claims link the readiness checklist.
-- [ ] No PyPI or directory-listing claims are included unless those tasks are Done.
+- [ ] The Glama claim is stated as a third-party listing (passing build + Tool
+      Definition Quality A), not as the official MCP registry.
+- [ ] No official-MCP-registry or awesome-list "listed" claim is included until those
+      submissions/listings land.
 - [ ] No Discussions/community-forum claims are included unless LS-1686 is Done.
 - [ ] No private hostnames, tokens, vault contents, or local absolute paths are included.
 - [ ] Operator explicitly approves the final text and channel.
