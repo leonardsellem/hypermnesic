@@ -14,12 +14,23 @@ story and channel-specific post drafts.
 Do not post any text from this document to Hacker News, Reddit, X, Bluesky,
 Discord, or any other external channel without operator approval.
 
-**Refreshed 2026-06-19** — two proof points strengthened since the first draft:
-PyPI `0.1.0` is published, so every engine draft now leads with the one-command
-`uv tool install hypermnesic`; and the server is listed on Glama with a passing
-automated build check and an **A** tool-definition-quality grade, cited as a
-third-party signal. The official-MCP-registry and awesome-list listings are still
-not live, and those "listed" claims remain off-limits until they land.
+**Refreshed 2026-06-19** — the framing now leads with the authentic angle (built
+for the author's own workflow; deliberately opinionated; lightweight setup; portable
+memory you own), and two proof points are strengthened. PyPI `0.1.0` is published,
+so every engine draft opens on the one-command `uv tool install hypermnesic`; and the
+server is listed on Glama with a passing automated build check and an **A**
+tool-definition-quality grade, cited as a third-party signal. The
+official-MCP-registry and awesome-list "listed" claims remain off-limits until they
+land.
+
+## Narrative spine (keep this voice in every channel)
+
+- It is a personal tool first: I built it for my own workflow, not as a platform.
+- It is deliberately opinionated — it does one thing (portable, file-first agent
+  memory) and does not try to be everything.
+- Setup is lightweight: one command to install, one to prove recall locally.
+- The point is portability: the memory is plain Markdown in your own Git repo, so it
+  is yours to move, diff, and rebuild — no vendor database, no lock-in.
 
 ## Evidence links every draft may use
 
@@ -45,6 +56,12 @@ not live, and those "listed" claims remain off-limits until they land.
 ## Claims allowed
 
 - Hypermnesic is git-first memory for AI agents.
+- Built for the author's own workflow; it is deliberately opinionated, not a
+  general-purpose platform.
+- Lightweight setup: a one-command `uv tool install hypermnesic` plus a local-proof
+  demo.
+- Memory is portable and owned: plain Markdown in your own Git repo, movable and
+  rebuildable, with no vendor lock-in.
 - Markdown files are the source of truth; the retrieval index is disposable and
   rebuildable.
 - Memory writes go through reviewable Git commits.
@@ -71,27 +88,31 @@ not live, and those "listed" claims remain off-limits until they land.
 
 ## Canonical story
 
-Hypermnesic is memory for agents where the files stay in your repo.
+Hypermnesic is portable memory for agents: the files stay in your repo, so the memory
+is yours to move, diff, and rebuild.
 
-The invariant is deliberately boring: Markdown files are truth, the index is a
-rebuildable projection, and every memory write is a Git commit you can review.
-Agents get recall over your notes through MCP and CLI surfaces, while humans keep
+I built it for my own workflow. I wanted my agents' memory to be something I own and
+can take anywhere — plain files, not rows in a vendor's database I can't see or
+export. So it is deliberately opinionated and lightweight rather than a do-everything
+platform. The invariant is boring on purpose: Markdown files are truth, the index is
+a rebuildable projection, and every memory write is a Git commit you can review.
+Setup is one command; agents get recall over MCP and CLI surfaces, while humans keep
 plain files, diffs, history, and the option to rebuild the index from scratch.
 
-The public v0.1.0 release focuses on making that loop inspectable: a one-command
-PyPI install, a local-proof demo, reference docs, product-readiness gates, benchmark
+The public v0.1.0 release focuses on making that loop inspectable: a one-command PyPI
+install, a local-proof demo, reference docs, product-readiness gates, benchmark
 notes, OAuth MCP work, and a separate read-only Obsidian companion.
 
-It is not a hosted memory service. It is a self-hosted, git-backed memory layer for
-people who want agents to remember without turning the index into the source of
-truth.
+It is not a hosted memory service and does not try to be everything. It is a
+self-hosted, git-backed memory layer for people who want agents to remember with
+memory that stays portable and theirs.
 
 ## Show HN draft
 
 Suggested title:
 
 ```text
-Show HN: Hypermnesic - git-first memory for AI agents
+Show HN: Hypermnesic - git-first, portable memory for AI agents
 ```
 
 Draft:
@@ -99,8 +120,10 @@ Draft:
 ```md
 Hi HN,
 
-I built Hypermnesic, a self-hosted memory layer for AI agents where Markdown files
-remain the source of truth and the retrieval index is disposable.
+I built Hypermnesic for my own workflow: I wanted my AI agents' memory to be portable
+and mine - plain files I can move, diff, and rebuild - instead of rows in a vendor's
+database I can't see or export. So it is deliberately opinionated and lightweight.
+Markdown files stay the source of truth and the retrieval index is disposable.
 
 Try it in two commands - no account, no service:
 
@@ -131,9 +154,9 @@ Quick start: https://github.com/leonardsellem/hypermnesic#quick-start
 Architecture: https://github.com/leonardsellem/hypermnesic/blob/main/ARCHITECTURE.md
 Benchmarks/caveats: https://github.com/leonardsellem/hypermnesic/blob/main/harness/BENCHMARKS.md
 
-Honest limitations:
+This is a personal, opinionated tool, with honest limitations:
 
-- It is self-hosted, not a managed service.
+- It is self-hosted, not a managed service, and it doesn't try to be everything.
 - Directory listings (official MCP registry / awesome lists) are not live yet.
 - Dense retrieval can degrade to lexical-only when embeddings are unavailable.
 - The Obsidian companion is read-only by design.
@@ -147,7 +170,10 @@ memory.
 ## r/selfhosted draft
 
 ```md
-I released Hypermnesic v0.1.0, a self-hosted memory layer for AI agents.
+I released Hypermnesic v0.1.0, a self-hosted memory layer for AI agents. I built it
+for my own setup because I wanted agent memory I actually own and can move - plain
+files, not a vendor database I can't export. It is deliberately opinionated and
+lightweight.
 
 The main idea: your Markdown files are the source of truth. The retrieval index can
 be deleted and rebuilt. If an agent writes memory, it leaves a Git commit.
@@ -185,9 +211,9 @@ related notes/questions and displays them in Obsidian.
 Companion repo: https://github.com/leonardsellem/hypermnesic-companion
 Engine repo and setup: https://github.com/leonardsellem/hypermnesic#quick-start
 
-The engine installs in one command (`uv tool install hypermnesic`) and is built
-around a file-first invariant: Markdown files are truth, the retrieval index is
-disposable, and agent writes are reviewable Git commits.
+I built the engine for my own workflow: portable, file-first agent memory you own.
+It installs in one command (`uv tool install hypermnesic`) and keeps Markdown files
+as the source of truth, with a disposable index and reviewable Git-commit writes.
 
 Limitations: the companion requires a running Hypermnesic engine/MCP endpoint, and
 semantic retrieval can visibly degrade to lexical-only if the embedding channel is
@@ -198,7 +224,8 @@ unavailable.
 
 ```md
 Hypermnesic is a self-hosted memory layer for AI agents where the source of truth is
-plain Markdown in your own Git repo.
+plain Markdown in your own Git repo. I built it for my own workflow - opinionated and
+lightweight, with memory that stays portable and yours.
 
 Install: `uv tool install hypermnesic` (then `hypermnesic local-proof --demo-dir
 /tmp/hypermnesic-demo` to see recall plus a dry-run write on a throwaway vault).
@@ -225,8 +252,9 @@ clients and agent workflows when you want the memory layer to stay inspectable.
 ```text
 1/ Hypermnesic v0.1.0 is public.
 
-It is git-first memory for AI agents: Markdown files are truth, the retrieval index
-is disposable, and every memory write is a reviewable Git commit.
+I built it for my own workflow: portable, git-first memory for AI agents. Markdown
+files are truth, the index is disposable, every write is a reviewable Git commit.
+Opinionated and lightweight by design.
 
   uv tool install hypermnesic
 
@@ -234,7 +262,8 @@ https://github.com/leonardsellem/hypermnesic
 
 2/ The invariant: a reindex must never be able to lose a memory.
 
-Files are the durable source of truth. The index can be rebuilt from the repo.
+Files are the durable source of truth. The index can be rebuilt from the repo, so the
+memory stays yours to move and diff.
 
 3/ Surfaces in v0.1.0:
 
@@ -245,7 +274,7 @@ Files are the durable source of truth. The index can be rebuilt from the repo.
 - read-only Obsidian companion
 - benchmark/readiness docs
 
-4/ It is self-hosted, not hosted SaaS.
+4/ It is self-hosted, not hosted SaaS, and it doesn't try to be everything.
 
 Dense retrieval can degrade to lexical-only. The Obsidian companion is read-only.
 Benchmark quality and product readiness are tracked separately.
@@ -260,7 +289,8 @@ https://github.com/leonardsellem/hypermnesic#quick-start
 ## MCP community Discord draft
 
 ```md
-I released Hypermnesic v0.1.0, a git-first memory MCP server for AI agents.
+I released Hypermnesic v0.1.0, a git-first memory MCP server for AI agents. I built it
+for my own workflow - opinionated and lightweight, with portable memory you own.
 
 The memory source of truth is Markdown in a Git repo; the index is rebuildable, and
 agent writes are reviewable commits. The release includes MCP (OAuth) / CLI surfaces,
@@ -284,6 +314,7 @@ write guard / OAuth flow.
 ## Review checklist before posting
 
 - [ ] The target channel is still appropriate.
+- [ ] The post keeps the personal / opinionated / lightweight / portable voice.
 - [ ] The post links the README quick start or demo.
 - [ ] The post leads with the PyPI install (`uv tool install hypermnesic`).
 - [ ] Benchmark claims link `harness/BENCHMARKS.md`.
