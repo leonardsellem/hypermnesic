@@ -431,12 +431,27 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         }
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True),
-              description="Hybrid (lexical + dense) search over the read-only index.")
+              description="Hybrid retrieval over the read-only index: fuses SQLite FTS5 "
+                          "lexical search with sqlite-vec dense (semantic) ranking via "
+                          "reciprocal-rank fusion, degrading gracefully to lexical-only "
+                          "when embeddings are unavailable. Returns ranked hits (source "
+                          "markdown path, heading, fused score, matched channels, a snippet, "
+                          "and git recency) so an agent can recall facts, notes, and "
+                          "decisions from the vault by a natural-language query. `k` caps "
+                          "the number of hits (default 10).")
     def search(query: str, k: int = 10) -> SearchOutput:
         return _search(query, k)
 
     @mcp.tool(name="hypermnesic_search", annotations=ToolAnnotations(readOnlyHint=True),
-              description="Compatibility alias for clients that prefix the search tool name.")
+              description="Hybrid (lexical + dense) search over the read-only index: "
+                          "functionally identical to `search`, exposed under this namespaced "
+                          "alias for clients that auto-prefix tool names with the server id. "
+                          "Fuses FTS5 lexical and sqlite-vec semantic ranking via "
+                          "reciprocal-rank fusion (degrading to lexical-only without "
+                          "embeddings) and returns the same ranked hits (path, heading, "
+                          "score, channels, snippet, git recency). Prefer `search`; reach "
+                          "for this alias only when your client requires the prefixed name. "
+                          "`k` caps the number of hits (default 10).")
     def hypermnesic_search(query: str, k: int = 10) -> SearchOutput:
         return _search(query, k)
 

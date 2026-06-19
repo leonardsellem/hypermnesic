@@ -57,6 +57,11 @@ its own changelog and version.
 - README header shows a PyPI version badge (replacing the git-tag version badge); added PyPI
   Trove classifiers to `pyproject.toml` (Intended Audience, Python 3.11–3.13, AI / indexing
   topics) for richer project metadata and a Python-versions badge from the next release.
+- `search` and `hypermnesic_search` MCP tool descriptions are now full, self-describing
+  definitions (retrieval model, return shape, and when to use each) rather than one-line stubs,
+  raising the Glama Tool Definition Quality Score; `hypermnesic_search` now states it is the
+  prefixed alias of `search`. A connector-quality test guards against regressing to terse
+  descriptions.
 
 ### Fixed
 - README: removed a duplicated hero "receipt loop" GIF (embedded twice after the launch-assets

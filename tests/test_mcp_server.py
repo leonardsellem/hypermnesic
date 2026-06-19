@@ -136,6 +136,21 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     assert {"committed", "refused"} <= set(schemas["commit_note"]["properties"])
 
 
+def test_search_tools_carry_descriptive_definitions(built_index, fake_embedder):
+    # TDQS / connector quality: the search tools must carry substantive descriptions (purpose,
+    # retrieval model, return shape) — not bare one-liners — so directory scorers and MCP clients
+    # can tell what they do and when to use them. Guards against regressing to terse stubs; the
+    # `hypermnesic_search` alias is the prefixed twin of `search` and must self-identify as such.
+    srv = mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
+    tools = {t.name: t for t in asyncio.run(srv.list_tools())}
+    for name in ("search", "hypermnesic_search"):
+        desc = tools[name].description or ""
+        assert len(desc) >= 160, f"{name} description too terse for TDQS: {desc!r}"
+        low = desc.lower()
+        assert "lexical" in low and "dense" in low, f"{name} omits the retrieval model"
+    assert "alias" in (tools["hypermnesic_search"].description or "").lower()
+
+
 def test_search_tool_returns_hits(built_index, fake_embedder):
     assert mcp_server.build_server(built_index, host=TAILNET_IP, embedder=fake_embedder)
     backend = mcp_server._Backend(built_index, embedder=fake_embedder)
