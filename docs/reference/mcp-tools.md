@@ -32,7 +32,9 @@ tool.
 
 ### `search(query: str, k: int = 10)`
 
-Hybrid (lexical + dense) search over the index.
+Hybrid retrieval over the read-only index: SQLite FTS5 lexical search fused with sqlite-vec dense
+(semantic) ranking via reciprocal-rank fusion, degrading gracefully to lexical-only when embeddings
+are unavailable.
 
 **Returns** `{ query, degraded_lexical_only, degraded_reason, manual_reindex_recommended,
 hits: [ { path, heading, score, channels, snippet, recency } ] }`. `channels` records which
@@ -44,7 +46,9 @@ names the provider/config state (`missing_embedder`, `configuration`, `rate_limi
 
 ### `hypermnesic_search(query: str, k: int = 10)`
 
-Compatibility alias for `search`; same read-only behavior and return shape.
+Hybrid (lexical + dense) search over the read-only index — functionally identical to `search` (same
+inputs, same return shape), exposed under a namespaced name for clients that auto-prefix tool names
+with the server id. Prefer `search` unless your client requires the prefixed name.
 
 ### `build_context(path: str, depth: int = 1)`
 
