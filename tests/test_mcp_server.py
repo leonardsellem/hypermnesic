@@ -102,7 +102,8 @@ def test_only_read_tools_no_write_tool(built_index, fake_embedder):
     tools = asyncio.run(srv.list_tools())
     names = {t.name for t in tools}
     assert names == {
-        "search", "hypermnesic_search", "build_context", "think", "resolve", "list_folders"}
+        "search", "hypermnesic_search", "build_context", "think", "resolve", "list_folders",
+        "read_note"}
     # read-only is structural: no write-ish tool exists
     assert not any(
         kw in n for t in tools for n in [t.name]
@@ -121,7 +122,7 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     schemas = {t.name: t.outputSchema for t in asyncio.run(srv.list_tools())}
     assert set(schemas) == {
         "search", "hypermnesic_search", "build_context", "think", "resolve", "list_folders",
-        "commit_note"}
+        "read_note", "commit_note"}
     for name, sch in schemas.items():
         assert sch and sch.get("properties"), f"{name} has no outputSchema"
     # spot-check the declared shapes match the real returns
@@ -133,6 +134,7 @@ def test_every_tool_advertises_an_output_schema(built_index, fake_embedder):
     assert {"folders", "truncated", "omitted", "agent_instruction"} <= set(
         schemas["list_folders"]["properties"]
     )
+    assert {"found", "content"} <= set(schemas["read_note"]["properties"])
     assert {"committed", "refused"} <= set(schemas["commit_note"]["properties"])
 
 
@@ -149,6 +151,35 @@ def test_search_tools_carry_descriptive_definitions(built_index, fake_embedder):
         low = desc.lower()
         assert "lexical" in low and "dense" in low, f"{name} omits the retrieval model"
     assert "alias" in (tools["hypermnesic_search"].description or "").lower()
+
+
+def test_read_note_reads_indexed_notes_only(built_index, fake_embedder):
+    # Completeness (TDQS): agents can read a note's full content by path. The index IS the
+    # security boundary — only committed, in-vault notes are readable; traversal, absolute,
+    # and non-note paths return (False, None) with no out-of-vault read.
+    backend = mcp_server._Backend(built_index, embedder=fake_embedder)
+    backend.converge()
+    assert "hetzner.md" in backend.idx.all_paths()
+    found, content = mcp_server._read_indexed_note(backend.idx, backend.repo, "hetzner.md")
+    assert found is True
+    assert content == (backend.repo / "hetzner.md").read_text(encoding="utf-8")
+    for bad in ("../../../etc/passwd", ".git/config", "/etc/hosts", "missing.md"):
+        f, c = mcp_server._read_indexed_note(backend.idx, backend.repo, bad)
+        assert f is False and c is None, f"out-of-vault read risk for {bad!r}"
+    backend.idx.close()
+
+
+def test_tools_document_their_parameters(built_index, fake_embedder):
+    # TDQS Parameters dimension (was 0% schema coverage): every input parameter of every tool
+    # carries a description, so agents understand inputs without guessing. Includes the write
+    # tool (write-enabled master on loopback).
+    srv = mcp_server.build_server(built_index, host="127.0.0.1", embedder=fake_embedder,
+                                  write_enabled=True, repo=built_index.parent.parent)
+    for t in asyncio.run(srv.list_tools()):
+        props = (t.inputSchema or {}).get("properties", {})
+        assert props, f"{t.name} has no input properties"
+        for pname, pschema in props.items():
+            assert pschema.get("description"), f"{t.name}.{pname} lacks a parameter description"
 
 
 def test_search_tool_returns_hits(built_index, fake_embedder):
