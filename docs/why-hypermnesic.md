@@ -71,6 +71,30 @@ retrieval, entity resolution, a git-first write API, and an MCP endpoint** on to
 *same* files — so your agents get high-quality recall over the vault you already keep in
 Obsidian, without exporting anything into a separate store.
 
+### vs. Hindsight
+
+Hindsight is an open-source agent-memory system that stores memories in **its own vector
+store**, run via Docker or a managed cloud, and reports a high LongMemEval score. Two honest
+distinctions. First, *where memory lives*: Hindsight's is a vector store you operate;
+hypermnesic's is **Markdown in your Git repo**, with the index a throwaway projection. Second,
+*the benchmark*: Hindsight's headline number is graded on a more lenient judge axis than
+hypermnesic's matched `gpt-4o-2024-08-06`-judge figure, so the two are **not directly
+comparable** — hypermnesic reports its number with the full comparability envelope rather than
+chasing a leaderboard row (see [`../harness/BENCHMARKS.md`](../harness/BENCHMARKS.md)). Reach for
+Hindsight if you want a turnkey vector-store memory with a high reported score; reach for
+hypermnesic if you want memory that **stays files you own and audit**, with retrieval quality
+reported honestly.
+
+### vs. Honcho (complementary, not competing)
+
+Honcho is a personalization / theory-of-mind layer: it builds a model of **who the user is** —
+preferences, communication style, behavioural state — that agents read to adapt how they
+respond. That is a different axis from hypermnesic, which holds **what you know** as durable,
+source-grounded files. They compose: let Honcho carry savoir-être and short-term behavioural
+state, and let hypermnesic carry the project and knowledge memory in Git. hypermnesic is
+deliberately *not* the home for "user likes terse replies" — that belongs in Honcho. The right
+move is usually **both**, not a choice between them.
+
 ## When hypermnesic is *not* the right fit
 
 - You want a turnkey hosted memory API and don't want to self-host → a managed service

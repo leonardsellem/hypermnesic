@@ -69,6 +69,15 @@ its own changelog and version.
 - Every MCP tool parameter now carries a schema description (previously 0% coverage), so clients
   and directory scorers see documented inputs — addressing the Glama TDQS "Parameters" dimension
   across all read tools and the gated `commit_note` write tool.
+- README rewritten to lead with the use case and an unequivocal USP. A scenario-led hero
+  ("One brain. Every AI. Yours.") opens above the receipt GIF; a new "Why it compounds" section
+  pairs the Capture → Curate → Recall → Compound flywheel illustration (`assets/flywheel.jpg`)
+  with the shared-brain argument; a "One endpoint, every client" section reuses the connector
+  montage; and an honest "How it's different" comparison (mem0/Zep, Hindsight, Honcho, a
+  database-backed brain) links `docs/why-hypermnesic.md`. The quick-start, how-it-works, and
+  benchmark reference depth is preserved below the narrative.
+- `docs/why-hypermnesic.md` gains `vs. Hindsight` (own vector store; higher LongMemEval on a more
+  lenient judge axis) and `vs. Honcho` (complementary behavioural layer) entries.
 
 ### Fixed
 - README: removed a duplicated hero "receipt loop" GIF (embedded twice after the launch-assets
