@@ -4,56 +4,117 @@
 [![PyPI](https://img.shields.io/pypi/v/hypermnesic)](https://pypi.org/project/hypermnesic/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
+## One brain. Every AI. Yours.
+
+Your second brain lives as plain Markdown in a Git repo **you** host. ChatGPT, Claude, and
+your coding agents — on your laptop *and* your phone — all read and write that **same** brain
+through one endpoint. Obsidian is how you browse it.
+
+Here's the part that matters: because every AI keeps **curating** the same notes, your memory
+doesn't just persist — it **compounds**. Every fact captured, every correction, every link
+added makes the next answer from *every* assistant sharper. Per-app memory traps you in silos;
+one shared brain gets smarter each day — and it's plain files you own, not rows in a vendor's
+database.
+
 ![An agent writes a memory through the MCP commit_note tool, git log shows the resulting real commit, and a fresh session recalls and cites it](media/engine/hero-receipt-loop.gif)
 
-**The git-native memory layer for AI agents.** A self-hosted second brain where your
-markdown files are the **single source of truth** and the search index is a disposable,
-rebuildable projection of the git tree. Every agent you use — ChatGPT, Claude, the Claude
-Code / Codex plugin, an Obsidian companion — shares **one OAuth-secured MCP endpoint**
-(browser-login once, then silent refresh). On the machine that holds the vault you use the
-`hypermnesic` **CLI** directly.
+**Every memory is a real Git commit** — reviewable, revertible, yours. The search index is a
+disposable projection of your files; delete it and rebuild it any time. A reindex can never
+lose a memory.
 
-**Who it's for:** developers and power note-takers who want durable, portable agent memory
-they *own* — plain markdown in their own git repo, no vendor memory database, no lock-in.
-
-**Why it's different:** files-are-truth with a throwaway index (not a proprietary memory DB),
-git-first writes (every memory is a reviewable commit), and one endpoint every client shares.
-See [why hypermnesic](docs/why-hypermnesic.md) and the [benchmarks](#benchmarks) below.
-Product proof is tracked separately: use the
-[remote-client smoke checklist](docs/guides/remote-client-smoke-checklist.md) and
-[first-class product readiness checklist](docs/launch/first-class-product-readiness-checklist.md)
-before claiming release readiness.
+**Who it's for:** developers and power note-takers who want durable agent memory they *own* —
+plain files in their own Git history, reachable by every assistant, with no vendor lock-in.
 
 > **Status:** public v0.1.0 release. The engine is licensed under **AGPL-3.0-only**;
 > the companion plugin ships from the separate GPL-3.0
 > [`hypermnesic-companion`](https://github.com/leonardsellem/hypermnesic-companion)
 > repository.
 
-![Terminal demo: hypermnesic local-proof shows source-grounded recall and a dry-run write diff](docs/assets/readme-local-proof.svg)
+---
 
-The demo source is an [asciinema cast](docs/assets/readme-local-proof.cast). It uses only a
-generated `/tmp/hypermnesic-demo` vault and placeholder-safe paths.
+## Why it compounds
 
-**Try it in under 5 minutes:**
+![Five surfaces — ChatGPT, Claude, Codex, your own agent, and Obsidian — arranged around a central web of linked Markdown notes; loose terracotta arrows sweep clockwise through four stages: Capture, Curate, Recall, Compound](media/engine/flywheel.jpg)
+
+Per-app memory **fragments**: what you told ChatGPT is invisible to Claude, your phone's
+assistant forgets what your laptop's agent learned, and none of it is yours to move. A shared
+brain does the opposite — it turns every interaction into a flywheel:
+
+- **Capture** — any AI writes a note: a decision, a fact, a person, a meeting.
+- **Curate** — any AI links it, corrects it, or adds context the next time it's relevant.
+- **Recall** — every other AI retrieves it on the next question.
+- **Compound** — the brain grows denser and more useful with every turn, for all of them.
+
+Because every write is a reviewable Git commit, one assistant's curation is safe, visible, and
+revertible for all the others. The brain is shared **and** trustworthy.
+
+---
+
+## One endpoint, every client
+
+![One self-hosted MCP endpoint serves every client — ChatGPT, Claude, the Claude Code / Codex plugin, and a read-only Obsidian companion — the same way](media/engine/connector-montage/one-endpoint-many-clients.svg)
+
+Point any MCP-capable app at your endpoint URL and it just works — OAuth is automatic (log in
+through the browser once, then silent refresh):
+
+- **ChatGPT, Claude** (desktop, mobile, web) — add a custom connector.
+- **Claude Code / Codex** — the bundled plugin.
+- **Your own agents** — any MCP client, same URL.
+- **Obsidian** — a read-only companion over your tailnet, for browsing and serendipity.
+
+On the machine that holds the vault, skip the network entirely and use the `hypermnesic` CLI.
+Setup details are in the [Quick start](#quick-start) below.
+
+---
+
+## How it's different
+
+Most "agent memory" keeps your memories in *their* store. hypermnesic keeps them as **plain
+Markdown in your Git repo**; the search index is a throwaway projection you can delete and
+rebuild at will. Everything else follows from that one choice.
+
+| Question | Hypermnesic | Hosted memory layers |
+| --- | --- | --- |
+| Source of truth | Markdown files in your Git repo | Service-managed memory store |
+| Writes | Git-first commits — reviewable, revertible | API/app-managed writes |
+| Reach | One self-hosted OAuth endpoint every client shares | Per-product API or app feature |
+| Compounding | Every AI curates one shared brain | Memory siloed per app |
+
+How it sits next to tools you may know:
+
+- **mem0 / Zep** — memory APIs over a managed vector (and graph) store. Reach for them if you
+  want a hosted memory *service*; reach for hypermnesic if you want **your files to be the
+  memory**.
+- **Hindsight** — also open-source agent memory, but it lives in its own vector store you run
+  via Docker/cloud, and it posts a higher LongMemEval score on a more lenient judge axis.
+  hypermnesic optimizes for **owned, auditable, compounding files**, not a leaderboard rank —
+  read the honest comparability envelope in [`harness/BENCHMARKS.md`](harness/BENCHMARKS.md).
+- **Honcho** — *complementary*, not competing. Honcho models **who you are** (preferences,
+  style, theory-of-mind); hypermnesic holds **what you know**, in files. Use both.
+- **A database-backed personal brain** — I built one before this. The database drifted from
+  the files, and I couldn't fully trust or move it. hypermnesic is the rebuild: files are
+  truth, the index is disposable.
+
+Full tool-by-tool detail — including when hypermnesic is the *wrong* fit — is in
+[**why hypermnesic**](docs/why-hypermnesic.md).
+
+---
+
+## Try it in under 5 minutes
 
 ```sh
 uv tool install hypermnesic
 hypermnesic local-proof --demo-dir /tmp/hypermnesic-demo
 ```
 
-That creates a tiny markdown git repo, projects it into the disposable index, recalls the
-repo-relative source note, and previews the exact `commit_note` diff without writing it.
+That creates a tiny Markdown git repo, projects it into the disposable index, recalls the
+repo-relative source note, and previews the exact `commit_note` write diff **without** writing
+it. No account, no service.
 
-**How it compares:** hosted memory layers such as Mem0, Zep, and OpenAI memory optimize for
-managed convenience. Hypermnesic optimizes for owned files, auditable writes, and self-hosted
-agent access:
+![Terminal demo: hypermnesic local-proof shows source-grounded recall and a dry-run write diff](docs/assets/readme-local-proof.svg)
 
-| Question | Hypermnesic | Hosted memory layers |
-| --- | --- | --- |
-| Source of truth | Markdown files in your git repo | Service-managed memory store |
-| Write model | Git-first commits and dry-run previews | API/application-managed writes |
-| Operations | Self-hosted CLI + MCP endpoint | Managed service or app feature |
-| Evidence | LongMemEval retrieval benchmark plus product smoke gates | Varies by product; compare claims by benchmark and setup scope |
+The demo source is an [asciinema cast](docs/assets/readme-local-proof.cast). It uses only a
+generated `/tmp/hypermnesic-demo` vault and placeholder-safe paths.
 
 ---
 
@@ -268,6 +329,7 @@ LongMemEval measures retrieval quality. It does not prove setup, consent, memory
 Start with the [documentation index](docs/README.md). Highlights:
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — how it works (the disposable-index invariant, retrieval, write path, serving lanes).
+- [`docs/why-hypermnesic.md`](docs/why-hypermnesic.md) — the wedge and a tool-by-tool comparison (mem0, Letta, basic-memory, Hindsight, Honcho, Obsidian).
 - [`docs/guides/getting-started.md`](docs/guides/getting-started.md) — local proof, setup diagnosis, and failure modes.
 - [`docs/guides/memory-control.md`](docs/guides/memory-control.md) — inspect, export, forget/delete, revert, audit, and write-scope controls.
 - [`docs/guides/consent-and-clients.md`](docs/guides/consent-and-clients.md) — consent scopes, reject/cancel, client grants, and revocation.
