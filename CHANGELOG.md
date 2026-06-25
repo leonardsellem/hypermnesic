@@ -71,7 +71,7 @@ its own changelog and version.
   across all read tools and the gated `commit_note` write tool.
 - README rewritten to lead with the use case and an unequivocal USP. A scenario-led hero
   ("One brain. Every AI. Yours.") opens above the receipt GIF; a new "Why it compounds" section
-  pairs the Capture → Curate → Recall → Compound flywheel illustration (`assets/flywheel.jpg`)
+  pairs the Capture → Curate → Recall → Compound flywheel illustration (`media/engine/flywheel.jpg`)
   with the shared-brain argument; a "One endpoint, every client" section reuses the connector
   montage; and an honest "How it's different" comparison (mem0/Zep, Hindsight, Honcho, a
   database-backed brain) links `docs/why-hypermnesic.md`. The quick-start, how-it-works, and

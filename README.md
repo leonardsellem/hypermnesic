@@ -34,7 +34,7 @@ plain files in their own Git history, reachable by every assistant, with no vend
 
 ## Why it compounds
 
-![Five surfaces — ChatGPT, Claude, Codex, your own agent, and Obsidian — arranged around a central web of linked Markdown notes; loose terracotta arrows sweep clockwise through four stages: Capture, Curate, Recall, Compound](assets/flywheel.jpg)
+![Five surfaces — ChatGPT, Claude, Codex, your own agent, and Obsidian — arranged around a central web of linked Markdown notes; loose terracotta arrows sweep clockwise through four stages: Capture, Curate, Recall, Compound](media/engine/flywheel.jpg)
 
 Per-app memory **fragments**: what you told ChatGPT is invisible to Claude, your phone's
 assistant forgets what your laptop's agent learned, and none of it is yours to move. A shared
