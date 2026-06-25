@@ -39,3 +39,6 @@ harness/longmemeval/.embed_cache.sqlite
 *.sqlite3
 .pytest_cache/
 .ruff_cache/
+
+# macOS
+.DS_Store
