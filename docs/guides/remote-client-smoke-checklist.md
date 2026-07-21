@@ -37,6 +37,7 @@ Evidence to record: client name, redirect origin, requested scopes, pass/fail, r
 | Codex | Write-scoped client | Safe write commits; protected path remains refused. | Pending. | Pending. | Pending. | Pending. |
 | Obsidian | Read-only companion | Read tools work; no write path is exposed. | Pending. | Pending. | Pending. | Pending. |
 | Any client | Revocation | Revoked grant can no longer read or write. | Pending. | Pending. | Pending. | Pending. |
+| `<NEW-CLIENT>` (template — not yet run) | OAuth discovery, read-output secrecy, write/protected-path behavior, revocation/reconnect | Fill in only after a real run. | Pending. | Pending. | Pending. | Pending. |
 
 ## Read-scoped client
 
@@ -119,6 +120,40 @@ write lane.
 3. Confirm no write control is exposed by the companion.
 
 Required result: Obsidian can read memory but cannot write.
+
+## Template: additional MCP-capable client (not yet validated)
+
+**This section is a reusable template, not a passed row.** Copy it when onboarding a new
+MCP-capable client. Do not mark the client `Pass` anywhere in this doc, in the evidence log
+table above, or in
+[`../launch/first-class-product-readiness-checklist.md`](../launch/first-class-product-readiness-checklist.md)
+until a real run against a live endpoint produced the evidence below. Replace `<NEW-CLIENT>`
+with the actual client name and delete this notice once the row is filled in with genuine
+results.
+
+Client under test: `<NEW-CLIENT>` — status: **not yet run**.
+
+1. **OAuth discovery.** Configure `<NEW-CLIENT>` with `https://<your-host>.ts.net/mcp` and confirm
+   it discovers OAuth metadata without a static token or inline auth header, and that the
+   consent page names the client, redirect origin, and requested scopes.
+2. **Read-output secrecy.** Call a read tool such as `search`, `think`, `resolve`,
+   `build_context`, or `list_folders` and confirm the response includes only repo-relative
+   source paths and never local absolute paths, private or `/mcp` endpoint URLs, endpoint
+   secrets, approval credentials, refresh tokens, or credential file bodies.
+3. **Write / protected-path behavior.** Write one low-risk test note with `commit_note` into an
+   ordinary writable folder, confirm a git commit and audit metadata exist, and confirm a
+   follow-up `search` recalls it after convergence. Then attempt exactly one protected-path
+   write to `scripts/<smoke-id>-protected-refusal.md` and confirm the write guard refuses it.
+   If `<NEW-CLIENT>` is read-only or read-scoped by design, attempt exactly one low-risk write
+   instead and confirm write refusal without write scope; record `INCONCLUSIVE/FAIL` if the
+   client aborts before Hypermnesic returns an explicit refusal.
+4. **Revocation / reconnect.** After operator-triggered revocation, confirm `<NEW-CLIENT>` can no
+   longer read or write, and that it must reconnect and reauthorize before access resumes.
+
+Required result before this row may be marked `Pass`: OAuth discovery, read-output secrecy,
+write/protected-path behavior (or read-only write-refusal), and revocation/reconnect all have
+real recorded evidence, reviewer, and date. Until then, record the row as `Pending` (or
+`INCONCLUSIVE/FAIL` if a run was attempted but did not complete cleanly) — never `Pass`.
 
 ## Pass criteria
 
