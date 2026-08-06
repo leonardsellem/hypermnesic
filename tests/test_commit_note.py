@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 import subprocess
 
 import pytest
@@ -301,3 +302,59 @@ def test_commit_note_noop_detection_ignores_foreign_staged(make_corpus, fake_emb
     assert r2.noop is True
     assert _git(repo, "rev-parse", "HEAD") == head             # no commit despite foreign staged
     idx.close()
+
+
+# --- an index failure after the commit landed is a degraded success (LS-2539) ---
+# Past the push the commit cannot be unmade. Raising would tell the caller
+# nothing was written, and an agent would write the same note somewhere else.
+
+
+class _IndexWriteFails:
+    """Fails the way a handle stranded by a reindex swap fails."""
+
+    def upsert_lexical(self, *_a, **_k):
+        raise sqlite3.OperationalError("attempt to write a readonly database")
+
+    def rekey_path(self, *_a, **_k):
+        raise sqlite3.OperationalError("attempt to write a readonly database")
+
+
+def test_index_failure_after_commit_returns_sha_and_audits(make_corpus, fake_embedder,
+                                                           tmp_path):
+    repo, _idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    r = cn.commit_note(repo, "notes/new.md", body="# New\n\nwidgets.\n",
+                       summary="add new note", idx=_IndexWriteFails(), log=log)
+
+    assert r.new_sha and not r.noop                      # the commit reaches the caller
+    assert r.index_degraded and "readonly" in r.degraded_reason
+    assert log.entries()[-1]["new_sha"] == r.new_sha     # a real git write is audited
+    assert _git(repo, "status", "--porcelain") == ""
+
+
+def test_healthy_index_is_never_marked_degraded(make_corpus, fake_embedder, tmp_path):
+    repo, idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    r = cn.commit_note(repo, "notes/new.md", body="# New\n\nwidgets.\n",
+                       summary="add new note", idx=idx, log=log)
+    assert r.new_sha and not r.index_degraded and r.degraded_reason is None
+
+
+def test_refusal_is_not_reported_as_a_degraded_success(make_corpus, fake_embedder,
+                                                       tmp_path):
+    """A guard refusal wrote nothing — it must never look like a landed commit."""
+    repo, _idx, log = _setup(make_corpus, fake_embedder, tmp_path)
+    with pytest.raises(serialize.WriteGuardError):
+        cn.commit_note(repo, "CLAUDE.md", body="# nope\n",
+                       summary="protected", idx=_IndexWriteFails(), log=log)
+    assert not log.entries()
+
+
+def test_rename_index_failure_returns_sha_and_audits(make_corpus, fake_embedder,
+                                                     tmp_path):
+    repo, _idx, log = _setup(make_corpus, fake_embedder, tmp_path,
+                             files={"a.md": "# A\n\nalpha.\n"})
+    r = cn.rename_note(repo, "a.md", "b.md", summary="move a",
+                       idx=_IndexWriteFails(), log=log)
+
+    assert r.new_sha and r.index_degraded
+    assert log.entries()[-1]["new_sha"] == r.new_sha
+    assert (repo / "b.md").exists() and not (repo / "a.md").exists()

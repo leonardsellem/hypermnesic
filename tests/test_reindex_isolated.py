@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 
 from hypermnesic import index as ix
-from hypermnesic import serialize
+from hypermnesic import ingest, serialize
 
 
 def _commit(repo, msg="c"):
@@ -87,3 +87,51 @@ def test_fallback_when_not_a_git_repo(make_corpus, fake_embedder, tmp_path):
     idx = ix.Index(ix.state_dir_for(repo) / "index.db")
     assert "a.md" in idx.all_paths()                            # still produced an index
     idx.close()
+
+
+# --- the swap must not strand a long-lived holder (LS-2539) ---------------
+# The MCP servers open the index once at boot. `os.replace` unlinks the inode
+# under them: reads then serve a frozen snapshot and writes fail with
+# "attempt to write a readonly database".
+
+
+def test_long_lived_index_can_still_write_after_swap(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ix.build_index(repo, fake_embedder).close()
+
+    live = ix.Index(ix.state_dir_for(repo) / "index.db")     # the server's handle
+    try:
+        ix.reindex_isolated(repo, fake_embedder)
+        live.upsert_lexical("a.md",
+                            ingest.chunks_for_text("a.md", "# A\n\nalpha rewritten.\n"))
+    finally:
+        live.close()
+
+
+def test_long_lived_index_sees_new_docs_after_swap(make_corpus, fake_embedder):
+    """The silent half: a stale read looks perfectly healthy."""
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ix.build_index(repo, fake_embedder).close()
+
+    live = ix.Index(ix.state_dir_for(repo) / "index.db")
+    try:
+        (repo / "b.md").write_text("# B\n\nNEWDOC beta.\n", encoding="utf-8")
+        _commit(repo, "add b")
+        ix.reindex_isolated(repo, fake_embedder)
+        assert "b.md" in live.all_paths()
+    finally:
+        live.close()
+
+
+def test_missing_db_file_does_not_trigger_a_reopen(make_corpus, fake_embedder):
+    """An in-flight rebuild must not make us reopen onto nothing."""
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ix.build_index(repo, fake_embedder).close()
+
+    db = ix.state_dir_for(repo) / "index.db"
+    live = ix.Index(db)
+    try:
+        db.unlink()
+        assert "a.md" in live.all_paths()                    # served from the open inode
+    finally:
+        live.close()

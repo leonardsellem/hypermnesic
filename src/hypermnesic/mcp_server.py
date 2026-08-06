@@ -125,6 +125,10 @@ class CommitNoteOutput(TypedDict, total=False):
     new_sha: str
     diff: str
     refused: str                       # set (with committed=False) when a gate/guard refuses
+    # Distinct from `refused`: the commit DID land, only its index projection
+    # failed. Never conflate the two — a refusal wrote nothing.
+    index_degraded: bool
+    degraded_reason: str
 
 
 def _commit_note_tool_result(payload: CommitNoteOutput) -> CallToolResult:
@@ -593,7 +597,9 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
         @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False),
                   description="Git-first write: commit a single note on the master "
                               "(guard → diff-or-die gate → git commit → audit; never merges). "
-                              "The index follows as a projection — a reindex never loses it.")
+                              "The index follows as a projection — a reindex never loses it. "
+                              "If index_degraded is set the commit still landed: keep the "
+                              "returned new_sha and do NOT write the note again.")
         def commit_note(
             path: Annotated[str, Field(
                 description="Repo-relative path of the note to write, e.g. 'notes/x.md'.")],
@@ -635,9 +641,15 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                 # refusal (remote drift / push could not reach origin/main) — no commit
                 # reached the shared remote, no audit entry (U11). Never a silent success.
                 return _commit_note_tool_result({"committed": False, "refused": str(exc)})
-            return _commit_note_tool_result(
-                {"committed": not r.noop, "path": r.path, "created": r.created,
-                 "noop": r.noop, "new_sha": r.new_sha or "", "diff": r.diff})
+            out: CommitNoteOutput = {
+                "committed": not r.noop, "path": r.path, "created": r.created,
+                "noop": r.noop, "new_sha": r.new_sha or "", "diff": r.diff}
+            if r.index_degraded:
+                # The note IS committed and pushed. Recall lags until the index
+                # catches up; the caller must NOT rewrite it somewhere else.
+                out["index_degraded"] = True
+                out["degraded_reason"] = r.degraded_reason or "index_error"
+            return _commit_note_tool_result(out)
 
     return mcp
 

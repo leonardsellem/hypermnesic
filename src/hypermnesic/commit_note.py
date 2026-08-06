@@ -16,6 +16,7 @@ only sync layer". Recorded in implementation-notes.md.
 from __future__ import annotations
 
 import difflib
+import sqlite3
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -45,6 +46,11 @@ class CommitResult:
     diff: str
     noop: bool = False
     dry_run: bool = False
+    # The git write is the commitment; the index is a projection that follows it.
+    # When that projection fails, the commit still happened — say so, with the
+    # SHA, instead of raising and letting the caller believe nothing was written.
+    index_degraded: bool = False
+    degraded_reason: str | None = None
 
 
 def _preview_diff(rel: str, old: str, new: str) -> str:
@@ -131,6 +137,28 @@ def _push_with_retry(repo, remote, branch) -> None:
         f"push to {remote}/{branch} did not succeed; aborted with no local-ahead commit")
 
 
+def _index_failure_reason(exc: Exception) -> str:
+    """Short, stable reason string for a failed index projection."""
+    if isinstance(exc, sqlite3.OperationalError):
+        return f"index_write_failed: {exc}"
+    return f"index_error: {type(exc).__name__}: {exc}"
+
+
+def _upsert_index_best_effort(idx, rel: str, text: str) -> str | None:
+    """Project a committed note into the index. Returns a reason on failure.
+
+    Called only once the git write has landed, where raising would misreport a
+    real commit as a failure.
+    """
+    if idx is None:
+        return None
+    try:
+        idx.upsert_lexical(rel, ingest.chunks_for_text(rel, text))
+    except Exception as exc:                      # noqa: BLE001 — never mask a landed commit
+        return _index_failure_reason(exc)
+    return None
+
+
 def _render_new(set_fields: dict, body: str) -> str:
     if not set_fields:
         return body
@@ -202,18 +230,24 @@ def _commit_locked(repo, rel, body, set_fields, summary, idx, log) -> CommitResu
         _push_with_retry(repo, remote, branch)             # push, retry on non-ff; raises
     new_sha = _head(repo)                                  # re-read: a retry rebase rewrites it
 
-    # synchronous lexical + graph extraction (embeddings are async — AE5)
-    if idx is not None:
-        idx.upsert_lexical(rel, ingest.chunks_for_text(rel, new_text))
+    # synchronous lexical + graph extraction (embeddings are async — AE5).
+    # Past this point the commit is on the shared remote and CANNOT be unmade, so
+    # an index failure is a degraded success, never an error: raising here would
+    # tell the caller nothing was written and make an agent write it again
+    # somewhere else. The index is disposable and a reindex restores it.
+    degraded_reason = _upsert_index_best_effort(idx, rel, new_text)
 
     # append audit log — summaries only, server-set actor (U11). Only after the write
     # has reached the shared remote (or is purely local) — never on a refused push.
+    # It records the git write, so it must not depend on the index projection.
     if log is not None:
         log.append(verb=("create" if not existed else "edit"), path=rel,
                    old_sha=old_sha, new_sha=new_sha, summary=summary or msg)
 
     diff = _git(repo, "show", "--format=", "--patch", new_sha).stdout
-    return CommitResult(rel, not existed, new_sha, diff)
+    return CommitResult(rel, not existed, new_sha, diff,
+                        index_degraded=degraded_reason is not None,
+                        degraded_reason=degraded_reason)
 
 
 def rename_note(repo, old_path: str, new_path: str, *, body: str | None = None,
@@ -282,12 +316,20 @@ def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log,
          "--", old_rel, new_rel)
     new_sha = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
 
+    # Same rule as commit_note: the git mv has landed, so an index failure is a
+    # degraded success. Raising would lose the rename's SHA and skip its audit.
+    degraded_reason = None
     if idx is not None:
-        idx.rekey_path(old_rel, new_rel)                 # follow the moved blob
-        if new_text != original:
-            idx.upsert_lexical(new_rel, ingest.chunks_for_text(new_rel, new_text))
+        try:
+            idx.rekey_path(old_rel, new_rel)             # follow the moved blob
+        except Exception as exc:                         # noqa: BLE001
+            degraded_reason = _index_failure_reason(exc)
+        if degraded_reason is None and new_text != original:
+            degraded_reason = _upsert_index_best_effort(idx, new_rel, new_text)
     if log is not None:
         log.append(verb="rename", path=new_rel, old_sha=old_sha, new_sha=new_sha,
                    summary=summary or f"{old_rel} -> {new_rel}")
     diff = _git(repo, "show", "--format=", "--patch", new_sha).stdout
-    return CommitResult(new_rel, False, new_sha, diff)
+    return CommitResult(new_rel, False, new_sha, diff,
+                        index_degraded=degraded_reason is not None,
+                        degraded_reason=degraded_reason)
