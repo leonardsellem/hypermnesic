@@ -82,9 +82,51 @@ class Index:
 
     def __init__(self, db_path: Path):
         self.db_path = Path(db_path)
-        self.conn = sqlite3.connect(self.db_path)
-        _load_vec(self.conn)
+        self._open()
+
+    def _open(self) -> None:
+        self._conn = sqlite3.connect(self.db_path)
+        # Bound after connect so a freshly created file records its real identity,
+        # and BEFORE anything below touches self.conn (which would recurse).
+        self._file_id = self._current_file_id()
+        _load_vec(self._conn)
         self.refresh_fts_projection_if_needed()
+
+    def _current_file_id(self) -> tuple[int, int] | None:
+        """Identity of the file currently at ``db_path`` — ``None`` if absent."""
+        try:
+            st = os.stat(self.db_path)
+        except OSError:
+            return None
+        return (st.st_dev, st.st_ino)
+
+    @property
+    def conn(self) -> sqlite3.Connection:
+        """The live connection, reopened if the database file was swapped.
+
+        ``reindex_isolated`` installs a rebuilt index with ``os.replace``. A
+        long-lived holder (the MCP servers) would otherwise keep its connection
+        on the unlinked inode: reads would silently serve the frozen snapshot
+        and writes would fail with "attempt to write a readonly database". One
+        ``stat`` per operation is negligible beside the query that follows.
+
+        A missing file is NOT a swap — an in-flight rebuild must not make us
+        reopen onto nothing, so we keep serving the connection we have. Neither
+        is an open transaction a safe place to reopen: that would discard
+        buffered writes, so we finish on the handle the caller started with.
+        """
+        current = self._current_file_id()
+        if (current is not None and current != self._file_id
+                and not self._conn.in_transaction):
+            self._reopen()
+        return self._conn
+
+    def _reopen(self) -> None:
+        try:
+            self._conn.close()
+        except sqlite3.Error:
+            pass                                  # the old inode is already gone
+        self._open()
 
     def create_schema(self) -> None:
         c = self.conn
@@ -384,7 +426,7 @@ class Index:
                 "model": config.EMBED_MODEL, "dim": config.EMBED_DIM}
 
     def close(self) -> None:
-        self.conn.close()
+        self._conn.close()          # closing must never trigger a reopen
 
 
 def _is_md(path: str) -> bool:
