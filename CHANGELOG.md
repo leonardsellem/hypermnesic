@@ -14,6 +14,15 @@ its own changelog and version.
 
 ## [Unreleased]
 
+### Added
+- The release workflow now creates the **GitHub Release** after a successful PyPI
+  publish, with notes built from this file's section for the tag
+  (`scripts/changelog_section.py`) and the built sdist + wheel attached. Previously
+  `release.yml` published to PyPI only, so `v0.1.0` was the newest GitHub Release
+  while newer versions shipped — and the changelog never surfaced on the releases
+  page. A missing or empty changelog section now fails the job rather than
+  announcing a release with empty notes.
+
 ## [0.2.0] - 2026-08-06
 
 ### Added

@@ -66,3 +66,49 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create the GitHub Release
+    needs: publish # only announce a version that actually reached PyPI
+    if: startsWith(github.ref, 'refs/tags/v') # nothing to announce on a manual dispatch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release; the other jobs stay read-only
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags + history, so `git describe` can find the previous tag
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      # Notes come from CHANGELOG.md, which AGENTS.md already makes mandatory for any
+      # user-visible change — so they cannot drift from the record the way a
+      # hand-written release body does. Missing section => non-zero exit => no release.
+      - name: Build release notes from the changelog
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          previous="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          python scripts/changelog_section.py "$GITHUB_REF_NAME" > notes.md
+          {
+            echo "Install: \`uv tool install hypermnesic\` · [PyPI ${version}](https://pypi.org/project/hypermnesic/${version}/) · [Full changelog](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/CHANGELOG.md)"
+            echo
+            cat notes.md
+            if [ -n "$previous" ]; then
+              echo
+              echo "**Full diff**: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${previous}...${GITHUB_REF_NAME}"
+            fi
+          } > release-notes.md
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag \
+            dist/*
