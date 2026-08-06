@@ -8,4 +8,4 @@ Files are the single source of truth; the index is a pure, disposable projection
 the git tree.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

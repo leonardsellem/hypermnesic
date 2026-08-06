@@ -14,6 +14,8 @@ its own changelog and version.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-06
+
 ### Added
 - Repository social-preview asset for the public GitHub presentation.
 - Directory-submission prep for the official MCP Registry, awesome-mcp-servers, and
@@ -80,6 +82,22 @@ its own changelog and version.
   lenient judge axis) and `vs. Honcho` (complementary behavioural layer) entries.
 
 ### Fixed
+- **A reindex no longer strands long-lived readers (LS-2539).** `reindex_isolated`
+  installs the rebuilt index with `os.replace`; a process that had already opened the
+  database kept its connection on the unlinked inode, so reads silently served a frozen
+  snapshot while writes failed with `attempt to write a readonly database`. On a
+  long-running MCP server that meant recall answering confidently from a stale index with
+  nothing to signal the drift. `Index` now records the file's `(st_dev, st_ino)` and
+  reopens when the path resolves to a different file — a missing file (an in-flight
+  rebuild) and an open transaction are deliberately not treated as swaps.
+- **`commit_note` and `rename_note` no longer report a landed commit as a failure.** The
+  index projection runs after the git commit and push, where raising told the caller
+  nothing had been written — so an agent would write the same note again elsewhere, and
+  the audit entry for a real git write was skipped. An index failure past that point is
+  now a degraded success: the SHA reaches the caller, the audit entry is still appended,
+  and the new `index_degraded` / `degraded_reason` fields on the `commit_note` MCP output
+  say what happened. Guard refusals are unchanged and still return `committed: false` —
+  a refusal wrote nothing, which is a different outcome.
 - README: removed a duplicated hero "receipt loop" GIF (embedded twice after the launch-assets
   merge) and activated the previously bare Docs-section links
   (`docs/unified-oauth-mcp-deploy-runbook.md`, `plugin/README.md`, `docs/plans/`,
@@ -284,7 +302,8 @@ Phase 0 → Phase 2.5 foundation (pre-public, internal milestones).
 - **LongMemEval benchmark harness** (`harness/`) and a French/English retrieval-parity
   harness.
 
-[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.6...v0.1.0
 [0.0.6]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/leonardsellem/hypermnesic/releases/tag/v0.0.5
