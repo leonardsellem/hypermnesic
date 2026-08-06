@@ -75,10 +75,11 @@ endpoint; see [`docs/guides/getting-started.md`](docs/guides/getting-started.md)
 
 ## Branches, commits, and pull requests
 
-- Branch off `main`; do not commit directly to `main`.
+- Branch off `dev`; do not commit directly to `dev` or `main`. See
+  [Branches](#branches) — `main` is the release branch and takes only `dev`.
 - Use clear, conventional commit subjects (`feat:`, `fix:`, `docs:`, `chore:`,
   `test:`, `refactor:`). Reference the unit/requirement when relevant.
-- Open a PR into `main`. The PR template's checklist ties your change to the gates
+- Open a PR into `dev`. The PR template's checklist ties your change to the gates
   above and flags security-surface changes.
 - **DCO sign-off (required).** Add a `Signed-off-by: Name <email>` line to each commit
   (`git commit -s`). By signing off you certify the [Developer Certificate of
@@ -95,16 +96,56 @@ guard are security-sensitive. They are routed to the owner via
 [`SECURITY.md`](SECURITY.md) and the threat model. Never report a vulnerability in a
 public issue — see [`SECURITY.md`](SECURITY.md).
 
+## Branches
+
+`dev` is the default branch and the baseline for all work. `main` is the **release
+branch**: it receives `dev` at release time and never a feature branch.
+
+```text
+feature/fix branch ──PR──▶ dev ──PR──▶ main ──tag v*.*.*──▶ PyPI + GitHub release
+```
+
+Branch off `dev`, PR into `dev`, and let `gh pr create` use the repository default
+rather than passing `--base`. Never commit directly to `dev` or `main`.
+
+If `main` and `dev` drift apart, reconcile by merging `main` back into `dev`. Do not
+cherry-pick across them — that leaves the same content under two SHAs to untangle at
+the next release.
+
 ## Releasing
 
 The engine is pre-1.0 and uses `0.x` semantics (any release may carry breaking
 changes while the kernel stabilizes).
 
-1. Bump `version` in `pyproject.toml` (the single source of truth) and sync
-   `src/hypermnesic/__init__.__version__`, plugin manifests, and citation metadata.
-   `scripts/check_version_consistency.py` enforces this — run it.
-2. Add a dated section to [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog format).
-3. Tag the release `vX.Y.Z` and push the tag.
+**Merging to `main` publishes nothing.**
+[`release.yml`](.github/workflows/release.yml) triggers only on a `v*.*.*` **tag push**
+or a manual `workflow_dispatch`; a branch merge runs `ci.yml` and stops. Publishing is a
+deliberate act, never a side effect of merging — so a release that "should have gone out"
+after a merge did not fail, it was never triggered.
+
+1. **Choose the number.** `0.x` semantics are loose about breakage, but the shape still
+   holds: new backwards-compatible functionality — a new MCP tool, new fields on a tool's
+   output — is a **minor** bump; **patch** is for releases that are fixes only. Decide by
+   reading the whole pending `[Unreleased]` section, not just the last change merged.
+2. **Bump the version.** `pyproject.toml` `[project].version` is the single source of
+   truth; `src/hypermnesic/__init__.__version__`, the plugin manifests, and the citation
+   metadata mirror it. Do not enumerate them from memory — run
+   `scripts/check_version_consistency.py`, which names every slot and is the same gate
+   the release build runs.
+3. **Cut the changelog.** In [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog format),
+   rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`, leave a fresh empty `[Unreleased]`
+   above it, and update the compare links at the foot of the file. The GitHub release
+   notes come from this section: anything absent here ships undocumented.
+4. **Promote `dev` to `main`** via PR.
+5. **Tag `vX.Y.Z` on `main`**, on the exact commit you intend to ship, and push the tag.
+   That pushes the build through PyPI OIDC Trusted Publishing. There is no stored API
+   token, so a mistaken tag cannot be neutralised by rotating a credential — check the
+   commit before pushing it.
+
+**Keep the dates honest.** The `[X.Y.Z]` heading and `date-released` in both
+`CITATION.cff` files must equal the date the tag is actually pushed. When release prep
+lands days ahead of the tag, update them at tag time. Letting them drift is what allowed
+the `0.0.4`/`0.0.5` pair to disagree twice.
 
 The Obsidian companion ships from its own repository under GPL-3.0 with its own
 version and release cadence; it is not released from here.

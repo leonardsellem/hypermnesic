@@ -64,9 +64,11 @@ All six must pass before a change is done. The suite runs offline and determinis
   in `tests/`, run with `--import-mode=importlib`.
 - **No "pre-existing" failures.** A red test is either fixed in your change or filed as a
   tracked issue — never dismissed or deleted.
-- **Branch off `main`; never commit to `main` directly.** Use a worktree per task when
-  changes could conflict. Commit per logical unit with a conventional subject and a
-  `Signed-off-by:` DCO line (`git commit -s`).
+- **Branch off `dev` and PR into `dev`; never commit to `dev` or `main` directly.**
+  `dev` is the default branch and the baseline for all work. `main` is the **release
+  branch** and receives `dev` only at release time — never a feature branch. Use a
+  worktree per task when changes could conflict. Commit per logical unit with a
+  conventional subject and a `Signed-off-by:` DCO line (`git commit -s`).
 - **Permissive dependencies only.** Any new dependency must keep
   `scripts/license_scan.py` green (zero AGPL/GPL/SSPL). The gate is dependency-scoped;
   it does not constrain the engine's own (planned-AGPL) license.
@@ -110,6 +112,7 @@ there is an hour the rule below would have saved.
 | **Auth / serving topology / lanes** (`auth*.py`, `mcp_server.py`) | `ARCHITECTURE.md` serving section; the serving-topology pin in `docs/README.md`; [`docs/unified-oauth-mcp-deploy-runbook.md`](docs/unified-oauth-mcp-deploy-runbook.md); `README.md`; `SECURITY.md` |
 | **Retrieval / convergence / index** (`retrieve.py`, `converge.py`, `index.py`, `embed.py`, `graph.py`) | `ARCHITECTURE.md` retrieval + convergence sections; `README.md` "How it works" if user-visible; `harness/BENCHMARKS.md` if measured numbers move |
 | **Version** (`pyproject.toml` `[project].version`) | `src/hypermnesic/__init__.__version__` **and the plugin manifests** — do not hand-enumerate them; run `scripts/check_version_consistency.py`, which names every file that must match; plus a dated [`CHANGELOG.md`](CHANGELOG.md) section |
+| **Release workflow or branch topology** (`.github/workflows/release.yml`, `ci.yml`, the default branch, branch protection) | the "Branches and releasing" section above **and** [`CONTRIBUTING.md`](CONTRIBUTING.md#releasing) — an agent that reads a stale branch rule opens its PR against the wrong branch |
 | **Any new dependency** | keep `scripts/license_scan.py` green; record it in `pyproject.toml` |
 | **New term or concept** | [`GLOSSARY.md`](GLOSSARY.md) |
 | **Renaming / superseding a doc** | the [`docs/README.md`](docs/README.md) index **and** its "current truth" pins; move the superseded doc to `docs/archive/` with a pointer banner to its replacement |
@@ -155,6 +158,45 @@ there is an hour the rule below would have saved.
 - **Public-launch staging** lives under `docs/launch/` — the AGPL-3.0 text, the one-PR
   flip runbook, and the launch checklist are staged but **not live**; the `LICENSE` stays
   proprietary until the flip PR.
+
+## Branches and releasing
+
+**`dev` is the baseline. `main` is the release branch. A tag is what publishes.**
+
+```text
+feature/fix branch ──PR──▶ dev ──PR──▶ main ──tag v*.*.*──▶ PyPI + GitHub release
+```
+
+- **Merging to `main` publishes nothing.** `.github/workflows/release.yml` triggers only
+  on a `v*.*.*` **tag push** or a manual `workflow_dispatch`; a branch merge runs `ci.yml`
+  and stops there. Publishing is a deliberate act, never a side effect of merging.
+- **Tag on `main`**, on the exact commit you intend to ship. Pushing the tag builds the
+  sdist + wheel and publishes via PyPI OIDC Trusted Publishing — there is no stored API
+  token, so a tag pushed from the wrong place cannot be quietly undone by rotating a key.
+- **Never open a feature PR against `main`.** Let `gh pr create` use the repo default
+  (`dev`) rather than passing `--base`. If `main` and `dev` diverge, reconcile by merging
+  `main` back into `dev` — do not cherry-pick, which duplicates content under two SHAs.
+
+Release steps, in order (the long form lives in
+[`CONTRIBUTING.md`](CONTRIBUTING.md#releasing)):
+
+1. **Choose the number.** Pre-1.0 `0.x` semantics, but the *shape* still applies: new
+   backwards-compatible functionality — a new MCP tool, new tool output fields — is a
+   **minor** bump. Reserve **patch** for releases that are fixes only. Read the pending
+   `[Unreleased]` section before deciding; the answer is in what accumulated, not in how
+   big the last change felt.
+2. **Bump the version.** `pyproject.toml` `[project].version` is the single source of
+   truth. Do not hand-enumerate the mirrors — run
+   `scripts/check_version_consistency.py`, which names every slot that must match and
+   fails the release build if any disagree.
+3. **Cut the changelog.** Rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`, leave a fresh
+   empty `[Unreleased]` above it, and update the compare links at the bottom of the file.
+   Release notes are built from this section, so anything missing here ships undocumented.
+4. **Promote `dev` to `main`** via PR, then **tag `vX.Y.Z` on `main`** and push the tag.
+
+**The changelog date and the `date-released` in the citation files must equal the date
+the tag is actually pushed.** If release prep lands days before the tag, update them at
+tag time. This is the same drift that let the `0.0.4`/`0.0.5` pair disagree twice.
 
 ## Reference
 
