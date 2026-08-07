@@ -14,6 +14,32 @@ its own changelog and version.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-07
+
+### Fixed
+- **A fresh `uv tool install hypermnesic` no longer installs a server that cannot
+  start (LS-2550).** Runtime dependencies were declared without upper bounds, so a
+  clean resolve took `mcp` 2.0.0 — which removed `mcp.server.fastmcp`, imported at
+  module level by `mcp_server.py` — and every new install crash-looped on
+  `ModuleNotFoundError`. `uv.lock` hid this from the whole test suite because it is
+  not shipped in the wheel or sdist, so it protects this repository and no user.
+  All four runtime dependencies are now bounded below their next untested major.
+- A `fresh-install` CI job builds the wheel, installs it into a clean environment
+  **outside the lockfile**, and starts the server — the only gate that sees what a
+  user actually gets. `tests/test_dependency_bounds.py` is the cheap local half: it
+  fails as soon as a runtime dependency loses its upper bound, without waiting for
+  that dependency to publish a breaking major.
+- CI now also runs on pushes to `dev`, not only `main`.
+
+### Added
+- The release workflow now creates the **GitHub Release** after a successful PyPI
+  publish, with notes built from this file's section for the tag
+  (`scripts/changelog_section.py`) and the built sdist + wheel attached. Previously
+  `release.yml` published to PyPI only, so `v0.1.0` was the newest GitHub Release
+  while newer versions shipped — and the changelog never surfaced on the releases
+  page. A missing or empty changelog section now fails the job rather than
+  announcing a release with empty notes.
+
 ## [0.2.0] - 2026-08-06
 
 ### Added
@@ -302,7 +328,8 @@ Phase 0 → Phase 2.5 foundation (pre-public, internal milestones).
 - **LongMemEval benchmark harness** (`harness/`) and a French/English retrieval-parity
   harness.
 
-[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.6...v0.1.0
 [0.0.6]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.5...v0.0.6
