@@ -14,7 +14,7 @@ its own changelog and version.
 
 ## [Unreleased]
 
-## [0.2.1] - 2026-08-06
+## [0.2.1] - 2026-08-07
 
 ### Fixed
 - **A fresh `uv tool install hypermnesic` no longer installs a server that cannot
