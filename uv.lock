@@ -775,7 +775,7 @@ wheels = [
 
 [[package]]
 name = "hypermnesic"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },
@@ -804,15 +804,15 @@ sidecar = [
 requires-dist = [
     { name = "docling", marker = "extra == 'sidecar'", specifier = ">=2.0" },
     { name = "markitdown", marker = "extra == 'sidecar'", specifier = ">=0.0.1" },
-    { name = "mcp", specifier = ">=1.2" },
-    { name = "openai", specifier = ">=1.30" },
+    { name = "mcp", specifier = ">=1.2,<2" },
+    { name = "openai", specifier = ">=1.30,<3" },
     { name = "pdfplumber", marker = "extra == 'sidecar'", specifier = ">=0.11" },
     { name = "pip-licenses", marker = "extra == 'dev'", specifier = ">=5.0" },
     { name = "pypdf", marker = "extra == 'sidecar'", specifier = ">=4.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "ruamel-yaml", specifier = ">=0.18" },
+    { name = "ruamel-yaml", specifier = ">=0.18,<0.20" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
-    { name = "sqlite-vec", specifier = ">=0.1.6" },
+    { name = "sqlite-vec", specifier = ">=0.1.6,<0.2" },
     { name = "tiktoken", marker = "extra == 'bench'", specifier = ">=0.7" },
 ]
 provides-extras = ["dev", "sidecar", "bench"]

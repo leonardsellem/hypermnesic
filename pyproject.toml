@@ -1,6 +1,6 @@
 [project]
 name = "hypermnesic"
-version = "0.2.0"
+version = "0.2.1"
 description = "A markdown-native, git-as-source-of-truth memory layer: a disposable, rebuildable retrieval index over any repository, served over one OAuth-secured MCP endpoint (read tools always; a gated, git-first commit_note write tool by scope) plus a tailnet read companion."
 requires-python = ">=3.11"
 license = "AGPL-3.0-only"
@@ -18,11 +18,14 @@ classifiers = [
 ]
 # Permissive primitives only (KTD1). The U1 license gate (scripts/license_scan.py)
 # fails the build on any AGPL / GPL / SSPL transitive dependency.
+# Upper bounds are load-bearing: uv.lock is not shipped in the wheel/sdist, so a
+# fresh `uv tool install` resolves whatever PyPI offers. See tests/test_dependency_bounds.py.
 dependencies = [
-    "sqlite-vec>=0.1.6",   # Apache-2.0 / MIT — KNN MATCH virtual table
-    "openai>=1.30",        # Apache-2.0 — text-embedding-3-large @ dimensions=1536
-    "mcp>=1.2",            # MIT — official Model Context Protocol Python SDK
-    "ruamel.yaml>=0.18",   # MIT — round-trip-preserving YAML (Phase-1 frontmatter gate)
+    "sqlite-vec>=0.1.6,<0.2",   # Apache-2.0 / MIT — KNN MATCH virtual table
+    "openai>=1.30,<3",     # Apache-2.0 — text-embedding-3-large @ dimensions=1536
+    "mcp>=1.2,<2",         # MIT — official MCP SDK. <2: mcp 2.x removed
+                           # mcp.server.fastmcp, which mcp_server.py imports (LS-2550).
+    "ruamel.yaml>=0.18,<0.20",   # MIT — round-trip-preserving YAML (frontmatter gate)
 ]
 
 [project.optional-dependencies]
