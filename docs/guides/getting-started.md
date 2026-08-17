@@ -105,8 +105,10 @@ identifier differs.
 By default, newly registered clients request `read` when they omit OAuth `scope`. Admins who
 want new approvals to request both read and write can run setup with
 `--default-client-scopes read write` or set
-`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write` in the cloud service environment. The consent
-page still requires the operator approval token, and write approval still cannot bypass protected
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write` in the cloud service environment.
+Access tokens last 48 hours by default (`HYPERMNESIC_TOKEN_TTL_SECONDS` /
+`--token-ttl`); refresh stays 30 days. The consent page still requires the
+operator approval token, and write approval still cannot bypass protected
 paths, frontmatter validation, dirty-tree checks, head-drift checks, audit logging, or git guards.
 
 `doctor` and its alias `status` are non-mutating. They do not start services, rewrite
@@ -116,12 +118,16 @@ Use `--json` when an agent or CI check needs the structured status contract.
 **Verify the discovery chain** (what `setup` checks, and what a client needs):
 
 ```sh
-curl -fsS https://<your-host>.ts.net/.well-known/oauth-protected-resource | jq .
-curl -fsS https://<your-host>.ts.net/.well-known/oauth-authorization-server | jq .
+curl -fsS https://<your-host>.ts.net/.well-known/oauth-protected-resource/mcp | jq .
+curl -fsS https://<your-host>.ts.net/.well-known/oauth-authorization-server/mcp | jq .
 ```
 
-Both must return JSON. If they 404 or time out, the funnel or service isn't up — see
-failure modes below.
+Both must return JSON (`token_endpoint` on the AS document). If they 404 or time
+out, the funnel or service isn't up — see failure modes below. The unsuffixed
+host-root `/.well-known/oauth-authorization-server` (no `/mcp`) 404s on purpose:
+Funnel only mounts the path-suffixed form so honcho can keep its own well-knowns.
+`mcp-remote@0.1.38` fetches that host-root URL first and then fails the code→token
+exchange; serving it is a Funnel follow-up (LS-2728), not a missing engine route.
 
 ### Failure modes (C)
 

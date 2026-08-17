@@ -50,6 +50,15 @@ LIST_FOLDERS_MAX_DEPTH = 6        # ceiling on the requested drill-down depth (c
 # Every other writable path is "curated": changes flow through propose→approve.
 IMMUTABLE_APPEND_ZONES = ("sources/",)
 
+# --- cloud-lane access-token lifetime (LS-2728) --------------------------------
+# 48h covers overnight idle + next-morning digest without a 401. Refresh stays
+# 30 days (CloudAuthProvider.refresh_ttl_seconds). mcp-remote 0.1.38 wipes local
+# credentials on 401 instead of calling exchange_refresh_token; a longer access
+# TTL keeps that client off the hang path. Override via HYPERMNESIC_TOKEN_TTL_SECONDS
+# or serve-cloud/setup --token-ttl. Code TTL (300s) and pending TTL are unchanged.
+CLOUD_TOKEN_TTL_SECONDS = 48 * 60 * 60  # 172800
+TOKEN_TTL_ENV = "HYPERMNESIC_TOKEN_TTL_SECONDS"
+
 
 def is_immutable_append_zone(rel_path: str) -> bool:
     """True if ``rel_path`` lives under a free-append zone (config path-prefix)."""
@@ -147,6 +156,28 @@ def get_api_key(repo: Path | str | None = None) -> str:
             "Set it via env var or a gitignored repo-root .env file."
         )
     return key
+
+
+def cloud_token_ttl_seconds(override: int | None = None) -> int:
+    """Resolve cloud access-token TTL: explicit override > env > 48h default."""
+    import os
+
+    if override is not None:
+        raw: object = override
+    else:
+        env = os.environ.get(TOKEN_TTL_ENV)
+        raw = env if env is not None and str(env).strip() else CLOUD_TOKEN_TTL_SECONDS
+    try:
+        ttl = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ConfigError(
+            f"{TOKEN_TTL_ENV} must be a positive integer of seconds, got {raw!r}"
+        ) from exc
+    if ttl <= 0:
+        raise ConfigError(
+            f"access-token TTL must be a positive integer of seconds, got {ttl}"
+        )
+    return ttl
 
 
 def assert_embedder_agrees(embedder) -> None:

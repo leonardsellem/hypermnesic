@@ -311,12 +311,13 @@ _DEFAULT_CLOUD_ENV_FILE = "~/.config/hypermnesic-cloud/cloud.env"
 def render_cloud_systemd_unit(repo: Path, *, host: str, port: int, path: str,
                               public_url: str, resource: str, exe: str, env_file: Path,
                               allowlist: list[str] | None = None,
-                              token_ttl: int = 3600,
+                              token_ttl: int | None = None,
                               default_client_scopes: list[str] | None = None) -> str:
     """A portable user systemd unit running the **unified public** OAuth serve (``serve-cloud``)
     on a loopback bind behind the Tailscale Funnel. The operator consent secret
     (``HYPERMNESIC_CLOUD_APPROVAL_TOKEN``) and OPENAI_API_KEY are referenced via EnvironmentFile —
     their VALUES are never inlined here (V9)."""
+    token_ttl = config.cloud_token_ttl_seconds(token_ttl)
     state = index_mod.STATE_DIRNAME
     allow = "".join(f" --allowlist {shlex.quote(a)}" for a in (allowlist or [])
                     if a and a.strip())
@@ -382,7 +383,14 @@ def funnel_routes(public_url: str, resource: str, base_target: str) -> list[tupl
     - the two ROOT discovery well-knowns the chain resolves at, each → the server's matching path:
       RFC 9728 protected-resource at ``…/oauth-protected-resource<res_path>`` and RFC 8414 AS meta
       at the server's bare ``…/oauth-authorization-server``. Missing these is what 404'd the first
-      cloud deploy; the path suffixes keep them off honcho's routes."""
+      cloud deploy; the path suffixes keep them off honcho's routes.
+
+    The unsuffixed host-root ``/.well-known/oauth-authorization-server`` is intentionally
+    absent: claiming it would collide with the honcho co-tenant. ``serve-cloud`` already
+    answers that path on loopback (``_patch_public_client_metadata_route``). mcp-remote
+    0.1.38 fetches only the host-root form and then ``finishAuth`` / ``executeTokenRequest``
+    dies without ``token_endpoint`` (LS-2728). Exposing it is a Funnel follow-up, not an
+    engine-route gap."""
     from urllib.parse import urlparse
 
     base = base_target.rstrip("/")
@@ -494,7 +502,7 @@ class SetupOps:
 
 def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LOCALHOST,
           port: int = DEFAULT_CLOUD_PORT, path: str = "/", env_file=None,
-          allowlist: list[str] | None = None, token_ttl: int = 3600,
+          allowlist: list[str] | None = None, token_ttl: int | None = None,
           default_client_scopes: list[str] | None = None,
           ops=None, secret_factory=None) -> dict:
     """Bring the unified public endpoint fully online in one idempotent command: render +
@@ -511,6 +519,10 @@ def setup(repo, *, public_url: str, resource: str | None = None, host: str = _LO
     from hypermnesic.mcp_server import _require_public_https_origin, normalize_default_client_scopes
 
     resource = resource or public_url
+    try:
+        token_ttl = config.cloud_token_ttl_seconds(token_ttl)
+    except config.ConfigError as exc:
+        raise InstallError(str(exc)) from exc
     _require_public_https_origin(public_url, "public_url")     # R2 — fail before any artifact
     _require_public_https_origin(resource, "resource")
     normalized_default_scopes = normalize_default_client_scopes(default_client_scopes)

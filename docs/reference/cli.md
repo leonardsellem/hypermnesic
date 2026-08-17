@@ -246,7 +246,8 @@ operator-consent gate + a write-enabled serve), exposed via Funnel. The operator
 token is read from `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` (env, never a flag).
 Flags: `--index-db PATH` (required), `--host` (default 127.0.0.1), `--port N` (default
 8850), `--path /mcp`, `--public-url URL` (required), `--resource URL` (required),
-`--repo PATH`, `--token-ttl N` (default 3600), `--default-client-scopes SCOPE ...`
+`--repo PATH`, `--token-ttl N` (default `172800` / 48h; env:
+`HYPERMNESIC_TOKEN_TTL_SECONDS`), `--default-client-scopes SCOPE ...`
 (default: `read`; env: `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`), `--allowlist
 PREFIX` (repeatable). When `--repo` is omitted, `--index-db` must be
 `<repo>/.hypermnesic/index.db`; pass `--repo` for custom index locations.
@@ -257,7 +258,8 @@ the service, persist the consent secret, configure the funnel, verify the live H
 discovery chain. Fail-closed (no partial state).
 Flags: `--public-url URL` (required), `--resource URL` (defaults to `--public-url`),
 `--host` (default 127.0.0.1), `--port N` (default 8850), `--path` (default `/`),
-`--env-file PATH`, `--allowlist PREFIX` (repeatable), `--token-ttl N`,
+`--env-file PATH`, `--allowlist PREFIX` (repeatable), `--token-ttl N` (default
+`172800` / 48h; env: `HYPERMNESIC_TOKEN_TTL_SECONDS`),
 `--default-client-scopes SCOPE ...` (default: `read`; env:
 `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`), `--json`.
 JSON output includes `milestones`, `what_this_means`, and `client_next_actions` in

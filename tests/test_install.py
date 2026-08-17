@@ -368,12 +368,14 @@ def _setup(repo, env_file, ops, **kw):
 
 def test_setup_renders_secret_free_cloud_unit(make_corpus, monkeypatch, tmp_path):
     _with_key(monkeypatch)
+    monkeypatch.delenv("HYPERMNESIC_TOKEN_TTL_SECONDS", raising=False)
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     ops = _FakeSetupOps()
     res = _setup(repo, tmp_path / "cloud.env", ops)
     unit = Path(res["unit_path"]).read_text()
     assert "serve-cloud" in unit                                  # the unified public lane
     assert PUBLIC_U in unit and RES_U in unit
+    assert "--token-ttl 172800" in unit                           # LS-2728: 48h access TTL
     assert "127.0.0.1" in unit                                    # loopback bind behind the Funnel
     # the consent/approval token is referenced by EnvironmentFile, never inlined (V9)
     assert "EnvironmentFile" in unit
@@ -522,6 +524,10 @@ def test_funnel_routes_emit_per_mount_targets_for_a_root_served_endpoint():
         "http://127.0.0.1:8850/.well-known/oauth-protected-resource/mcp"
     assert routes["/.well-known/oauth-authorization-server/mcp"] == \
         "http://127.0.0.1:8850/.well-known/oauth-authorization-server"       # server-root path
+    # LS-2728: mcp-remote 0.1.38 fetches only origin + this unsuffixed path.
+    # Funnel does not mount it (honcho co-tenant). Engine already serves it
+    # on loopback; exposing it is a Funnel follow-up, not an app-route gap.
+    assert "/.well-known/oauth-authorization-server" not in routes
 
 
 def test_setup_uses_tailscale_funnel_never_serve(tmp_path):
