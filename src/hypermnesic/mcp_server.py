@@ -889,7 +889,7 @@ def _patch_public_client_metadata_route(mcp: FastMCP, provider) -> None:
 def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
                        path: str = DEFAULT_PATH, repo: Path | None = None, embedder=None,
                        resource: str, public_url: str, approval_token: str,
-                       scopes_supported=("read", "write"), token_ttl_seconds: int = 3600,
+                       scopes_supported=("read", "write"), token_ttl_seconds: int | None = None,
                        default_client_scopes: list[str] | None = None,
                        write_allowlist: list[str] | None = None,
                        audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:

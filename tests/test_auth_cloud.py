@@ -18,7 +18,7 @@ import pytest
 from mcp.server.auth.provider import AuthorizationParams
 from mcp.shared.auth import OAuthClientInformationFull
 
-from hypermnesic import auth_cloud
+from hypermnesic import auth_cloud, config
 
 RES = "https://example.ts.net/cloud/mcp"
 PUBLIC = "https://example.ts.net/cloud"
@@ -183,6 +183,35 @@ def test_load_and_exchange_authorization_code_issues_bound_tokens():
     assert tokens.access_token and tokens.refresh_token and tokens.token_type.lower() == "bearer"
     # single-use: the code cannot be loaded again after exchange
     assert _run(p.load_authorization_code(_client(), code)) is None
+
+
+def test_cloud_access_ttl_default_covers_overnight_and_matches_issued_expiry(monkeypatch):
+    # LS-2728: 48h default so overnight idle does not 401 mcp-remote into a browser hang.
+    monkeypatch.delenv(config.TOKEN_TTL_ENV, raising=False)
+    clock = {"t": 1_000_000}
+    p = auth_cloud.CloudAuthProvider(
+        resource=RES, public_url=PUBLIC, approval_token="op-approval-secret",
+        scopes_supported=["read", "write"], now=lambda: clock["t"])
+    assert p._token_ttl == config.CLOUD_TOKEN_TTL_SECONDS == 172800
+    _run(p.register_client(_client()))
+    tokens = _redeem(p, scopes=("read",))
+    assert tokens.expires_in == config.CLOUD_TOKEN_TTL_SECONDS
+    grants = p.list_grants()
+    assert len(grants) == 1
+    assert grants[0]["access_expires_at"] == clock["t"] + config.CLOUD_TOKEN_TTL_SECONDS
+
+
+def test_cloud_access_ttl_env_override_is_what_provider_issues(monkeypatch):
+    monkeypatch.setenv(config.TOKEN_TTL_ENV, "7200")
+    clock = {"t": 2_000_000}
+    p = auth_cloud.CloudAuthProvider(
+        resource=RES, public_url=PUBLIC, approval_token="op-approval-secret",
+        scopes_supported=["read", "write"], now=lambda: clock["t"])
+    assert p._token_ttl == 7200
+    _run(p.register_client(_client()))
+    tokens = _redeem(p, scopes=("read",))
+    assert tokens.expires_in == 7200
+    assert p.list_grants()[0]["access_expires_at"] == clock["t"] + 7200
 
 
 def test_access_token_validates_then_expires():
@@ -378,6 +407,28 @@ def test_pending_details_exposes_client_for_an_identified_consent():
 
 
 # --- serve wiring: build_cloud_server (AS+RS + DCR + consent + write tool) ----
+
+def test_build_cloud_server_uses_config_token_ttl(make_corpus, fake_embedder, monkeypatch):
+    from hypermnesic import index, mcp_server
+
+    monkeypatch.delenv(config.TOKEN_TTL_ENV, raising=False)
+    captured: dict = {}
+    real = auth_cloud.CloudAuthProvider
+
+    def wrapper(*args, **kwargs):
+        prov = real(*args, **kwargs)
+        captured["token_ttl"] = prov._token_ttl
+        return prov
+
+    monkeypatch.setattr(auth_cloud, "CloudAuthProvider", wrapper)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    mcp_server.build_cloud_server(
+        db, host="127.0.0.1", repo=repo, embedder=fake_embedder,
+        resource=RES, public_url=PUBLIC, approval_token="op-secret")
+    assert captured["token_ttl"] == config.CLOUD_TOKEN_TTL_SECONDS
+
 
 def test_build_cloud_server_wires_as_dcr_consent_and_write_tool(make_corpus, fake_embedder):
     import asyncio as _aio

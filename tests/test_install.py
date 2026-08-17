@@ -368,12 +368,14 @@ def _setup(repo, env_file, ops, **kw):
 
 def test_setup_renders_secret_free_cloud_unit(make_corpus, monkeypatch, tmp_path):
     _with_key(monkeypatch)
+    monkeypatch.delenv("HYPERMNESIC_TOKEN_TTL_SECONDS", raising=False)
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     ops = _FakeSetupOps()
     res = _setup(repo, tmp_path / "cloud.env", ops)
     unit = Path(res["unit_path"]).read_text()
     assert "serve-cloud" in unit                                  # the unified public lane
     assert PUBLIC_U in unit and RES_U in unit
+    assert "--token-ttl 172800" in unit                           # LS-2728: 48h access TTL
     assert "127.0.0.1" in unit                                    # loopback bind behind the Funnel
     # the consent/approval token is referenced by EnvironmentFile, never inlined (V9)
     assert "EnvironmentFile" in unit

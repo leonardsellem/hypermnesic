@@ -105,8 +105,10 @@ identifier differs.
 By default, newly registered clients request `read` when they omit OAuth `scope`. Admins who
 want new approvals to request both read and write can run setup with
 `--default-client-scopes read write` or set
-`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write` in the cloud service environment. The consent
-page still requires the operator approval token, and write approval still cannot bypass protected
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write` in the cloud service environment.
+Access tokens last 48 hours by default (`HYPERMNESIC_TOKEN_TTL_SECONDS` /
+`--token-ttl`); refresh stays 30 days. The consent page still requires the
+operator approval token, and write approval still cannot bypass protected
 paths, frontmatter validation, dirty-tree checks, head-drift checks, audit logging, or git guards.
 
 `doctor` and its alias `status` are non-mutating. They do not start services, rewrite
