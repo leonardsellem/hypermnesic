@@ -14,6 +14,8 @@ its own changelog and version.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-17
+
 ### Changed
 - **Cloud access tokens now last 48 hours by default (LS-2728).** The previous 1h
   TTL 401'd overnight-idle clients. `mcp-remote@0.1.38` treats that 401 as "wipe
@@ -343,7 +345,8 @@ Phase 0 → Phase 2.5 foundation (pre-public, internal milestones).
 - **LongMemEval benchmark harness** (`harness/`) and a French/English retrieval-parity
   harness.
 
-[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.6...v0.1.0
