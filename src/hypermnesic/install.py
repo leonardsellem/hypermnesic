@@ -383,7 +383,14 @@ def funnel_routes(public_url: str, resource: str, base_target: str) -> list[tupl
     - the two ROOT discovery well-knowns the chain resolves at, each → the server's matching path:
       RFC 9728 protected-resource at ``…/oauth-protected-resource<res_path>`` and RFC 8414 AS meta
       at the server's bare ``…/oauth-authorization-server``. Missing these is what 404'd the first
-      cloud deploy; the path suffixes keep them off honcho's routes."""
+      cloud deploy; the path suffixes keep them off honcho's routes.
+
+    The unsuffixed host-root ``/.well-known/oauth-authorization-server`` is intentionally
+    absent: claiming it would collide with the honcho co-tenant. ``serve-cloud`` already
+    answers that path on loopback (``_patch_public_client_metadata_route``). mcp-remote
+    0.1.38 fetches only the host-root form and then ``finishAuth`` / ``executeTokenRequest``
+    dies without ``token_endpoint`` (LS-2728). Exposing it is a Funnel follow-up, not an
+    engine-route gap."""
     from urllib.parse import urlparse
 
     base = base_target.rstrip("/")

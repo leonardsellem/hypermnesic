@@ -524,6 +524,10 @@ def test_funnel_routes_emit_per_mount_targets_for_a_root_served_endpoint():
         "http://127.0.0.1:8850/.well-known/oauth-protected-resource/mcp"
     assert routes["/.well-known/oauth-authorization-server/mcp"] == \
         "http://127.0.0.1:8850/.well-known/oauth-authorization-server"       # server-root path
+    # LS-2728: mcp-remote 0.1.38 fetches only origin + this unsuffixed path.
+    # Funnel does not mount it (honcho co-tenant). Engine already serves it
+    # on loopback; exposing it is a Funnel follow-up, not an app-route gap.
+    assert "/.well-known/oauth-authorization-server" not in routes
 
 
 def test_setup_uses_tailscale_funnel_never_serve(tmp_path):

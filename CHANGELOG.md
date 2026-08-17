@@ -23,6 +23,11 @@ its own changelog and version.
   `serve-cloud` / `setup --token-ttl`. This does not fix the client 401-wipe bug;
   it keeps overnight idle off that path. Existing units that bake `--token-ttl
   3600` must be updated after deploy.
+- Host-root `/.well-known/oauth-authorization-server` (no `/mcp`) still 404s on
+  the public Funnel. `mcp-remote@0.1.38` looks there first, then `finishAuth` /
+  `executeTokenRequest` dies without `token_endpoint`. The engine already serves
+  that document on loopback; exposing it is a Funnel follow-up (honcho
+  co-tenant), not an app-route gap.
 
 ## [0.2.1] - 2026-08-07
 

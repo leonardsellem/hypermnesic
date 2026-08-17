@@ -118,12 +118,16 @@ Use `--json` when an agent or CI check needs the structured status contract.
 **Verify the discovery chain** (what `setup` checks, and what a client needs):
 
 ```sh
-curl -fsS https://<your-host>.ts.net/.well-known/oauth-protected-resource | jq .
-curl -fsS https://<your-host>.ts.net/.well-known/oauth-authorization-server | jq .
+curl -fsS https://<your-host>.ts.net/.well-known/oauth-protected-resource/mcp | jq .
+curl -fsS https://<your-host>.ts.net/.well-known/oauth-authorization-server/mcp | jq .
 ```
 
-Both must return JSON. If they 404 or time out, the funnel or service isn't up — see
-failure modes below.
+Both must return JSON (`token_endpoint` on the AS document). If they 404 or time
+out, the funnel or service isn't up — see failure modes below. The unsuffixed
+host-root `/.well-known/oauth-authorization-server` (no `/mcp`) 404s on purpose:
+Funnel only mounts the path-suffixed form so honcho can keep its own well-knowns.
+`mcp-remote@0.1.38` fetches that host-root URL first and then fails the code→token
+exchange; serving it is a Funnel follow-up (LS-2728), not a missing engine route.
 
 ### Failure modes (C)
 
