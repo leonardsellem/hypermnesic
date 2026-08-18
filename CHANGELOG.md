@@ -69,6 +69,9 @@ its own changelog and version.
   `uv tool install hypermnesic` once the project's trusted publisher is configured
   and `0.1.0` is published.
 - Launch-week first-contact response SLO checklist and baseline.
+- Reusable template row in the remote-client smoke checklist for onboarding an additional
+  MCP-capable client (read-output secrecy, write/protected-path behavior, revocation/reconnect),
+  marked not-yet-run until real evidence exists.
 - Launch narrative and channel-specific post drafts tied to readiness evidence.
 - Launch sequencing plan and public-launch retro template.
 - GitHub Discussions welcome and public roadmap prep for the contribution funnel.
