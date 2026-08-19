@@ -208,3 +208,37 @@ tag time. This is the same drift that let the `0.0.4`/`0.0.5` pair disagree twic
 - Security: [`SECURITY.md`](SECURITY.md) · threat model: [`docs/threat-model-commit-note.md`](docs/threat-model-commit-note.md)
 - Glossary: [`GLOSSARY.md`](GLOSSARY.md)
 - Contributing (humans): [`CONTRIBUTING.md`](CONTRIBUTING.md)
+
+## Cursor Cloud specific instructions
+
+Setup is the standard `uv sync --extra dev`; the six-step gate is documented above in
+"Build, test, and gates". The startup update script already runs `uv sync --extra dev`,
+so dependencies are refreshed before each session — you do not need to reinstall. Notes
+below are the non-obvious caveats, not a re-listing of the gate.
+
+- **`uv run pytest` takes ~15 minutes (750 tests) and is NOT hung.** The suite is
+  offline and deterministic but heavily git-subprocess- and index-I/O-bound, so it
+  spends most of its wall-clock time blocked on I/O with very low CPU — do not mistake
+  that for a hang and kill it. Give it a generous timeout (≥ 20 min) and, when watching
+  progress, run it with `-v` (a bare `uv run pytest 2>&1 | tail` buffers and shows
+  nothing until the very end).
+- **Everything the dev loop needs runs fully offline — no `OPENAI_API_KEY`.** Without a
+  key, dense retrieval degrades to lexical-only (exactly the mode the test suite and CI
+  use). Set `OPENAI_API_KEY` (env var, or a gitignored repo-root `.env` — see
+  `.env.example`) only to exercise the dense embedding channel.
+- **`hypermnesic init` and `reindex` hard-fail without `OPENAI_API_KEY`** (they call
+  `embed.smoke_embed_or_die`). To exercise the product offline, use the commands that
+  degrade to lexical instead: `capture`, `retrieve`, `think`, `converge`, and
+  `local-proof` (its default lexical mode), plus the `serve` MCP server.
+- **Fastest end-to-end proof (offline):** `uv run hypermnesic local-proof --demo-dir
+  /tmp/hm-demo` (generates a tiny git vault, projects the index, recalls, dry-run write
+  preview), or `uv run python scripts/product_smoke.py --work-dir /tmp/hm-smoke` for the
+  seven-stage first-class loop. Against a real vault: `capture` a note, then
+  `local-proof <repo> --query "<keywords>"` to recall it (lexical recall needs keyword
+  overlap with the note text — there is no fuzzy/dense match without a key).
+- **MCP serving lane (dev):** `uv run hypermnesic serve --index-db
+  <vault>/.hypermnesic/index.db --host 127.0.0.1 --port 8848` serves the read-only
+  tailnet companion at `/mcp` (streamable-http). It **refuses `0.0.0.0`** by design; bind
+  a loopback or Tailscale IP. The public OAuth lane (`serve-cloud` / `setup`) additionally
+  needs `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` and Tailscale Funnel, which are not available
+  in the Cloud VM by default.
