@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:84cc78a01f3feb19f7477e072aabbd396b1d869eb0062617ce51a194d7776754",
+  "claims": [
+    {
+      "id": "claim_298c73fdc44d47819f4c2bbc72e6c866",
+      "statement": "The hypermnesic CLI is the engine-host-local surface that skips the network entirely and drives the index, retrieval, write, and serve paths directly, in contrast to the MCP lanes used by remote clients.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        }
+      ]
+    },
+    {
+      "id": "claim_16d5fd08815c4b3ca6dc14175848fb9a",
+      "statement": "The CLI exposes 22 top-level subcommands, two of which — memory and clients — are groups with their own required subcommands.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://tests/test_cli.py",
+          "version": "repo-file-v1:sha256:d596f0ec4bcd2c7caec56492893d0c6f23589bef27d43596467da9f606fe1cf7"
+        }
+      ]
+    },
+    {
+      "id": "claim_f19382321c9b4c6092dacb8e4108b03d",
+      "statement": "Every CLI subcommand supports --json emitted with ensure_ascii=False, so non-ASCII vault content survives the output round trip instead of being escaped.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        }
+      ]
+    },
+    {
+      "id": "claim_96f732fd3f414a8cb3edfb5510797096",
+      "statement": "Read subcommands converge the index to HEAD before answering and several accept --now to force a non-debounced pass, which is what makes a note committed inside the debounce window immediately recall-able.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_35fce6eef42c46aeb9f15a8459ee8510",
+      "statement": "local-proof is the local-first entry point that precedes any endpoint concept: against an existing vault it validates the markdown git repo, builds the projection, retrieves an answer with its repo-relative source path, and previews a write as a dry-run diff with no commit, defaulting to a lexical proof that needs no API key.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f0ae347846144bcab7f4b90f05d6626",
+      "statement": "The reindex command runs an embedding smoke check before rebuilding, so a rebuild cannot silently produce a lexical-only index when the embedding provider is misconfigured.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        }
+      ]
+    },
+    {
+      "id": "claim_a08958b827a949fab95a2f23a5858faa",
+      "statement": "The isolated reindex builds the replacement index in a git worktree and swaps it atomically, so a rebuild never blocks writers.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://tests/test_reindex_isolated.py",
+          "version": "repo-file-v1:sha256:07a0d9c21c5333d514c05b1952e9ad26db81a930e1234eb2a565ba0bdd9f6dda"
+        }
+      ]
+    },
+    {
+      "id": "claim_16bfb57349ec47e88bda3c0d7319254a",
+      "statement": "Four read subcommands — retrieve, think, resolve, and list-folders — are CLI twins of the search, think, resolve, and list_folders MCP tools and return the same output shapes, so a local script and a remote client see the same data.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_837fbd7ef0fe4210889ec66088e2bca6",
+      "statement": "The commit-note subcommand is a dry-run preview rather than a write: it invokes the real write path in dry-run mode so the guard and frontmatter gate actually run and the diff is printed, with no commit and no side effects — making it the safe way to learn whether a write would be refused.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://tests/test_cli.py",
+          "version": "repo-file-v1:sha256:d596f0ec4bcd2c7caec56492893d0c6f23589bef27d43596467da9f606fe1cf7"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a07b20aa86c4621aee22e4451f88112",
+      "statement": "In the memory group every destructive operation previews by default and requires an explicit --apply to act, covering both git-backed forget and safe recent revert.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_3443838d2fc0449f8e441cc4cc3bb769",
+      "statement": "memory inspect deliberately reports provenance in file and commit terms without exposing a raw full-body field, and memory export produces a markdown-plus-provenance manifest rather than an index database export.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_895c690904944d0592587c5db8af5348",
+      "statement": "memory write-scope answers what an agent may write using the same folder derivation and protected-path guard as list-folders and commit_note, so the three surfaces cannot disagree about writability.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_ab81ee4cba414ab9bd0c252683e425b9",
+      "statement": "clients revoke previews by default and only marks a grant revoked with --apply, after which a running server sharing that metadata store refuses the grant on its next access or refresh validation.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/client_control.py",
+          "version": "repo-file-v1:sha256:bb6431d70783614076ecaf78871e070bf94836deca0d211025a2a1b15b8d6efb"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f3057f1d03549e4a52b298d2bb31d99",
+      "statement": "install-hooks is opt-in, idempotent, and non-destructive: it manages only its own block inside the post-merge hook file and can remove just that block with --uninstall, so a hand-written hook survives.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        },
+        {
+          "resource": "repo://tests/test_install.py",
+          "version": "repo-file-v1:sha256:7f90ffb89cfbaf79fb3aaeb92bc8a6c4a020ba7c7631e048e8f7fbfad3a6595e"
+        }
+      ]
+    },
+    {
+      "id": "claim_3416b0de83f74889a65050aceff3f6a9",
+      "statement": "doctor and status are built from a single parser definition in a loop over both names, so the two aliases cannot drift apart in flags or JSON shape, and both are non-mutating diagnostics.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        }
+      ]
+    },
+    {
+      "id": "claim_94b2abfc57e2470f9e1e2994a27e1007",
+      "statement": "Live dense verification is opt-in via --check-dense-live and skipped by default, so setup diagnosis works offline and never spends on an embedding call the operator did not ask for.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        }
+      ]
+    },
+    {
+      "id": "claim_46c3d879c22049efad81ee180d7fdd38",
+      "statement": "The serve command requires an explicit interface host and refuses to bind 0.0.0.0, exposes read tools always, adds the gated write tool only with --enable-write, accepts tailnet membership as the write boundary only through the bounded --allow-tailnet-write opt-in on a CGNAT bind, and can narrow the write surface with repeatable --allowlist prefixes.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_86a8fdc4206546acac60e6fa33c94ded",
+      "statement": "The public cloud serve reads its operator approval token from the environment only and never accepts it as a command-line flag, keeping it out of the process table and shell history.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb765a296f584991b72239141f474976",
+      "statement": "When --repo is omitted from a serve command the index database path must have the standard <repo>/.hypermnesic/index.db shape, and a custom index location requires passing --repo explicitly so credential lookup is not guessed from an unrelated parent directory.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        }
+      ]
+    },
+    {
+      "id": "claim_129fca58a1cc42399df6289000343ec1",
+      "statement": "The setup command is idempotent and fail-closed, bringing the public endpoint online by rendering and starting the service, persisting the consent secret, configuring the funnel, and verifying the live HTTPS discovery chain before reporting success.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        }
+      ]
+    },
+    {
+      "id": "claim_83082cc71c324ea3bc0d444a5e816716",
+      "statement": "The install command provisions a host into one of three roles — single, master, or client — by rendering artifacts, writing role config, and installing the convergence hook, while returning live service start and index build as manual steps rather than performing them.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        }
+      ]
+    },
+    {
+      "id": "claim_2d7b330ead504e9393cb5c7e3086bd1e",
+      "statement": "The daily-review subcommand generates a review-gated dashboard proposal composing capture backlog, recent writes, generated navigation and salience links, degraded state, and cleanup next actions, and it never moves, deletes, or rewrites a source note.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/daily_review.py",
+          "version": "repo-file-v1:sha256:ed2b40fff423e7f6786edddb9d7f2bb116265afa6a1a5d231c65487019245acb"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

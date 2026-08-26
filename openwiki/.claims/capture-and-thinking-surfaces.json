@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f1c24668dba3e29903151a4241cc2584506104f86c2f3a31f9a5051e520fb613",
+  "claims": [
+    {
+      "id": "claim_a9e7e5f2eb984dcda3c084311300c991",
+      "statement": "Capture deliberately separates low capture-friction from generative processing-friction in time: raw text lands under sources/ immediately through a free-append fast path committed straight to HEAD with no proposal branch, while triage into structure happens later as a separate step.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py",
+          "version": "repo-file-v1:sha256:ccb2a02f64c60d50a7eb03fa2da48832e5f1dd63a2319fa54cc60cb5c9d4ae66"
+        },
+        {
+          "resource": "repo://tests/test_capture.py",
+          "version": "repo-file-v1:sha256:a37abfdc386185fe8ab699e47621a38cd2117d6bd701a04361b3ec6b17bf5cdd"
+        }
+      ]
+    },
+    {
+      "id": "claim_543fdc08696949b2867fbdce588dc758",
+      "statement": "An unnamed capture is given a deterministic path derived from a timestamp plus the first six hex characters of the body's SHA-256 under sources/captures/, and the capture write is narrowed to the sources/ prefix so the fast path cannot reach elsewhere in the vault.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py",
+          "version": "repo-file-v1:sha256:ccb2a02f64c60d50a7eb03fa2da48832e5f1dd63a2319fa54cc60cb5c9d4ae66"
+        }
+      ]
+    },
+    {
+      "id": "claim_2779462daf9542b2b76dfc03e330f8af",
+      "statement": "The capture backlog listing is non-mutating and reports each capture's path, bounded snippet, byte size, and a stage of pending_triage or triage_proposed determined by whether a triage note already exists for it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py",
+          "version": "repo-file-v1:sha256:ccb2a02f64c60d50a7eb03fa2da48832e5f1dd63a2319fa54cc60cb5c9d4ae66"
+        },
+        {
+          "resource": "repo://tests/test_capture.py",
+          "version": "repo-file-v1:sha256:a37abfdc386185fe8ab699e47621a38cd2117d6bd701a04361b3ec6b17bf5cdd"
+        }
+      ]
+    },
+    {
+      "id": "claim_6e0083e69fa44d9cac3fd34e88903cf6",
+      "statement": "Triage never files, moves, or rewrites a capture: it emits a proposal carrying a suggested folder derived from the nearest related note's directory, up to five connection wikilinks, and one grapple question, and it attaches the thinking step's own wrote value to the result so a caller can verify from returned data that the analysis wrote nothing.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py",
+          "version": "repo-file-v1:sha256:ccb2a02f64c60d50a7eb03fa2da48832e5f1dd63a2319fa54cc60cb5c9d4ae66"
+        },
+        {
+          "resource": "repo://tests/test_capture.py",
+          "version": "repo-file-v1:sha256:a37abfdc386185fe8ab699e47621a38cd2117d6bd701a04361b3ec6b17bf5cdd"
+        }
+      ]
+    },
+    {
+      "id": "claim_e211be6396ae4c60b803dae7ad7f0ebd",
+      "statement": "Thinking mode's no-write boundary is structural rather than a runtime flag: the module imports only read surfaces and therefore cannot reach the write path or the proposal queue, and the returned wrote: false field exists so the boundary is observable to a caller instead of merely asserted.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        },
+        {
+          "resource": "repo://tests/test_think.py",
+          "version": "repo-file-v1:sha256:f5a14c778fdeb496b76d5f070e1752fd0a502da819686f936a1a4a671b5647ec"
+        }
+      ]
+    },
+    {
+      "id": "claim_910d516c862e4cba88962278d8d3fa72",
+      "statement": "Thinking mode reasons over distinct note paths rather than chunks, so a note whose two chunks both match is counted once and cannot produce a duplicate unlinked pair.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        }
+      ]
+    },
+    {
+      "id": "claim_2963c3e2cc624d4385a3fac1b128413a",
+      "statement": "The Socratic prompt is grounded or absent: the generic topic-templated questions were removed because they referenced nothing retrieval found, and the surviving prompt names two distinct related notes by resolved title and fires only when at least two exist, so think degrades to no questions rather than padding with boilerplate.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        }
+      ]
+    },
+    {
+      "id": "claim_50b19fd18237467bb22b0f9cb04684f4",
+      "statement": "A related note is labelled by its own H1 title read from the note file rather than by the heading of whichever chunk matched, so results carry note identity instead of chunk identity.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/ingest.py",
+          "version": "repo-file-v1:sha256:21e54cedff1e84fa22b05862ea5f04af485584e9e5a511ccdaf5d3746fb163f6"
+        },
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        }
+      ]
+    },
+    {
+      "id": "claim_6b785ee0a80b42c186ca6ab518551b83",
+      "statement": "Unlinked pairs assert only that two notes surfaced together and no wikilink joins them — a candidate missing connection for the writer to verify, not a claim of conceptual conflict — and adding the link is a review-gated proposal rather than a write.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        }
+      ]
+    },
+    {
+      "id": "claim_6d7e9b1aec3040f998041b429034d6dc",
+      "statement": "When the active note's path is supplied it is excluded from its own results, and if that self-exclusion removes the only retrieval hit, think falls back to the note's explicit graph neighbours as low-confidence graph-channel results so a well-linked note never yields a blank thinking surface.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        },
+        {
+          "resource": "repo://tests/test_think.py",
+          "version": "repo-file-v1:sha256:f5a14c778fdeb496b76d5f070e1752fd0a502da819686f936a1a4a671b5647ec"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef808225c4bf4dccab1fab37ca90127f",
+      "statement": "Folder writability is single-sourced from the write guard by probing a synthetic markdown file under each folder prefix through the same predicate commit_note uses, and probing under the prefix rather than the bare prefix is required because the protected-path reason excludes the leaf and a bare prefix would misclassify a protected folder as writable.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        },
+        {
+          "resource": "repo://tests/test_folders.py",
+          "version": "repo-file-v1:sha256:4b9600b8d0efa3f3206362f17c444dc5b4639e7b794d7f0248ceb6286ee6033a"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9f6e1eb6bea421c8c0a324b2fe86f24",
+      "statement": "Folder listings are deterministic under truncation: entries are sorted before the node cap is applied so the dropped tail is always the same, the response reports both a truncated flag and an omitted count, and the requested depth is clamped to a ceiling.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        }
+      ]
+    },
+    {
+      "id": "claim_e4722a35b1534bc9a21771d40ca317eb",
+      "statement": "A caller-supplied folder root is normalized to a repo-relative prefix and an absolute path or one containing a traversal segment is rejected outright rather than silently normalized into a plausible prefix.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://tests/test_folders.py",
+          "version": "repo-file-v1:sha256:4b9600b8d0efa3f3206362f17c444dc5b4639e7b794d7f0248ceb6286ee6033a"
+        }
+      ]
+    },
+    {
+      "id": "claim_1fc44ba224ea406e9d6cd21f2e835a13",
+      "statement": "Folder discovery returns the root-local agent instruction file with AGENTS.md taking precedence over CLAUDE.md at that exact root, and descendant instruction files are deliberately not aggregated into a parent listing so a caller must narrow the root to read a child folder's guidance.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        }
+      ]
+    },
+    {
+      "id": "claim_b058b2af0db44aacaeb7d0a4fc40a912",
+      "statement": "Because folder discovery is a remote read surface, returned instruction content is sanitized before leaving the server: endpoint URLs and host-local absolute paths are replaced with placeholders while repo-relative paths are preserved, so guidance stays useful without leaking operator coordinates to a connected client.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://tests/test_folders.py",
+          "version": "repo-file-v1:sha256:4b9600b8d0efa3f3206362f17c444dc5b4639e7b794d7f0248ceb6286ee6033a"
+        }
+      ]
+    },
+    {
+      "id": "claim_08eec6fb4b0d4062af05b46a43bec375",
+      "statement": "Non-markdown sources become retrievable through markdown sidecars produced by a router keyed on extension and complexity, sending images and scanned, table-dense, or equation-bearing PDFs to one extractor and office formats and simple native PDFs to another, with all extractors and probe libraries chosen to be permissively licensed so the copyleft alternatives are excluded by requirement.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py",
+          "version": "repo-file-v1:sha256:9743485fcc30cc7f78390554da8f1a3a5c8725e700a7e9b918638b0fa82c60a4"
+        }
+      ]
+    },
+    {
+      "id": "claim_9048e0383e2c439192e0b6fe57102d94",
+      "statement": "The heavy extraction libraries are imported lazily, so the sidecar module's routing and hash-gate logic loads and is testable without those dependencies installed.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py",
+          "version": "repo-file-v1:sha256:9743485fcc30cc7f78390554da8f1a3a5c8725e700a7e9b918638b0fa82c60a4"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py",
+          "version": "repo-file-v1:sha256:f70e4b1b038d09fcf33c00a92aeded523063716f1b89e96f39a96002d8e7925f"
+        }
+      ]
+    },
+    {
+      "id": "claim_96bcb3c07b62477e876451be14583b85",
+      "statement": "Sidecars are content-addressed: frontmatter records the source path, extraction time, source SHA-256, extractor and extractor version, and a quality label, and re-extraction fires only when no sidecar exists, the source hash no longer matches, or the extractor version constant was bumped — so an unchanged binary produces no churn and a corpus-wide re-extraction is a deliberate one-constant change.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py",
+          "version": "repo-file-v1:sha256:9743485fcc30cc7f78390554da8f1a3a5c8725e700a7e9b918638b0fa82c60a4"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py",
+          "version": "repo-file-v1:sha256:f70e4b1b038d09fcf33c00a92aeded523063716f1b89e96f39a96002d8e7925f"
+        }
+      ]
+    },
+    {
+      "id": "claim_c3284500ef5c414194766fd2735d9c44",
+      "statement": "Sidecar writes never overwrite silently: a changed source yields a review-gated re-extraction proposal, and the one-time cold start over a whole corpus is emitted as a single batched proposal rather than one per file.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py",
+          "version": "repo-file-v1:sha256:9743485fcc30cc7f78390554da8f1a3a5c8725e700a7e9b918638b0fa82c60a4"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py",
+          "version": "repo-file-v1:sha256:f70e4b1b038d09fcf33c00a92aeded523063716f1b89e96f39a96002d8e7925f"
+        }
+      ]
+    },
+    {
+      "id": "claim_6addfa16d56d4a559268c93e84b41bfe",
+      "statement": "Every sidecar carries a source: sidecar trust tag because its text originates in arbitrary binaries and is read by write-capable agents through the index; the current posture accepts that content, but the tag is present so a later policy can restrict sidecar-derived chunks from write-capable tools without re-extraction.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py",
+          "version": "repo-file-v1:sha256:9743485fcc30cc7f78390554da8f1a3a5c8725e700a7e9b918638b0fa82c60a4"
+        }
+      ]
+    },
+    {
+      "id": "claim_e698ace108d5465eb588ade7bf458619",
+      "statement": "The memory taxonomy classifies a candidate memory on five dimensions — duration, type, scope, update strategy, and retrieval mode — and admits semantic facts, episodic source evidence, procedural policy, generated summaries citing sources, raw captures, and current-state mirrors as durable project memory.",
+      "evidence": [
+        {
+          "resource": "repo://GLOSSARY.md",
+          "version": "repo-file-v1:sha256:064432c0d2587d5551296fba6b14d7e5f24825da4046496bb7824de332b4e658"
+        },
+        {
+          "resource": "repo://docs/guides/memory-taxonomy.md",
+          "version": "repo-file-v1:sha256:970bfaa5b481b2833102b004a1266ac567427f6c106f0696c1c50567742a585b"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c53585cfe714b34bb80dbbff638f77e",
+      "statement": "Behavioural preferences, temporary session state, transient inferences about a person, secrets and credentials, and unreviewed sensitive personal material are explicitly not written to hypermnesic by default; behavioural preference and session state belong in an adjacent short-term layer rather than becoming durable project memory because they are useful.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-taxonomy.md",
+          "version": "repo-file-v1:sha256:970bfaa5b481b2833102b004a1266ac567427f6c106f0696c1c50567742a585b"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/skills/hypermnesic-memory/SKILL.md",
+          "version": "repo-file-v1:sha256:517553f7033a64b705fbb9c570f4551c7b4b7f638cca7286b07d5b83e6253d44"
+        }
+      ]
+    },
+    {
+      "id": "claim_26d9b4834c8448a09b7db0a28538fb39",
+      "statement": "The taxonomy requires evidence-first handling — preserve raw captures and cite source paths rather than replacing evidence with a cleaned summary, with removals routed through the memory-control preview and apply flow so they become new git events with audit context — and treats a guard refusal as a control signal rather than an obstacle to route around.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-taxonomy.md",
+          "version": "repo-file-v1:sha256:970bfaa5b481b2833102b004a1266ac567427f6c106f0696c1c50567742a585b"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

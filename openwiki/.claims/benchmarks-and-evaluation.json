@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:b58a57dd692430ebc1ae0c64519720e65f0dd6ca22682b95d599bd6763156b1f",
+  "claims": [
+    {
+      "id": "claim_f8e61fcea84e4a6dacda303870b38e63",
+      "statement": "A LongMemEval score is only comparable to another score sharing three axes — reader model, judge model, and dataset release — and this harness fixes them as the V1 _s variant of the cleaned-2025-09 release graded by the canonical gpt-4o-2024-08-06 judge with raw verbatim ingestion.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.json",
+          "version": "repo-file-v1:sha256:35f174b83ea200a50ab41802bfb683793a3a1a47d7e7e203ca99fe789551111d"
+        }
+      ]
+    },
+    {
+      "id": "claim_44ce8f6dae3240a9ae93344f3c5c0d33",
+      "statement": "The judge model is pinned to exactly gpt-4o-2024-08-06 because the official aggregator hard-asserts that snapshot, which places leaderboard rows graded by a more lenient GPT-4.1 judge out of scope by construction and makes the gap to those rows a judge-leniency artifact rather than a memory-quality result.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/judge.py",
+          "version": "repo-file-v1:sha256:d8705f1e5b3e0f70bae0a4c5c9031a4c7918d7022160b5ab9823ca67d92f7b81"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.json",
+          "version": "repo-file-v1:sha256:35f174b83ea200a50ab41802bfb683793a3a1a47d7e7e203ca99fe789551111d"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8651dfffd2c4f2fb32e42ef764bf5ae",
+      "statement": "Every externally cited leaderboard anchor is attributed per row by reader, judge, and dataset release, and that discipline caught a real planning-document error in which a GPT-4o-judge figure was attributed to a system that publishes no GPT-4o-judge row at all; the correction is recorded in an open corrections log rather than silently applied.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        }
+      ]
+    },
+    {
+      "id": "claim_02c5e6353b274ed2aa821081839db06c",
+      "statement": "Benchmark ingestion is raw and verbatim: dataset sessions are materialized to markdown with no summarization or fact extraction between the dataset and the index, the session date is written into the note body so it survives frontmatter stripping, and the mapping is deterministic so the same instance yields byte-identical files.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/materialize.py",
+          "version": "repo-file-v1:sha256:76dc2f1267461a7da30c15ff0286c25a013cc93ae51bfed09b9a5c2fb0877387"
+        }
+      ]
+    },
+    {
+      "id": "claim_5439ffda6ce54fbeb083446d5a625d2b",
+      "statement": "Each benchmark instance is scored against its own isolated index built with a state directory outside the corpus and discarded afterwards, using the production embedding configuration unchanged, so the harness measures the shipped read path rather than a benchmark-specific variant of it.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/adapter.py",
+          "version": "repo-file-v1:sha256:20850c6ea2c1018fb0935c190aad2058b6b5f6be61a738a8e5ad0709f7ca9381"
+        }
+      ]
+    },
+    {
+      "id": "claim_19922d621d70411a87c7e7d5d9611a1d",
+      "statement": "Retrieval parameters — k, fusion weights, lanes, and near-duplicate collapse — are frozen at manifest values before any run, and any parameter change must be recorded in the corrections log, which is what makes the no-tune-to-pass commitment auditable.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.json",
+          "version": "repo-file-v1:sha256:35f174b83ea200a50ab41802bfb683793a3a1a47d7e7e203ca99fe789551111d"
+        }
+      ]
+    },
+    {
+      "id": "claim_598132d9063845d6969fb4ae09b7c221",
+      "statement": "If embeddings are unavailable and any query degrades to lexical-only, the entire benchmark run is voided rather than scored, so a degraded run is treated as non-comparable instead of being recorded as a failing score.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/adapter.py",
+          "version": "repo-file-v1:sha256:20850c6ea2c1018fb0935c190aad2058b6b5f6be61a738a8e5ad0709f7ca9381"
+        },
+        {
+          "resource": "repo://harness/longmemeval/qa.py",
+          "version": "repo-file-v1:sha256:00011e7c0e90f17abfc99aac012a4480dab70f94b558f8674c361d830878fb6a"
+        }
+      ]
+    },
+    {
+      "id": "claim_e27764eaeb3545368ebfd45bef3e8ba7",
+      "statement": "Because the engine applies no date-aware ranking, the retrieval diagnostic reports recall_any@k and the gold-set-size distribution beside strict recall_all@k for date-sensitive abilities, which localizes a sub-unity score to retrieval ordering rather than missing coverage; session-level recall_any@10 reaches 1.000 for those abilities.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py",
+          "version": "repo-file-v1:sha256:5a72c886292f4b6a95f4e47929b4b68ace4f2724692ff622ed85fecb00417242"
+        }
+      ]
+    },
+    {
+      "id": "claim_483a4a1730bd42869dc7f9a6c93fd509",
+      "statement": "Only aggregate and per-ability numbers are committed: the downloaded dataset, the materialized corpus, per-question outputs, and the embedding cache are gitignored, so no per-instance corpus data enters the repository.",
+      "evidence": [
+        {
+          "resource": "repo://.gitignore",
+          "version": "repo-file-v1:sha256:3a17f64b4df525420a4c9af9e6c9fdc85e9b8968217b8dca475a1a2f98542fca"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8f1d80aa1f84265b811618d5ad2ef66",
+      "statement": "The end-to-end QA phase is spend-gated: the runner requires an explicit paid-run confirmation flag and otherwise prints the gate and a cost estimate instead of issuing paid requests.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/qa.py",
+          "version": "repo-file-v1:sha256:00011e7c0e90f17abfc99aac012a4480dab70f94b558f8674c361d830878fb6a"
+        }
+      ]
+    },
+    {
+      "id": "claim_b57262c02e6c40c9ae71d8c731f2c6d6",
+      "statement": "The judge applies the official per-question-type prompt templates rather than one generic rubric, including the knowledge-update rule that only the latest value counts as correct and the abstention rule that a correct response must actually abstain rather than fabricate an answer.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/judge.py",
+          "version": "repo-file-v1:sha256:d8705f1e5b3e0f70bae0a4c5c9031a4c7918d7022160b5ab9823ca67d92f7b81"
+        }
+      ]
+    },
+    {
+      "id": "claim_a490a23db97f46809700e62ca1ced0a6",
+      "statement": "Every number is reproducible from the committed harness plus a pinned manifest that fixes the dataset URL and SHA-256, the release and variant, the embedding model and dimension, the judge and reader models, the frozen retrieval parameters, the prompt template version, and the seed; a re-download is verified strictly against the hash and writes nothing on a mismatch.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.json",
+          "version": "repo-file-v1:sha256:35f174b83ea200a50ab41802bfb683793a3a1a47d7e7e203ca99fe789551111d"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.py",
+          "version": "repo-file-v1:sha256:397d020e27207784386d5daaaa71f51c8b622b491dcb48f6e71d55ff051a0436"
+        }
+      ]
+    },
+    {
+      "id": "claim_b3cfce5573eb4befba9990a593543c85",
+      "statement": "The paid reader path depends on the separate bench extra rather than the default or dev install, and CI runs only the offline harness smoke test, never a paid benchmark run.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py",
+          "version": "repo-file-v1:sha256:b4baa23da06744faa25c117012c6b4a9d34f0c7928a7d0387a40faf067fb0ea7"
+        }
+      ]
+    },
+    {
+      "id": "claim_b345e9a253944db6944dadbfe8b9c13a",
+      "statement": "Benchmark quality and product operability are separate gates: LongMemEval measures retrieval quality only, while setup, consent, memory control, plugin observability, and remote-client operability are proven by the product smoke script, offline remote-contract tests, the remote-client smoke checklist, and the product-readiness checklist.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://scripts/product_smoke.py",
+          "version": "repo-file-v1:sha256:8ab751ef64af20203acfdf498140f56dd2ebd4affd25016bcc84259d7a821cdf"
+        },
+        {
+          "resource": "repo://tests/test_product_remote_smoke.py",
+          "version": "repo-file-v1:sha256:c24bc72a82a0271bb2c82574399bf311f2e09cef56f578537d516dc874048439"
+        }
+      ]
+    },
+    {
+      "id": "claim_3366ac48573e4bf99d501c0ded974ff6",
+      "statement": "Dataset contamination is disclosed rather than hidden: the benchmark dataset is publicly available so reader pre-training may have seen it, which is part of why the retrieval diagnostic — unaffected by reader pre-training — is treated as the higher-confidence signal.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        }
+      ]
+    },
+    {
+      "id": "claim_362869951c864cefadcbe6a5ea1461bb",
+      "statement": "The parity harness scores the engine against a frozen baseline fixture on a frozen query set using human-judged, baseline-independent relevance labels with both sides un-reranked, so a claim of parity is not tautological.",
+      "evidence": [
+        {
+          "resource": "repo://harness/PARITY_VERDICT.md",
+          "version": "repo-file-v1:sha256:49f8e42e313f1fa0fb20be928e2470fb170c0a0098d6db438695d60d58414afb"
+        },
+        {
+          "resource": "repo://harness/parity_harness.py",
+          "version": "repo-file-v1:sha256:e4c5125c9311284919f7c1768affb61cb67bfceed528bac5fbd96e89a6b37578"
+        }
+      ]
+    },
+    {
+      "id": "claim_e97a7c58c96245f2b2e227c349b1567e",
+      "statement": "The parity verdict is deliberately conservative: passing requires beating the baseline on both aggregate recall@10 and MRR outside a near-tie band with no catastrophic miss, a near-tie returns no_decision, no_decision counts as not passing, and a run degraded to lexical-only is voided rather than scored as a failure.",
+      "evidence": [
+        {
+          "resource": "repo://harness/parity_harness.py",
+          "version": "repo-file-v1:sha256:e4c5125c9311284919f7c1768affb61cb67bfceed528bac5fbd96e89a6b37578"
+        },
+        {
+          "resource": "repo://tests/test_parity_harness.py",
+          "version": "repo-file-v1:sha256:e74e00021782c1d7402596754e9f0bdddc7f6e45760371b6073f296243f1c821"
+        }
+      ]
+    },
+    {
+      "id": "claim_becaaa1df59240f3823bc3a0a1bdc868",
+      "statement": "The composite cut-over verdict is test-enforced and combines retrieval parity with entity resolution — whose critical safety property is never producing a false wikilink target, so a miss is acceptable where a wrong link is not — and index freshness, that a just-committed delta is recall-able through read-time convergence alone with an oversized delta surfaced as a manual-reindex signal rather than dropped.",
+      "evidence": [
+        {
+          "resource": "repo://harness/PARITY_VERDICT.md",
+          "version": "repo-file-v1:sha256:49f8e42e313f1fa0fb20be928e2470fb170c0a0098d6db438695d60d58414afb"
+        },
+        {
+          "resource": "repo://harness/parity_harness.py",
+          "version": "repo-file-v1:sha256:e4c5125c9311284919f7c1768affb61cb67bfceed528bac5fbd96e89a6b37578"
+        },
+        {
+          "resource": "repo://tests/test_parity_harness.py",
+          "version": "repo-file-v1:sha256:e74e00021782c1d7402596754e9f0bdddc7f6e45760371b6073f296243f1c821"
+        }
+      ]
+    },
+    {
+      "id": "claim_f9a8303e1814420eb476afc77333c245",
+      "statement": "Corpus equivalence detection keeps parity scoring fair by recognizing only two narrow notions of the same document — an exact frontmatter-stripped content mirror at two paths, and a same-event pair sharing a date-and-slug stem after a trailing source-id suffix is stripped — deliberately keeping the date in the key so two different events sharing a title are never merged.",
+      "evidence": [
+        {
+          "resource": "repo://harness/corpus_equivalence.py",
+          "version": "repo-file-v1:sha256:97cff1f8610ccd93a2f066cdea3a5a6bc6a03297bc905c45c8f5a2f67bea0d23"
+        },
+        {
+          "resource": "repo://tests/test_corpus_equivalence.py",
+          "version": "repo-file-v1:sha256:92e57d040ad0b06e6d0517145a121ec9a46e59ee3bc36bb1d6c046c620af40b4"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

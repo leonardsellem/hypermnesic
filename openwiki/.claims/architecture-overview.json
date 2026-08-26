@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:ca23482878fa5e2ed1ccebc62a59540dbdb0c0ea3df4d3e2e60f8f4de421ba24",
+  "claims": [
+    {
+      "id": "claim_5e5a215b45f145d19bbbd85a949b4726",
+      "statement": "hypermnesic's prime invariant is that git-tracked markdown files are the single source of truth and the SQLite search index is a disposable, rebuildable projection of the committed tree rather than a database of record.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/__init__.py",
+          "version": "repo-file-v1:sha256:421d3fde4a47c2e90e9f0f0f222e0ce195d59e6817d86ba897140735443235d3"
+        }
+      ]
+    },
+    {
+      "id": "claim_0e0895bd6cbd4d6bb901592a91d08127",
+      "statement": "A reindex can never lose a committed write because writes are applied to git first and the index is rebuilt from git, which is why the index needs no backups and can be deleted at any time at the cost of only a rebuild.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://GLOSSARY.md",
+          "version": "repo-file-v1:sha256:064432c0d2587d5551296fba6b14d7e5f24825da4046496bb7824de332b4e658"
+        },
+        {
+          "resource": "repo://tests/test_index_projection.py",
+          "version": "repo-file-v1:sha256:f48209d7f04491abc0e5a0b4cfcbd98beb185dc7f6c070ae558ff8876bdcfdf8"
+        }
+      ]
+    },
+    {
+      "id": "claim_f273341c6c6646c786bff3860effcd02",
+      "statement": "The corpus format is plain markdown in a git repository where body wikilinks are the graph edges and frontmatter carries note metadata, so the vault stays human-readable and diffable without the engine present.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/graph.py",
+          "version": "repo-file-v1:sha256:545c60d026e0280747d9c5e1d6b5dc9f68f66022c9d1d2d8c6f730162fc5b4e8"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py",
+          "version": "repo-file-v1:sha256:21e54cedff1e84fa22b05862ea5f04af485584e9e5a511ccdaf5d3746fb163f6"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e70c378fd8d49f99dfcb1b3c59ca908",
+      "statement": "The index stores a commit-SHA checkpoint alongside its lexical and dense tables, and that checkpoint is what lets the engine measure how far the projection lags HEAD and converge only the delta.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_061e82e2c2bb4066a807c30f8792c604",
+      "statement": "Every read path runs convergence before answering, so a just-committed note is recall-able on the next read without a manual reindex — the guarantee that lets the index remain a pure projection instead of a cache that drifts.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://tests/test_converge.py",
+          "version": "repo-file-v1:sha256:4722cdfa20d1351ee5bd1aa24f09b970c219e162fa14041edd1dbbf347096d83"
+        }
+      ]
+    },
+    {
+      "id": "claim_a926ec8613ef435d94e63c80d79f9c7d",
+      "statement": "The dense retrieval channel is optional at runtime: when the embedding provider is unreachable, reads still return lexical and graph results and are explicitly flagged as degraded rather than silently returning thinner results.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_06b7f1329dbe47ef936a4d639b4b7cf7",
+      "statement": "commit_note is the only sanctioned mutation of the corpus and runs a fixed order — write guard, frontmatter gate, file write, git commit and push, index projection, append-only audit entry — with the agent never merging.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        }
+      ]
+    },
+    {
+      "id": "claim_a0c30ce374d94e35a86d79fc7aebd003",
+      "statement": "The serving topology is exactly two network lanes: a public OAuth 2.1 /mcp endpoint with dynamic client registration, PKCE, operator consent and audience-bound revocable tokens for every remote client, and an auth-off read-only tailnet companion where tailnet membership is the boundary; descriptions of a tailnet-only system or of four lanes are superseded.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://docs/README.md",
+          "version": "repo-file-v1:sha256:023a1ddc68bdaf6212f8188bc5bf1b1476a18df6ceccee3d5808cb64127e3643"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_5e867a8e77f6404b8733f78861f486c0",
+      "statement": "The MCP server binds a specific interface at the socket level and refuses to bind 0.0.0.0 at construction, so a misconfigured bind fails loudly instead of exposing the vault broadly.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_dbc1ffad2109469cba7b1fdbe63bd84a",
+      "statement": "The CLI is the engine-host-local surface and is the only one of the three surfaces that skips the network entirely, operating the index, retrieval, write, and serve paths directly.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        }
+      ]
+    },
+    {
+      "id": "claim_8dc5624c095a433eb5a9bea47525766b",
+      "statement": "src/hypermnesic/ is deliberately a flat module layout with one module per responsibility, so retrieval, convergence, the write path, serving, provisioning, diagnostics, control surfaces, and the human knowledge surfaces each have a single owning file rather than a package hierarchy.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_6b4a916e5c42442880481feb33ea3362",
+      "statement": "connect.py owns serendipity connection proposals — pairing notes with high cosine similarity that no body wikilink already joins — and never writes the suggested link into a source note, emitting a bounded review-gated proposal instead.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/connect.py",
+          "version": "repo-file-v1:sha256:3745ccb692c80bbf0eaee178208b13f12648b8e31b524d0c12932fb93c043948"
+        }
+      ]
+    },
+    {
+      "id": "claim_cb9f0313d130455995afd8d5f857b5a6",
+      "statement": "The distribution exposes a single console entry point named hypermnesic bound to the CLI main function, and the package pins its own __version__ that a release gate keeps in agreement with the project version and the plugin manifests.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py",
+          "version": "repo-file-v1:sha256:ddc438db874ec48342d7c35db56260d81def2b7ec962d243a11cb4d44860632b"
+        },
+        {
+          "resource": "repo://src/hypermnesic/__init__.py",
+          "version": "repo-file-v1:sha256:421d3fde4a47c2e90e9f0f0f222e0ce195d59e6817d86ba897140735443235d3"
+        }
+      ]
+    },
+    {
+      "id": "claim_e5810a8438824150be995a7de03288c6",
+      "statement": "The engine's runtime dependency set is deliberately small and permissively licensed — the sqlite-vec extension, the OpenAI client, the MCP SDK, and a round-trip-preserving YAML parser used by the frontmatter gate — and each carries an upper version bound because the lockfile is not shipped in the wheel or sdist.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        },
+        {
+          "resource": "repo://tests/test_dependency_bounds.py",
+          "version": "repo-file-v1:sha256:064259dae92b83981142e7044f636ecc598e04122f5071870ec638aff9d7d080"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

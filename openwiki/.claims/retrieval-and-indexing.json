@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5a6b537b21e0f02d2b035162e55243ab48d7417ad80014800e151edbee0b6303",
+  "claims": [
+    {
+      "id": "claim_1e16eb7efce140cbb4d5f293beac22ca",
+      "statement": "Ingestion walks markdown in sorted path order so rebuilds are reproducible, skips the git directory, the engine state directory, and common tooling directories, and reads files defensively by replacing non-UTF-8 bytes so a single bad byte cannot fail an index build.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/ingest.py",
+          "version": "repo-file-v1:sha256:21e54cedff1e84fa22b05862ea5f04af485584e9e5a511ccdaf5d3746fb163f6"
+        }
+      ]
+    },
+    {
+      "id": "claim_ac980d2510364758b9d5b830eb173687",
+      "statement": "YAML frontmatter is stripped before chunking, which means the wikilink graph never sees frontmatter and frontmatter relation fields cannot become graph edges even accidentally.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/graph.py",
+          "version": "repo-file-v1:sha256:545c60d026e0280747d9c5e1d6b5dc9f68f66022c9d1d2d8c6f730162fc5b4e8"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py",
+          "version": "repo-file-v1:sha256:21e54cedff1e84fa22b05862ea5f04af485584e9e5a511ccdaf5d3746fb163f6"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8490a0b713d48b094bb97fde1bb5c64",
+      "statement": "Chunks are bounded by a hard character cap chosen to sit well under the embedding model's token limit after a real failure where an oversized chunk was rejected by the API mid-build, and an oversized single block is split preferring line boundaries with a hard character slice as fallback for content with no usable whitespace.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/ingest.py",
+          "version": "repo-file-v1:sha256:21e54cedff1e84fa22b05862ea5f04af485584e9e5a511ccdaf5d3746fb163f6"
+        }
+      ]
+    },
+    {
+      "id": "claim_fe13744645b54f98972d1caceebeb485",
+      "statement": "Each chunk carries the nearest preceding heading, so a retrieved chunk arrives with the section context it came from rather than as bare text.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py",
+          "version": "repo-file-v1:sha256:21e54cedff1e84fa22b05862ea5f04af485584e9e5a511ccdaf5d3746fb163f6"
+        }
+      ]
+    },
+    {
+      "id": "claim_c33f0247f24a4882ac8e037e81ba4e1b",
+      "statement": "The index schema holds chunk rows, an FTS5 lexical projection with diacritic folding, one vector per chunk, a document table with one vector per document for the doc lane, and a metadata table carrying the commit-SHA checkpoint — every row derived from committed markdown, which is why deleting the index costs only rebuild time.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://tests/test_index.py",
+          "version": "repo-file-v1:sha256:e0895c890c865e6d61ff8efa880d7eca80b19ac84f3330df6af6fcadb89c255c"
+        }
+      ]
+    },
+    {
+      "id": "claim_505a1de0521a43a2980055b3c7b69ef4",
+      "statement": "The engine ignores its own state directory through git's local exclude file rather than by editing the repository's tracked ignore file, so it never modifies a tracked file to accommodate itself.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://tests/test_index_projection.py",
+          "version": "repo-file-v1:sha256:f48209d7f04491abc0e5a0b4cfcbd98beb185dc7f6c070ae558ff8876bdcfdf8"
+        }
+      ]
+    },
+    {
+      "id": "claim_39a2f629fe0f48fe85bf1b02a71c39e3",
+      "statement": "The FTS content is versioned and an index built under an older lexical scheme is rebuilt from the already-indexed chunk rows on open, so degraded lexical recall self-heals cheaply and deterministically without needing any embedding credential.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://tests/test_index.py",
+          "version": "repo-file-v1:sha256:e0895c890c865e6d61ff8efa880d7eca80b19ac84f3330df6af6fcadb89c255c"
+        }
+      ]
+    },
+    {
+      "id": "claim_3acde6a6336e4962944254aec9ce6952",
+      "statement": "Dense retrieval uses the sqlite-vec KNN MATCH query shape rather than a brute-force distance ordering, a deliberate choice because the brute-force form is orders of magnitude slower at scale.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_038c2222cbfb4f2f867776342ea4a4bb",
+      "statement": "The embedding dimension is sent explicitly to the provider rather than relying on a default, and embedding failures are never swallowed and never zero-filled because a zero vector would silently participate in ranking.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        }
+      ]
+    },
+    {
+      "id": "claim_982072dc5ba64668b264044c2165abd2",
+      "statement": "A startup smoke embed verifies that the credential is actually read by the SDK rather than merely present in the environment, failing loudly on a missing or invalid key and refusing to proceed on a short or empty returned vector.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd8acaa79cad4a98ac9675e3e39910ec",
+      "statement": "Provider failures are classified rather than lumped together — a rate limit is distinguished from another API error and from a generic embedding error — and a rate limit opens an in-process cooldown so reads keep serving lexical and graph results instead of hammering a throttled provider.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        }
+      ]
+    },
+    {
+      "id": "claim_56c7c281fe804d35996a11d8a82d271d",
+      "statement": "The lexical lane phrase-matches the query because an OR-of-terms query was measured to flood the candidate pool with weak common-term matches and degrade fused ranking, and it falls back to an explicit AND over salient non-stopword tokens when the exact phrase misses — which is what lets lexical-only degraded mode still recall hyphenated or non-contiguous identifiers.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py",
+          "version": "repo-file-v1:sha256:77846d2127725185240fa96f1d8b554e393df3c1d48466066ec7652a795f6709"
+        }
+      ]
+    },
+    {
+      "id": "claim_70d6077cbeda4ac1b98ffa069c846e9f",
+      "statement": "A third document-level lane embeds one surface per document built from its title, headings, and lead text, and a doc-surface match lifts that document through its representative chunk, aligning whole-document questions with the right document rather than an arbitrary chunk of it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b586c0c80394ef8a1c75a4fb422f2d2",
+      "statement": "The lanes are combined by reciprocal rank fusion with per-lane weights defaulting to equal, chosen because it is parameter-light and scale-free and therefore needs no comparable raw scores between a BM25 lane and a distance-based lane.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_1c3e4500919b4b6faefdc3bc90b83be9",
+      "statement": "Optional multi-query expansion fuses the dense results of several alternative phrasings so a document answering the question from multiple angles accumulates fusion mass, while the lexical lane deliberately runs only on the original query because phrase-matching paraphrases is noisy; any expander failure falls back to no expansion rather than failing the search.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/expand.py",
+          "version": "repo-file-v1:sha256:8faff67457a4d8aaf7189b81ba3065d578aa7514c28dcb081fe1830c54ae5de9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a1df2307d7c4e508200cb1078cb58b6",
+      "statement": "An optional rerank stage exists for harness comparability, reorders only the top window while preserving membership at the requested count, and is off by default so no proprietary reranker enters the product read path.",
+      "evidence": [
+        {
+          "resource": "repo://harness/parity_harness.py",
+          "version": "repo-file-v1:sha256:e4c5125c9311284919f7c1768affb61cb67bfceed528bac5fbd96e89a6b37578"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_104efd737f9c4b32822771f07bcbfb4b",
+      "statement": "Near-duplicate collapse is on by default and drops a hit whose chunk text is byte-identical to a higher-ranked hit, keeping the highest-ranked copy, because corpora routinely mirror the same document at two paths and those copies otherwise flood the result list and crowd out distinct documents.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py",
+          "version": "repo-file-v1:sha256:77846d2127725185240fa96f1d8b554e393df3c1d48466066ec7652a795f6709"
+        }
+      ]
+    },
+    {
+      "id": "claim_8be6a2b923224e9ba6669f9f2a024e56",
+      "statement": "Self-exclusion drops hits at a caller-supplied path before truncation, and because fusion runs over a larger candidate pool the exclusion does not shrink the result below the requested count when other matches exist.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        }
+      ]
+    },
+    {
+      "id": "claim_d32f75663ec84816a962143822866ed3",
+      "statement": "Each hit carries a write-recency value — the epoch seconds of the most recent commit touching its path, null when untracked — taken from git commit time because the index is a projection of git, and it has no ranking effect so consumers derive their own forgetting curve from it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4dee9aff7aa46a9af44896d551c5ac7",
+      "statement": "The recency map is built lazily by a single git log pass on first lookup rather than one subprocess per hit, uses a unit-separator sentinel so a digit-only filename cannot be misread as a timestamp, disables path quoting so non-ASCII paths match, and takes the first newest-first sighting per path.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_cae169aed6294dbc9bce6dfaa19067c6",
+      "statement": "A fused candidate whose chunk row has disappeared is skipped rather than failing the search, because a concurrent projection update can briefly leave stale candidates visible to a reader and the git tree remains the source of truth.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_38e69647189e4eaea89d9084e352a07f",
+      "statement": "The degradation contract is explicit and observable: a degraded_lexical_only flag is true when the dense channel did not contribute, a degraded_reason names the cause as a missing embedder, rate limiting, cooldown, an API error, or a generic embedding error, and each hit's channels record which lanes matched it.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a1aaf1099dd4b1e8fb075d836a382ed",
+      "statement": "Naming the degradation reason is what lets a benchmark harness void a silently degraded run rather than scoring it as a failure, and lets an operator distinguish an unconfigured credential from provider throttling from a broken index.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/adapter.py",
+          "version": "repo-file-v1:sha256:20850c6ea2c1018fb0935c190aad2058b6b5f6be61a738a8e5ad0709f7ca9381"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_7e9fcacc20b14a6698e4844bf5de5c00",
+      "statement": "Graph edges are body wikilinks only, with a link target normalized by dropping any display alias and any anchor, and self-links are excluded from the edge set.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/graph.py",
+          "version": "repo-file-v1:sha256:545c60d026e0280747d9c5e1d6b5dc9f68f66022c9d1d2d8c6f730162fc5b4e8"
+        },
+        {
+          "resource": "repo://tests/test_graph.py",
+          "version": "repo-file-v1:sha256:77e92bf821383f212f81b331af068d36551d90b2f8e5d3271c89b5fef52d6a92"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b2e7902689a4ae0b3cae06e34403c4f",
+      "statement": "Context expansion walks both incoming and outgoing edges to a bounded depth, is cycle-safe through a visited set, excludes the start page itself, and returns a sorted list so results are reproducible.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/graph.py",
+          "version": "repo-file-v1:sha256:545c60d026e0280747d9c5e1d6b5dc9f68f66022c9d1d2d8c6f730162fc5b4e8"
+        },
+        {
+          "resource": "repo://tests/test_graph.py",
+          "version": "repo-file-v1:sha256:77e92bf821383f212f81b331af068d36551d90b2f8e5d3271c89b5fef52d6a92"
+        }
+      ]
+    },
+    {
+      "id": "claim_a23d3f83425f4fb1af58cbd332d87831",
+      "statement": "Entity resolution uses exactly the same matcher as the body-wikilink resolver — exact path, markdown-suffix, or unambiguous stem — so resolving a name yields exactly what writing that wikilink would bind to, and an ambiguous or missing name resolves to null rather than a guess.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/graph.py",
+          "version": "repo-file-v1:sha256:545c60d026e0280747d9c5e1d6b5dc9f68f66022c9d1d2d8c6f730162fc5b4e8"
+        },
+        {
+          "resource": "repo://tests/test_graph.py",
+          "version": "repo-file-v1:sha256:77e92bf821383f212f81b331af068d36551d90b2f8e5d3271c89b5fef52d6a92"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

@@ -242,3 +242,16 @@ below are the non-obvious caveats, not a re-listing of the gate.
   a loopback or Tailscale IP. The public OAuth lane (`serve-cloud` / `setup`) additionally
   needs `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` and Tailscale Funnel, which are not available
   in the Cloud VM by default.
+
+<!-- OPENWIKI:START -->
+
+## OpenWiki
+
+This repository has a generated `openwiki/` evidence index. It is optional just-in-time context, not required startup reading.
+
+- Treat source code and tests as authoritative. A brief's unknowns and review items are verification gaps, not automatic requirements.
+- Prefer the narrowest quiet validation that proves the changed behavior. Preserve complete failure output.
+
+The scheduled OpenWiki GitHub Actions workflow refreshes the repository wiki. Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate.
+
+<!-- OPENWIKI:END -->
