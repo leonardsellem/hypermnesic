@@ -1,9 +1,42 @@
 name: OpenWiki Update
 
+# The daily schedule is DISABLED, and re-enabling it will not work as-is.
+#
+# Why: CLAUDE.md is a symlink to AGENTS.md (deliberately — see the note at the top
+# of AGENTS.md). OpenWiki's code-mode setup prepares two different managed snippets,
+# a full block for AGENTS.md and a short pointer stub for CLAUDE.md, then writes them
+# concurrently. Both resolve to the same inode, so the writes interleave and leave a
+# duplicated <!-- OPENWIKI:END --> marker. `openwiki code --update` runs that setup
+# more than once per invocation, so the second call reads the file it just corrupted
+# and aborts with:
+#
+#   Cannot update AGENTS.md because its OpenWiki managed markers are malformed or
+#   duplicated.
+#
+# This is deterministic, not a flaky race, and it fires ~2s in — before any model
+# call. Run 32972848563 failed exactly this way on 2026-08-26. The repository's
+# committed AGENTS.md is and remains correct; the corruption only ever exists inside
+# the runner's checkout.
+#
+# Until this is fixed, wiki updates are driven manually through the OpenWiki MCP
+# lifecycle (openwiki_begin -> submit_plan -> next_page/submit_page -> finish), which
+# hits the same setup bug but only once per invocation — so it corrupts AGENTS.md
+# without failing, and the block must be repaired before the next run.
+#
+# To re-enable the schedule, first do ONE of:
+#   1. Replace the CLAUDE.md symlink with a real file (verified stable and idempotent
+#      across repeated setup calls) and update the symlink note in AGENTS.md.
+#   2. Land an upstream fix that dedupes writeCodeModeAgentSnippets targets by
+#      resolved inode, and pin that OpenWiki version below.
+# Then restore:
+#   schedule:
+#     - cron: "0 8 * * *"
+#
+# workflow_dispatch is kept so the fix can be verified with one manual run. Expect it
+# to fail at the "Run OpenWiki" step until one of the above is done.
+
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 8 * * *"
 
 permissions:
   contents: write
