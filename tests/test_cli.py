@@ -602,6 +602,42 @@ def test_serve_cloud_plumbs_to_build_cloud_server(tmp_path, monkeypatch):
     assert captured["token_ttl_seconds"] == 1800
 
 
+def test_serve_cloud_default_token_ttl_is_48h(tmp_path, monkeypatch):
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret-token-24-chars-or-more")
+    monkeypatch.delenv("HYPERMNESIC_TOKEN_TTL_SECONDS", raising=False)
+    captured: dict = {}
+    srv = _FakeSrv()
+
+    def fake_cloud(index_db, **kw):
+        captured.update(kw)
+        return srv
+
+    from hypermnesic import mcp_server
+    monkeypatch.setattr(mcp_server, "build_cloud_server", fake_cloud)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp"])
+    assert rc == 0 and srv.ran
+    assert captured["token_ttl_seconds"] == config.CLOUD_TOKEN_TTL_SECONDS == 172800
+
+
+def test_serve_cloud_token_ttl_env(tmp_path, monkeypatch):
+    monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret-token-24-chars-or-more")
+    monkeypatch.setenv("HYPERMNESIC_TOKEN_TTL_SECONDS", "7200")
+    captured: dict = {}
+    srv = _FakeSrv()
+
+    def fake_cloud(index_db, **kw):
+        captured.update(kw)
+        return srv
+
+    from hypermnesic import mcp_server
+    monkeypatch.setattr(mcp_server, "build_cloud_server", fake_cloud)
+    rc = cli.main(["serve-cloud", "--index-db", str(tmp_path / "i.db"),
+                   "--public-url", "https://h/cloud", "--resource", "https://h/cloud/mcp"])
+    assert rc == 0 and srv.ran
+    assert captured["token_ttl_seconds"] == 7200
+
+
 def test_serve_cloud_plumbs_default_client_scopes_flag(tmp_path, monkeypatch):
     monkeypatch.setenv("HYPERMNESIC_CLOUD_APPROVAL_TOKEN", "op-secret-token-24-chars-or-more")
     captured: dict = {}

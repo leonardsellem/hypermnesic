@@ -176,7 +176,8 @@ projection state: missing indexes point to initialization, and stale/absent vect
 `hypermnesic converge /path/to/vault --now --json` before a full reindex.
 By default, new OAuth clients request `read`; admins can make new approvals request both
 read and write with `--default-client-scopes read write` or
-`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`.
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`. Cloud access tokens last 48 hours
+(`HYPERMNESIC_TOKEN_TTL_SECONDS` / `--token-ttl`); refresh stays 30 days.
 
 ### C. Connect a client (any remote app)
 

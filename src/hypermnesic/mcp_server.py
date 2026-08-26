@@ -861,6 +861,11 @@ def _patch_public_client_metadata_route(mcp: FastMCP, provider) -> None:
     (`token_endpoint_auth_method=none`), which Codex app connectors rely on. Insert a
     first-match route that returns the provider metadata while leaving the SDK token,
     registration, revocation, and protected-resource routes intact.
+
+    This is the process-root document. Funnel publishes it at
+    ``/.well-known/oauth-authorization-server/mcp`` (and ``/mcp/.well-known/…`` via
+    the ``/mcp`` strip). The unsuffixed public host-root URL is a Funnel mount, not
+    a missing app route — see ``install.funnel_routes`` / LS-2728.
     """
     from mcp.server.auth.routes import cors_middleware
     from starlette.responses import JSONResponse
@@ -889,7 +894,7 @@ def _patch_public_client_metadata_route(mcp: FastMCP, provider) -> None:
 def build_cloud_server(index_db: Path, *, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
                        path: str = DEFAULT_PATH, repo: Path | None = None, embedder=None,
                        resource: str, public_url: str, approval_token: str,
-                       scopes_supported=("read", "write"), token_ttl_seconds: int = 3600,
+                       scopes_supported=("read", "write"), token_ttl_seconds: int | None = None,
                        default_client_scopes: list[str] | None = None,
                        write_allowlist: list[str] | None = None,
                        audit_actor_fn: Callable[[], str] | None = None) -> FastMCP:

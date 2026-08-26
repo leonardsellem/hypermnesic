@@ -14,6 +14,23 @@ its own changelog and version.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-17
+
+### Changed
+- **Cloud access tokens now last 48 hours by default (LS-2728).** The previous 1h
+  TTL 401'd overnight-idle clients. `mcp-remote@0.1.38` treats that 401 as "wipe
+  credentials and open a browser" instead of calling `exchange_refresh_token`, so
+  Grok's stdio connector hung until `-32001`. Refresh is still 30 days; code and
+  pending TTLs are unchanged. Override with `HYPERMNESIC_TOKEN_TTL_SECONDS` or
+  `serve-cloud` / `setup --token-ttl`. This does not fix the client 401-wipe bug;
+  it keeps overnight idle off that path. Existing units that bake `--token-ttl
+  3600` must be updated after deploy.
+- Host-root `/.well-known/oauth-authorization-server` (no `/mcp`) still 404s on
+  the public Funnel. `mcp-remote@0.1.38` looks there first, then `finishAuth` /
+  `executeTokenRequest` dies without `token_endpoint`. The engine already serves
+  that document on loopback; exposing it is a Funnel follow-up (honcho
+  co-tenant), not an app-route gap.
+
 ## [0.2.1] - 2026-08-07
 
 ### Fixed
@@ -328,7 +345,8 @@ Phase 0 → Phase 2.5 foundation (pre-public, internal milestones).
 - **LongMemEval benchmark harness** (`harness/`) and a French/English retrieval-parity
   harness.
 
-[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.6...v0.1.0
