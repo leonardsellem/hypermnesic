@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:84d1e046c0ffff7ca38a3550f8065214b488431325ec600c23a333a60bc64330",
+  "claims": [
+    {
+      "id": "claim_8176e58e16c047bdb147f164ab123a74",
+      "statement": "commit_note executes a fixed order — path guard, frontmatter gate, file write, git stage and commit, push, index projection, audit append — with no database-first alternative lane, and the ordering itself is the security property.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ed5826f30f345338ad159a50d8638a2",
+      "statement": "The path guard runs before the target file is read or any body content is processed, so a protected path is refused before any content work happens rather than being reachable through crafted body or frontmatter input.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        },
+        {
+          "resource": "repo://tests/test_commit_note.py",
+          "version": "repo-file-v1:sha256:5b8df4ae4047c7de2dc1576b9d3cd66073da409feedf6a0b8448412d791453b7"
+        }
+      ]
+    },
+    {
+      "id": "claim_0ef30276d23844d8b3b5e89ca0be0a38",
+      "statement": "Git is the only synchronous layer and the durable unit is a real commit rather than a staged change, which is what makes a write recoverable from HEAD alone by the audit reconciler and the index checkpoint.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/audit_log.py",
+          "version": "repo-file-v1:sha256:936d8849fd1b0754199461bb4c08f823c4724046ab9c5e16416aca668ec84d85"
+        },
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        }
+      ]
+    },
+    {
+      "id": "claim_fc4545176b6e40858f5f5ae11e1f6f53",
+      "statement": "The frontmatter gate enforces that a write may change only the lines it was asked to change: frontmatter is parsed with a round-trip-preserving YAML implementation so untouched keys stay byte-identical, then the before and after frontmatter are diffed and the write aborts with the offending diff if any unrequested key changed.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:6b5462600344b54ec74b23289459c22dee45cd339e0c5f9ab5a1365075de7608"
+        },
+        {
+          "resource": "repo://tests/test_frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:2a4e1eacd6e9f33920816a1e0468fdff9af2c2ac7577397bd4299b9e380d7e8c"
+        }
+      ]
+    },
+    {
+      "id": "claim_6d49df0fc8d94395bc0c914f59d7492e",
+      "statement": "The gate treats key reordering as drift alongside additions and removals, comparing keys as line blocks, because a tool that silently reorders frontmatter is a tool that will eventually rewrite it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:6b5462600344b54ec74b23289459c22dee45cd339e0c5f9ab5a1365075de7608"
+        },
+        {
+          "resource": "repo://tests/test_frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:2a4e1eacd6e9f33920816a1e0468fdff9af2c2ac7577397bd4299b9e380d7e8c"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c0c6362f3f94b8c80fc7da28cfdcfd5",
+      "statement": "The gate prefers a surgical line edit that replaces only scalar value tokens on existing top-level keys, leaving every other byte untouched so an unrelated block list cannot reflow and trip the drift check, and falls back to a structural round-trip only for additions, deletions, or non-scalar values — with the same drift assertion applied either way.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:6b5462600344b54ec74b23289459c22dee45cd339e0c5f9ab5a1365075de7608"
+        }
+      ]
+    },
+    {
+      "id": "claim_340ad73b1c3a474daf259fe1c05a5218",
+      "statement": "A note whose YAML style differs from the gate's configured style aborts rather than being reformatted, which is the deliberate safe failure mode: a visible refusal is preferred over a silent rewrite of someone's notes.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:6b5462600344b54ec74b23289459c22dee45cd339e0c5f9ab5a1365075de7608"
+        }
+      ]
+    },
+    {
+      "id": "claim_c316191bba924089bc6b90dda9c7fe8c",
+      "statement": "A file with no frontmatter has its body replaced directly, but requesting frontmatter field changes on a file that has none raises an error rather than implicitly creating a frontmatter block.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:6b5462600344b54ec74b23289459c22dee45cd339e0c5f9ab5a1365075de7608"
+        },
+        {
+          "resource": "repo://tests/test_frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:2a4e1eacd6e9f33920816a1e0468fdff9af2c2ac7577397bd4299b9e380d7e8c"
+        }
+      ]
+    },
+    {
+      "id": "claim_4dcf3e94602d4d0ea242582b9e2f0f13",
+      "statement": "On a vault with a git remote the write path fetches and fast-forwards before writing and refuses a divergence it cannot fast-forward, because the agent never merges.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        }
+      ]
+    },
+    {
+      "id": "claim_e7868a4673e44ee8ac42c7106b748de3",
+      "statement": "After fetching, HEAD is re-checked against the base captured when the file was read, and a mismatch raises a head-drift refusal so an edit computed against a stale base aborts cleanly instead of clobbering a concurrent change.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_d293ac8fbe964b32950672e2fab65182",
+      "statement": "If the push cannot succeed after bounded non-fast-forward retries — or fails for a conflict, auth, or network reason — the local-ahead commit is dropped and the tree reset to the remote tip before the refusal is raised, because an un-pushed local commit would wedge every fast-forward-only puller on that checkout.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        }
+      ]
+    },
+    {
+      "id": "claim_b51ad871462b4e6aa99ab468191b0884",
+      "statement": "Every git operation in the write path is path-scoped to the note being written — staging, the nothing-staged check, and the commit — because the write lock is process-local and provides no cross-process exclusion, so the pathspec rather than the lock is what prevents another committer's staged work on a shared checkout from being swept into the commit and pushed.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3dadc1b98384ed99b96fd894dd56e1e",
+      "statement": "A write whose resulting content is byte-identical to the existing file is a no-op that neither commits nor logs, and the same holds when git reports nothing staged for the path after staging; both return an explicit noop result rather than a fabricated commit.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://tests/test_commit_note.py",
+          "version": "repo-file-v1:sha256:5b8df4ae4047c7de2dc1576b9d3cd66073da409feedf6a0b8448412d791453b7"
+        }
+      ]
+    },
+    {
+      "id": "claim_15ea77fa370542cd93430bfcf4e54796",
+      "statement": "Every refusal class — protected-path or allowlist refusal, frontmatter drift, head drift, dirty tree, and git coordination failure — surfaces as an explicit committed:false result carrying the reason, with no commit reaching the remote and no audit entry written, so a refusal is never a silent success and never leaves a partial write.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_commit_note.py",
+          "version": "repo-file-v1:sha256:5b8df4ae4047c7de2dc1576b9d3cd66073da409feedf6a0b8448412d791453b7"
+        }
+      ]
+    },
+    {
+      "id": "claim_78c2d9cdd3eb417bb82c206b3cf4d4e5",
+      "statement": "The MCP write tool self-enforces the write scope independently of the transport's global required-scope configuration, so a read-scoped token reaching the tool is refused before any write is attempted, and the refusal states that write approval only permits requesting commit_note and does not bypass protected-path, frontmatter, dirty-tree, head-drift, audit, or git coordination guards.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_0173982f71424494bd7fbfc86d0336cd",
+      "statement": "Once a commit has reached the remote it cannot be unmade, so a failed index projection is reported as a degraded success carrying the real new SHA plus a degraded flag and stable reason rather than raising — because raising would tell the calling agent nothing was written and cause it to duplicate the note elsewhere.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_501a025cac474280a597d66ad8368e1f",
+      "statement": "Embedding is asynchronous and never blocks a write: a newly committed note is findable through the lexical channel immediately while its dense vectors catch up later through convergence.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_77c9909dc7414d99994777084a4df596",
+      "statement": "The audit log records summaries only and never page bodies, truncating summaries to a bounded length by contract, which is a deliberate response to a private-content leak through diagnostic output.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/audit_log.py",
+          "version": "repo-file-v1:sha256:936d8849fd1b0754199461bb4c08f823c4724046ab9c5e16416aca668ec84d85"
+        },
+        {
+          "resource": "repo://tests/test_audit_log.py",
+          "version": "repo-file-v1:sha256:128d8b342a0bd2fb2a452eda11df64274f527399967218100cba959f24eb6ee0"
+        }
+      ]
+    },
+    {
+      "id": "claim_64f73aa5644f4ebcb0459eedcf1deaa5",
+      "statement": "The audit actor is server-set from a verified node identity or a fixed sentinel and any caller-supplied actor value is ignored rather than trusted.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/audit_log.py",
+          "version": "repo-file-v1:sha256:936d8849fd1b0754199461bb4c08f823c4724046ab9c5e16416aca668ec84d85"
+        },
+        {
+          "resource": "repo://tests/test_audit_log.py",
+          "version": "repo-file-v1:sha256:128d8b342a0bd2fb2a452eda11df64274f527399967218100cba959f24eb6ee0"
+        }
+      ]
+    },
+    {
+      "id": "claim_d30387b37515464a975d7c65aeefe366",
+      "statement": "Refusals are recorded as body-free audit events carrying the attempted verb, path, and refusal category, and their summaries are scanned for token-shaped strings which are redacted before the entry is written, so an owner can review what was blocked as well as what succeeded.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/audit_log.py",
+          "version": "repo-file-v1:sha256:936d8849fd1b0754199461bb4c08f823c4724046ab9c5e16416aca668ec84d85"
+        },
+        {
+          "resource": "repo://tests/test_audit_log.py",
+          "version": "repo-file-v1:sha256:128d8b342a0bd2fb2a452eda11df64274f527399967218100cba959f24eb6ee0"
+        }
+      ]
+    },
+    {
+      "id": "claim_dfe4869250da4900ad42bbc3186e76d6",
+      "statement": "An audit reconciler back-fills entries for commits reachable from HEAD that carry no log entry, so a crash between the commit and the log append leaves a recoverable gap rather than a permanent one.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/audit_log.py",
+          "version": "repo-file-v1:sha256:936d8849fd1b0754199461bb4c08f823c4724046ab9c5e16416aca668ec84d85"
+        },
+        {
+          "resource": "repo://tests/test_audit_log.py",
+          "version": "repo-file-v1:sha256:128d8b342a0bd2fb2a452eda11df64274f527399967218100cba959f24eb6ee0"
+        }
+      ]
+    },
+    {
+      "id": "claim_7767d8f64d514fa6a1f07da991c5a78e",
+      "statement": "The rename surface applies the path guard to both the source and destination paths and runs the frontmatter gate before any git operation, so an aborted gate means no move occurs, and it re-keys the index to follow the moved blob rather than re-materializing the old path.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://tests/test_rename.py",
+          "version": "repo-file-v1:sha256:c6d426b8228e8b8d7da3355185cb7a5b12f0e6db1201b8973cb0ce830e2d1af9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f88119c8d2c24217930accac43c3b197",
+      "statement": "The rename path invokes an optional tombstone sink with the neutral repo-relative old path after the gate but before the removing git operation — so an abort leaves no orphan tombstone and a crash mid-operation cannot leave an un-tombstoned orphan — and it defaults to no-op so the engine takes on no dependency on any external companion system's paths or formats.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://tests/test_rename.py",
+          "version": "repo-file-v1:sha256:c6d426b8228e8b8d7da3355185cb7a5b12f0e6db1201b8973cb0ce830e2d1af9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

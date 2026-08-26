@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:659b5983cc245a0e2d6934cbdeb50516f30d2c8d733cd49f902a8de49aa0248a",
+  "claims": [
+    {
+      "id": "claim_1c573d25b0a443369b66ee6d1541ad1b",
+      "statement": "The default write surface is a blocklist — write anywhere under guards — so a note may land anywhere in the vault except the protected classes; any description of an allowlist-by-default posture is superseded.",
+      "evidence": [
+        {
+          "resource": "repo://docs/README.md",
+          "version": "repo-file-v1:sha256:023a1ddc68bdaf6212f8188bc5bf1b1476a18df6ceccee3d5808cb64127e3643"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_d61d192751b64172849cd3e55ac426e7",
+      "statement": "An allowlist exists only as an opt-in narrowing that bounds where a write may land and can never widen the surface or re-enable a protected class, because the protected-path refusal is evaluated first and independently of any allowlist.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        },
+        {
+          "resource": "repo://tests/test_blocklist_write_gate.py",
+          "version": "repo-file-v1:sha256:a162c08ec6ba448bae3c4acbeda6a91bc4b1f5e50d83bb85f12c0a2dde461394"
+        }
+      ]
+    },
+    {
+      "id": "claim_bee3c089ad874d178d8f454dd31120ac",
+      "statement": "The earlier prefix allowlist blocked dangerous file classes only by exclusion, so making content folders writable removed that accidental backstop and the dangerous classes are now refused positively by name and class instead.",
+      "evidence": [
+        {
+          "resource": "repo://docs/2026-06-03-blocklist-write-surface-security-review.md",
+          "version": "repo-file-v1:sha256:e95cd63dbb66c382240100663397c211e33829fe26cd7d44275c325bd0d676d6"
+        },
+        {
+          "resource": "repo://docs/threat-model-commit-note.md",
+          "version": "repo-file-v1:sha256:89c098b571c522c75ea634df198e13017b4e28898a6ad7ab4593179af3332636"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_06975891a93f440199c6ae998e159308",
+      "statement": "The denylist is a rule about file classes rather than a fixed list of paths, which is what lets it hold when the engine is dropped into an arbitrary repository it has never seen.",
+      "evidence": [
+        {
+          "resource": "repo://docs/threat-model-commit-note.md",
+          "version": "repo-file-v1:sha256:89c098b571c522c75ea634df198e13017b4e28898a6ad7ab4593179af3332636"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_24850bdb048b4fd78361091409ff164e",
+      "statement": "The protected classes cover version-control internals and engine state, CI and workflow directories, executable directories such as scripts, binaries, hooks, and skills, editor and agent configuration directories, git metadata files that are never write targets, and a governance, build, and credential file class including container and build files, package manifests and lockfiles, credential dotfiles, and configuration and lockfile extensions.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        },
+        {
+          "resource": "repo://tests/test_serialize.py",
+          "version": "repo-file-v1:sha256:334fdffe1f1773dd02f7cf54114c38110e5ade5925465d9b2bece851bd26ef35"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ce04f7944fc4c5fba679527935990e8",
+      "statement": "Agent-instruction files are refused anywhere in the tree including nested locations, because a writable instruction file is privilege escalation — whoever writes the instructions steers every future agent.",
+      "evidence": [
+        {
+          "resource": "repo://docs/threat-model-commit-note.md",
+          "version": "repo-file-v1:sha256:89c098b571c522c75ea634df198e13017b4e28898a6ad7ab4593179af3332636"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_a09206b3c76e4ac6a1dfbdfe39f29fcf",
+      "statement": "Protected directory matching is case-insensitive because on a case-insensitive filesystem a differently cased directory name lands in the protected directory on disk, a hole that was inert under the old allowlist and reachable under the blocklist and was therefore closed when the default flipped.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        },
+        {
+          "resource": "repo://tests/test_blocklist_write_gate.py",
+          "version": "repo-file-v1:sha256:a162c08ec6ba448bae3c4acbeda6a91bc4b1f5e50d83bb85f12c0a2dde461394"
+        }
+      ]
+    },
+    {
+      "id": "claim_7078535abc8349bd9b270754102bc0b1",
+      "statement": "Guard checks are ordered so the most informative refusal wins: directory checks run before the governance file-class check, so a workflow file inside a CI directory is reported as a protected directory rather than as a generic governance class.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_a7e22339522d479ca423e47d72b0f850",
+      "statement": "A write target must resolve inside the repository: an absolute path is refused outright, and the path is resolved against the repository root so that both traversal segments and a symlink pointing outside the repository are caught as an escape.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        },
+        {
+          "resource": "repo://tests/test_serialize.py",
+          "version": "repo-file-v1:sha256:334fdffe1f1773dd02f7cf54114c38110e5ade5925465d9b2bece851bd26ef35"
+        }
+      ]
+    },
+    {
+      "id": "claim_efb344d4369948628e7c1cba5009404c",
+      "statement": "Path classification is kept pure and path-clean while repository-context resolution is handled separately, which is what lets folder discovery surface the same refusal reason verbatim so discovery and the write path share exactly one rule and cannot drift apart.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_4139af816dc542178001a0c10c8bd94f",
+      "statement": "Write locks are advisory exclusive file locks that conflict across descriptors even within a single process, so concurrent broad writers and reindexers serialize instead of corrupting the database, and they come in two granularities: a single-indexer lock for broad writers and path-scoped locks so distinct paths proceed concurrently.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        },
+        {
+          "resource": "repo://tests/test_serialize.py",
+          "version": "repo-file-v1:sha256:334fdffe1f1773dd02f7cf54114c38110e5ade5925465d9b2bece851bd26ef35"
+        }
+      ]
+    },
+    {
+      "id": "claim_42f61a3295224c7abc4f8ec99571f70b",
+      "statement": "Preflight catches head drift, where HEAD moved out from under the base a caller read, and for broad writers a dirty working tree, while the engine's own state directory is excluded from git's view so it never registers as a dirty change.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_71018d12016c4daab660ca4ebb4f368f",
+      "statement": "The proposal path lands a set of files as one atomic commit on a side branch built inside a temporary isolated worktree so the owner's live checkout is never touched, and any failure rolls back both the worktree and the half-built branch so no orphan ref survives.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/propose.py",
+          "version": "repo-file-v1:sha256:87bcdcaeb667cb385716eabcb38ca691f08a572924d18b7f184fe91be9c81819"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_83de03cc997347548d75dbe91268b3dc",
+      "statement": "Credentials — the embedding key, the OAuth consent secret, and bearer and refresh tokens — are read from the environment or gitignored state only and are never written to the index, the audit log, or any output.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example",
+          "version": "repo-file-v1:sha256:6c4c591db8c7bf27ea63452319c61054a28fe04b85feb2bd823b159f85508753"
+        },
+        {
+          "resource": "repo://SECURITY.md",
+          "version": "repo-file-v1:sha256:e174bcfb20574084b9510995f0df2d002b4563f6b06639559aed9a5f8bd2f30a"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        }
+      ]
+    },
+    {
+      "id": "claim_40af708070df46b3b9528a22ffec36d3",
+      "statement": "Secret suppression is implemented at each surface that could leak: the audit log stores summaries with token-shaped strings redacted, diagnostics report categories and permissions rather than values, the local proof redacts tokens and operator home paths from echoed text, hook status stores endpoint and credential categories rather than URLs or tokens, and folder discovery sanitizes instruction content before returning it.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        },
+        {
+          "resource": "repo://src/hypermnesic/audit_log.py",
+          "version": "repo-file-v1:sha256:936d8849fd1b0754199461bb4c08f823c4724046ab9c5e16416aca668ec84d85"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        },
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        }
+      ]
+    },
+    {
+      "id": "claim_fd3364ed58254c4891d91f4986fe9980",
+      "statement": "A repository scan gate enforces that no operator host, address, or credential ships in the public surface and masks any match it reports, so the gate itself never re-prints a secret into a console or CI log.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/preflight_public_scan.py",
+          "version": "repo-file-v1:sha256:ce79101641ea0660bee8998c15dfe06dc2bd5d4b7c000001819819514c60266f"
+        },
+        {
+          "resource": "repo://tests/test_preflight_public_scan.py",
+          "version": "repo-file-v1:sha256:496d352f0ec849c6e69692b372332afebaf4da01748d00f269ad0f4643ab4d98"
+        }
+      ]
+    },
+    {
+      "id": "claim_84a6365ec3fb4f92afa6e0181d3a684c",
+      "statement": "The threat model enumerates the write-surface vectors — protected-path escalation, prompt injection through ingested content, frontmatter clobbering, actor spoofing, audit-log leakage, path traversal, ignore-file side effects, concurrent-writer corruption, credential exposure, and crash recovery — with dated amendments covering token-validation bypass, audience confusion, authorization-server blast radius, the inverted failure mode where an auth bug opens the write surface, and the bounded tailnet-write opt-in.",
+      "evidence": [
+        {
+          "resource": "repo://SECURITY.md",
+          "version": "repo-file-v1:sha256:e174bcfb20574084b9510995f0df2d002b4563f6b06639559aed9a5f8bd2f30a"
+        },
+        {
+          "resource": "repo://docs/threat-model-commit-note.md",
+          "version": "repo-file-v1:sha256:89c098b571c522c75ea634df198e13017b4e28898a6ad7ab4593179af3332636"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f1ca23103b140ec96fda4a0d6e743c7",
+      "statement": "Prompt injection is bounded rather than solved: the engine treats retrieved content as data and never auto-acts on it, every write is an explicit authenticated call, and the path guard bounds the blast radius so an injection cannot reach governance files — but content is not sanitized, an explicitly accepted risk that makes treating retrieved content as untrusted a stated integration assumption for downstream agents.",
+      "evidence": [
+        {
+          "resource": "repo://docs/threat-model-commit-note.md",
+          "version": "repo-file-v1:sha256:89c098b571c522c75ea634df198e13017b4e28898a6ad7ab4593179af3332636"
+        }
+      ]
+    },
+    {
+      "id": "claim_1ac6224672404cc2b0e4e3859e9c077f",
+      "statement": "Frontmatter churn is treated as data corruption rather than cosmetic: silent reserialization that rewrites dates, reorders keys, or drops custom properties causes the gate to abort and surface the offending diff instead of writing.",
+      "evidence": [
+        {
+          "resource": "repo://docs/threat-model-commit-note.md",
+          "version": "repo-file-v1:sha256:89c098b571c522c75ea634df198e13017b4e28898a6ad7ab4593179af3332636"
+        },
+        {
+          "resource": "repo://src/hypermnesic/frontmatter_gate.py",
+          "version": "repo-file-v1:sha256:6b5462600344b54ec74b23289459c22dee45cd339e0c5f9ab5a1365075de7608"
+        }
+      ]
+    },
+    {
+      "id": "claim_4b892efe66e84e558c1f900b5e1ca29e",
+      "statement": "The remaining accepted risks are named plainly: no multi-tenant authorization, a malicious operator is out of scope, and dependency supply chain is covered by the license gate and ordinary hygiene rather than by anything write-surface specific.",
+      "evidence": [
+        {
+          "resource": "repo://docs/threat-model-commit-note.md",
+          "version": "repo-file-v1:sha256:89c098b571c522c75ea634df198e13017b4e28898a6ad7ab4593179af3332636"
+        }
+      ]
+    },
+    {
+      "id": "claim_944386222e1248fca92d79172267703b",
+      "statement": "Security reviews are immutable dated deltas carrying amendment and sign-off frontmatter that form an audit chain, so a new finding becomes a new dated review rather than an edit to an existing one.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://SECURITY.md",
+          "version": "repo-file-v1:sha256:e174bcfb20574084b9510995f0df2d002b4563f6b06639559aed9a5f8bd2f30a"
+        },
+        {
+          "resource": "repo://docs/2026-06-03-blocklist-write-surface-security-review.md",
+          "version": "repo-file-v1:sha256:e95cd63dbb66c382240100663397c211e33829fe26cd7d44275c325bd0d676d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_a049415adb64443593be41daae8d1ae5",
+      "statement": "Vulnerabilities must be reported privately rather than in a public issue, and reports must never contain live tokens, hostnames, or addresses.",
+      "evidence": [
+        {
+          "resource": "repo://SECURITY.md",
+          "version": "repo-file-v1:sha256:e174bcfb20574084b9510995f0df2d002b4563f6b06639559aed9a5f8bd2f30a"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

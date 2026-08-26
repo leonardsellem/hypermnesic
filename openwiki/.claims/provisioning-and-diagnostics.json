@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:c1ff0bf3130ac403b2fc5f77dc9763486b36ff4a7120a6930e64d1ece9dbb0df",
+  "claims": [
+    {
+      "id": "claim_079b14470bb64665b4f553b2b9d5791c",
+      "statement": "Local proof is a thin orchestration over existing primitives — git validation, index projection, retrieval, and a write-path dry run — and deliberately provisions no endpoints, clients, or services, so proving local memory precedes any endpoint concept.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/getting-started.md",
+          "version": "repo-file-v1:sha256:d90fecf470d879f30c59b64b9910a5b8c6bb8871e778d806c3da4b8efbb9dd5c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        }
+      ]
+    },
+    {
+      "id": "claim_29db55ec178f4daab5aec52b7cc902ba",
+      "statement": "Against an existing vault local proof is read-only by default and creates no sample content unless seeding is explicitly requested, while demo mode instead builds a dedicated small git-backed vault.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        },
+        {
+          "resource": "repo://tests/test_local_proof.py",
+          "version": "repo-file-v1:sha256:074764404283fb7a739ff8c81fee16a92ced8b158a72cec0e657189d27287e76"
+        }
+      ]
+    },
+    {
+      "id": "claim_c7cb24e6a337449eb5b016546609b89d",
+      "statement": "Local proof returns a stable result contract rather than prose: a status, an ordered milestone list running from git vault confirmed through dry-run write previewed, degraded capabilities, the retrieval hit, the write preview, index information, and a next action.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        },
+        {
+          "resource": "repo://tests/test_local_proof.py",
+          "version": "repo-file-v1:sha256:074764404283fb7a739ff8c81fee16a92ced8b158a72cec0e657189d27287e76"
+        }
+      ]
+    },
+    {
+      "id": "claim_d1c1234f78ef470a97975d7a7689992e",
+      "statement": "Local proof failures are structured rather than raw errors: an ambiguous target, a missing target, and a query with no retrieval hit each raise with a stable code, a message, and a concrete next action.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        },
+        {
+          "resource": "repo://tests/test_local_proof.py",
+          "version": "repo-file-v1:sha256:074764404283fb7a739ff8c81fee16a92ced8b158a72cec0e657189d27287e76"
+        }
+      ]
+    },
+    {
+      "id": "claim_a45abef9c53248e1912445ee251cc7fc",
+      "statement": "Text echoed by local proof is sanitized before output: bearer tokens, API-key-shaped strings, approval-token assignments, and operator home paths are redacted, so a diagnostic cannot leak a credential or an operator path.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        },
+        {
+          "resource": "repo://tests/test_local_proof.py",
+          "version": "repo-file-v1:sha256:074764404283fb7a739ff8c81fee16a92ced8b158a72cec0e657189d27287e76"
+        }
+      ]
+    },
+    {
+      "id": "claim_20929a4d913f489e86fe9c679ebb1731",
+      "statement": "The default local proof runs on the lexical channel and therefore works with no embedding credential at all, with the dense channel available as an explicit opt-in.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        }
+      ]
+    },
+    {
+      "id": "claim_5608618c05a44271ad967e0f13449c20",
+      "statement": "Setup diagnostics are strictly non-mutating: they write no files, services, secrets, or git commits, and group their checks by local, remote, oauth, auth, and write categories.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py",
+          "version": "repo-file-v1:sha256:a85f7e3c46ccb0fabae49f712f32cb875286eaef7089c8ba6ca975944cfd3440"
+        }
+      ]
+    },
+    {
+      "id": "claim_60d2f65db49b480e817497eaf8fb7b94",
+      "statement": "Each diagnostic check returns a status, a human summary, a stable action code, a next action, an optional command, and a documentation pointer, and a skipped check is reported as skipped with its reason so an offline run reads as not-evaluated rather than silently passing.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py",
+          "version": "repo-file-v1:sha256:a85f7e3c46ccb0fabae49f712f32cb875286eaef7089c8ba6ca975944cfd3440"
+        }
+      ]
+    },
+    {
+      "id": "claim_473d8a344fd445c3bbd1aab64d581032",
+      "statement": "Without a public URL every remote check — tunnel readiness, the endpoint, OAuth discovery, the auth challenge, and write availability — is explicitly skipped, so local diagnosis works with no network.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py",
+          "version": "repo-file-v1:sha256:a85f7e3c46ccb0fabae49f712f32cb875286eaef7089c8ba6ca975944cfd3440"
+        }
+      ]
+    },
+    {
+      "id": "claim_72e9e41a3dfa4e0b80494dee57d10172",
+      "statement": "The dense diagnostic separates a configured credential from a healthy projection by reporting distinct states: not configured, configured but unverified, configured valid or invalid, index missing or unbuilt, and vectors stale or absent — the last two meaning the credential is fine and the projection is not.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        }
+      ]
+    },
+    {
+      "id": "claim_c9fbe6f3913148a8a6475cf665677659",
+      "statement": "Dense verification defaults to reporting a discovered key as configured-but-unverified so diagnosis stays offline and spends nothing, and only an opt-in live smoke embedding distinguishes a valid from an invalid credential — without ever printing the key.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        }
+      ]
+    },
+    {
+      "id": "claim_e6eb31a6077c428eb7859c539ff47ac9",
+      "statement": "The stale-vectors state points at running convergence rather than a full reindex, so the remedy matches the actual fault instead of defaulting to the most expensive repair.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf6ad7f06d9f41978333617dec6b1521",
+      "statement": "The index check reports three distinct states rather than a binary — missing, present but possibly lagging HEAD, and present and current enough — with a build command supplied only when action is needed.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ecae648e3c840079925fc146506cc8b",
+      "statement": "The consent-secret check reports only whether the file exists and whether its permissions are owner-only, warning with a remediation command when they are broader, and never reads or prints the file's contents; omitting the path yields a skipped check explaining what supplying it would do.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py",
+          "version": "repo-file-v1:sha256:a85f7e3c46ccb0fabae49f712f32cb875286eaef7089c8ba6ca975944cfd3440"
+        }
+      ]
+    },
+    {
+      "id": "claim_f18da37ef0ce4c9794b2207adf4e50a1",
+      "statement": "Public setup is idempotent and fail-closed by ordering: it validates the public HTTPS origins, normalizes and rejects unsupported default client scopes, confirms a git repository and a discoverable engine credential, and confirms tunnel readiness before creating any artifact, so a precondition failure leaves nothing behind.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        },
+        {
+          "resource": "repo://tests/test_install.py",
+          "version": "repo-file-v1:sha256:7f90ffb89cfbaf79fb3aaeb92bc8a6c4a020ba7c7631e048e8f7fbfad3a6595e"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c423ebf262c455995eb6c212aec6a79",
+      "statement": "After the routes are applied, setup verifies the live HTTPS discovery chain and fails the command if a well-known does not resolve to this service, checking real output rather than trusting an exit code — so a half-configured endpoint is never reported as working.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        },
+        {
+          "resource": "repo://tests/test_install.py",
+          "version": "repo-file-v1:sha256:7f90ffb89cfbaf79fb3aaeb92bc8a6c4a020ba7c7631e048e8f7fbfad3a6595e"
+        }
+      ]
+    },
+    {
+      "id": "claim_efe215b4a7f7459899d9b28b69ded895",
+      "statement": "Setup never manages the tunnel software itself: when the prerequisite is missing it fails with an instruction to install and authenticate it and re-run, rather than taking over a dependency it does not own.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        }
+      ]
+    },
+    {
+      "id": "claim_2658f9d3194d408095a17831f551bfd0",
+      "statement": "The consent secret and the embedding credential stay in owner-only env files and are never inlined into a rendered service unit, and setup returns milestones, a plain-language explanation, client next actions, and next steps including that each client performs a one-time browser authorization gated by the operator approval credential.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/consent-and-clients.md",
+          "version": "repo-file-v1:sha256:ce7e7b7e7a7a1cef1df2fbda9928b8898a303d1d68a5ccbdbe57fb912ad048dc"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        }
+      ]
+    },
+    {
+      "id": "claim_00b88d6457204116990722c8020d3b8e",
+      "statement": "Role provisioning is pure, offline, and idempotent across the three roles single, master, and client: it verifies the environment, renders service artifacts, writes role configuration, and installs the convergence hook, while returning index build and service enablement as manual steps rather than performing them, and it rejects an unknown role against the known set.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        },
+        {
+          "resource": "repo://tests/test_install.py",
+          "version": "repo-file-v1:sha256:7f90ffb89cfbaf79fb3aaeb92bc8a6c4a020ba7c7631e048e8f7fbfad3a6595e"
+        }
+      ]
+    },
+    {
+      "id": "claim_48db472bad9241f1ad14230835f7cf60",
+      "statement": "Hook installation manages only a delimited block: an existing hook keeps its operator content with the managed block replaced, a missing hook is created with a shebang, and the file is made executable — so installation is idempotent and non-destructive.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        },
+        {
+          "resource": "repo://tests/test_install.py",
+          "version": "repo-file-v1:sha256:7f90ffb89cfbaf79fb3aaeb92bc8a6c4a020ba7c7631e048e8f7fbfad3a6595e"
+        }
+      ]
+    },
+    {
+      "id": "claim_540dbd78b7ff491c972f48500810ceb9",
+      "statement": "Hook uninstallation removes only the managed block and deletes the hook file entirely when nothing but a bare shebang would remain, reading the file once rather than re-reading it so there is no check-then-act window.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        }
+      ]
+    },
+    {
+      "id": "claim_86c5228a61794bcb85b1ba579682d137",
+      "statement": "Setup and diagnostics both return secret-free per-client next actions naming each client surface with its availability, summary, and concrete action, and availability is honest: without a public URL the remote entries report unavailable and direct the operator to run setup first, while the local CLI entry is always available because it needs no remote setup.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/client_guidance.py",
+          "version": "repo-file-v1:sha256:a206c3d43f66c28c1af82a52a9f5a25a6e1ae140566ac5319727a515da61bdb7"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}
