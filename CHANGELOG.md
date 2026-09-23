@@ -14,6 +14,17 @@ its own changelog and version.
 
 ## [Unreleased]
 
+### Added
+- **CLI `commit-note --commit` lands real guarded writes.** The command stays a dry-run
+  preview by default; `--commit` runs the full `commit_note` path (guard → diff-or-die
+  gate → single-path git commit + push; the index follows as a projection), so agent
+  writers no longer hand-roll raw multi-file commits. `--json` now reports `new_sha`.
+
+### Fixed
+- **The MCP `commit_note` tool returns a clean refusal for gate input-shape errors**
+  (e.g. `set_fields` on a note with no frontmatter) instead of a raw
+  "Error executing tool" traceback.
+
 ## [0.2.2] - 2026-08-17
 
 ### Changed

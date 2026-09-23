@@ -216,7 +216,7 @@ hypermnesic local-proof /path/to/vault                           # first local v
 hypermnesic retrieve /path/to/vault "what do we know about X"   # hybrid search
 hypermnesic think    /path/to/vault "topic"                     # thinking-mode
 hypermnesic resolve  /path/to/vault "Some Entity"               # name → page path
-hypermnesic commit-note /path/to/vault notes/x.md --body "…"    # git-first write (dry-run preview)
+hypermnesic commit-note /path/to/vault notes/x.md --body "…"    # git-first write (preview; --commit to land)
 hypermnesic memory list /path/to/vault                          # inspect/control memory
 hypermnesic memory forget /path/to/vault notes/bad.md            # preview source removal
 hypermnesic clients list /path/to/vault                         # inspect OAuth client grants

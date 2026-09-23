@@ -47,8 +47,9 @@ Tool routing:
 
 - `hypermnesic capture <repo> <text> --json` — frictionless capture. It writes raw
   text under `sources/` and commits it.
-- `hypermnesic commit-note <repo> <path> --body <text> --json` — dry-run preview of
-  the guarded write path. In the current CLI it previews the diff and does not commit.
+- `hypermnesic commit-note <repo> <path> --body <text> --json` — guarded write path.
+  Without `--commit` it previews the diff (dry-run, read-only); with `--commit` it lands
+  a real single-path git commit (guard → gate → commit → push).
 
 Do not treat plugin enablement or proactive recall as permission to write. Writing
 should be an explicit CLI action.
@@ -65,6 +66,7 @@ scope refusals.
 - Reads are convergent before answering.
 - The index can always be rebuilt from committed markdown.
 - `capture` is the simple CLI write path.
-- `commit-note` is a preview surface until a later engine change says otherwise.
+- `commit-note --commit` is the CLI durable-write primitive; one call commits one path
+  (split multi-file updates into one call per file).
 - Use placeholders such as `<path-to-your-vault>` in examples; never assume a private
   local path.

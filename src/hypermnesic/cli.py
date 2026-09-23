@@ -71,15 +71,30 @@ def _cmd_embed(args) -> int:
 
 
 def _cmd_commit_note(args) -> int:
-    """Preview what a commit_note write would do (dry-run; read-only)."""
+    """Preview (default, read-only) or, with ``--commit``, land the guarded write for real."""
     from hypermnesic import commit_note as cn
+    from hypermnesic import index
 
     body = Path(args.body_file).read_text(encoding="utf-8") if args.body_file else args.body
-    r = cn.commit_note(Path(args.repo), args.path, body=body, summary=args.summary,
-                       dry_run=True)
-    if args.json:
-        _print_json({"path": r.path, "created": r.created, "noop": r.noop, "diff": r.diff})
+    if args.commit:
+        # Same projection wiring as `capture`: git is the commitment, the index follows.
+        db = index.state_dir_for(Path(args.repo)) / "index.db"
+        idx = index.Index(db) if db.exists() else None
+        try:
+            r = cn.commit_note(Path(args.repo), args.path, body=body, summary=args.summary,
+                               idx=idx)
+        finally:
+            if idx is not None:
+                idx.close()
     else:
+        r = cn.commit_note(Path(args.repo), args.path, body=body, summary=args.summary,
+                           dry_run=True)
+    if args.json:
+        _print_json({"path": r.path, "created": r.created, "noop": r.noop,
+                     "new_sha": r.new_sha, "diff": r.diff})
+    else:
+        if args.commit:
+            print(f"committed {r.path} @ {(r.new_sha or '')[:9]}")
         print(r.diff or "(no change)")
     return 0
 
@@ -754,12 +769,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_embed.add_argument("--json", action="store_true")
     p_embed.set_defaults(func=_cmd_embed)
 
-    p_cn = sub.add_parser("commit-note", help="preview a commit_note write (dry-run, read-only)")
+    p_cn = sub.add_parser("commit-note",
+                          help="guarded note write: dry-run preview by default, "
+                               "a real commit with --commit")
     p_cn.add_argument("repo")
     p_cn.add_argument("path", help="repo-relative note path")
     p_cn.add_argument("--body", default=None)
     p_cn.add_argument("--body-file", default=None)
     p_cn.add_argument("--summary", default=None)
+    p_cn.add_argument("--commit", action="store_true",
+                      help="land the write for real (guarded single-path git commit + push); "
+                           "without it this is a read-only preview")
     p_cn.add_argument("--json", action="store_true")
     p_cn.set_defaults(func=_cmd_commit_note)
 
