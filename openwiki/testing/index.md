@@ -1,0 +1,4 @@
+# Files
+
+- [Benchmarks and Evaluation](benchmarks-and-evaluation.md) - How retrieval quality is measured and reported honestly — the LongMemEval harness and its comparability envelope, the two retrieval and QA phases, the reporting rules baked into the harness, judge labels and label review, reproducibility, the adjacent parity, dogfood, portability and product-smoke harnesses, and what a benchmark score does not prove.
+- [Testing and Release Gates](testing-and-release-gates.md) - What "done" means in this repository and how a change ships — the six-command local gate set that mirrors CI's lint-test-license job, the offline deterministic test conventions, the version/license/preflight scanning gates and the scripts that enforce them, the fresh-install job that catches unbounded dependency ranges, the dev/main branch topology, and the tag-triggered PyPI release.

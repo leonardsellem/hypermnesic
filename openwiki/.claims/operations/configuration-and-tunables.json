@@ -1,0 +1,414 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:69d5823098c8c36f9e8531bdb27d86bc57ff3c73fab695adeba0186d825ac4af",
+  "claims": [
+    {
+      "id": "claim_46171382425e495685f31e4c95255c7e",
+      "statement": "src/hypermnesic/config.py is the pinned source of truth for engine constants, while docs/reference/configuration.md and .env.example mirror it; AGENTS.md requires a config or env change to update those mirrors (plus any CONVERGE_*/budget mention in ARCHITECTURE.md) in the same PR.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example#L1-L4",
+          "version": "repo-lines-v1:sha256:85d28c183cb518f3ac84ac3a03e1d6ae230ffef157b7c762b3c5c44df01dd120:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTAzM2FmMGM0YTU4Nzc2MjU1YWY0MGYyMWIxZTIxZjY2MzBlZmYyY2I0YjJmZWQzNjk0MTEyODRiNzdjNjhmYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjQwYzgxZWQzMWNhNjlkOWM0YzViZWY5YjljMzU3YTUwZWVkMjU1M2QxNTFlYTA4MTMzYzk3ZWNiYmVlNWNiNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTJmYjE5OTMwM2VhNWRhNzI3NzlmZGFiNGQzNTFlNGJmNzFiNTgwNDg4ZWEzYTIxNWQ2MDgxNzkzNWZlODI4MiJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L104-L110",
+          "version": "repo-lines-v1:sha256:31c24eecc4719dc0b592e21f171f9dc4381990dbb3115fbea0ab9e30da0681f4:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGM4YzlhYzkxNDhlMjVhODcwNjBlZjk3MWNmMWU1NmE5ZWQ4ZDYzNzU0NWZiN2E5YjQ5Y2M0ZTlmZWQyOTBlNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGRiMGZjM2I5MGY0YjliNGI0NWFmYmIzYzhkMmZlMTAxYWVjZDFmMTdkZDM4NDZiMDQyOTBjYmU0ODQxMTAzNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTY3YzBiN2RmMDdiYjY0MmNiNTVkNDBiZWExMTkxNWMyMTc1ZDEzZDIzYThkZWM2ZDc1M2UwY2ViNDNlODMwZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTY3YzUyMDg2YWNhZTFmOGY1YWYxNzg0NGE4OTI2NmE4ZDAxN2I5OTI0YWRjYzYzMzA5MTFlOTBlZTFlNjMxYSJ9"
+        },
+        {
+          "resource": "repo://docs/reference/configuration.md#L1-L6",
+          "version": "repo-lines-v1:sha256:e0ed68574bfe40385bc8452c0b352aafa1368b8561a004185380054e26e6d9b3:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjMwOWZkNWIwNzYwZDdhNjUyZDdlNjEwYTRlZGJmMGE2YjczZWNmZjM1OWI2NTQ5YTFhNjliZGY4NTQ2NGRmMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTRlZDk5ZDRhZDFhZjY3ODhiZjQzYjkxZmQ3ZmFjY2FkMTc1NjQ1YjdkNzAwOTEzZjcxOWI5NjJmYWJlNWI2NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWFmMzE1NDQ3NzNiODhkZjk2NzNhYzc4YTM4NjA0ZjFhMzYzNDg4OWM0N2U3YWM0MjcwZWM1MzBkMWIwYjM0YSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L1-L11",
+          "version": "repo-lines-v1:sha256:57b3acbdd0c006a3c13bb7110c62ad441ea6df361176f9387b566da1501c216c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1ZTkwNTUwOGFmNDUzNWNlNjhhMTgyNjdkZTI1YWJmMWRlYjNlNTMwMDE0YzZkMmNiOGQ1Y2EyMDA5YjhkNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7500672eb0fb4dafaa388a743058ac45",
+      "statement": "For a repo-addressed command or server the OpenAI key resolves as process env OPENAI_API_KEY (source category process_env) then the target repo's gitignored <repo>/.env (repo_dotenv) and then nothing else — there is deliberately no working-directory fallback once a repo context exists; only helper paths with repo=None fall back to cwd_dotenv.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L111-L135",
+          "version": "repo-lines-v1:sha256:ff2f5f6a5e3e9eaad5dbd76e514becda8bec28409a8a07b9cd9bf2aae6950c2a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4ZjAxNTg3NGZlMjNkM2YwMDljM2FiODc2ZTNkMmMyMTQ3ODYxMDY2MzI5Yjg2MDRmNzQwNGZhYzdiYWUzMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZjQ5NzViNjY3NDE0NDQxMzUyOThmZTlmYWNjY2E1MTEyMmY2OWI3NTM0MDlmM2U3YTM0MDhjZjFjOTA4MDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3MDE0OWUwNjlhZDY3ZWNjZjQ3MzY0NmZmMWM3NTAwNTBkMzI5ZDExMDAxOGRjNTc2Njg3OGVhZmExZDYwN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzNmExNjY4ZGNlMTRkZWUyMTQyM2JlOTk2OWU1ZjM2ZGRiMjc0MWI3MTM5ZWI0YzBhODdlZGYxOTAyZTQ5MzIifQ"
+        },
+        {
+          "resource": "repo://tests/test_config.py#L50-L76",
+          "version": "repo-lines-v1:sha256:a4893c1dc99596a4e162f0d16069bbc83d9723216233590dfa3f5e7d3a6b0df0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlZjg5ODhiY2E1MmY3YmQ5OWM5MmNjZDkxMDk5NWRiZGEzOTEwMjI2NGEwNzg2ZTk5NGQyNzMzNzZkYTI2MGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkMzQyZjM4ZDk2NmU1NDcxYmVkNmE0OGM5ZGUxMjQxOGVhMTc5ZTUxOTY0MDdkMmYwOTBlYTQ1ZWQzNDZjNTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmMzBkMDJiZmI2YTE1NmU2YzhhNDVhM2U2YTFlMDEzYWYxMTllOGFlYTJkMTVmMjkyZDI1NTY1NzM1MTQ3NTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5MDFjNWYwM2E2OGMzOTljYmRmYzBlZWExZWI2ZTEyODg5YTI3MGJmNjU5ZDQ0NjhmNzJkM2IyYTk5ZTAzNmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_905ff653c23f4f76945bc8b3104cd064",
+      "statement": "The cwd .env candidate path is captured at import time (config._DOTENV_PATHS = [Path.cwd() / \".env\"]), so the no-repo-context fallback reflects the process's starting working directory rather than a later cwd change.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L68-L69",
+          "version": "repo-lines-v1:sha256:b50a578825398c8c0e476c3474f2f03fbcfe543efb058dd83510ebd6cbf14878:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODUzNzliMzQyM2Q2YjY4MmVkZTI2ZTQ1MDZjNDM2ZWRhY2I3Yzk3NTM3YWRiNzFjMzVmYmZkZWM3ODhlYzA5ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ViZjFkODRmNDZjMGY2ZDkzYTUzNWRlMGQwY2E4NjU0YTMzNTI2OGNjZWNiNWMxY2IxNmZmZDlmZWQzYzQzZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjQwNWQ0MzgyMWFmMDQ5YzlhNzM1MTM3YTU3ZjlmNWU1MWM2NDc5ZjRiZTU2YjU3MDNkNDRlY2ZkZDQ1YjkxOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDkzY2I5MWEwZGUwNmRjYjA2ODUzNjkzYmFlMWEwZDc4YTdjNjM0NWIzYWNjNGFjYTM5OTJkNzdiOTZjY2FiOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9c4212156dda4b68a94e531f524e848b",
+      "statement": "Credential discovery is reported through the frozen ApiKeyStatus dataclass carrying configured, a source category, the ordered tuple of categories checked, and an optional error category — never filesystem paths or key material; get_api_key raises ConfigError naming only the categories checked, and tests assert the key and temp paths do not appear in ApiKeyStatus's repr.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L138-L158",
+          "version": "repo-lines-v1:sha256:dd665a0d2f93599ce0954edbb24bd002ff168316d2977675197b905942423fed:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkNGRkOWUxYjc3YWQxNWUwY2U3MjdkNGZlMzg1Nzc4YjBjZDk5YzFmYmY5MDM4NmNhMmY3NGM1NmJhODBhYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MDljZDkxMThmMzAzZTI3MWQyYzE3M2Q4ZmM3ODg4ZTAwNTI2ZDRhNWM4NjdmYzNjMjU3N2I0NTNlMmM0NTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzYzAxNjczMTZkYjI0ZWVjMDZiOWE0ODZmNjI1ODVlMzkzNDViZmU0NmM2OThiNTMzNWIxNmE3YjkxZjBhY2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1NWNkMDk3MTA5YjYyODEzNDk3NDBhM2M1N2E1ZjllOWE5ZWZkYTY4NGJjYjYwYzg3ZmViZmQ2ZjRkNDc1ZWUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L76-L87",
+          "version": "repo-lines-v1:sha256:6dfee0b27704fc20fa8ec060786c6e33e5a7db52ffb3bf201e56715b111c9616:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2OWExMzk3NWMyNTZlYzgzMjBlMjAxNjA4M2M5NmRmNjM3Y2EzZDM1YmViZGUyMzE0YmVlM2E0NzExYjU2Y2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3NzJhNDY0M2NmN2I3YjU3N2ZjM2RmNGFkZWM2ODZkY2UzNjlkNTliNjNhZTMyNDI5OGI4NzM1ODU0OTU0MDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkYjE2MmNkNDg0MDJkZjQ5MmIzNGI1MmFhZDliNzcyNGZjMDRlMzZlNjg0YzExMTA3ODNmY2ZmODE5YmJkMDMifQ"
+        },
+        {
+          "resource": "repo://tests/test_config.py#L79-L112",
+          "version": "repo-lines-v1:sha256:b286f0fa218fe00015d718af3d7065f90422a8a8d3e228e98d820827a6f49020:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1YjcxOWQzMTExOGY5ZDNhOGMzMWYxNWJiMDFjZjU2ZjExMDRkYjgzZThhNzIyOTM2NTY0ZmM2N2U5ZmU4NzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YWNmN2FkMGNjYzAyYjA4Mzk0YTkxYjUxMmVkYzk3ZWQ4NWMxZWYyMzYyNTJlNmUwZjY0ZGFkZmIwYTUzNjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhYTRiYmNlMWRmZGY1OGE3ZmEzNzkwYjk5NTE4ZDI4ZTYzY2RhODNiZGJiN2Q4MzFmMDcxZGFmYTJhZDg1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2OGZlMGVlNGMyZmEyYzFlZmQzYWZlNWZkZDhkODBlZGQ1MTFkM2FjYTU0NGQzNjg0MjljODVjNDY2MTM2ZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7f2766f795ce4597a000541dbaa9a763",
+      "statement": "An unreadable repo .env is distinguished from a missing key: ApiKeyStatus.error becomes repo_dotenv_unreadable and doctor turns that into a failed dense_retrieval check with a repair_key_file next action rather than a configuration instruction.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L119-L129",
+          "version": "repo-lines-v1:sha256:9624e95007c8bbe0b254469391b33336b6c2483987442b93699fab825cbe5c24:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkMWU3ODg4MzY0N2MzMDYxM2Y3MThhNzI2NDU0NDcyNDdhZWY4MWFkY2NlMjFiODFlOWMxYTU3Y2NhMmY3ODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkMWVkOWZhMTZiYmViMjU0MGY4MzI1ZjJhNTc4OGE4Y2RlNDU0OWUxYWYwYTFlNGFhYmY5OTdlY2UwNzE0MzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlMDVkMDcyZTgzZjc4ZThiYmU4OGU2YjNjMzFiOGQwYjFjZDRlMGQxZDM4OWUyNmRkYTRhN2Y2NmNlYTcwMWMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L271-L282",
+          "version": "repo-lines-v1:sha256:ceeaf1205028d66a91690bc49e324108cbb546a7e8aeebf4c36d6c0b00500919:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1OGYzZGQzOTk2MjAyNTg3MmZjMzM5NDhhZGEyNGJkYjk3NWVjNzM4MjlhYjdmNDdhN2ZlODQwNWVkNjQ5OWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4NDZmNDNkY2NiMTJkZDE1YzhhODJlOTE1ZDVlZWJmNjYyYjA4NjZjMGExYWVkODEwZTIyMzVlYjdlMzQ4M2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3NDY1YTgwZjAzMDI4MzUzZDUwYWNhMTUwYWMwMzkzODgxY2I0YzQyN2NiOTg4ZmNkNTRmMTc0ZjAxMmVlNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkMzRhOTc5ZTIzYmU5ZGNjYzUyZjQxOTRlM2ZmNjkzN2E4ZTUwZjRkZGQ2NzQ5YjcwMjA2ZWI1MWJlYTFkYzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a52f004c511d4a219d21cb3336303f70",
+      "statement": "A configured embedding key is not evidence of a healthy projection: doctor reports configured_unverified by default, only an explicit --check-dense-live smoke embed distinguishes configured_valid from configured_invalid (without printing the key), and the separate states index_missing_or_unbuilt and vectors_stale_or_absent carry their own next actions (build the index, or converge before reindexing).",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md#L37-L43",
+          "version": "repo-lines-v1:sha256:24d9ad594c5d6d269cad6cf435defb836b833f01f29fe8f3cb8030c0d53ebc17:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2Q3YjQyMGQ3NGVlOWExOWMzYWMxMmRjYWJkNGE1ZmRhNjU2MzhkMGQyZGVhMjlkNWZmMTgzN2U2OGI4OGE5NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWEzOWRhZDFiYjA3MDM0NzcxYjliOWIwOTllMjkzNWJhOTE4YThhYzBjMjc5ODNmZWNjYTc1Zjc3YjU2YjQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2Y0ZWNiMTkxNDJiNmUyNjFmOWU1NjU3ZDYwMTBhNDQ1YTE4NDc4NGIxMDI3MGQ4ZDg0ZjY5MmNhNTkwOTAzZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWM1M2RlNjQ4YTliZjYxNDY3MTZlMDBmODYyOGM4YTI2ZDYyNDM1ZTk1ZTE3NjY1NzE3ZDgxNjQ2ZTczZjBjMyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L234-L312",
+          "version": "repo-lines-v1:sha256:eddc6bc52c66f5e8c944e00ea61f18c00bf6bead7999c86b500c05f329ab1fcf:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkNDBjYzQ3MzI2NTkwODRlYWJiODFhMDRiMTkzMGM0OTBlMGFmNWRlNjUxMjkxZDQ4ODlhYWI0MDk0M2YyMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwNGZmMTMxNTg5MWJlYzUzM2M0OTEyZmFhMGNjMTk3ZWI1YmE1Yjk5Y2NlZTQzOWJiODQ1MmQ3NGUwYTY4MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3NmMwN2Y3ZjA3NTJkM2EzMmU4ZWM5ZWI0ZjI1MjQ0NWQ2MGRkOWUxZjY5Y2ViM2ExNmNmMmY5MTE0YjgzZmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_51c528127c05456bb1f68763f367ba3a",
+      "statement": "doctor --env-file inspects the consent secret file only for existence and owner-only (0600) permissions and never reads or prints its value; a broader mode produces a warn with a chmod 600 next action.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L356-L385",
+          "version": "repo-lines-v1:sha256:fbfda6adf308d9ba2ddf254df88fd33ac39b74d1d8c8610bc81c7d1aff98fd8b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzMjA4MWEyN2Y3OTY4OTMzMmJiYzU1NmRhNTdjNjBkYzRlYTFlMTkwZmI5NGZlYTJiNjgxMjgzNjk3NjE1NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwZTIwMjhiMThmOWQyOTU5YmZjODdjODBiYmQyMDQwMDcyYjEzODQzZGY5MjBjNGRmNGU3MzI5ZmZjODVhYmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7610de0b1e994c6abb6a94596edef72e",
+      "statement": "The engine parses exactly one variable out of a .env file, by hand and without a dotenv library: a stripped line beginning OPENAI_API_KEY= with surrounding quotes/whitespace removed, so export prefixes and interpolation are not supported by that reader and all other variables must come from the process environment.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L89-L100",
+          "version": "repo-lines-v1:sha256:ef02eae257e99823e5e5088baba4a92786f5b4fe2a1d492f3f663268e24937c1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0NTMxYzZlMTg2MGU2NTYzMmVjMTIyNTFkOWQ5ZmU0OTllYjJkMTBjZDBiNGExMzY1YWEyNDY4NTRjNDY3ODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZGNlYmVjMGNiNTU0OTRiNGRlZDk4NWQ0OTg0OGEzNGQ5MjJmYzQ0NTc5Y2VmMDVjOTYzYzc4MGE5NGE4ZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMGMyNDUwYzFkMjNjOGIyZjhjZGIxOWNjNzllODgxZTU0M2IyNWQ3NTg0OTAwYzM3N2M3ZDMyY2YyOWY4MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVlMzc2MjJkNzZlMWZiM2VhMTBiNmY2Yjc5ZTE5MzU2NjMyZTExYzI5ZDI2YzE3YTNiYmYxZTk5ZmM2M2YyNzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c34e87e5cabc4434b8d05faf91f1b56a",
+      "statement": "The rendered cloud systemd unit loads secrets by name via EnvironmentFile=-<repo>/.env and EnvironmentFile=-<owner-only cloud env>, so a provisioned serve-cloud receives those variables through systemd rather than through the engine's .env parser, and no secret value is inlined in the unit.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L311-L348",
+          "version": "repo-lines-v1:sha256:30d2c2c0a543318c24cb9a844afc7d1a86d9f2510774bbc70e231161d3ef5def:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmN2QyMGUwYWFhNTU2MDY1ZmUxNGNjN2VmOGEwZTA1MTA1NDY4NTFiNjVmNjIzMDc2NzFiY2VhMmYzMDBmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjOGFjMzgxMTgyMTFjMzVlNjNkMWZhOTFkNGYxYjRhYWQzOTU1YTdjODY2OGVkYzZkZWQxOWU1Njc0OWQ4NTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmNjUyNzJjMTIxMzZiY2I0MDQ0OTc5NjlhODJhYWEyZjgxMzFiNTAzNWU5OTM1MDRjMjk3NjNjZTg2YTE2YTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7ed864b99e524759ab1d650814cb257e",
+      "statement": "`.env` (and `.env.*`) is a governance-protected path in the write guard, so the sanctioned write path can never author or modify the credential file it reads.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/serialize.py#L76-L83",
+          "version": "repo-lines-v1:sha256:ba68aeadddb0bcdf094c1e0fa7498c44390e1c9155d0c3bd51d1d88c73eddd93:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWZjMmQ4MmM3NTM0MTk4ZmJmNTQxZDRmZDY2OTliMmM5NGY5OGFhYzZjMjIxM2Y5ZjU4ZTAzOGMyZDJjYzUyYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzUxMDg1MDU4MzM0YTBjNzVjNGEyZjkwNThjODlhMzM3MDE5ZTBkYzliMWI0NmMzYjc2YTRlMGNjZWJkZGFjZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzE3MTU0ZDkyNzFmZDA2NjE3OGQwODBmZDk4NmY1ODRkZGMyZTU1YTVjNDMzNGNkNWVhN2Q4OGFhNzIyMGQ0MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDcwMTQ5ZTA2OWFkNjdlY2NmNDczNjQ2ZmYxYzc1MDA1MGQzMjlkMTEwMDE4ZGM1NzY2ODc4ZWFmYTFkNjA3ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_98992685c88243dd9ffdcdc71773658a",
+      "statement": "EMBED_MODEL (text-embedding-3-large) and EMBED_DIM (1536) are pinned in config.py, the dimension is baked into the vec0 table declarations so changing it invalidates every existing index and requires a rebuild, and config.assert_embedder_agrees fails fast at build, reindex, and dense-fill entry when an embedder's dim disagrees.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L18-L20",
+          "version": "repo-lines-v1:sha256:59a412e0f17f8a06c92f14a509fb6c4976180495dcdd2593f248d86b705c4879:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmMzNjEyY2U0MDc0MzVhMGE2NWMyMGRlYzkwZmUzMjVjY2I4ZTllNDlkZmQ0ZGUwMDdhNTlmMjZjZWNhODMxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmIzODQ0YjQ1NjNlNThjODcxMTNkNjEyODU0YWIwNjRhODAzMzc3OWQ1YWE5NjEwMjg1MTk2ZjcyMWRkOWZkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGJjMzQxZjE3MWZmMmZlNmYyNjZjM2UzMjU5MDg4OGU2NThkYmQyMWVhNWViZjFmZTMzZmQ4ZjgzN2M1MDA0MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmM4OWZmNWM1OTIyMzljYTNmMTA2OTZhYTQ0Zjk1NjRiMzBiNjJjODY1M2E1ZDcyYzEzNzZiZTBmZDBkMzIxMCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L183-L189",
+          "version": "repo-lines-v1:sha256:601db69e4bb580f2417029201b243170aa3adc02bfef61d82c1f6bcc82a19bd1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGU5NTU1MmU3ODU1NGVjMzExYjc1NDVlOWE2YzQ0NDdjZWViZmIyYzg5MjRkNGZjYzkzM2UzMDU0MDc5ZTcyNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTkwOWE1M2E2MThkMDI4ZTFkMzAwMGMwYTdhYmNlZWNiZTVmYjM3ZjRlNTExZWZlNDY2NDNmYWQ2ZTY2ODcyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjdiZjE1ZTI2NTQ0ZmQwZDQ5NTgxZGVmNjQ3MGM1OTNmZmMxZjE3NTY0YTZlNDYwZDYyNjY5MGVlMWNjYTY4YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L138-L153",
+          "version": "repo-lines-v1:sha256:1ec50c4b85df1034578e8c1060a9ba84e5f26da3c2df9875d5be15ffdf56e512:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxZmY3MGJmZTUzYThiMWQ2NjI0MTA5NmY0NzliMmYxMzYyMTkyN2M5ZGIwNzhmNzIzNzI0NjhkMjY4NWVkYTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZjEwYzBiMWM1YWNkY2YzNzQ4ZWYxMDhiZmIzODI5ZDczZTI5YzI2NTI4ZmU2ZTQxMDYxODEwNjNhNWU4YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlOGU4NjQ2MDUzYWQ5MWM2NWJkODI4NDA3M2QzMjkwMWQxZDYxZThhNGZkZjlhMDIwZWM4ZmZlNDcwOWFhYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlMDFjNzM3NjdkM2Q5Y2I5MTFjMGM1NDI3NzVmMjhlYzA0YjkwMGYxZjQ2OGQ1Y2M4MjVjMThjOWQxYzNjMjMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L590-L594",
+          "version": "repo-lines-v1:sha256:08e0ac59c668032df530dccd1a837fd72022749861740a8f7e45ecab6a859a19:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTE1MjM1YzQ1N2Y0M2JiMGI3ZGFlZGU3Y2NlMjkwZTQyYmNjMWY0ZmEwZjNkMjM2YWQyODNmZDJhYjBlODdiOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjc1OGQzOTkzYTIzYWQ4ZDQ5Yzk1MjA2YWZjMjY4OTQ2N2E2ZDVmZDdkZDBmMWZmODVjMjVlZjE1ODBkZjlkMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzg0NzA3MmVmYjY5ZDc0NjJjMjQzMTc5YjI4ODIzZTgzNDJhNWMzN2EwYzM1YjI4MTBmZGM5MWU1NGZlZTMwZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzdhNzFjOWU2NDljY2QzMTM5NWNkYjk4NjM5YWU3Yzg1ZTFhMDBjZDM1NjA3YTY3MzA4NGRmZTlkMzZmNDUxOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7f94eb17a8f5421ba0418abfe080ca11",
+      "statement": "EMBED_FAILURE_COOLDOWN_SECONDS (300.0) makes a 429 open an in-process embedder cooldown during which further embedding attempts raise EmbeddingError with reason=cooldown (the triggering call reports rate_limited), so reads keep serving lexical and graph results instead of hammering a throttled provider; a value of 0 disables the cooldown.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L36-L38",
+          "version": "repo-lines-v1:sha256:8f522b4dc8c4dafc69bdc6f1ec9f1de3016f2b67db45dda13b9f9974a2b33e66:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjA3ZWMxMjMzNjM4N2Y2YWNlZjQ5MTU4ZjE0Y2M3NzM2ODA2ZDRhMDk1MzgyZDI3ZGUzNTY1MWEzMTZiNTQ2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOThkMGVhZDQ4NGU3NWZkYmVjNTkwMGMwODQxMGUwMTlkMTA0YzE5YzM0NTJkNDZhNDhlMTg3YjlmZGRmYjM2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTNhYTA0YmQ0YzdkOGYyN2U0MjkxYmRjMDMwYmVhM2I1NTdmMTA3ZDdiZWMxNWM0ZTYzMDg5YjA0MTAxZDRlNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTQ3MGE1OWFiZmVmOWEzOWI3YmIyMDFjMjhjNzkzZjgxMGJiMzJiMjZjMzYzNzRkZGZkNjVkMDYzMjYyOTAzYSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py#L24-L31",
+          "version": "repo-lines-v1:sha256:b08d28c4079a0d532b76fff9be9e529e6a54408192843c4c8b311bc6a9e0658d:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDMwMDg2N2UxYzkyN2Q5NjI3MGE4YTdkZDUzMjNiM2M0MjQyZDI1MTRiYzYxMDQ3OTgyZDE5MWJjYzQ1OGI2NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTI4NjhlYzE5ZjhmZGY5MTkxZTVkMDcxN2M1YTZhZTlkN2ZhMGFkMDM3NWRkNzBlYWJiOGVjMjM1ZDk4YjBjOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWZiZWM3YzdhODhjOGU1MjllMDU4ZjFmY2RhYThiNTA5ZjFkNWU5ZTdjNTRiZjIwZTIyOWQ4MTk3Y2FhODcyMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWJmZTk4MWVkMjIwMDVjYzRhMzMxMmI2ZjYzODE0MmIwN2JhYjg5MmRiZDk4NTQzMGM5OTNhYTViZDZiYTJhYyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py#L63-L93",
+          "version": "repo-lines-v1:sha256:f0aa082c714e4a982fb670cac1a705c5e59b44c95a9fe7b0ce2aa066de0026df:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNTc0OTAxYmQ2ZjRmYzBmNTU5MThmMjM5OWIyYTVkOWIzYTQ5YjMxMmEyOTdjY2Y4MTg1Mzc2M2YzN2VjMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhM2NlOGQ5ZTU2NjllYjU5ZTEyNzRhM2YyZjRiYjM4Yzg5NzUwMjkxZjRiMWFlNDUxYzgwYjk3OWEyNWZlMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0MTg3ZWIzYzllMDdhNTI2ZTA2M2I2ZDJiY2UwM2NhMWRhMjMwMmM3NzRhMGVhNDNhYjQ4ZDBhYWJiOWE1Y2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiYmI1MzdmNTQxMzM5NDg5ZGY5ZTBlMDI0Y2Y3MDQ2NGRlMTc1NTUyNzBlOWYyZTUxYTU5NTMyNjQxZWVhNzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8018b7fa9acc48309f87bdac7aae1c67",
+      "statement": "EXPANSION_MODEL (gpt-4o-mini) is an opt-in ranking aid whose expander is constructed only by the benchmark harnesses (harness/parity_harness.py --expand) rather than by any engine read path, and any expander failure returns an empty list so retrieval falls back to the un-expanded query.",
+      "evidence": [
+        {
+          "resource": "repo://harness/parity_harness.py#L281-L289",
+          "version": "repo-lines-v1:sha256:30f95511d8e195467be30d3b22b4e758e52ccd2719c8169fcb8d8c7d191cbc30:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDQ4MmFmNGQ1YmMzMzEwYzhkMTk5MmQ4NTFhODA3ODI0NGIzYTc5YmQ2OWJhMGYxODhiMDE4YjJjZmRkOGY2NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzUwNWNkNTQ5ZWM3Y2VkYjAzOWY4YTdmMjExMmJjZGE0OWMwZmMyYWVmNDMxYjFlNjVmZmFjYjAzNThmOWQyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWJiM2VlNjVmODkyMDczMzliMGViNzMzNTdlY2Y5MTg2YjI5YzIxNWNiOTRiODg4OWMyZWFkZDJiNzdlNjA3MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDk1NWE5YWIwZmE0MDQ5NGVkZmYyMmQ1NDA1NTlkZWIxOTgxMzhiODBlODQ5M2RkNDY1ZTA5ODhlY2ExYzVkMiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L22-L24",
+          "version": "repo-lines-v1:sha256:e672cf11bf9b38813e0ef44440e57a6c96ba81ad25363ae3ab2497623a41aa2c:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODIyNTRmNTAyYzE2MTNlOTkyNGYxNzJlMmEzOTJlOTZhMzgxNWQ0NTQ1ZjUxMWJiODI1N2M3Mzc2MDIzMDVlMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2UzZWNiMTYzOGY5MDgyMDRjODM4ODgwMGVjYWI2NTQyMjY0YTRjNGIyNTBhYmIzYmM1OTljZjRkYmEzNzRmZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTZjNmZjNjY3Y2M0NTQzZmE3MTg0NTM5MThjYzRjOGUxZjc3NTYxZTkzMzAxYjJlMGM2Njc3ZjVmMzExYWQyMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGU3M2IzYjY5Mjk1NTVhZGQ4ZjE5NzY3M2E5OWRiOWI3NGIxMWQ2NjA3ZmM2Mjg0Nzg1YjdhMzVlMjZjOWNmMCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/expand.py#L53-L62",
+          "version": "repo-lines-v1:sha256:5db64b364be27ea88c83401eaca45e9741ebb00b23f82b8ea8b7d2d03d803b0a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1NjljYjA5MjgwZWUwNzgxOTQ1ZTQ4ZDQwNDFiZDJkZmFhZTY5MWFkMmVhYmY1ZDNjYmEwODQ2YzcyMTZjYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5NWJiNjMwZjc1NmMyMWY1MWQ4OWE0OGY0NTcyYzhhYTQ5N2NlMGIyMGI3NTAxMGQzODM0MDcyZjYwYTZjNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY1MjMxYjYxZmMzYTk1NTI5MWYzYWVmMDYwNGU4MmQ2OGNmMzRmMzhkY2UzOWVlOTRmMDczNWMwNGI5ZDBlMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_caa3a74a15bd44d8b387acf0d2f43692",
+      "statement": "The three convergence tunables are CONVERGE_EMBED_BUDGET (128 stale chunks, and at most as many missing doc surfaces, embedded per converging read — matching the indexer batch index._BATCH = 128), CONVERGE_DEBOUNCE_SECONDS (5.0, suppressing the next pass), and CONVERGE_MAX_DELTA_FILES (200, above which the delta is not replayed inline and the pass sets manual_reindex_recommended); all three are read at call time and injectable per converge() call.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L26-L34",
+          "version": "repo-lines-v1:sha256:eced9c87546ac4a12f4017406ec0a0f34be6fe4afa7905cd95c89495e1f615fe:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTg4OGUyYTFmZmU2ZTEzYjU0YjYzZTlkNWRlMDE2NThjNTZiN2YyZTNkNWYwNzNjNDNkMGYxYTU0MDRkNmUwYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTQyYWVlNWVlMjIxZjEwNGI0Y2QzYWNjNmYxMDdiNzhjYTYxMDJjMzExNjUzYTQxM2M1ZDZhZDE5NGZmMzhiNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTUzOWY4ODMwNTc1NTQ0YTU5NzNiNWQ2M2ZjZGQwODRmZTVmYWNlODdmZjg5ZmIyMzUwNGQxZmY0MmVhZDhjNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2EzZjExYzNkNmNkYTFiNWI2MzM3ODFlMWI3N2JjMmUxNTY5M2UwNzU0NDkxZjA2Yzc4MGUzNDNiNTI0OGZlYiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L131-L140",
+          "version": "repo-lines-v1:sha256:8af35cc9802b50c39e544c5e961e227716e2981a86622e9084dbef35761c3244:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxZjgxN2U0MmQ1ZTIyYTBmNGQ1ZTBkZDZlY2M3Njc4YTM1NzdhMzFmOTU5MmYxYmI2NGExZmM2ODk4NmM4N2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MWIzYWY4YmZkMWU2Zjg1NmM2OGNiMTBjOTQzMzg0MmRlN2RmYzQ1YzZhODBkZTQ5Y2Y3ZmM4NDgzY2EwMmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5NjY5MDc0ZjczNjRiYWM4YTZlYmQzYmUyMTcwMGZlYzBkYmYwOWI2YjgxYmNhMTJlZWU1NTgwODRmNGMxZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4OTNhZjJmZTE0MGRkZGJmZmIxZjg2YzM3ZmQxMzhkNzFlMDMxMzFkMGQxZTQxNjIzYWM3OTJlOTU5YjBmNGQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L93-L107",
+          "version": "repo-lines-v1:sha256:17b05121df6ac2718828254634a53a7ed77183bad32fdf0c5005692062052428:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NzE1MDkyNzk4ZDZiNjIyOWExMDA4YjkwNzcwOWY0MGM1N2M0ZjU2OTkyY2M3YjlhNzVjNjUwMTZmYzYwYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YmZlYTI3YzhkYjNiZGU0Y2Y4OGYzZDhmMGY0ZWU0NmQ3MmM5YzFmOGUxZmRhMjkzMzI4ZGU1ODIwNTc0MTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhMjhmMzA0MGRmYmViNjhjYzk0NjA4NDdiODVkYjU5ZDNlMGFkNzA5Nzk5NzFhNzM0YzQ5NWEyMTBiOWViN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0YjVkM2ZkNjE1MTJlMmNlM2MxOTg2MTQxMzcwYmJiMjRkZWI4ODZhZTkxOGI1MTYyNjRlNmU2MTI0NTVkMjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_68aa3562c5c440c7904f9e90ff2fed12",
+      "statement": "list_folders discovery is bounded by LIST_FOLDERS_MAX_NODES (200) and LIST_FOLDERS_MAX_DEPTH (6): entries are sorted before the cap so the dropped tail is deterministic, the payload reports truncated plus an omitted count, depth is clamped to the ceiling (never rejected), and the MCP tool passes config.LIST_FOLDERS_MAX_* explicitly at call time so a patched constant takes effect per request.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L40-L45",
+          "version": "repo-lines-v1:sha256:eb05c21b2d582a22dc1d123916284deaca3e18aacbd4595154cc03a84fba8fe2:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYThiNmRjMzA4YTQzNWQ2YzFmY2NhM2ZhNTJlMWJiNDdmOThjM2M4YzFmYTc4MGJmZTQwN2M1M2YyMjIxZDdmMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzAyYzlmYjQ1YmRhNDI1NTJhM2U4NGRmZDk1Y2M2ODU5ODc3YmVlNDY2NTJlYzJmNDQ2NTY3MzRjNzliNDBmYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWQwYTUxY2FjOWNjOWZjMTU2MjRjNjJmOThhM2U3ZGE0ZWVjODMxZDZjMDQ5NzYxMDgwNzYzZDEwZTNkYjdmZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDNjOGQwN2M0NmQ5OTJmZjQwOTBhZDY5MGU0MWQ2ZGE5NDRiMjAyM2E3MWZlOWMzMzY3NmEwMGUyZjM5YWVlYSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/folders.py#L145-L151",
+          "version": "repo-lines-v1:sha256:9eddceeb29d3b415499caebbe29695c6bec10447b5afd0e0be9f082b18a67ce6:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTBjZTlhYjc1MmUzYjFhMzk0MGQ2OTk1YjBjMTczYjNlYzRmYWVjODVmNGI1NWUzNjViZDZmZGI1N2I1NjQ0MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDczMDM3MzFjYzNhY2E5OWQwMmIwMzJlYTFlOWJiODkzZjgzNjc0ZTZkNzQ3NDkxNTJjNjExYTc0ZjUxYmEwZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTQ4NGFjMmIzZTBmMjg0M2QwN2IzY2I2ODE4ZWY3NTFkYzhjMGJhNzZmMzU0Mjk1OGVmZDJkY2RkMDc2YzhhNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L544-L556",
+          "version": "repo-lines-v1:sha256:fe734dafc9100f738a194b9cbbfa03d0f5fda98afe399d01db11553ca102867a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1YmIyNzE2MDgzNjA3ZjgwODAyZGRlNDJmODFkNGZkMzQzYjllMzRkM2ZmOWM1MjJlZGVkZWJmYjkyY2Y0MmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1OTM3NTBiMDE0MDRhNDZkZmZlYjRiYWZmMjNmYjE3ZTJiNmJlZThkNTVlMGE4MThiNTFhOTA1M2FjMzBlMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjYTkxZWIwZDk5NDc2M2RiODM5MTc1MTA5MWQ1YzhhMTRhOTJhZDNjMGFhZWM0YzAyN2U1ZWMyMTA1MDdiOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzMzMwMzk5OTRiY2IzZTRjMzNhZGQ1ODRiYzBiZmM1NzVjNjllMmUzOGY2MjhlYzMwZmY2NGIxZmM4ZTI0YTAifQ"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L693-L702",
+          "version": "repo-lines-v1:sha256:f9ab117849305c1b207e754f553c4e109206e1d2db3e71a2dc37d804561ea3cc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2YzI5OWU4ODEwMWFiOTEyMWQ5M2QyMGI2MzA4MDc5ZmQxOGMwOWJmYmE5Y2YzZDc5YjkwYjFkZjljOTA5ZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMWM4Y2I4ZGM0ZTRmZTZkMGJjMzI1OGFkMzUyZTIyYzhiYTI4NDNiZmU5ZTVmZTY5ZjBjZTlmMjEzNWFhY2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyMmE2MDI4MDRlOGZiZWNlZWE0N2Q2Yzc2ODI1YTQ0MjliMTgzNWQxMjFjNWU4ZmM1NzFkNjNiYWNkMWY0ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljNDdhMDMzNmE0ZThkYjhmMTY2MDBmZWFmNmFmMzM3YTY2YjM5YTBkMDFjNmI5ODQzMjExNGVhZjc4Zjk4MDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_df4ed02b2ace4f4aaf17c62eee81593b",
+      "statement": "IMMUTABLE_APPEND_ZONES (\"sources/\") is an explicit path-prefix list, not a heuristic: a path qualifies only when it equals a zone minus its trailing slash or starts with the zone prefix, and its single consumer decides whether a proposal takes the fast path — which requires every requested change to be a new file inside a free-append zone, since a free-append zone accepts a new file but never an overwrite and every other writable path is curated.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L47-L66",
+          "version": "repo-lines-v1:sha256:a7e155cd4454f2eeb9817433d394e78d8b774a4e125b6b25d3617248fae03bc6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzNzM2ZGQ0MjNiZGM1MzJlNzAwYjg4NGYwNDRkN2I4MzM1YmY3Y2YyNWI5ZDk5NWY2OTcxZjc3MzA5ZGExYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZDcwZjE3NDgzYzZiYjk5ZTc4YWZkZjdjMGQzOTQyYTc3MWViOWM5YWQ2YjMwOTRiMWU0NzE5ZDBkYzQxZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMDc0MmQzMzg5MDNmY2E3ZDdkNGY1ZTk5NDA3YjkwZmRjMjRiOWFkNGY4ZDY5MDBlZWMwNGY5NGE1ZGQ0NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkZTEyYmU3MWRhM2NjODQyOTNiZWUzYjBkOTQ3NzQ5OTMzZjAwYzY5NTFiODI5OWJhNTIzYjQzY2YyMGFlMjgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/propose.py#L220-L228",
+          "version": "repo-lines-v1:sha256:240280be50aac44fc2ed384d66b4a38a83baae0c4aca54c56936d578a92237cb:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTg4YjVjMzk2ZWY4ZDY5NTE0N2E0ZDQ3NTIxNGExN2RlM2QyMmJkYTc0MjQxZTE4YjA5ZThiNzM0NTU3YzJhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmQ1ZmRhZjI2NmRlZjM1ZmQ1MzNmZjRmMDk1ZmY4Mzg0ODAyY2M2ZTdmZDBjZjBkZDJiMjAzNWFkNWI1M2I3YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjUyZjdhMjEyNDEzMTk1YWFkOTUxYTRiNTM1ODliYzFiMzM2NTQ5Mzk5ZjFjMWQyMzFhOGMwODMwNWM1ZDE5YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2IzMzM4N2YwNDRjZmM4NDJkZjEzYmIxMTEwZGE4ZDc3ZGM0OGUzNmIzZmM3M2I5ZjI5NzQ5NTBlMjk2NmM5MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e46f191dcd74ac8bc4acc3fab2bc77f",
+      "statement": "The writable path surface is not a configuration constant: it is the blocklist guard (protected-path refusals plus the governance-file fence), with the CLI/serve --allowlist narrowing it through a single coercion site shared by the write path and the list_folders writability flag, and an explicitly empty allowlist on a write-enabled serve is refused at construction rather than silently permitting no writes.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md#L97-L106",
+          "version": "repo-lines-v1:sha256:764486dda40dc41a0ac231b6fccc7f5d7df10a63657f6dafbad78c5c11942830:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1NWFlNWE3MTMxOTM2ZjY4OThjMjkxMzhhNDBiOWViZjYzNjRkMDQ5ZTFlNTY3NTg4YWYwMTg5ZDU5NmE3NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxMzFiMDU4MjI0NTM1OTNiMGM2ZjEyNTM1NDU3YmFkNTIxMjk0YzIxY2MxYzg5N2E1YmM0NGIzMGQ3YzExMDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkZjEzNjJkNWMxMTQ0MmY1NGQwYjU2NjBiMTgxYmFlMDg0MDMyMzU5YWU0ZWNkNmY4YjViODc5MGNiMjcxMmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L221-L239",
+          "version": "repo-lines-v1:sha256:e792a74df9df085cea2796cb83af0f89735245b39abb3f77894a56df241fdc33:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyNjQwNzc0NTU2ZDQ1MjliOWJjNDM2MWEyY2RkODFiMTA5YWQ2ZTZlNTg2MTRiOTYxNjY3OGZhYTZmOWRlNzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkZjlhZDIxNDU5MjFjZTY5YzEyYTQwZDY5NGEwZDc0NDc3NTdjMWM2Mjc1Y2I3Nzc1MTc1NWZlYzdhYWYyNzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkYjI4Yzk1ZTQ0ODE2MmYyN2IzYWM1NjY5ZThmMjU0NTllMjkyMzViZTIyOTFhZGMyNzEzMzkzYzQ3YzAxNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1MmM2MjM1NDBlYzYzNzU5YzI2ZTQwZjgxNTY2NTgxNTZlOGFhNmRiNDE0NDY3ZjUwYWIwOTExYTM2MWE5OWQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L405-L414",
+          "version": "repo-lines-v1:sha256:3f560bc5dca4f5484e1b60ac150846a4790fa1e56e9da6d5292e853182d1b094:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmNGIyZjhkY2YwM2U1MzdkNzkyMGQyODZiMjI2NjIwMTFkM2QyYjIxZTgxNzAwOTcyMmU0N2M1Nzg2ZWEyYWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4MTkxZGVjNDI3NjEyMjQ5MmM0NTk0NjJkZDE0NzdkNGQzZTlkNmFkZTNlZGE2ZGU2ZjdhM2ZkNzYxOGI2MTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljMTkyODMxZDFmZWIzY2UzYTRmMGZkZmZjZjVlOTI3MzE2Yjk2MGZkZDE2YjA1YjYyNDIyZGJmOGQyMWQwYjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_242709312764414baeb21e7faa0e0362",
+      "statement": "HYPERMNESIC_CLOUD_APPROVAL_TOKEN is read from the environment only (never a CLI flag, to keep it out of the process table and logs), and serve-cloud refuses to start when it is absent or shorter than auth_cloud.MIN_APPROVAL_TOKEN_LEN (24) characters, returning exit code 1 with an actionable message.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L49-L52",
+          "version": "repo-lines-v1:sha256:8705921e2a820545eba6c809a3fe06a23f9bc48ae82ded0d32f7ea314364ebc5:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTk3OGViODA0Mjk2YTFmZWE1NWVlNjljZDA0ZmJkYzk5N2Y2ODM0NDUxMzY1NmJhODU1MmZhZmI4Y2FmMmMxMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWUxMDU1OWU3N2U0NzZlYTJiZTMyZDUxNDk5NmE2NzAzOTAzOTM3NjE3NDM1NjA3YTc4MTEzNzVlZTViNjg1NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjA3MmY0MTk2NWI0MTg4ZjNjNDk4NWU2MWQxMDNlNzQ2Nzk3OTk3Y2M5M2Q0MGYwNzQyOWEwYTllNDQ3NTMzYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDk4YmJmNThiYjg2MmY3OTdhZWMwZWRjMjdiMGQyZTRiYmZhNGU1ZWY5YTk2NzY2YTc5MDQ0OWRmOGQ1ZDM0NiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L511-L531",
+          "version": "repo-lines-v1:sha256:8ad5d626a3e05f31cee16ed95752e8698d922d9ddaffbd9ccdc1ddbc2371000e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjMzNjMGIxYTEwNzczOTJiOTA2ZGE5MzRhMWU1ZDgwOTcxZjk3Y2IxYzgxNTIxZTJjZTVhZjViOTQyMmI3ZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzMDg2NmUxYmNjNWFiNzZlM2VmNTkwMTJkMGFkMzlhNjg3YWJlMDAyM2I0MzhhY2IxMTMwYTE4ODI1ZTgxOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4OTgwNzNlOWE1ZGJiMGQxODdjNTllNzZlMWU0NDBhYTZjNzRjNGVjMzUyMmFiMjIyN2FhMmEzYTYzNjY5YzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_994d76f1f294477fbdfa288f7d599922",
+      "statement": "Default client scopes resolve from the --default-client-scopes flag and then HYPERMNESIC_DEFAULT_CLIENT_SCOPES, default to read, accept comma- or space-separated input, and any scope outside the supported set (read, write) is rejected with a ValueError before the authorization server is constructed; because setup resolves the value once and bakes --default-client-scopes into the rendered unit, an env var present at setup time persists as a flag.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L24-L33",
+          "version": "repo-lines-v1:sha256:14ec8a7a643f7571eecdd1856a64c6cc66be10fb234ce8c490f8189318c81953:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4NjgyMGUzYTYyNTJmMWVmNDNjOTBlY2MzZjM0Nzk2MmQxNDI3YTU5MjUyN2FkNTQ0Mjk1NGQzMTMwNzM5YjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwN2YyMTBjY2QyZmU1NzMxNjkyY2ZlMDJkOGU2MjgyNTY5YmZhMzBmYjg2ZjM2NTFjNWE5NzczOTQ1ZWRmNDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3MGZkM2NlNTBiZDFiNzc4ZTQ1MThkZTg5MDcxYzhhZTIxODA5ZmMxN2QzZTVkNGFiODg0ZDcyYjc2MDI5NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlNWJkNWMxZmU4Y2Q0YjA5YTY2NzA4NWViMzAxOWVlMDRmNzcyNzg0NTIyNDMzNDFhMWMyOGQ0OGRjNmMzNjAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L320-L327",
+          "version": "repo-lines-v1:sha256:a29644f5b988d2518f5c560db13cd61efb963e5d1424f054cc187dc01d223bfc:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmIzMjQ5ZWEwYTcxZTMyOGI1M2RlOTBjNjhlOTA1YzY1NWM1ZmQ4MzdkNzNhMGU1ZmZhMWFkM2Q3OThiMjI0MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTJmMTdlZTUwY2U2OTAyNmI1ZTc0NjE4YzMwZTE1NmY4Yjc5ZGM5MzI2YjViMGRlZmNjMDM5MzY1ZjIxZjAzNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE2YWRhZDliNjY5OGQwZTI5Yzg5YmM4NTNiOTIyM2Y1OTM4ODY3NDZkZjA3ZjgyMDZjODE0MWVlNzc3ZmRjYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTk5MjRkMThhYmIwZTY0N2ZlM2VkNzRhNjUxNTFmMTFiZjc2MDAxMzlkZjQ5NTFiMjY2MWU3OGNlYjgxOGNlOCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L194-L218",
+          "version": "repo-lines-v1:sha256:412e5bd6235ad5458d66f2cf38b47e7884764f4b6e4bd23bd723f03626ac585e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4NGFhY2MwYzQ3ODAyYmI4Nzg3ZDBkMTVmMTIwM2ZlN2FkNTY1YTQ0YjcwZmJkOTM5ODQyOTdhYzE5YjdmYmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMTI3MTViZWM1OWE0NDFmMTY4MmZmYjUyZTg5YmZhZDk5NzdmNTBmZmY3YWQzZjhhMWQxOTFkZGMzMDhkNDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjM2U2MGE1MDUwYWY1ZmM2Y2E1NzFhM2Q0NDlkNDE2M2NlZTBlOTNiYzJmNWVhZmI3MDA5YTVhNmE3ZmI0MDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5NWJlMWYyNmVhNjIwYzdlZTFiN2MxZmJlNmIwYTYzMTE4NzQxMTY0NjNjMGU5MzU5NGU2MTlmYTA0NTVkZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_29772f9b57634ba9a69bd1f71043c25a",
+      "statement": "The cloud access-token lifetime resolves with the precedence explicit argument > HYPERMNESIC_TOKEN_TTL_SECONDS > CLOUD_TOKEN_TTL_SECONDS (172800 = 48 h), raising ConfigError instead of falling back for a non-integer or non-positive value, and setup bakes the resolved value into the rendered unit as --token-ttl so a pre-existing unit still carrying an old --token-ttl keeps issuing that shorter lifetime until it is edited or the flag is removed in favour of the env var.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md#L55-L60",
+          "version": "repo-lines-v1:sha256:382fa7a4df53f38be739d3af6c41e16fd0b41515923711763588a7f76a1f931e:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2I4NTU4Yzk5Y2ZmODdiZTJkZjk1M2I2NjEzOTJkMzcwYzA4OWNlMDA1NjFjNGNkZGQ4OTU2MjEyOGJlNDVhOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU4MjY3ZDYwZTE3OWQ4MDNiOTgyYTM5MzMxZTgwOWVhNDcxNGQxNmMwYTdkNWExMDY5NDg0NDBlZTc1MjM4OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2E4ZTkxZGVkNDczMWZkYWQ1Njg2MTZiNjZkYjZkZWE4NzUzMTUxZWY5ZjlhZGI0ODRhMDYyMmVkMDY0NGE1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzdlMjcwZDAxMjkzOTI4N2NlMDgyOGU3YzcxYTBiY2UwMWMwOGMyYzI4NmE5M2ZjNDE3YTkyNzFjODg4ZDRmMSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L161-L180",
+          "version": "repo-lines-v1:sha256:d7a115633b66a97db2f762ee139cb549ced23c8d4b0502d33fc2134c3058e57b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZjE3OWM4MmY4MzhiMjk2MjA0MjU0Yjc3ZTg3NzliMDIzZTgyOGU2YjZmYjgxZmU1OTFlMzViYjlmYTUyMDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzMWJkZTEwYzUxYjgwYjNmNTgxNDFhMGEzNjkxMDZiMmU5NzhkZjE0OTMyZDEwMTA2Nzg5MmYxMjI4N2VhNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkYTJmMzYwY2M1Yjk5MzFjNGJmNWVjNjFkMTkxZjYxODhmM2UxMDRkZDBiMmVhM2FiZmEzNzhkZmZlODAwYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmOTQyMWYyMzkwOWRhZDg3YmVkNGRmMDExYjMzNTQ2MzBmNzUzMDI3YmUwZjZhOTBiZWVhNzdhN2E2M2I3ODcifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L53-L60",
+          "version": "repo-lines-v1:sha256:f27e4b289f1d9a2df87005bd24c484930e6ac8a6fc0797e64caf3a06e121f3ed:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGM4MzY5NTUyMTI3NDFkMThlMDcxNjY4OWVhNGVlNjAxN2I0ZjdjYzllZWYzNDAwMTAwZTU0Y2Y1N2E3MjNkNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU4YzNiMzcxMjQ3ZmJiZmUzOWM0ZTZkZjY3N2I4ZWNlOTMwZDJkNGRiMTgwNTU4ZGY5ODliOGI3YTgzOWQyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDI1MDA1MzlkYTg5MjhkMzdjZjQ3MDg1ZTY0NDNkMDk0NTRiMzY0ZWU3MTkzM2YyYmRiZjAwYjgzNDI0NDVmOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGJjNzM1NDhmNjI5ZDZiOGI5YzFiNzkyYzk1YTJjNTdkNDhjMWI5M2Y1NWFiYTUxNWU3N2NmZjJjMGNjYmE0OCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L340-L342",
+          "version": "repo-lines-v1:sha256:50e60dfd67353236f8e1d7d8463bcbe8381eca2450ecabe4473dbd2c803e2bad:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWY4ZTg0YmU5NjhjNzFlYTc0ZDVhZmVhZTEzMGU0N2FjMTBlOGJjOTIwMGI3YmYzYTZiMTQyMTM5MDZhOWZmOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTM1YTZlMTE2OTJlYTQyYTc0ZWUzZDhjN2MyZTE4ZjE1ZDI0MDY3YjMxZWNiMTFhYTIwMzkxN2MyMDcxNjQ0ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDBiN2E5MmU1MGY1YzY4YzVhOWQ1MjNkOGJjOTFiZWZkYmQ0NDlmOTk1OTc5MmQ3NWVlZmRjZmYxYzcxMGU0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2RmMWMzYzNlZDZjY2M5NmI1YTM5MjRlNDk3Njk1YjZlNzI0ZGFhZDc5YzlkZGE4MGJlMjU5OTQ2NTFmN2E0MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5413500e504a4a2f897fd68942c74e57",
+      "statement": "The access-token TTL is the only cloud-lane lifetime exposed as a knob: the provider's defaults keep code TTL at 300 s, pending consent TTL at 600 s, and refresh at 30 days, and build_cloud_server does not override them.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L49-L50",
+          "version": "repo-lines-v1:sha256:8390740b6adfa8e9a147792135eb6d82a347a2db3a9e2a40247cab93fd72de01:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTk3OGViODA0Mjk2YTFmZWE1NWVlNjljZDA0ZmJkYzk5N2Y2ODM0NDUxMzY1NmJhODU1MmZhZmI4Y2FmMmMxMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjczMWY0NWVhZDdjYWExZjViNzBhOTZiMjk4OGM4NWNhODJjZjA0OGVlYzIzMTEyMzQ3N2Y5MDZjZGQzOTdkYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjA3MmY0MTk2NWI0MTg4ZjNjNDk4NWU2MWQxMDNlNzQ2Nzk3OTk3Y2M5M2Q0MGYwNzQyOWEwYTllNDQ3NTMzYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZjNjBmYjliYmNjNTQyYmEzNTM1YWYwNWFhZDQ2ZTA3YzBmY2RhMmFjMjI0NjY5MmEyOTEzNWZiZWFiYTRmZiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L82-L105",
+          "version": "repo-lines-v1:sha256:2eb521e372815c6426b5101f8ffa0fc2851fe6931c1b4557b61d71be6d86c4d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllZDZjNGI1NWY5NGFmZTQ1OTQxMmI1MDBmYzlhZWYyNzIyYjRhYzI2NDUyYTc1NTM3NWY1ZjIyMGMyMzEzMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0MTY5NDg3NDY5NTE2ZmZlNDY0N2QyMGQxMGI0M2E4OTE2YjljYjcxM2FkZWRmZmQxNjhiNTBjZDE3MzRiODciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1YTg0MzBlMGFlZGVlODgzMWYzOGM3ZjlkOTc5ZDUzN2ViYjg4M2I0MzIzZWM0NWRhMmQzZjMyOWZlNzJmNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExNmY4MDRkMTdlN2I4MTIwMGYyMDU2ZTM3MTJkNzg3NjUxNGQzOTMzNDc2ZTY4OTg1N2FlMGNkMzc0MDA3MTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ddf8cd43a9f46f7bb1b73b4c459b05a",
+      "statement": "The tailnet resource-server introspection credentials HYPERMNESIC_RS_CLIENT_ID / HYPERMNESIC_RS_CLIENT_SECRET are read from the environment only (never a committed config), and a missing pair raises a ResourceAuthError naming both variables when the first token is validated.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py#L205-L222",
+          "version": "repo-lines-v1:sha256:a25e5f6766f6968927bb8969436bffc998b5e6d59f8abd10df72e1af3b42e422:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlZjk1OGYzMmRlZDRmNjIzMmM4NDE5ZTRhZTEyMTEwYTk1MTM4MjUyMWUxMTc5ZjViNjYzYjU2NTRmMjg3ZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxNTMxNGY1OGEwZjcwZTcyZDJlZWZlMmM2MzAwM2Y2OTc3ZmQ2YWVkOTY1MDU0Y2Y4ODg4NGE0NGM0Y2Q2YzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmMmRlOGI0Njk4NjEyYzFhN2VjODRkNjg2OWRhNDUzYTZhMjMwYjhjYWE0ZTg4ZGJkODVjY2Q1MjBlMjJlN2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyY2I0ODk3ZDFhMzRmNDU4ZGUzNjE1NmEwYjM3NmRkMWU1Mjk3NGQ3ZGIyOGZhZTU2ZmM0MDQ3N2VlN2U5OWEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth.py#L44-L46",
+          "version": "repo-lines-v1:sha256:08047e4f8451a6e78402280346caefa25954aa705acdd393c725acfa60da4f5a:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTc4NjdkNWQyMTQzOTFhMzc4NDQwYmRkYWYzNTc1YzAxNzcxNGFlNWVkODk3YWQ0M2E4YWJkZmJkYjRlMjFhYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2RmNjYxN2I2M2FlYWE5M2U4MmI3NjUzNzcyNzA4NjY1OThiNTI1YWM4ZGI4OTU1MmQyM2UzMTc1OTE2Y2Y5MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzRmMDRkODBkZDVkYTZiYzkwNjVkM2E3M2U2OTA3MTlkM2ZiOGY5YWQ0YmY3ODZmMWEyN2NiZjY2NGI1MjYyMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTEwY2M3Y2RjNWNiMmRkN2RmYjNjNzc1YTUxYmE0ZWI2NmU4YjJiYjQyN2QzMTEzY2JjZTk0NzU4NjAxZjQ4NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_51067d66160c48ad841115fecd6a994d",
+      "statement": "The plugin-side recall surface is configured purely by environment variables: HYPERMNESIC_MCP_URL gates the auto-recall hook (unset → silent, recorded as unconfigured_endpoint), HYPERMNESIC_MCP_TOKEN is optional and a missing token on a non-tailnet endpoint stops the hook at missing_credential instead of sending an unauthenticated request, HYPERMNESIC_HOOK_DISABLE_LOOKUP / HYPERMNESIC_HOOK_DISABLED_HOSTS disable recall globally or per host, HYPERMNESIC_HOOK_STATUS_FILE relocates the non-secret status JSON (default ${XDG_STATE_HOME:-~/.local/state}/hypermnesic/hook-status.json), and HYPERMNESIC_HOOK_FIXTURE is a test-only fixture seam.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md#L14-L17",
+          "version": "repo-lines-v1:sha256:a78e48f26d549119e33dca0a2885f8e1d9a918ae1741b70a80b5f562581810d0:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODg1YTYwMmU2NTRlNDliMGM3MDZkOGFiZWE3OWNlMDMyZjc0OGQ0MGRlMTc0MWI2NTAwOWM3NDYwMGM1OTI0YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGJmYjQyMzlmMjVlNTliNTc1YmM5MDQwOTY2NTUyYzA5MGE2MWVmMTk0MjE4NThhY2MyYzM4NzZiMDZjZWJjNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTE5ZDVmOWY2ZDkxODNhYzNiNjg5NzBlOWMwMjEzZjdhZGNkZDk0ZWE1ZTEyYTVkN2QzNDRlNjQ4MDhjMTdjNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjI3YmUzNTVhN2EzMDU2OGY0YmQyNGI0N2U1ZTQzNWVkMzQwOWMxYjFmY2U0NGU4YWRkN2FiYzc3Y2MxMWYxZSJ9"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py#L107-L123",
+          "version": "repo-lines-v1:sha256:9fb8230764009b3b54aec1fead0b698e5953ca35f255507ed3ab072bcff3b5d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5Nzc3YzhkYjk0ZmMyZmExNmNkMDhkMzc3OGJmNzhlNDEyMjUwNGYyYjJlZjhiNjJmMzg5N2U5YzA5ZjMyYWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZWU3ODQ4YWQ0YjIyMGIzOWIwMzMzMTRkMTc4NmYyMzJlOGI0Mzk5ZTUyYTQ3YjM5NzA5MDZmOGJhNjI5NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMWQ3YjQ3ODQ0NjA2YTI0OGYzOWE1Y2EwNzg4YTIzOTcyNmJhMzQ1ZTJlMWE1ZTUxYTBhYjllNWZmYjMyNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmZmUyYzliYzZmZjZhMjc3MGUwNWZmYmM0ZWQxMWI2YzM2MmU5OTM3NmQ3ZDIxZWQ0ZmEzNmZjNTk3Y2JiMGYifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L42-L98",
+          "version": "repo-lines-v1:sha256:ef17e813152d0663942bb81cc8e3025e16af6c1d9ed482f12b6a69387202491b:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwODBhMTBkYTY3OWRiY2U0ODU1YjMxMmJlNjIyNGM2YTUyNjE4NjAxMGI5ZWIxZTQwOGU0MzU1OTgxNmNiODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1NmEwYjMwMTI3YmJiZjE1NTE0ZGVhMjNhMTlkYTQ3ZWQ5OTRkMjdkODAwOTA3NWM3MDRiYTQ5NzAzMjkzMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlY2QwYTg1Mzk5MmEwMDJlYjZjMmI0NTVjOWJmNTkyZTVhYzZjNTU2ZThiMzBjMmMxZTQ2MDYxMGFiZGJmOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyYjkwZmE0OGQ1YzYwNjk5OWQ0ZmM0NGI1NTI0MjExYWZmNTMzM2FlZWQ4NTYzZWZkMWFiZDA3YzRhZjM4Y2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6b9f2548bae64699a23b6684367e7936",
+      "statement": "The Hermes plugin's pre_llm_call recall is configured by HYPERMNESIC_REPO (unset → the hook stays silent), HYPERMNESIC_INDEX_DB (optional index DB passed through to the CLI), and HYPERMNESIC_HERMES_RECALL (on/off), with no secret or endpoint involved.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/__init__.py#L51-L63",
+          "version": "repo-lines-v1:sha256:27154c1cf93f85d0d6673159b706c78de125465db5a0917391234389e17fd1e3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiODUwMmFmMmJlNWVjNmJiYWZjZGMzZjBhNTExNTFmNDIzMDkyZGE5MGIzMTFkNzA2MTIyODI2ZWNkNmZmYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzZGU4NmViMmFjNjk5ZDJiYTc4Y2JlZTYyZWM3ZmVhMjBjOWMxYWE0MmViMTUwY2MzZjhiZWYyZmI0M2Y1ZmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ZGZkZTFlYWMxMTIxODA2ODdiOTUyYjJjM2I5NmU3MTcxN2NlZWY5ZjhkODBjNzZkOGE2ZGEyMjQ1NmQzODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0MzIzMDFmNjdhYWVlZjQyMTcyZjg0MzUwMGI2NGYyZmJkOTNmYTJiYjQwOTI3MGM0ODNlMTAwZmI0ZDZiODQifQ"
+        },
+        {
+          "resource": "repo://plugin/hermes/__init__.py#L84-L92",
+          "version": "repo-lines-v1:sha256:2cc2b2b93fbff6971f2d3b6537f2c43d8c96b1eda49f282d4616a80b4136fecf:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWZkNjNlMjYwYWZmMjgzOGE3MzhhNDFlMDM0NDg3NjliNzJiZGFmNWNiNzkxYTUwZGQxMGU3MjFmNmM0NmNmNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGI1OGU2NTEyZTFjYjBhNGVkNDEyYTZhMTY5ZTIyZGU4YjE4NDUxZjQyODA5MTkwNDhmYTA3OTcxYmVkNjU1OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc0OGI5Y2ZjMDY2OGY3MWRkMDk2YmY0YTU2MWJjNzVlOWE3NzViOTQwZDZlZTgyNmE3MTVjOTQ3MGVjMGFlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGM4OWQzOTZjOTBmZDMwNThiYjE3ZDEzNTcwMzVmYTkxNmM2MjM3ZmZkODgyOGUwNzliMTU4MzFmNzU0MzBhYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_24f9b11cf81145cdadcc6d775d8ec4bf",
+      "statement": "Committed configuration must use placeholder endpoints rather than operator values: AGENTS.md forbids echoing secrets and requires placeholder hosts, and a tracked-file preflight scan fails on secret/host patterns such as specific tailnet names, operator IPs, OpenAI keys, JWTs, PEM keys, and inline token values.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L75-L80",
+          "version": "repo-lines-v1:sha256:c91af0b7e55f39ed5c861e1802bfe33b065ab861952ea29c40a758d9f6612c15:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjg0ZjhlMjM2MDM2NjgzZTE2MGY3MTY2ZWQxOWQ1YzEwNzhkZmU3MzZjMTRkMjI2MDIxZTM1YjNiYTJhNWQ3NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTkzMDIwZmY3MGNkNDAyZmRkZjczZjg3ZDg2OTM3M2JlYTFjMTQyZmE0ZDViZDEyMTlmMGZmMDI4ODJlZDVkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWUwYzMxMjg2NzUyM2M2MTNhOTk5OWUzYjY1ZWNmODI5OTA1ZjUyZDllYzFmYTU4MTlmNTNkMGI0YWJhMWNmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmY0NGI1MTc5ODIxYjI0ZjZmOTI4NThkNjUzNmZjNWRmMGMyNjRiYTU0ODM4M2ExZTU4MzJlNzBlY2QzZTA1MiJ9"
+        },
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L51-L71",
+          "version": "repo-lines-v1:sha256:f723630aca226626296065f060d7c50625480ce7e43b773cfaf52ef536b647ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4ODE1MmJjNTE0OGJmZDZjNjBmYmRlNGMxMWJiZWJkMGI3MTE1MjA2NjYyMjhhNDA4ZTNmNGZhYTk4NmE1Y2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3MTBkN2FmNTg5NjUxOTdhM2MyM2U3MjI1NjRjZGVkOTc3YWJhZTQ3YmYzYmZiZWJlMWViOGMzMzJhMDgyOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1NmI0YmQ5MWVhNWM3NDFhYWIyMDgxYWU5NjE0NTBjMjc3MTQzMWVjNzI5MWM4ZmM3NWRmODBiMGEwMGFmMmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6cc712564b7a4bfdabd62aad80dff8d5",
+      "statement": "An absent OPENAI_API_KEY is a supported and tested mode rather than an error: dense retrieval is simply unavailable and the suite exercises exactly that offline shape by injecting a deterministic FakeEmbedder with no network or API spend.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example#L6-L9",
+          "version": "repo-lines-v1:sha256:0ceef5def75a18ccd76a9bd2e10601ec5c3fde5cc6395c7ff853755b89735467:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmE2ZjcyYjQzNDdhZjY3MmJhMjQwNDY2OWVjMzViOGJkOGU0ODg2MzQ5MWVmNjI1MDM2NzU2MmMwMjU2NTgyNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZmYTNmYmEzODQ1YmRhMWI2NGIwM2ViMzY1Yzk3ZDJiODdiNDAyMzAzZTAxYWE5MTJmOTNhNzFlMjQ3NTEyNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODZlMzY0NzEyYmJjNDM2YjdhZTQ4MzkyMTBhYzRhY2E1ZTViZjUyZmI1NjhlNjhlNTkxMzk3OGI1YzJmZWNjZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWY5MjNhZTk3NTkwMDYyZTc0YjVkZGJlNWJhMzZjNDdlZmFhNWZmNDY2YTU0MmI1NjliMDUyZDY0ZTY0MTUzYyJ9"
+        },
+        {
+          "resource": "repo://tests/conftest.py#L1-L7",
+          "version": "repo-lines-v1:sha256:963c66cbc4054a709652c7c9ab2a12b1a18c258876a218e1112865c56b59a5fb:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2Q1NTg3MzA3YTA5NTlhMjdhODVlZjY1Y2Q2MjNkMmRmYjg2ZjI0ZmNiZjAwNDM1MDA3NTVlNzQ1YzZjM2E3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

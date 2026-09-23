@@ -1,0 +1,510 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6408ce4b4aeecb546f67714c5bc10a20d02da847746f4b67ddc183efee9e1995",
+  "claims": [
+    {
+      "id": "claim_64e2a12cd83a4f51940ebbe5271825e5",
+      "statement": "The repository's CI workflow runs on pushes to `main` and `dev` and on every pull request, and defines exactly two jobs: the `lint-test-license` gate job and `fresh-install`.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml#L1-L9",
+          "version": "repo-lines-v1:sha256:adf3150ddfeacbbdc32de77cee8a38501c337a3d7714f6a134ca853597c2639c:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTU5ZTNiOWYyY2VlMGMwODA5YmY0MDY2MWZmZjNlMmZlZDI2NDRlMWQwZTA3Y2UyMjA0ZWQyYmEzOWVhMTFiMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2E5YzA1YjBkOTRhMDVjZmMyYjk1NjYzYjg2ZDFiODA5MjBmMGI3ZWVkZTdkNGZmZWYyYWVlNDVjOWNhN2FjOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzU4MmVhYjhhNTk3YTg3MDg0YzY0MTEyMTgxM2IwZGU2ZjYyODdkOGQ1ZWIxNzhmMzM0N2Y4MDBjNDk4NzllZCJ9"
+        },
+        {
+          "resource": "repo://.github/workflows/ci.yml#L28-L35",
+          "version": "repo-lines-v1:sha256:77b47deb770f52b1bc76c46e2f4f5f944f7a79580a588307ed3d0ef9957fcbbd:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTQ0NzRmYzU4NTc5ZTJkMDY2MDY2YzVlZDU2OTljZTE2NTVjNjZjY2JlYjA3ZGZkODMzMTFiNjExMTk0NmJiMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzg5OTkxMTAzZjZiYTg4OGUzZGU3NjUxYzVhMzA1Yzc3ZTU1NDc2NzczYWJhODM5NTkxZWNjNWJkMGYyYWIxZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTI1YjJmMzM1ZDI3Zjc3YWQwYWNjNGZlY2MyYjlhYzgzNTcwNDVmNDA0YWUzNzNhMDAxZmM4NzNhNDdiMzdjYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjc5NTgyYWU0ZWRjMzc0YTdiMDI2NDdmZjIwN2Y1MzQ2NzczM2RmOWJkZTBiNjZjNzJlNTMzMGY3NzkxZWY4YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_eb742cd835694d6aa5be175ec1d28f48",
+      "statement": "The steps of the `lint-test-license` job are exactly the commands the governance docs require before a change is done (sync dev extras, ruff, version consistency, pytest, license scan, preflight scan), so a local pass and a CI pass are the same event.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml#L15-L26",
+          "version": "repo-lines-v1:sha256:e14dfab660922b82df3692e250b3e31660cae5d12c1032a55ec36ba3af688b62:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiYmQyM2IwOGE2MWE3M2U2NDIwM2Y3NTA2NjM4NzYzOGNlNDc3NjM3YmE2ZGEzYjM0YTdkNjNhZGE4NGY2OTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkNGNhNWM0NGI5MTJlOWIzYzBmMmU4ODQ3N2ZlMGYzYWYxYmE2ODFjNTliYjQyZGEwMGVlMjM2MTEyNzFlZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3OTU4MmFlNGVkYzM3NGE3YjAyNjQ3ZmYyMDdmNTM0Njc3MzNkZjliZGUwYjY2YzcyZTUzMzBmNzc5MWVmOGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4ODJjZGNjYTlhNmYwN2YyMzMzMGM2MGJmYTdjMmZhZDZlMzNlNzhhNmVmMDM1MjcwMjEzZmMxZGI2NDVlODUifQ"
+        },
+        {
+          "resource": "repo://AGENTS.md#L44-L59",
+          "version": "repo-lines-v1:sha256:84b9a38b4820d6b6393b7b123779dcd38c140ffaca5a4f3a09e6a12ee6263832:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwZDRkYzg4YTczMzllN2RhNzQ5YjQwOTkyNzA5Y2M4OGZiMjIxZGUyZTQ3Mzc0MmM0ZWQwNGMyYzdjYzY4YWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMDVjNWFkM2Q3NTM2ZTJiOTljZDljNWM3NWVlZjI0N2FjZDk2NDc3YjZhZmI4ZTY4MTA3MjZmNDJmYWI3ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyN2Q0MWE0OWUxNzdmMmVhMzYwOGJiMTNjMGNlYmU2MGU5NjJhNzU5ZDkyYjE0MWYyNmZkMTg1MzRjNWU5OTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3M2EwNzg3YTg5NThmMmVlNjlmNDliYTdkMmE2ZDllOTBjZmFjMThmNmY1ZWU2M2I3OTBkNmQ1ZGI1YzQ0MmUifQ"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L39-L50",
+          "version": "repo-lines-v1:sha256:722b663e47e3a502b9487e8f04a5cc347a06d9d5be84e4a00d4c79b4f223adcf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3ZmU5ODJkNWM5MTdjNjQzMDk0NDE0Mzc0YTAzYzk0NDY0M2U1NzJlOTg1NzU5ZWFkOGFkNzhmMDJjOTYwYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YzA2YzU2MWQ1YzMyNzM0MzY4NTI2OGE0NmIzMzkxZjM5OThlZWU4OTBkMmJlNTFmMGQyMWNjNGE1M2FlNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyNTgyOTVjM2YzNWVkZWYwMTU1MTVhZjhiZmVkYzc2ZWRhYjEyNjhkZDZkZGE3MTFmYTc5NmEzMjc5YzZkN2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkN2RkZTEzNjJiNDg4NTYzZjdkODNkOWU3YWQ0MjRjYjZhNzIwZjQ1OTBmMzUxNGFhZGI4OWU1Njc4MjZjMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d5f887b62ef4111849441246739f613",
+      "statement": "The CI gate environment installs only the `dev` extra, so the `sidecar` and `bench` extras are absent from CI, and optional-dependency code paths therefore import their heavy libraries lazily and are exercised in the suite with injected fake extractors.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml#L15-L16",
+          "version": "repo-lines-v1:sha256:6742750b61cbf8150cc0962d922d30ca8a2362196c6fa5e2b77f3e8597ce8ca0:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2JiZDIzYjA4YTYxYTczZTY0MjAzZjc1MDY2Mzg3NjM4Y2U0Nzc2MzdiYTZkYTNiMzRhN2Q2M2FkYTg0ZjY5OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmQ5YjhiNzFlYTliYjc3NTQ5YjBlNWU0MjljODllYjcyZWNlNDI1ZjgyNDRiZjNkN2U1M2UyNTA3NDJmZjgzYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc5NTgyYWU0ZWRjMzc0YTdiMDI2NDdmZjIwN2Y1MzQ2NzczM2RmOWJkZTBiNjZjNzJlNTMzMGY3NzkxZWY4YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2NhYzYzZTRlZGRjZjNiNWZlMzhhMDM3MTJiYzI3YWY2Mzc4MGQwZWJhZWIwYTc4NzljYTY2ZDU0MDE5ZmNjZSJ9"
+        },
+        {
+          "resource": "repo://pyproject.toml#L31-L53",
+          "version": "repo-lines-v1:sha256:090ba2b987e8b6ab86f11a9f57e51f1a4377dd3cd3dd6e7e922ba06a4ab5f178:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5MjE4ZGM0Y2U5NzFjYmUzZDM4ZDc3NDMwZTYzOTkxODg4NGRkNzdkNzE4NGM3YjkzZGZkYzJlOTk4NjkxYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI1MWE3YjQyNTEzZDhiOTA0ZGE4NDUyNjBlYjQzNjU0ZDYyOWRjYzZiN2E4YmUxYzdmZGJmYmJhZTg0ZjViNTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1MGE3ZWM5OWY5ZWQwMzQ3YTIyZTNjOTRlMmZiNjFlZDFiYzM1ZjRlNjBmYzI2NzI3MGNhOGEzMGEyN2E0MjkifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L8-L10",
+          "version": "repo-lines-v1:sha256:0d6b0386734679d87682f14ead2e2a4afc3ff14b85e17031a733f00666957f88:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjA5NGNhYjVhNDdhOGMyNTcxNThkM2FjMzE5YWE1ZTJiZjg5NGFlOTdiYTBhMDkwMDQzYWNmZDAyNzk5ODk1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzM5YTJjMmY3YmZmMmJjNzk5ZTExNzBmOTQ5NzY0Njc2Njc0NWQ3YmQ0ZDgzYTgwYWE5MTNhNmYzNmYxODI2NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmU5ZjExZmQxNTBkMGI1Yzc5OGMzOTM2MjZkNjU1Y2MzZTFkZDM3OGVjMDJjNTk2YWQ1M2Q3Y2VlNjUyMDU0MSJ9"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py#L1-L6",
+          "version": "repo-lines-v1:sha256:deb0ffeb087efafe9c0620ae4e6f342ab454fce7c0db636061f7132dce416599:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQ1ZTkwNzk2Nzc2NzY0ODRjNzlkZjE3OGM3MmE5N2JlMzQ1NWU0Zjc3MmI3MGI3ODY4MWM3NGY3NzY0ZjFjMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3639a2fbced04536be5ca12c07b02bf5",
+      "statement": "`ruff` is configured with `select = [\"E\", \"F\", \"I\", \"UP\", \"B\"]` at line length 100, and pytest is configured with `--import-mode=importlib` over the `tests/` path, in `pyproject.toml`.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml#L65-L74",
+          "version": "repo-lines-v1:sha256:6b9d2723d4ecf9a7f4d1ec4a85066f879b28c541e631156ee3eb7c5d9d9c76da:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3NDVmYWI4NmIxMjFkYzg1YjRmNzg2NzMzOWExM2ZlZTgwNGM4YTAyZjQ3MTA2NTcyZjJiZjA2NjRkNTk1MWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxMDg1YWQwOTA0MjU3MTFhZGI0ZjE1ZjI4ZTI1YzE3MTA3OTJjMWQ0NWRhNzM5NGVlOTEyZTAzODE5MDQ1OTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI2NTcxYWNhODM5N2EzNDNkOTA3ZjhmYTY1MWI4NmEwODBhMGU1YWYwYTg5YWIyYTg0ZTVlNjlkNTFkZmNkNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4e3a66c4958f46a3a78b0a4fff0cd873",
+      "statement": "Test determinism comes from two shared fixtures: `FakeEmbedder` hashes text into a unit vector of exactly `EMBED_DIM` floats so identical text maps to an identical vector and rebuilds are reproducible, and `make_corpus` builds a small markdown repository that is optionally git-initialized with a deterministic commit; `conftest.py` also puts `harness/` on `sys.path` so the suite can import tools that are not part of the installed package.",
+      "evidence": [
+        {
+          "resource": "repo://tests/conftest.py#L21-L23",
+          "version": "repo-lines-v1:sha256:835544042f8f526b18786749155eaaf0a88e2cc202fcb0cd84ad4b045fbef133:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmM3ODQzZjM5ZDRhNWU4M2MzMTI0ZGUyNGRlYTlmMmQ2ZWZiMTRiMWU0ZTlhMTQ5NWMxMGZjZGJhZGJjMTRkOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUwMzMwYjc2YzAxMGRkYzI0ZWYxZjAyMzUwMWQ2NmQyNjcwN2ZjOTM0NTNhMDA5ODVjNTE4MmFjZGJlYWUyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDk5MzhlNTczMmYzOGYyMDZlMTA0ODRiYzc1ODYwN2RkODVmMWNjODhiN2UzNGM0YjQ5ODhlOWMyYjdmM2MwYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTk2MjU5NWIwYjUxMmEyOWRiNGE0MDQwZWY3ZjY4MzNmOGRmZjMyMDU1NjkyYjZmOWQ1MTBkOTVkNWY1N2YyZSJ9"
+        },
+        {
+          "resource": "repo://tests/conftest.py#L26-L56",
+          "version": "repo-lines-v1:sha256:20cb50fc3b6c82df2b032f2b9f1b5e75b076047ea3d9515388b001fa72aeaf38:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxM2ZlNGE0YjI2ZjY5NjZkZjc3M2EzMmJhYTYyYzhlNDljZDA2N2YyZDIzMWNhNWNlOTBmYmFjNTZjZjU4NjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1MzBkNDY2ZGUwZDczOTA4Njk5YTIwMTBkODJlNGJmNmM3NzZlOTVmYjcyMDEyMDViZGVlZWVmZWFhMmY3N2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0ZjNkZjFkMzIwMjY2ZTJhZTIzZDc0NzIyZDhmOTEyZjAxMWJjMDFmYWU3OTQ1MmQyNzRiYjA5NjYwZjVmMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhZjY1M2Q3MTQyOTg4YjBhMzc1OTI0ZjViMzJlZmIzZjJjNTg4OWUwYTM4N2IyNGQ3NGIxYjU3MTQ5ZWJiOGYifQ"
+        },
+        {
+          "resource": "repo://tests/conftest.py#L64-L86",
+          "version": "repo-lines-v1:sha256:0e1e3925cfa0da826c30d3f81b236ca1f3e52577284f0b49141413b6bfb862da:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZjM2NmI5YmQ5YThkMGYzNDBhMmJjMGJlMWUyMmVlYTIwNTY4ZGQ3OGE0NTI4MWI3MjFiMzBmMjJkMDg3ZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiODgzMjhlYjRlNDMxNjUwNjliNGJiMWZkNGJiMjA1OTFiMDNkOTU3ZGRhY2YzMWMyNjU2ZTAwOTE3NTQ2NTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExYzBjNzQ3NDcwZTNlY2MzN2MyZTc4YTQ5YWE3ODBiN2VlMmNlOWU2MTJmZjIzNDBhODgwM2NiMDU5ODVkNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9d3f7188b4834bce8461959a16311da6",
+      "statement": "The test suite is offline because the embedding credential is neutralized rather than mocked away: tests delete `OPENAI_API_KEY` and repoint `config._DOTENV_PATHS` at a nonexistent path, so dense retrieval degrades to lexical-only and assertions check that degradation, while a separate test asserts the fail-loud missing-key path of `embed.smoke_embed_or_die()`.",
+      "evidence": [
+        {
+          "resource": "repo://CONTRIBUTING.md#L19-L22",
+          "version": "repo-lines-v1:sha256:2758d578db668e7b4e08e831622ab0151f6b5b360c13e9fd20e6fbd98eb50c61:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTkzNjBkNzI0YWM1ZWFiMzNmOGExMjZhYWY3ZDc2OWFlOTVhOTI3NDhmMDA5ZGY5NTZiYTM1OWI5MWRhMTAwOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDk3OGNhNDc5NGI5YzYxNzllYjE0MDIyNTRlYTE4ZWEzYTlhODgzOTFmMDM1YTg1NDJkNmZiMzAyOTAyNmFkZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGQwMWQ1YTY0NTdkNWM3N2E5MTdlNmIzYzlhZTQ0YzI3Mzg4NzQxNmFlMmM5YzBmMTRiYTIxNTQwOWJjNTc0YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTJmYWNmMmRlNWM0NzhiZGExZGJkOWY4YjY2MDkxMTk4Y2ZhNjBiNTE1NDY3NTI5MTJiYmQ1M2M1N2E0ZGI2OCJ9"
+        },
+        {
+          "resource": "repo://tests/test_cli.py#L21-L23",
+          "version": "repo-lines-v1:sha256:fff1ad83ed80b9e012b74d711394f002f09c46d3807a3b365310b8f909a043b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzM5OTZlZjlhMzQ4MGRhMzBkZjRlOWUzNmJiMjQ1YTdhNTY1YjY2NTYxMGU4NzhmY2VhNzE3MGM1YjBjNzgzOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTNkZjliNGU0NjdiZDBlMTViZmI5ZTZmNWUzOGI2M2FmMWUzYTFjNThhZWQ4NGY5NjRhNzFkZWI2NDMxMjI5MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmNlNjU5NjA1ZTk1MjcxZjEyYzA4OWEzYzY0OWNjMTgwMjMxNzJlY2I2NTdmZWQ4OWFkNGIwNzQ5YjJkMzUyMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2Q3YjljNDUyZDliMzg5NWY2ZDI5YzgxZmI5ODVjN2FjYmE4ODA2MDFjY2NjZmI4YTU3NTE5NDY0ZTcwOTc1MyJ9"
+        },
+        {
+          "resource": "repo://tests/test_cli.py#L34-L46",
+          "version": "repo-lines-v1:sha256:de124781ed0bef37d1a8bf5b36f1a25fd381dedd08daed60b41670b021b5541b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NWRkYmUyYmE4ZmM5ZGIxNTYzNDU1NjExZTIzNjQ3YWM5ODRmM2IxNzFkZTliNTFkZDhjYzdjYzc4OTgzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxODM0ZjAxNTNmNGJkNDUyYWJjYTE2YzhiYWUzMzE3NmRjMzM0ZmI1ZDZkNzUzMDczMDI0NzkyNWExOWJmNGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlMGQ2NzgwODQwZjVmOTE0YWY3ZGNmOTU5N2M0MmZkYjRkMTEwZDI4MGNhYjgzNTBlZTI0NmIzMGZlMjFiMzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmMWNmNDI2YzM0ODk0NjgzZjgwMzkwMjcyNTMxNzk3ZjQxODgzYTA2NTRkM2UxMmU1ZWFmYjdmZDAyYzBiOWUifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L129-L134",
+          "version": "repo-lines-v1:sha256:02cce154fef04a71f89743fc9a373024012594dc7ac078d4ff9c5c8bec161375:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTUxYjc1YTVkZTFkYTVlODgzNWQyMGNjOGE3OTI1OGQ1ZGVlNGY0NDFlMzAyZmEwYjAzYWRjZDM5ZTkyNjIwYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg0NmQxZDAwZWQxZDIxYWE5MTU1OTMzYWJiOTJmNTViYTdjZTQ1OWEzN2NkMzQxNmM3OTczMjQ2NjEyN2I0YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2ZhZmI4MDI1OGZhOTA5NjdkN2Y2MTU4MmJlZWZlYmNkYmJiYTE2YWIyYTdlM2U2NTY3ODgyZjhhYWFmYzIyOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGRkMDg2NDdhMWQwZmEzMDBkZWE5OTBlZmViM2M2NDlhYzJiOWU2OWU0YjIxMGQyYjM0MjU5NjFjNTgwMWMyMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_67bbc2aa858445c6a8d3f4ffd75b3f68",
+      "statement": "The repository is test-first: no new production behavior without a failing test first, and a red test is either fixed in the change or filed as a tracked issue, never dismissed or deleted.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L61-L66",
+          "version": "repo-lines-v1:sha256:4ab88b99b18f2b0c26fbdde0b6c2a514a8d4f417424136f47df18bb5c7863548:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDQzMTg4YzEyMjUxOGVlMmM2NmU0YTEyNTBiZThjNDY4ZTBjNzhjNzM2NjI1NzRiMTk3ODBjMGMyNWNlODYyNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDQzOTRhZTg4N2E1OTAzYTEyNDM0NGZmZjZlMDRhOGQ3MjJjZjM0M2UyNDc0NTEwOTljYWE2YjRhMWQ0NmFmNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWQwMTA1MjE4YmNjZDk1MzA2NDg3ZTgzYjlmZTAxNDllZjlkYWJkZTg0ODRmZWYxNzk4Y2ZhMDA1ZjA0MTRhNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDhhNDE4NTkyMTY0M2I3OGM0ZWU3MWE0MGQ3NDQxMDlkMzZjZTc5NTI4ZmU4ZTExN2NmY2IyODQ0NGJlM2UxNCJ9"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L55-L56",
+          "version": "repo-lines-v1:sha256:7f2e71171159c5aa8347f347c60770c19e59d11342768548638896c8ef754634:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzgwYWNlYWE3NjkxZGE0ZTMyZDI1YzQ2ZDI0NTM1ODA0ZmFhZWRmYzM0MzBmNTM2N2IxNDIzZThkNzdlMmUyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWMzMzFiNWFmNzNlMTNlOTI1NzIzOWU2MjJlNjI3ZDY5ZjUzZGUyMWRkYmY0MDA4N2U5N2JiZDA5MTRhNjUwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGY3M2Q2MGRiZDg0MDE2NTU0ZDcxMjVjNDA1Yjg4YTEzYjI5OTgzYTkyZGVmMjA3NWJjZjIzZjM0NmJhMWVjNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDY3NzFhMTFhNTkzODVhZjBlNDU2MmRjNWVlYjZkOGVlYWFkOTg4MWRlY2JlMWMxMjBkNjg4MzBmYzc0N2E1YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_61ec07ec5130407597d01c34f96036d5",
+      "statement": "The test suite dominates the local gate loop's wall-clock time (recorded as about 3 minutes on a fresh Linux runner and roughly 15 minutes for ~750 tests in the cloud dev VM) and is git-subprocess and index-I/O bound with low CPU, so a long quiet run must not be mistaken for a hang and killed.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L219-L224",
+          "version": "repo-lines-v1:sha256:b84a5da0e8f287b3ffca47fe57e2ef75e0715f3256367597af9098613ffae5a5:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmU3NGEwZTliY2JjNGFmOThlMTI5MTBjNDAwMWQxNjdjYmFjMTg2MTEyNGM3OWFhMDUxY2E5MGNiOTBhYTBhNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg2ODczYjNlNDViMGZjYmQ0ODg3NGI5Zjk1OWY0NzExYzlhYTFkZWM5ZDliYjE1Yjg2ZDkyNjczNWI5YzUyOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWIzN2Y2ZGU3MjhlNDRiYTdjYjNhYzVhMmEwMzMyNThmOWVhNjFmNGRmNjg5ZWEzNDM2ZTE1ODdjNTkwYTcwYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2NjMjEwMTlhOWRhODZjNmNiODRlNjkwMTNmNmFmNjJhODNiZTg3NWU4YWYwNjQyODliMTliMDQxYTFhYmMwNCJ9"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L24-L37",
+          "version": "repo-lines-v1:sha256:14e5a5ded33ad6a44a63fee30295601e10bb86bf238af3b4320e14ad5d0ee89c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0ZGYzYTdkNmIzY2I3ZWVkYWY2MzQ3NTBjMWYzOTM0NWEwMjhhNmI5NGVhZjg4MWVmYmM5NDVjZDk5ZTY2NjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkYjhmZDU4MzA2MmIyNTUzYWM0NGQ4MGI0NjdhZWVjODRhYzRiZGExYjIxMmU4ZjFlNTk2NWVkNGQyYjQ3NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3MGI4ZjVmYzBlODg2Yjg5N2U1OWM3NzNlNDdiMGJjOWI2ZDczM2VlOTRlMjI3MTRkNzBiZGM5NjQyOTgzMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4NTIzMjg2ZWY5MmMxNmI4NzdmNTVhMGU3YTJiNDkzOTUyZjg5YTdiNDAzMTY0MWI4YWIwMDhiNDc0NGIxZjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96e1626be24848ca94e52cdb52d13ba0",
+      "statement": "The version-consistency gate treats `pyproject.toml` `[project].version` as the single authority and fails when the in-package `__version__`, any plugin manifest version slot (including nested `plugins[].version` entries) or existing citation metadata disagrees, reporting a manifest with no version slot as a problem and naming the diverging file and both versions in the failure message.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L133-L149",
+          "version": "repo-lines-v1:sha256:4c89bb2dc2298eed75fd84f5597fc7088f92e70a02ede2178b5f9117dd46df01:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NDBhYmY0ZDM3NmViNGUzYWUxZjNiZDU3Y2FhYjlhMTg1OGJlMjBjNTdlNzRmN2YwNGExOGQ1NTI4ZGZmMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3NWVmYTBmMDQxYTc3MmMxMThiZWM0NDllNWUzNzExMTc5NTMwMGNkZmZhNTA3OTU1YzE4YTNlMjk4ZDU1YjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU0ZDdkNmNmODFhODg1NDhhM2Q2ZjQ5Zjk4NjAwNTlmMzlhOWIyNGE5MWViMzAwMjIwNzY1Zjg3NWE4YWJhMzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L36-L49",
+          "version": "repo-lines-v1:sha256:c2b26b0e82cb5df74aa5cf8298a7ea47f386fc404e7a47a888140aff8aedb230:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YjNiNzhlODhjMjg1MTFiNzlkYTZlNjAxMGY5YzE1MDcyZTljYWY1NjcxZDU5YTMzMDcyNjVjYTUyNzRmOWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxYThhOWZlNDE4NjIwMzc0NDc0ZWRkODVlMDAxZmRjNDg2NDE4ZGE0ZDBmZWQ0MTVmYjYzMzdkOGU0NTc4NGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhOTZkMjVkMWQ2OTcyZjBkZTIxNDNmYjg1MjIyNzM2ZWJhMmQ1MTY2ZmQwNWM4YzRhZThiMmE1ZTdkNDhkYjEifQ"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L92-L122",
+          "version": "repo-lines-v1:sha256:756fc430bd2d962d2a781b55d6a38860be5210b095bc54bad69da2538a21e95a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZjFjMzk1ODdlNGFjMzBlNjIwMzk5MTlkNmUxNjM0NjViYTExZmEyNmVmZGUxYjE0MWFiMGQwMTc0NjRhYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMzRiMTc2NjE2MmIxYzk4YTYyNjkxNWVhODZiZTU4ZWQ5MmRmOWM5NmY1ZDU4OTA5NWQ5NjIwYjc1MTk2NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxMGRkNDRkNzVmZmI0ZjQ1ODY5NmFkOTQwMDExZDM1MmRjNjI0ZThjZjM0NDg5MmE4N2M5M2NlNTZiMDczNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5N2JlYWMzYWM2NmRhOWU2MTc0NmViOGU2Y2Q5OTgwNTExM2JlMjY4MDc2NmZhNzI5MmQwNjkzZmJlMmFkMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3ae371f0560e4600be4f75ca36cb5f3e",
+      "statement": "The version gate asserts consistency in CI instead of deriving the manifests at build time — recorded in the script as the chosen lowest-churn default, with manifest generation noted as a drop-in replacement if preferred later.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L15-L17",
+          "version": "repo-lines-v1:sha256:2c84f6758f0e112473260ea6196cdcefd46995ab03f69cbd401a4a80242b9f6c:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODJmMTUyNzM3ZTJkYmMzYTIwNjhlNTU1NzEyMDM0ZDViNTRmZjgyM2QxYjQwMTExOWFhMTkzN2Y3MzEwZjdhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTY3YzkxMWU4NGNjZTljNGNkYWVjZTVkNWVkMmQ3MmE1YjM1OGJiYzEwMzA1MmFkMjUwMTBkMDgzMmY0MzIxYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2Y1YWZiODliMjgzN2MwMTZiMzRiNjlhMjVmM2E1NDI3ZmE5MzI3MjY3MmRmZjA3N2U3MmEwMTVhYWU0YmUwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNThkNzEwOTIzYjUwYjFkNTA4MjU2MzM5NTE5YTdkNmNiZmFmMTQ4MDk3ODM3MGFmYTY5ZGRkMzRlYWM0NGFhOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9d03e89ddb7d4de1941259a4b2a10cbe",
+      "statement": "The license gate fails on strong-copyleft license strings (AGPL, GPL, SSPL) in the resolved environment, reports LGPL informationally rather than failing, does not deny a dependency whose metadata declares no license or `UNKNOWN`, and reads licenses from `pip-licenses --format=json --with-system` with an `importlib.metadata` fallback when that tool is absent.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/license_scan.py#L40-L67",
+          "version": "repo-lines-v1:sha256:ad5677d5c5f7050dcd97c5f214dd89020c379d9a0de7c8950e5966ed69ee75bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYmEzMmYyY2E5YjIwY2U0YjI0ZjdjN2Q1MTBmNGY5Y2VkOWY3MmMxM2M0MDVjYTdlNDNjZDA3ZGU1YTIxNzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTYwMGE3M2QyZTAyZjM1MmI5MGZlZjFkOGQ2MzgxMWJhNGE4ZWUwYzFiZWFhN2FlNDY1OGYzNmFhMmUxOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjMzc0ODk0NjA3Zjk3ZDViM2E4MTU3NWQzMGM2ZTlmZDk0ZmQyNWFlZjFjNzVjNGVjOTk3ZDkzYjI3MDg2NTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlYzhiMTgxZDNlN2Q2YTFkZTM1M2ZkNDQ1M2Y1YjgwNjRjMzRmMWM4OGU0MDY2NzIxMDI0MjQ3NTNiOGU1YzQifQ"
+        },
+        {
+          "resource": "repo://scripts/license_scan.py#L70-L95",
+          "version": "repo-lines-v1:sha256:7f2ad00dc3ca3f9317ad9d13fb999f12709f96be054edcb07dfd229ec9b4f57c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwMjUwNGQwZTZlZjE4MGEzMTAwZWIzNGQ4MzcwZTZlYTU2ZGZiOWU4OWY1YTY2MTlmOTQ0NmZkNDU1N2ExZGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyN2UyMjdhMjg2NTIyOTU0Mjk1MDFkNmEwMDhiNDAxYTM1NjUyZDRjMzFjNmRkYWFmOTk1N2M3ZGUwMzU1ZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3MDE0OWUwNjlhZDY3ZWNjZjQ3MzY0NmZmMWM3NTAwNTBkMzI5ZDExMDAxOGRjNTc2Njg3OGVhZmExZDYwN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJjODEyZjZkNTk0YjQ3YzUxMDgzMDg0YzA0YmI4YWI0OGZiOWJjMjNlM2MzZjkzZTE2NWUxOWViMGRhMmZlMWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_faf5a87261044ec280db08a5b4285945",
+      "statement": "The license gate is dependency-scoped: it excludes the project's own distribution before classification, keyed on the PEP 503-normalized `[project].name`, because `uv sync` installs the root project into the environment — so the engine's own `AGPL-3.0-only` license cannot make the gate reject the project, while the exclusion keys on the name only and a real copyleft dependency is still denied.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml#L6-L6",
+          "version": "repo-lines-v1:sha256:4e559d0210bbf8b5b0dc1d4a50d899cc5b2e7b554b380bc36c0437ee14a97b21:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGU1NTlkMDIxMGJiZjhiNWIwZGMxZDRhNTBkODk5Y2M1YjJlN2I1NTRiMzgwYmMzNmMwNDM3ZWUxNGE5N2IyMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGU1NTlkMDIxMGJiZjhiNWIwZGMxZDRhNTBkODk5Y2M1YjJlN2I1NTRiMzgwYmMzNmMwNDM3ZWUxNGE5N2IyMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmVmMTFlMzBkNTY2YmIyMmVkN2RjZDMwNzllMDUyNDAxYTAyMGU4MTFiY2JjMWNjNDcxYjNlODA5NTllZDEwOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDJjNzk1ZjY4Yjc3MTk0M2VmOGYwN2U3MjdlNjU0Y2U4M2ZhMWQ1YTZkZTAyMDA4NDU1NjExOTRlZTcxMjYyNyJ9"
+        },
+        {
+          "resource": "repo://scripts/license_scan.py#L96-L142",
+          "version": "repo-lines-v1:sha256:abeecfb97daadb0576616112f69fbd3321f4b1948fdfa6efff6c54fbf1b6981f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3ZmRlNmFhNWY4N2M3MTRmZmU5NjMwYmQ3MTA3NzYwYzM1NTZmYjA4MTA2YWRmOGQyOGEyZDA2YjVmYzJiMzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmYTJmNzY4ODBlYjIxZDczZTUyYWVlNGE5YzExZGZiOTIxZDIxNGVmZmQxNGE5YzE5ZGVmMDljMTgzOWYzYzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0MTU3NzZhOTlmMTQxNTY1OWRlMjZlYjRkYjI2MTg2M2ZhMTIxOTY2NjBjOTU3ODUzYTYzMTMxOWJmZDliODYifQ"
+        },
+        {
+          "resource": "repo://tests/test_license_scan.py#L38-L85",
+          "version": "repo-lines-v1:sha256:ad3a5f8a800926b2894f4c459c0936e646acc96035c30025cf9e356304703070:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MDgxNzEwZTY0OTE3MjgyNjg1MmIwZjI1OGViMTc2ZGQ5ZjU0N2QyY2VjZGUwYjAzZTE2NjQ4MTY0ZGM2MDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhNzUyZjcxOWFhY2UxOGYwZTVjMTk5NWMxNGE1MTY3N2NmZWFkZjY2ODBhODllMWZhYWRkMmJjNzJiMWUzZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNTE2MWY2ODZkZjI1ZWU4NmExZDYyODExNzEyMjY3MTI1YmY5OGYyZWM1ZDgyZTRiYjQ4NGIzNzJjMzI1ZTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6e503170643b4eb7987c11d6f5b8871f",
+      "statement": "The preflight public scan inspects only `git ls-files`-tracked paths and skips binary or unreadable files, always excludes `docs/launch/` plus its own script and test, and in default mode scans non-docs files and the durable docs while deferring inherited process-history documents and reporting how many it deferred instead of dropping them silently.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L123-L159",
+          "version": "repo-lines-v1:sha256:eed1f4008937004d19323449a34766aadbdd116fb69aa8a2779f577896dd5913:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1MzdjMGJmOTQ5YjA2NTA0ZjA5M2RiNDE3ZjRmZDgzOWIxYzBlZjUyNWZlNzliYmEwYzgwNjg4OTg0OWJiYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhOGYzY2EyY2E0ZjFlMGYyZjQ3Yzk2OGY0NjBhN2Q4ZTg1YjA3Nzc0Yzc1Y2ZkYTg0NGQ3ZWE3NWRkNTM5YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM0NTJhOGYxNmFjOWFiOWMxMDYyMDgzNGFlMTBmMWU1OTQzMmQ2YTAzYjk0MzdkMmI5NDVjNGZiZDZmNTU5MzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0MTU3NzZhOTlmMTQxNTY1OWRlMjZlYjRkYjI2MTg2M2ZhMTIxOTY2NjBjOTU3ODUzYTYzMTMxOWJmZDliODYifQ"
+        },
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L73-L104",
+          "version": "repo-lines-v1:sha256:82de868e8fbe1b3b583c45105a2cc82d30a641bf1f9209cb533a34e3729b48bb:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5ODkzMjZiZWU2ZWU4OGI3NmIwMWM3MWJkMDZiMWQ5ZTkzN2ZiZjgyMGJhNjVkYTQxNWUyYjJiOWVjZmRiOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzMDEyOTRhMzM2Y2QwYTNjYjFlNzRhN2E2NWQzY2M5N2FmZGM3NjMzZjQxNWY5M2EwOTFiZjQ2MDM4NjM3ZDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5N2I2ZDQ5MmJmMDczNTNmNzFjNDc1YmRiMTlhNjhlYjgwZDU3MWVlMGM3NjYyZjU4NzdkNjAzYzBmMjgyNzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9752ea344183415db2c76b2f1ef5d037",
+      "statement": "The preflight scan's `--strict` mode scans all tracked docs including `docs/archive/`, so archiving a document can never hide a leak from the flip-time gate, and its separate history scan over commit diffs is informational only and never fails the run.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L18-L30",
+          "version": "repo-lines-v1:sha256:bf114ea788429bc2fb4f535d640bbbb554b76f0f2d018c67f0356b67dce6bbc7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4NDA3MzE0NjY5YjA3NmYwYTE5OGY3Y2RhOWJmODM3YmZjYWU2MjA4ODk5MjNlYmY5MmJkM2Y0ZmNmYTBjNTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNzg5MWNlNjMwNjdiMTBjODkzMWZkNjRkMWYxZDQwOWE1ZGQ2YzNkOTMzYTZiN2VmY2FjODdlYWRkYjMyM2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3NDFmMzYyNGQ5MDcwYzUyZGM2Y2JhY2IwZTg1YmIzOTAxZDk4ZGNlZGNkNGMwNjQxYzMxNGU2N2Y4MTFlODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ZDcxMDkyM2I1MGIxZDUwODI1NjMzOTUxOWE3ZDZjYmZhZjE0ODA5NzgzNzBhZmE2OWRkZDM0ZWFjNDRhYTgifQ"
+        },
+        {
+          "resource": "repo://tests/test_preflight_public_scan.py#L99-L108",
+          "version": "repo-lines-v1:sha256:88e3943285613054c02118654061c532e8e8e451b0aa0d5dbbcb66145fdd585f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkN2IzNGE1NWUwNGYwMTYyNWIyM2JlOGU2NzJlNGIxZGY0Nzg3ZTMyNmYzNTJiNDdjNTFmODgxYzFiZTBmNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1YzI4ZjM5MjY5YzMzMWZlOTQ5OGJmYjA4N2FkMzkwNWVlOTBlMzRmZjg0M2UwMTkwOWJhZmUxYjViMjg0MDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NjBhYjI0OGMzMDU3MGEwMGZmOTM3ZTc0NGUxMDI5ZDBhYzQwMTdhYjcwODMwMzJkNTkwMmM2NzM1MGIzNDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwMjM3OWVkZjcxYTMzYzAxMmM1OWEwNTA2NTgwOGRjYjRiZDEwZDUzODBhMGJiZGFmMGQzYWQzMDYzNmU4OTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f1636e2bde3b48bea9f47b093cdbbb3e",
+      "statement": "Preflight findings print the file, line, pattern label and a masked (truncated) match value, so the gate never re-prints the matched secret into a console or CI log.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L106-L120",
+          "version": "repo-lines-v1:sha256:0c4606b32e05d8e8c9475ebb8c59ab90cf8558eafc6de16b719543c2b7d32704:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjZTJjNmIxYWM4ZThhZjYxODlkZjQ4ZGZmZjA0ZDYxODc5Njg2MTlmMjg3ZDBjZDY5MjE1ZTQ0Mjk0NTdlMDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2NjU1MDMxODdjNzdlNDgzMzU4M2Y4MDc3YjYwYzU1OGZjMzE2MDc3ODViZjljMWY0MjhhYmUwMWVhNjIwMWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0ZWJhMjgzYmMzNTRjYzdjNGMxYzc4NTQyMTNmYzkzZjU5ZTRkMmIwNTI3MDkyMTJjNmYxM2I2OGQyMmI0NjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0M2NmNzg5YzllNDFhOGY0MmVjYjU4ZjY2ZTUzMzIyNGM0ZDM4Y2M5MjUwOTg1NjEyMTU2ZWMwZTdmMzk4MmUifQ"
+        },
+        {
+          "resource": "repo://tests/test_preflight_public_scan.py#L126-L128",
+          "version": "repo-lines-v1:sha256:30ac7d8de2a185f069f4bcab57545983913875401b7f4829863cbd3e86d545df:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzIwMjEyN2VlZjdhODQ1ZGU1ZmIyNDhlZjU2MDgyOWU3ZDg0ZDY1NTRjZjg2YTViNGQwMTQzZWYwYmVkYjVlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmY4MzBkM2EzODU1ODdhOWFjM2Q0ZGIyNTBhNjA4MzQ0M2YzMjZhNWQ1NmI2MGE1MTlhZDI5ODdmM2I3ODAyNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTU1YWNiNWJlYmFmOTlmMWZiOTIzOTc3MmIwZTI1MGI2ZGEzMzhjNTdlZGVlYjYzMzFkYTdmMzQxYmQ1YTU2OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTVmY2Q2ZTU0NWIxMTI2N2EyYjUyNmE4MmQ5NThkY2Y1MzAwNjMzNTI1ZWNhMTRjMzM3MWEyZWUxYzY4MmFkMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b995c2eb538b41c88c3f36c08916ded6",
+      "statement": "The preflight deny set targets specific operator identifiers and credential shapes rather than generic categories: the shared CGNAT documentation range and empty `VAR=` placeholders are deliberately clean, which is why committed docs, fixtures and media assets must use placeholders instead of real operator values.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L75-L80",
+          "version": "repo-lines-v1:sha256:c91af0b7e55f39ed5c861e1802bfe33b065ab861952ea29c40a758d9f6612c15:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjg0ZjhlMjM2MDM2NjgzZTE2MGY3MTY2ZWQxOWQ1YzEwNzhkZmU3MzZjMTRkMjI2MDIxZTM1YjNiYTJhNWQ3NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTkzMDIwZmY3MGNkNDAyZmRkZjczZjg3ZDg2OTM3M2JlYTFjMTQyZmE0ZDViZDEyMTlmMGZmMDI4ODJlZDVkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWUwYzMxMjg2NzUyM2M2MTNhOTk5OWUzYjY1ZWNmODI5OTA1ZjUyZDllYzFmYTU4MTlmNTNkMGI0YWJhMWNmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmY0NGI1MTc5ODIxYjI0ZjZmOTI4NThkNjUzNmZjNWRmMGMyNjRiYTU0ODM4M2ExZTU4MzJlNzBlY2QzZTA1MiJ9"
+        },
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L50-L71",
+          "version": "repo-lines-v1:sha256:b74ecd9239f77b4bc0030fccf2da9ba1e4e89a016a7f3441f939a8ab1f470ced:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4M2VmYjhhMzUyZjEyMDkwODk2ZWNlZGVkNzExZGY5NTEwNzEzYmE2OGIzNThjNDVjY2RhZTQ3ZjYxZjgxNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1NmI0YmQ5MWVhNWM3NDFhYWIyMDgxYWU5NjE0NTBjMjc3MTQzMWVjNzI5MWM4ZmM3NWRmODBiMGEwMGFmMmIifQ"
+        },
+        {
+          "resource": "repo://tests/test_preflight_public_scan.py#L81-L90",
+          "version": "repo-lines-v1:sha256:43998d6a5a32c4262de46e3e577c3e02e0cc57eebde7e95ceb2e261428430255:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxZTliY2RkYzgxZWI4NGEzMGY2OWJkMDhhMTE2MGVmYTNlYjhkYWUzNjE2ZGEwZmRmNTc5ZGNkZmNhMjI2YzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiZWIwMjNiMDU3NjZjMmE1Y2VkMmQ3OTFjYzkyOWIyYmIzZjYwMmZmOTE5ZTllYmE1NmU5NjFiOTI4NzNiZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhMmEwNDY3ZTBjMDVkOTA3NmIzOTM2Mjc3M2ZmYzYyZTlhNjNkMTg5MGEyMWM1MmZkOWU1MDJjYTQ5NDdlM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkODA0MGU0MjAyMWIwNzM4OWI4OGExZTFhNWVmMTYwNDZiMGRiMzE2NzZjMzcxN2ExNjQ3YmE0NThhYzhiNTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a06110143e9e448db1403af6e8c2620b",
+      "statement": "Each gate script is itself under test: offline tests load the script by path with `importlib`, assert the real tree passes, and assert planted failures are detected (diverging manifest, planted copyleft dependency, planted operator secret, missing or empty changelog section).",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_changelog_section.py#L55-L87",
+          "version": "repo-lines-v1:sha256:709f9c23fb525f5705f3aa8e2ffc453148e4d605a79b150f713914eb63233e8c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyY2Q4MmExYzgxNzg4ODE3MjgxMDgxMTc0MWEzYzY0OWNlODExNzgwNTdlMDcwOGY4ZjY1MmI1ZTI1OTk3OWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4YWU2MGEwOWE3ODRiNDdlYTA4NTMxNmJmZjkyYzY4MDExZGQ2NzBkODlmMjhkYWY1ZGE5YmI2YWU0MWJjNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmNjczZGFmMmFhYmVjZjJlMDkzNGM2ZDU5ZTIwZDc3YWQzMTEzNDUwNGI0ZTZkYzUxMzJkMTQ2MWNjYjc3ZTAifQ"
+        },
+        {
+          "resource": "repo://tests/test_license_scan.py#L29-L60",
+          "version": "repo-lines-v1:sha256:d96108ea08979249272ebceef47a6138e0541bc15a1d8c9d087e437c29654718:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzYmQxYWYxZDgyY2M4OWRhYjdmMGNlNzk3MDNmYjViYmY4NWFlMDEzYzhmOGJkZmJiYjM0MmFhYzIzMWI1YWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkZTk0ZTRlMDY5OGNkM2U1YmEwMWU5MGEzY2Y2N2E0NWYxZjdiMjI4NmMzYTIyNzBiYWM2YjNlOWY4YjhmN2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0OWZjMGQ4ZDc5NGU0OWY5MTA2NjRjZmZkMDRiMzdmNmNlMDYyNmYzYTViNGExZWYxYjljNDVhYmNjMDU3NjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkMmY1ZWM4Mzc4MWYzZDYzZWUyNjU3MTljYTNkZmNjNjc3MTNhYTU0ZmM2ODBhMWE3ZWU2NDhkYjE4NzU4ZTQifQ"
+        },
+        {
+          "resource": "repo://tests/test_preflight_public_scan.py#L40-L78",
+          "version": "repo-lines-v1:sha256:6d1aa484a0c33c6ba3f23e6fdbd221c8331fa4bd0ba49d4c2b759b172a568a9f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY4MTcxZmRiZmZiMWVmZTQwYWVlMjZkN2VjNDdjZGVhZDgzYTE4MmE4ZDM5ZWY5NDM4NWExNzAxNzY3NDNiNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4ZTdiYTRlMDA0ZmUwOGQwZDQwNzk0N2VmNjZkNmVmNzIyYzRkOGQ5NTdkMGY2ZjIyNmMwYzRmYTVhY2I0OGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjczZDkzOGFmYjIxOWQ5ZjhlNjEyMzU0ZTNhNTgwMjNhM2ZkM2RkYjFhZjBhNmFlZjY0MWE4NzhkNWI0YWMwNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2MDg4NTAyNjY4OTQyMTNlMzkyNGJmMDZmYzFkNjA1MmY0MzM5ZWY5MGMyYzUxMzE3ZGNkNjY1NjAyZDk3MDcifQ"
+        },
+        {
+          "resource": "repo://tests/test_version_consistency.py#L28-L65",
+          "version": "repo-lines-v1:sha256:456ba4771540f784f21ba0feca2757facbb6a28b21c006ff76cadd552214f461:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5OGQ5ZmMyZWFmNmU2MTAzOTcxZjhiNmI3NzIwOGQwYjMxZjg1NTdkMDMyNTQ3YmIxMjIwNmVlNDk4NGEwNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2ZDJlZDkxNzUwZWU4ODM5MDYxZTZlMWViZjE3YWEyMWE0YjRhMmQzZGMxZWEyYmFiNmEyNWNkZWQ2MDZkMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUyNTY0ZDQ4ZmU4MzdhMGU1MTViOTRiOTBkNDU0ZTgyNDUyN2YwOTRjYjRhNGQ3MTdkNTkwZGIzMTMyMTExNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwYjQwM2ZiZDEzYzM4MTMxYTNlZTAzMDQ5Nzk1YWJjOWQ4N2NmMjQzOTBjZmQyNWQzNzVlYmRmNGI2MGNjMTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ea9a3973a38a420680fd497255ec0022",
+      "statement": "The `fresh-install` CI job builds the sdist and wheel, installs the wheel into a clean virtualenv resolved from PyPI with no lockfile, prints the resolved runtime dependencies, then proves the package starts by importing `mcp_server`, printing the version and rendering `serve --help`; it exists because `uv.lock` does not travel with the published distributions, so no lock-resolved job can see a dependency resolving to a breaking major (the LS-2550 `mcp` 2.0.0 crash-loop).",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml#L28-L58",
+          "version": "repo-lines-v1:sha256:27c5860af59d4b93b0a2895f3c25cf22a4905594d152e40990b23b581ee9f0c7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0NDc0ZmM1ODU3OWUyZDA2NjA2NmM1ZWQ1Njk5Y2UxNjU1YzY2Y2NiZWIwN2RmZDgzMzExYjYxMTE5NDZiYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzN2NiMGNlODM5ZjgxNmIxZjlkMzNjNzU2Y2IyYzQzZjZkODY2ZjI2ZTlkMjIwZTIzOGU5NTg2ZTFhNjE5ZmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyNWIyZjMzNWQyN2Y3N2FkMGFjYzRmZWNjMmI5YWM4MzU3MDQ1ZjQwNGFlMzczYTAwMWZjODczYTQ3YjM3Y2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://CHANGELOG.md#L48-L63",
+          "version": "repo-lines-v1:sha256:a28c988a8a188512dc52f9808855a44dcc4799d87d02d0a02c589c67936e46f8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4ZjVjYjIzYmJiNDFjZjlkMTU0YmE1N2NmMzQ2NTMxZDUzZjY4NDI4YzExYWE2ZDRmYjZmMWZlMTE2OTgyZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzZTFhZmM5ZTU1ZTYzZGU4MTVjNGY0OWIxNjZiYTU1OTFmM2JmMTk1NTI4MzljZjE4YWQzOTc1M2ZmMDBlM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3OTliNmVhYjM4NTk4ZGJkMTY3OThmOGY5MTk5Y2IzYjdlOGU2MDAxYTYxN2UwNzIxMzUxNWE4OWYwODRkMTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxN2ZlMzUxZTMyYTE1OGViNjY5MzNiMGU0MzM2ODRiY2ZjYTM2MzY1NzRkNDQyNDU1OWRjOTlmZjgzNWQ4N2EifQ"
+        },
+        {
+          "resource": "repo://pyproject.toml#L58-L63",
+          "version": "repo-lines-v1:sha256:8e31303959c57f0dc5f040b567737f707fb49e99af7126306adb5288a468a33d:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDQ1Njk5NDZhYzliYmU3Y2IyY2RlYzNmOGJlY2YzNDM3NTBjNThiOWIzMjFlYzIxOTViZmJhYWIyYWE4YzRiYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRkZGZlODI0YjgwMTMzMDc4N2E2YTYwNjkyNDdjMjVmZTg4MWE4YzJjZDU3NmFhNWE0NjdiN2M2OWUzOGYwZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjZmNjBlNmZiOTZiYjBjNzg5NjIwZTU3OGMxMjc1MGJmODk0NmQ0OGI0NTgwYzM3Zjg2NGZlNTFlNjdiYmY4YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDNhMzY2OTNlNzRlZGJmOTk2M2I5NTM0MTk2ODI0NGFhYmRiYTcwNzE3MmU5YmJhNjg0ZGY5NzkwN2JhMzk1NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0cf1ce553c5544c588d769345cfa9ce5",
+      "statement": "`tests/test_dependency_bounds.py` is the cheap local half of the fresh-install protection: every `[project].dependencies` entry must carry an upper bound (`<`, `~=`, `==`, or `.*`) while optional extras may float, and a second test requires `mcp<2` while `mcp_server.py` imports `mcp.server.fastmcp`, skipping with a note to revisit the bound if that import ever disappears.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml#L19-L29",
+          "version": "repo-lines-v1:sha256:975bb9e665ac2cf0971f08121379af3ee3805a8da7d6867e7fb259197874cbf8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNjk2ZTkxYjFmZmI5ODc2NzIxOWZmNjM2YTVmZmYxNDAyZDYxMzRiYTAwYzc0NDkzNzhjODcwZGI5ZWNmZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyODIxMTdhMmJmMzM3YzQ5NjBkM2Y2MDA4ZWM4MWMxMmI4MjRhOWZiYjdiMjI3Y2E5YWE2MmI1NzRjZDZkYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhYmYxOGU5NDk1MzMyYjczOWZmNDFiYjQxYzhjOGExYjhiZmEyZWM4MGY0YmRjYWU5ZmU2YWI5MGI5NmJkODAifQ"
+        },
+        {
+          "resource": "repo://tests/test_dependency_bounds.py#L22-L56",
+          "version": "repo-lines-v1:sha256:5ec18cfd488231cf5ac5c25048e7fba05101c1c6583efa07aaa7d96a591c0799:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YjVmYjgzYWFlNGZlZGQ3MmEwMTU2YzRmYjRlZTI4OTNiODZlNDhiYTc0MDc0N2E1ZWZhMDFlMmNlMGIyMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwZDViNGUxZjMwYzQ0M2RiZDA5M2M3NzlkNGZhZjc2ZjY3ZTM4ODBkMGNjYzc4NTA2ZjhkYTMzODIyMTg3MWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQyNjg3ODdhYjg5ODRmZTFlNTEyZjE1MWY3YjU4YzIxNWIyZjk2MTEwMzVmMTA5ZWUyMjc5NzczYzA2MTJmNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3051ec7253684efba5b7a7af3dd9585b",
+      "statement": "Branch topology: `dev` is the default branch and the baseline for all work, feature and fix branches PR into `dev`, `main` is the release branch that receives only `dev` and never a feature branch, direct commits to either branch are forbidden, and divergence is reconciled by merging `main` back into `dev` rather than cherry-picking.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L162-L178",
+          "version": "repo-lines-v1:sha256:46887b676238623c19532f13811a3bacb740e1c55e78a60fa1d0a2f9d6b06004:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NDNkNDZhM2JiYjc3NzY3YjkzNDY1N2FmNTAyZmI3YjVjMTlkYjcwNmIxNDk2N2FmNjRjMjU4MTVhOTc0NTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhYTcwNjA1MjU1YjgyNzI3ODJmMTRiMGFlZTUyNjE4ODhmYTYxYzMwOGE4YzY2OGE0NWIzZWI2N2QxY2E0ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxY2E4NTUzNzc3NDQ5NTBkNmJhZTg5YzYxMzMwNWNiNDNhZjQ2NTM2YWRhYjc4OWZiMjQ3ZDUxMDI5MjE5ZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyZjY2OWVhY2VhMzVhMDdkYjI3YTgwMWEyNDY5OTM2NGFhYjJkMGU5ZTllOTBkNzU2NmY0YmRhNTI5MjZhYWIifQ"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L99-L113",
+          "version": "repo-lines-v1:sha256:2a91c0fd89748b611a667a293b8ed3e10f9a86a7c2f6886a1a0699d7af19d14f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2OTUxZmMyZWExNTA0NGQ2ZDIwYjlmOGUzYTgzZmQwMWRlMDRiYTllNjU3YTY3OGZjMzRhNGM1NGYzMzg4ZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzYTA0MGI5ZWQyNTVjZjhjYWVmYjJkNmQwN2Q5OGZiNDFjZWY2MmZmMjNjMjEyMTM5MzQ1MGYwODY0ZTZhNWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjMTRjOTFkYzM3Yjk0OTZkMWFhOTUyZTU0MTRlNjQ4ZjM4NjJhOTU0NWYzZGRhNGZjMjRhYjgwYzQ0ZDdjMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhiNGRjYjhmM2I2NjQxM2JiNzBjNGFhN2Q5ZjZiNGViMGZhNDJiZTFkYTA2MzY1YzFmNGEwNjE0OTE2OWI0ZWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e557d7f89f73489fabbe280399ef4899",
+      "statement": "Commits use conventional subjects and require a DCO `Signed-off-by:` line (`git commit -s`), and a contributor licence agreement is deliberately not required.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L67-L71",
+          "version": "repo-lines-v1:sha256:7cfd9371bf514be9c3f5797943d2f2806540a33f8a7a95032c7b7820d8a1909c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjBlN2Y0YjZmZTc2Zjc5YjY5MGNiMmI0MTVhOWYyZmQ1NmZhYWNjNWNmNjQxNjdjNGVjMzkxYWIzM2M2YzI3YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUzYjdiZTRiOGNjMzE5ZTU5ODI0NjFkMGRmYWFlYzQ0ZDBmMjZiYWE0ODY5NmUxODY0NTg5N2ZjMzYwMDczNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGVkYjJkZTg5NWFlYWE2MmQzNGFlZDY1N2VmMzA5ZDgzYzBkZjk0ZDE3YTJiMzMzZTdmY2NkY2Q4ZjM2ZjA4ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWUwYzMxMjg2NzUyM2M2MTNhOTk5OWUzYjY1ZWNmODI5OTA1ZjUyZDllYzFmYTU4MTlmNTNkMGI0YWJhMWNmZiJ9"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L76-L88",
+          "version": "repo-lines-v1:sha256:3b8d77e34a55e127f96b3b0e71e5e50d335a551fe41efff7bd04efa40b58a68a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ODIzYjUxMDBlOTRhMjJjMTQyZmI5Yzg5OWIxMjYwNTdkODA2Nzg1NmU1MDAyYjEzZTIxMzQzZmU2ODBmOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiMDgzY2IyYjA0OTk0YjQyZjg3ZGVhY2JkOTM5ZjFhN2IzY2NiZGI3ZWNiYmI4NGYzNWE3OWU2ZWUyYzlmYTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgxYmE3NDliNjE5OGNhN2JiYTkwNWNmZmExYzU0N2VjMjgxMWEzZjA5NTA0ODJjZTUxMjdhMDQxOGExOWM3MDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3YWZmNGRkYzA2NWZmZGY0YTlkZTQ1MjgwZjIxMjVhNDlkOGZkNDMxZGU5OTE3YWYzNTE3YmZiMzdkMmVmYjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a0c3c30036d44539335bf91ffdcc27f",
+      "statement": "Only a `v*.*.*` tag push or a manual `workflow_dispatch` triggers the release workflow, so merging to `main` runs CI and publishes nothing.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L19-L23",
+          "version": "repo-lines-v1:sha256:2bd842d410d306a6a5b379300a2c5baaa4a6b6376433650c459ebf9df89be3eb:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTk2ZGM0ODE0OWY1YTgzZDFlZDZkYmIzOWJiYzdlMmI5MDJhYTNkMzRkNmJkNWFlNGIyOTFiNjhkZjBjYTc5YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2YyZmE3M2YwNzA0ODlkOTcyNGEwMjlkZmI1MDJhYTA4ODUwN2QwODU3OWJiYmNjOTRlZDkzNWMxYTA1MzMxNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzJiY2M5NTI2Nzk2ZTU5OTc5YzdmNTU2NzRkZmQ2NjA4MGJkNjllODA2MjIzODA4Yjg0NDEyNjBjYjc0YzQ2MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2UyNzQyMjRlOTgyODgxZDk4MWI4YWRkZmRkYzk4ODBiMmYxZDA3ODAzMTVkNzBkNWQ1MTkxYzc1Zjk1YTViMiJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L168-L175",
+          "version": "repo-lines-v1:sha256:c844dbc7ba13f7606bf672b3aa6ecb3f4b78618803905b9098d2846bd0951ca2:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdjMDZjNTYxZDVjMzI3MzQzNjg1MjY4YTQ2YjMzOTFmMzk5OGVlZTg5MGQyYmU1MWYwZDIxY2M0YTUzYWU2ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmQ4ZDM0NGYzYWEzOGZhMTUwOTVjNTNmMTYzMzE1Njc2Mjg2MTQ2ZTUyYjk1NGVmM2NhYjc0OTNhZDc4ZTg5MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTRjMDkzYmY3MWYzZjdiMjE2M2UwNTc0NmU1Y2RkYmExZmY2MmFmYTUwYWZjZDVmMjNmYThjNTZkMGJjMjkwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjJiODc5Y2U1NWE5OWI3MWNjNTUyZTBmOWY5Y2IwNWU5NjQ5YjVmZmQwNjVmZWJkNTQ0OGRkNGNiNGUxODYwZSJ9"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L120-L124",
+          "version": "repo-lines-v1:sha256:b55e6b86ea2b5bd09c45f79c439fb8eec5ce8bb0339f2c6f6957a40f8e8e9fe1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzY1ZmY2M2UwNzhjMDhmNGI3ZGQ1NTIzOTUyNDFhMzljNjA1ZjhmOWYwOGU4OWIwNTdmOWU5YWYyNjBkMTUzZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGYyMjgyNzQ5ZDc3MjM2ZGZhYTIyYzNlNGE2ZjdiYTc2OTFkMzMwM2I5NWFkZTZhODBmNGUzYmExOTYxZWFhZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWFmMjRmYzBmZjJhNjdlY2VhZjRhM2ZkZWZiMGExYzNjOThmOWY2M2I4OWY4N2RkMGEyMDU4NzZjMWU5OGYwNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzYzZmQ3NGY4NDdkMjkzYjg2Y2VhODY3MWZjNzJjZjUxODYzODE5ODRlYjc2NzM2OTQ5YjlkMDRiMjU4NGIxNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef8931f3f06449988ba95570aeb0d24a",
+      "statement": "The release workflow is three dependent jobs: `build` re-runs the version-consistency gate, runs `uv build` and uploads the `dist` artifact with `if-no-files-found: error`; `publish` needs `build` and uploads via `pypa/gh-action-pypi-publish` under the `pypi` environment using OIDC trusted publishing with `id-token: write` and no stored API token; `github-release` needs `publish`, runs only for `refs/tags/v`, and is the only job with `contents: write`, the others staying read-only.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L25-L76",
+          "version": "repo-lines-v1:sha256:6750ca056807c18c4ab2de93ea0df2b369da5d2c21035559d3cd067bfb745267:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1MjYyNDdlZGUwMDZlOWJkYWI5YzY4NTA3Mjg0MjVkMWI0MTY2Y2FmNWNhYzUwY2YwOTU1YzQ0ZDI0YzFhOGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzNGUwYWVkNDdiZjFkMmRkYzQyYWU2NjI2MmExYWIwODY0MmUzYWIwYjIyMDUyYjZlNTU4YmYxZmZmMjJjM2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlMDJiNzZiNWIwZjQ1Y2U0OGI4OGZkMjIxMDUzZDZmYmExNzk0Y2RhOGU1YzE3NDAwNDhiMjZjNDQ1NDlkN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5MTdlM2U2YjRjZWJkN2M2ZTE2ZWUzY2Y4ZjkzZTVhZWFiYWU5ZjIyMWRlYzMwYmQxNTkxMjc3NTE4MzA1NzcifQ"
+        },
+        {
+          "resource": "repo://.github/workflows/release.yml#L51-L68",
+          "version": "repo-lines-v1:sha256:69f4ecfefeb2897bf16878509c27cdfaee8833d63ebd0af37bc19c631f81b8a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4MjU0YzkxNmE0NDgxMjNlMmQzZDk1ZWJhYTJlNGIxZGIwZmE3YjU0M2UxMmMzZTFiMTFjZjM2MjE2ZjIwMGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjMzMzOGI1N2QyMTJhMTY5ZTQxZDRiNTE1N2MyZmVlNzBlOTA5NjQ0MTFkYmI0YjE4MDgzMWU1NzM0YWYxNWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiNjI0MzcyNTlkMDQ0YWJmOGQ3NjUyZjY4OGFhODI3OTRhNTE0Zjk2YTFiYjI4NDIxMzg4NTVmZWQ5ZDRlMDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZDE1YjA4MjU5MGQ3ODk2OGIyN2JmMjIwOTE2ZmM3ODBjMDc0NWUyZjE3ZTI0OTU2ZmJmOWMwODE4NDhkYTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cfc4ca5a5a204002a4e8b7788189ee4a",
+      "statement": "Because only the `github-release` job is guarded by the tag ref, a manual `workflow_dispatch` publishes to PyPI without creating a GitHub release.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L51-L57",
+          "version": "repo-lines-v1:sha256:f39caa235c6d470566fc04a7b678bf90fc27065033f1348671972d879025d300:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTgyNTRjOTE2YTQ0ODEyM2UyZDNkOTVlYmFhMmU0YjFkYjBmYTdiNTQzZTEyYzNlMWIxMWNmMzYyMTZmMjAwYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2Q1MTk1OTg5OWRlYTZkYzRiZTY1N2E4NzU0MTFlYjU0N2M4NDFmOTAwMTdlNTJjNjNmMjk4ZmNlNzEzODkzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGI2MjQzNzI1OWQwNDRhYmY4ZDc2NTJmNjg4YWE4Mjc5NGE1MTRmOTZhMWJiMjg0MjEzODg1NWZlZDlkNGUwOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTA3MzVjNGZhNGIzZjdjMTEwMDQ0N2Y1ZDMwZGRhYzgxODY3YTc0NTMzNDhiMjQwOTRjZWZjYzM1YWZmODQxNCJ9"
+        },
+        {
+          "resource": "repo://.github/workflows/release.yml#L70-L74",
+          "version": "repo-lines-v1:sha256:973df0c88be55db65cee619527914a768bfc95960e012fb995ac53ef88f30604:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTc5NTdmOGI0NzlhYWUwNmU2MDUzYmMwMWUxNGNkOTM0YTk4YjAzOGMzNDA3MzE4MmMyN2RmOGRlZTBiZTNlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzMzNzMzNGFlYzBkY2IyNGU0MGUzYzIwZGMwOWQ1OWFmNjc0M2QwMjdkYmZmNTBjMWFjYTA4OTc0NzExNzY3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDM4ZDkyMzA1NTljYTNiOWMyNzg3NmNhZDQzNDgxN2YwYzE1ZGQ0OGNmM2Q3YmFlYWFhZjk1ZTBkMDVhNjg1NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzhkZjg2ZjIwNzA1Y2Y0ZWYyMzE0MWNiM2E4NmRmNTk1MTg0MjczOGU5ODI5N2E5MTVlNzdlZjQzZjEzMjFlMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_25108e08b7384aaa931317ed12e5c140",
+      "statement": "Publishing depends on one-time operator setup of a PyPI trusted publisher naming the owner, repository, workflow and the `pypi` environment, which must match the `environment:` declared in the publish job.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L1-L17",
+          "version": "repo-lines-v1:sha256:8d4ce11e50cb4725da06d6fb901b8ac5e65e77bc902a874a0d43d3fa64a700a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlYTc1NThiZWJjYmVjMzAxMjIzOTlhZjE1MmM0ZjQ1MzBiZDdiMTc4ZTQ3MGM4NzY4YjU4Njg2OTljNWQ4YTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzOTVlMmQzNTUxYTZlNGUzMGVmZDIzMDExNWI5OTVkOTRjYTVhOWM2MWYyZWRiY2Q5YTMxM2NhNGZjZjdmNDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzMzYyYzE5ZmFlZGQ3MDQzMTVmNTg4ODMwZTRhNWQwODE5ZTY5ZDg5MjA3NjAyZGM2NTdhY2VhZDQzYTUyMWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1d3d2386dc6c4e78af8b5af6138e7770",
+      "statement": "GitHub release notes are derived from `CHANGELOG.md` by `scripts/changelog_section.py`, which refuses `[Unreleased]` and exits non-zero when the requested section is missing or empty; the job prepends an install/PyPI/full-changelog line, appends a compare link to the previous tag located with `git describe` (hence the `fetch-depth: 0` checkout), and creates the release with `--verify-tag` and the built `dist/*` artifacts attached.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L78-L114",
+          "version": "repo-lines-v1:sha256:1c054861802c6d98078cfe2abbc233df665b539ccaeb3000b5352ff9af9aa4c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwN2E5NTM5ZDI5NjA2N2Q0ZTI4ZmU3ZTZlMmRhMGZkZjBhYTc3Yzg0NDkzMzM2ZTkxNTIwMWJiMTA0MmJiOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3OGFlMzNjNjg1ZGYxMzY2Y2FmMDhhNjAyNWRmMjFhZjkzZTA5YzVmM2NiMmZjOTRkNGVlOWI5ODVmYTg3ODgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4ZGY4NmYyMDcwNWNmNGVmMjMxNDFjYjNhODZkZjU5NTE4NDI3MzhlOTgyOTdhOTE1ZTc3ZWY0M2YxMzIxZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://scripts/changelog_section.py#L26-L59",
+          "version": "repo-lines-v1:sha256:3a986b108fa8db88688d311d1d54d1ce76dbf3b6bf657e89afedfa117ecf210a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkN2E1NmI3NjlmNjZhYjhjNmE5MTE0NGU3MmYyMTI1ZmI5NDQzODNhY2I5YWZkMDI0MjY2ZTFjZjM5ZGUxMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVkOTU1MDY4Yzk3ZjZlZjc5ZGIwMjcwYTgxMzExOTY1NDg4ODQxYTEwMGU3ZjI4YmQyY2QzYTcxYTRjMzNiOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        },
+        {
+          "resource": "repo://tests/test_changelog_section.py#L84-L98",
+          "version": "repo-lines-v1:sha256:7ae1fd17967fa06325cb26feb20850c9562ed3cf70f5486096da30a02c12105c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmY2RhMDE5ZjIyMDUwMDEyMDQzZDQzMGE1OTdjOGI1MTc2YzUzNjA0ZjRiNGYxMjg0MmZkMzFmOWE4NjZlYTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5ZDhkMGM5ZDE0NDY4NTAxNTQzZDE4MDM0M2FlZjY0YzVmMzRmZTI3YzAxNzU3ZTRmMjFjODE5MzZmNmIyMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhZTMzYzQzMzY0OWNiYjI3OGY0MjdmNjViZTcyMGU3NzlmZTAwNjdmYjZkOTcxOWIwNjVkNzY0NTRiNTg3YjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_508d66566bdb410c8e05a2422f79e552",
+      "statement": "Release prep runs in order: choose the number from the accumulated `[Unreleased]` section (a minor bump for new backwards-compatible functionality, patch for fixes only), bump `pyproject.toml` and let the version gate name the mirrored slots, cut `[Unreleased]` into a dated `[X.Y.Z]` section with a fresh empty `[Unreleased]` and updated compare links, promote `dev` to `main` by pull request, then tag `vX.Y.Z` on `main` at the exact commit to ship.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L180-L199",
+          "version": "repo-lines-v1:sha256:73aff78cd7a07c1d0d30b70170ee25b5c8b1dd1477e927adc3e34c4e38d04497:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxY2U5NTJkYjQ2NTc2Y2ViZmZjMjZjYmExNTcyNDFjYzI4YjY2ZWVjYjk5NTg5OTNiMzZhN2M1YWFiZDFkYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyMTE0NTRiNjc3NDc2ODcyYmJhNDk2MTAzMmJiMzY5MjI3ZjBjNjFhMTlkN2NhNmNmYTIyMDI3ZGEyNzc3ZDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmMzdiNTRhZGZmOTFmZDlkNTAyNzdjNjJhN2I3Mjk0YmViYTk3ZDcwNzEwNzEzZDE3ZTg0M2QwZDUzZWFmNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3N2ZkMTNjNGE2NmRhZGJiNTM4NTk1MTkzNjY3NzFmMjViODQ0MzY1YmVjYzdhNjU0NGM4OTM5MGQ4YTE4YWIifQ"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L126-L143",
+          "version": "repo-lines-v1:sha256:f8f4eee8e690d96fe1e4587637f06f2d516b6e18d7dcc860b313fc1e6b2abb83:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3YTFjNTQ0YTIzYzljNjNkYWE0NjcxMTdiOTVmY2MyZWI2NmMyNmVkODM0OTBiYmIzNTg0ZjU4MmRkYjcxMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3YzI4NzAyYWYwMTEzMjM4MDYxMDE0YTQ0ZDY4ZmFlNjUyNWQ1NDZlNGIwNWY4MjlmZTAyMjllN2I3OTNkNDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3ZGI3Mjk5MmVhZGQzOThhN2Y5OWQ5OTk1MWM4ODRiYjE5MDY0YTgzYzU3ZDdiMWM0Y2U0ODlkZGJhMWJjOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlNzdhZTYzZWY2ZGFmZDU0ZGRkZjY3NWI2NzQ0Y2VmYjEwNTdiYjMwNzM3YWM4NTcxZjk2MmQ4NDA1MmIxNTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8dd90685088d406fbc191c51679bd334",
+      "statement": "The changelog heading date and the citation files' `date-released` must equal the date the tag is actually pushed, and because the version-consistency gate checks versions only and not dates, this invariant is maintained manually.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L197-L199",
+          "version": "repo-lines-v1:sha256:71d4737f7b84f27468623997fc533a0ac54b38665b8cdd6d668128798318267f:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDc5NDRlMTNhNzJjYzEyZDE3NzhmMTdiNzc3YmZhMmIwYWVhMWY1ZTg1YjBlNTRmN2ViNzg4ZDE1MGZhOTJkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTIxMTQ1NGI2Nzc0NzY4NzJiYmE0OTYxMDMyYmIzNjkyMjdmMGM2MWExOWQ3Y2E2Y2ZhMjIwMjdkYTI3NzdkOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTRmYzFlYjRhZTQ1ZDEwZDQzZjBmNDcwMjI5ZmFhNDM0NDM2Y2U0NTAwZTZlM2QyNDJjMzJiMjJmNGZhOWJjMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTc3ZmQxM2M0YTY2ZGFkYmI1Mzg1OTUxOTM2Njc3MWYyNWI4NDQzNjViZWNjN2E2NTQ0Yzg5MzkwZDhhMThhYiJ9"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L145-L148",
+          "version": "repo-lines-v1:sha256:583e7e01855b01e3446bb9a4ee23f7bd8259b4b04496d1838a1c397431225025:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjVkZDFlZWZlOTJkN2ZkOWY5ZWRlMTY1MmRkY2IxZTAzOTY3YmQ2YWE2MjFmMDgyOWM3MWZmNTllOWRmNTUxYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDExYWIwNjU2ZWMxNWEyN2YyNWQ2MTFhZmRjOWU4ZmUxNDc1Njk3OGI4MTE2N2M2NGRiNDJhM2U5NjE2ZTNmZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWVhZTIwODM5N2I2NWZjMDU3NGQyYjJlNWFmOTFhMmQyMGFlODk4MTQ5ZmI1ZjYyN2Q1MWMzM2RlMTE2ZmFkMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjBkNTliZDgwN2NkYjVmZjJiNWIzNTMxZDQwYjAzNDViMTU4YTE5YjU2ZGQzMDc1Njg0ZDIzMDI3NWY1MjUxMyJ9"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L92-L122",
+          "version": "repo-lines-v1:sha256:756fc430bd2d962d2a781b55d6a38860be5210b095bc54bad69da2538a21e95a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZjFjMzk1ODdlNGFjMzBlNjIwMzk5MTlkNmUxNjM0NjViYTExZmEyNmVmZGUxYjE0MWFiMGQwMTc0NjRhYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMzRiMTc2NjE2MmIxYzk4YTYyNjkxNWVhODZiZTU4ZWQ5MmRmOWM5NmY1ZDU4OTA5NWQ5NjIwYjc1MTk2NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxMGRkNDRkNzVmZmI0ZjQ1ODY5NmFkOTQwMDExZDM1MmRjNjI0ZThjZjM0NDg5MmE4N2M5M2NlNTZiMDczNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5N2JlYWMzYWM2NmRhOWU2MTc0NmViOGU2Y2Q5OTgwNTExM2JlMjY4MDc2NmZhNzI5MmQwNjkzZmJlMmFkMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b5af81c62b9d4c0f941173cc7e90c90d",
+      "statement": "Documentation is part of the change: a change is not done until every document it affects is corrected in the same pull request, a doc-sync table maps each changed surface to the documents that must move (including release-workflow or branch-topology changes updating both `AGENTS.md` and `CONTRIBUTING.md`), and the anti-drift rule is to reference the enforcing gate instead of copying its enumerable list, with `docs/README.md` current-truth pins overriding process-history documents.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L90-L134",
+          "version": "repo-lines-v1:sha256:a4a76d45c0158cceefde3ecc17b6cf13f173efb122584a18e2d827922a826950:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxM2RmNjIyZTllMzE1MTVmYzg5MGVjMDlhM2FkMjYwNDkwMjA3ZWJmODhmZWJhZTI4MTlmY2ViNWQ0M2YzNzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyY2IxM2ZiMDRjMzAzZGI3MDNjNzVjNWQ4MDY5ZWQyMmQ4NmRhZGMxMzIzOWFlY2ExMWJjOWUyYTdlYjQxODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwMDBkYWQ1ZmM2NjUwMzI2N2FhY2JiMTVkNDU2NGRhZjI4OTlmODM5MTRlZjUxNWI5ODVmYjllNzFjOTQwZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiYTlkNmEwMDc5NTYzYWYyNWI3MDEwNjBhZDAxOTNkM2U3ZmE5ZjczMTgwODZlZjUxNDg4MTRmN2U0ZGE5NTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3addb65c536f4e9badf1364ade134bbe",
+      "statement": "Changes to auth, the MCP server, the write path or the protected-path/governance guard are security-sensitive and routed to the owner through `.github/CODEOWNERS`, which also covers the gate scripts and `/.github/` itself, and the pull request template carries the gate and security-surface checklists.",
+      "evidence": [
+        {
+          "resource": "repo://.github/CODEOWNERS#L8-L25",
+          "version": "repo-lines-v1:sha256:bd0bd5c69d3df5aad7aacd6297d03c27d5c0191d1cab87e653a47275f84c9e41:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyNjc1OTY5YmMwMjQ3ZDk2OTQ0ZGFkYWRlM2MzNDIzMmEzMTkzZGJhODQzYzg3OWYyNzI3MzlkY2NjZTFkNmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MWYxYzQzYWZlNzMyOTAyNjBjNTllZDRjYWYyMDg2YTU4N2Q2ZjRjMzU0NWY2MDZjNjgxZmM1MWYwYWY4YmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzNTQxZjQwZmQ1YTBiYzNhNGQ4ZTFjMzJkMGI2YTYxMGI4OGQ5OGNmOTNlYmUzMGQzMGJkZGU3YmU4NjdmZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://.github/PULL_REQUEST_TEMPLATE.md#L8-L23",
+          "version": "repo-lines-v1:sha256:83dee89ad4fe0f459ee00b0890e77376e0daf1584bdd1d4c219a91d377551315:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxODZjYWFmNGZkOGVjNjFjYTg3YzUyNGI1NDVjMWNiOWQwYmU0YzdiYTIyYjg0YWEyMmU2Yjg1Y2Y1NjhjYjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiODljOTNlMTkxMmVmMWEzOTliMjg5YTc3OWU5M2I2MGQ5NmFlYWVkYTZjM2JmMTFkZDRmY2E5ZDNjMzgxYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyZTIyZjMyZDE1NTQ3Njc4NDQ5YzRhYjZhOGRkNWZmZGVmZmU0MGI3NmMyN2E0ZTc5OWY1ZWQwODA5ZGEyZmQifQ"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L90-L97",
+          "version": "repo-lines-v1:sha256:0d3b184fec4d14279c9df5b5d7cebe69b4e3994945c86875b04aef63402cd04d:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWJkMjIzYTI2NzY4ZDAwMWIwMTdjZDE0MDJkOTZjNTgxYWE2YWRhMmE3Y2NhYzBhYzFkZWFiNTg1NTg1Zjc3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZhYTVjYzZmNzU1MDQ4NDk5MzQxZjNlNmNjNWZkMmYwNGVmMzYwZmUzYjI5MDM3YWFkYjlmM2M3OTY5NmRiZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWE4ZWUyNTVhMjViYmFmYmQ0MDUyZGRmYmQzOGUzNTAxMDBjMWI5MDFlODU0YTJkOTQ0NWUyOGNkNDNlNzk4OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTViNjIxODdhZWNkMThmYjc2ZjYxNTJjNzFlMjY5YmU4MTdlOTExN2UyYjRkMGQzNjdlNTQ3ODM3NDAwZGU5NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_25fb976df4f04ddd85df81f00b3a652e",
+      "statement": "Operability is gated separately from retrieval quality: `scripts/product_smoke.py` runs a deterministic seven-stage loop on a disposable fixture vault with path-relative, secret-free output and is exercised in-process by the suite, and the first-class product readiness checklist is release-blocking with per-row recorded result, pass/fail, reviewer and date — pinned by `tests/test_product_readiness_docs.py`, which also requires that benchmark evidence stays separated from product proof.",
+      "evidence": [
+        {
+          "resource": "repo://docs/launch/first-class-product-readiness-checklist.md#L7-L11",
+          "version": "repo-lines-v1:sha256:5b44df15025e8e30dc06cc99e9bfc50323050f181a2e9c680aaf654812ccfbe4:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmY0YzhlMGI3MzkwZTI2YmNkMTA3NGU5Njk0ZDZmMTZlNmY1NmYyYjI3MDRmNWMwNmE2NDQ3N2UyZTI5NmZkNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzFmNzczN2VmNjE3OGE5ZjhhMTA2YmQzMmJhYWM4ZTAwYjFhNDE5ZjkzNjU1NTQ2MWJjZjhiM2ExZjQ4ZWVmMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGU5MjRhNTBiMzVlNTdmMzZkMjY2NTE4MDJjYWJmNGZjMzNhNDY0ZGIxNWYzOTE3MDRhYzFmZDc1YzcyNTNkMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmNmMWRiMzk1MGYyOWE4YjgyYTM4YzI3OWViODZhOTkzODc5MTI3NzA2YThjODgyMmI0OTU1OWE1NTNkZjlmOSJ9"
+        },
+        {
+          "resource": "repo://scripts/product_smoke.py#L1-L60",
+          "version": "repo-lines-v1:sha256:4e0892d8654282ad7c0bc778b0567bc88ea5850fbe37d4c3a273dfc5cf77096c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZjg2MWRmMTQ3MDllOGJiNTRiMThjZGEyMjI2OTM3YzU1MGFlMmUxNzA4OTU0ODhiMjhlMTI0OTYyMzlmZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg2ZTE3YTkyMWY0ZDI5ZDNkMjJiN2I5N2NmMjc5M2RkMGVjODgxZDZhYTgxNDBhMGNjZTkyYmQyZWVkNmFmZmMifQ"
+        },
+        {
+          "resource": "repo://tests/test_product_readiness_docs.py#L43-L69",
+          "version": "repo-lines-v1:sha256:5b7d18132ee48b238e01dacdf784fdd294de79b70fa60086ad7ba08c8fbd683d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmODNlZTI5NTg0ZWI0MTI2MmMyMjEyOGIyMjYxZGMzMTU2N2U1YjA3OWYzMDg3MDJhZDYxM2JlNzZjYmJlOWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmNmI0NGQxOWJjY2E2MDBhNjkzMmFkYzQwZGIzNmNjMzBiMjljNTdkZmFiZWU3OTJhMTVhN2UwYjIwNDQxOWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkN2UxNjgwNWM5OWRlMTQzZTEwMGQ5OTg0ZmUxMDZlOWRkYzg1YWUyNjIwMjU0YTgzZjc4NTlkZjBiZjMwMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4YWMzZjFlMWM1ODZkOWRkYTU3NjcxNjZiZjZiMTYzMjNlOTM1YWQ4ZjlmMTg5NmYwNTRiMGJjNmE2ZGZiNmQifQ"
+        },
+        {
+          "resource": "repo://tests/test_smoke.py#L36-L60",
+          "version": "repo-lines-v1:sha256:62e600eff5a29bde902c0fd12a41097840e40ef1916c49f4bba6271d903b14e6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhMmM4NGFhMTM2MGFjZDc3MmM2OThhY2U1NjQ3NjFmOTg1YjczZDAyZjdjNzYzZTExZGE4ZTVjNDRhY2Y0M2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4MTQzOTg0NTcwNmIzMDNiYzc0MTQ3Nzk5OGIzMjE0MjM4OTliYzI1ZWNhOThhNGZkMWY5NjM2ZTczZTdhODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4ZDQyZWMyN2I0MzQyNGRhNzlkZmZhMjUyZWM2OTg2MjUyY2M3M2ZlYWJiMGVjYzNhNzBhMDQ4M2NkYzgwYzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2e9b6a7217f541af88610c2884c0c462",
+      "statement": "`tests/test_changelog_section.py` also asserts that the real `CHANGELOG.md` already contains a section for the version declared in `pyproject.toml`, so the extraction gate behind the release notes is checked against the repository before release time.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_changelog_section.py#L94-L98",
+          "version": "repo-lines-v1:sha256:d0ca13e4e3626580b031d6757404c99dbdf687e80f5dd22113292d0a96bd32d0:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWU4OThiMGRjYzczMzAzMWFkNTIxMzE3NDc1ZjQwOGI4NzkyNjYxNmFlNjRhMGZmYzYxOGM4YWRlNDkyNWRhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzlkOGQwYzlkMTQ0Njg1MDE1NDNkMTgwMzQzYWVmNjRjNWYzNGZlMjdjMDE3NTdlNGYyMWM4MTkzNmY2YjIxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODg2Y2M5MGNhMmFhYzZiMmE5NmE0NWY2MzFjYzQwZTRlMjU1ZjM5YTRjYjE0MzFiNzMwMzgwYzVjYzFhMjRlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

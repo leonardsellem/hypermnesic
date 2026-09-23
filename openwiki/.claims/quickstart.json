@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:aedc3944b870f42464467f4038cb5ef298f9d6b7649c2034e762498bf73f6dc9",
+  "pageVersion": "sha256:3815d4b3e2832070a96028cedc0439aef9c74a054e1bebd9320808a543d7d7eb",
   "claims": [
     {
       "id": "claim_d2d1bb56d9674daab5ffbe311c525f02",
@@ -12,11 +12,11 @@
         },
         {
           "resource": "repo://README.md",
-          "version": "repo-file-v1:sha256:917e04c01745a143b670819f9e61fd73c71c04fbb686988fcd781efa060ac576"
+          "version": "repo-file-v1:sha256:df7224846519ee18deca464c8201e57740c038fc41933ef0b9bca0c3a1ebc440"
         },
         {
           "resource": "repo://pyproject.toml",
-          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+          "version": "repo-file-v1:sha256:0c05a33acbd2626cb60aa398add5331c7792fa757ba6e94567cece5629610fae"
         }
       ]
     },
@@ -26,7 +26,7 @@
       "evidence": [
         {
           "resource": "repo://AGENTS.md",
-          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+          "version": "repo-file-v1:sha256:4e140230271cfcd472dc96ea6a838ed7c3bfb75facf538764a1367ab22ebdcb3"
         },
         {
           "resource": "repo://ARCHITECTURE.md",
@@ -52,7 +52,7 @@
         },
         {
           "resource": "repo://pyproject.toml",
-          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+          "version": "repo-file-v1:sha256:0c05a33acbd2626cb60aa398add5331c7792fa757ba6e94567cece5629610fae"
         }
       ]
     },
@@ -66,7 +66,7 @@
         },
         {
           "resource": "repo://src/hypermnesic/config.py",
-          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+          "version": "repo-file-v1:sha256:1379d88d5e2706f6142fe5ccee3bc7724b60eeca32f7661a9e07340d4a6f068b"
         },
         {
           "resource": "repo://tests/conftest.py",
@@ -76,37 +76,49 @@
     },
     {
       "id": "claim_ca432fecb3f6465d9354ad8d05a913a9",
-      "statement": "The contributor gate loop is five commands — lint, version consistency, the test suite, the license scan, and the public-surface scan — matching CI's single job step for step, and the whole loop is expected to complete in a few minutes with only the test suite measured in minutes.",
+      "statement": "The gates that define done are the five commands CI's lint-test-license job runs after syncing dev extras — ruff, check_version_consistency.py, pytest, license_scan.py, and preflight_public_scan.py — and all five must pass before a change is done; CONTRIBUTING.md expects the whole loop to fit under five minutes on a Linux runner with the suite the only step measured in minutes, while AGENTS.md warns the I/O-bound suite can take about 15 minutes and must not be mistaken for a hang. A second CI job installs the built wheel with no lockfile to prove a fresh user install still starts.",
       "evidence": [
         {
-          "resource": "repo://.github/workflows/ci.yml",
-          "version": "repo-file-v1:sha256:782e1ee9960f676432bcd9995b4fe112f691622b57776d06d668a1bfa6d45d5e"
+          "resource": "repo://.github/workflows/ci.yml#L1-L58",
+          "version": "repo-lines-v1:sha256:782e1ee9960f676432bcd9995b4fe112f691622b57776d06d668a1bfa6d45d5e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1OWUzYjlmMmNlZTBjMDgwOWJmNDA2NjFmZmYzZTJmZWQyNjQ0ZTFkMGUwN2NlMjIwNGVkMmJhMzllYTExYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzN2NiMGNlODM5ZjgxNmIxZjlkMzNjNzU2Y2IyYzQzZjZkODY2ZjI2ZTlkMjIwZTIzOGU5NTg2ZTFhNjE5ZmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         },
         {
-          "resource": "repo://AGENTS.md",
-          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+          "resource": "repo://AGENTS.md#L212-L224",
+          "version": "repo-lines-v1:sha256:d4f6c59c2470f9708cb4b7144a72928c9a78ebcf43d2c8c034bce0a0c58fd286:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwNzgyNTBjYzdkZDk2Mjk5MDRiMGQ1NWJkOGZkNTEyZTY4NDYzZTAzYTk5ZDBiMzJiNzdmODliOTQ1MTA4M2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4Njg3M2IzZTQ1YjBmY2JkNDg4NzRiOWY5NTlmNDcxMWM5YWExZGVjOWQ5YmIxNWI4NmQ5MjY3MzViOWM1MjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljNjgzMGRjYTMxNWRiYTAwNDU0Mzc5NWY1MWM0NjljMmE3NGQyN2Q1YjQ2NWM2M2U0MGNmZDBjYjgyMzE3YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjYzIxMDE5YTlkYTg2YzZjYjg0ZTY5MDEzZjZhZjYyYTgzYmU4NzVlOGFmMDY0Mjg5YjE5YjA0MWExYWJjMDQifQ"
         },
         {
-          "resource": "repo://CONTRIBUTING.md",
-          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+          "resource": "repo://AGENTS.md#L44-L59",
+          "version": "repo-lines-v1:sha256:84b9a38b4820d6b6393b7b123779dcd38c140ffaca5a4f3a09e6a12ee6263832:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwZDRkYzg4YTczMzllN2RhNzQ5YjQwOTkyNzA5Y2M4OGZiMjIxZGUyZTQ3Mzc0MmM0ZWQwNGMyYzdjYzY4YWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMDVjNWFkM2Q3NTM2ZTJiOTljZDljNWM3NWVlZjI0N2FjZDk2NDc3YjZhZmI4ZTY4MTA3MjZmNDJmYWI3ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyN2Q0MWE0OWUxNzdmMmVhMzYwOGJiMTNjMGNlYmU2MGU5NjJhNzU5ZDkyYjE0MWYyNmZkMTg1MzRjNWU5OTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3M2EwNzg3YTg5NThmMmVlNjlmNDliYTdkMmE2ZDllOTBjZmFjMThmNmY1ZWU2M2I3OTBkNmQ1ZGI1YzQ0MmUifQ"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L24-L51",
+          "version": "repo-lines-v1:sha256:e6ceb8fe63dd050fa6a3fe037686ac8b958027889219ee4d3ff237a42c131685:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0ZGYzYTdkNmIzY2I3ZWVkYWY2MzQ3NTBjMWYzOTM0NWEwMjhhNmI5NGVhZjg4MWVmYmM5NDVjZDk5ZTY2NjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3MGI4ZjVmYzBlODg2Yjg5N2U1OWM3NzNlNDdiMGJjOWI2ZDczM2VlOTRlMjI3MTRkNzBiZGM5NjQyOTgzMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmNzNkNjBkYmQ4NDAxNjU1NGQ3MTI1YzQwNWI4OGExM2IyOTk4M2E5MmRlZjIwNzViY2YyM2YzNDZiYTFlYzYifQ"
         }
       ]
     },
     {
       "id": "claim_8b7d5766300645559c24ef22c16e3b6e",
-      "statement": "The local-proof command is the shortest path to proving recall: against an existing markdown git repository it validates the vault, builds the projection, answers a natural question with its repo-relative source path, and previews a write as a dry-run diff with no commit, while remaining read-only, provisioning nothing, and working without an API key.",
+      "statement": "`hypermnesic local-proof` — installed with `uv tool install hypermnesic` — is the shortest path to proving recall: against an existing markdown git repository it validates the vault, builds the projection, answers a natural question with its repo-relative source path, and previews a write as a dry-run diff with no commit, creating only the disposable index projection and provisioning no endpoints or clients; it works with no API key, and `--demo-dir` generates a tiny git-backed demo vault instead.",
       "evidence": [
         {
-          "resource": "repo://docs/reference/cli.md",
-          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+          "resource": "repo://README.md#L103-L143",
+          "version": "repo-lines-v1:sha256:bd06115cc8ddec2068422e25509d751e73a729b1ce0e385ea6552c93b9e6aab2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzE3NzI5MTIwNDFiNGE4ZTk0YTBmNzJkYmZlZTFmMjhiZmQ0NGIyYTVkNGJjYjMxMzE5MGM2NDRmZDA0MjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4OTBkMDg5NzM0NGE2NmE1MGQxNDJhMjBmMzA1MTI1Yzk5OWEyZjEyZTNjNzdhMWI4M2QwNzU3YjQxNzUwN2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3YTU4NzIxZmJiMjk1MTAxMDRkMWM3ZWY3M2QyNzgyMjRjMzc5NGYyMDQ1N2IwMmI3ZmE2MzI3ZDcxN2EzMzMifQ"
         },
         {
-          "resource": "repo://src/hypermnesic/cli.py",
-          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+          "resource": "repo://docs/README.md#L19-L22",
+          "version": "repo-lines-v1:sha256:73836334c71e89b721e965e1275a2257031a6a553ca3d8cb4cc9c85812e78399:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGJlMWQ1MmQ5ZDZmNWYzY2Y3YjA4MDczNzEzNDFiNTk4NTgyOTU3MGM2Y2ZjMmRmNWViMzc0ZjJjNjQwZWI3NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZmYmRkMjM5ODQyNTNiNDMxNWM1MTgwZmQyNWVkMzQwNzA1NTlmOWU3ZTNjNTcxYTQzNWMyMTI2M2IzZjI3MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjk2YmExNDcyMTVlMDBlNGYxZTg5NzBlM2E2MDBkYTU0N2RlNzkxZTk1NmJkN2MzOTU3ZmI3YTBhMDkwMDdiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjYxNzUzNDM0ZTFlYzVhNjZlMjM4MTdhNDFlMTc1YWUxM2U4NWQ2ZDU3OTg1NTk5MDkwMGI3MmVjMjI1YmU5NSJ9"
         },
         {
-          "resource": "repo://src/hypermnesic/local_proof.py",
-          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+          "resource": "repo://docs/reference/cli.md#L16-L29",
+          "version": "repo-lines-v1:sha256:ba7f325dbc06d7793db69cf8948e6ecec83647aa47857ec13f7bd18601d93971:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkZmU3YWRkNzk5NzRjODE2ZGM2OGY3ZThmNTQ0ZDUzZWE0MmY0ZmUwMmNmNDQ3YWQxMDRjNDIxMDA5ZDc5YmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3N2JmMmMzMTYyMjY3ODAxYTZkZTRmMjdjMTcyZmE4NGJhYzRhNGE5NTc1NzUzOTc1YTYyMjM3YzhkOGE0NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhYzRjYzFjMzNkNmY3YmFhMGY3NjA0MjM0OGVmOWZiZDc4MWRiZWJmZjcxMzRhNmZlODJmMWM1YjFmYzU2MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkZGFlY2Y1ODc3YzI1MTlhYzIyNjg2YjU4ZWNmYWM5ZmJhMzljNjA0MDg3M2Y3ZDcyZjkzMDdjOGZiZDdhOTAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L824-L841",
+          "version": "repo-lines-v1:sha256:ec2192a2de5fda69f0f7874a5f1c7c2275f4ab1b3db71b0a46ea331d75afec81:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYTFlYWZlODAwZTM5Y2ZhODI5MTRhY2Q0MWI1MTFlMGQ5ZDE2OWUzYWQ3ZDkwM2IyZmI4NDI5NjQ5ODE4YjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhMDI1MmFlMmJmODI1ZWNmYTFkNzI4MjQ1YWJmMDEyNzY3ODYzYzYyOGZhYTc2NjJkMTViZmQ5YzU1NDdkYjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwYzE5NzU4Mzc5ZWNiOTlhMjIwYTZmZGJkNjUzOWExZTE1MzIzMzdmNjJjYjA1NjgxYzI3YTZiYjA5ZjlmYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0ZGE0Y2Q1MjZkNTg4ZmUyNjU3NjU1MDBmYjM0MzZlODljODIwMThkYjE3YjAxZWEzNzlhNjFlMzY0MGYwN2IifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L95-L178",
+          "version": "repo-lines-v1:sha256:b918533fbac9814c925f4fde535be59da1f3dca9d6214db47dc6dd5f3363fd48:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1MDQ2ZmU4OGEyMjQ1MzJhOGIwOTFkNjY5N2FhMjEzNDBmODI5ODhiYWIwZGY1ZTJkMWUxY2ZmZWNmNDAzMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmOGNmNmU2MjBjMDg2ZDAzMTIyYzIxNThkMTY2ODZkMmIzYzBkZGE3YjY1ZDdkMjc4YjVkNWFlOGE2MDMxMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2MjdkMGZiNmI1ZjA2ZTNlYzJjODI0YTBlMzliOGU3NmE3MTk3MDcwNjRmYTM5YmIwMzE1NmFlNjljMmNkNzEifQ"
         }
       ]
     },
@@ -120,7 +132,7 @@
         },
         {
           "resource": "repo://AGENTS.md",
-          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+          "version": "repo-file-v1:sha256:4e140230271cfcd472dc96ea6a838ed7c3bfb75facf538764a1367ab22ebdcb3"
         },
         {
           "resource": "repo://CONTRIBUTING.md",
@@ -134,7 +146,7 @@
       "evidence": [
         {
           "resource": "repo://AGENTS.md",
-          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+          "version": "repo-file-v1:sha256:4e140230271cfcd472dc96ea6a838ed7c3bfb75facf538764a1367ab22ebdcb3"
         }
       ]
     },
@@ -144,7 +156,7 @@
       "evidence": [
         {
           "resource": "repo://AGENTS.md",
-          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+          "version": "repo-file-v1:sha256:4e140230271cfcd472dc96ea6a838ed7c3bfb75facf538764a1367ab22ebdcb3"
         },
         {
           "resource": "repo://CONTRIBUTING.md",
@@ -152,7 +164,7 @@
         },
         {
           "resource": "repo://pyproject.toml",
-          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+          "version": "repo-file-v1:sha256:0c05a33acbd2626cb60aa398add5331c7792fa757ba6e94567cece5629610fae"
         }
       ]
     },
@@ -162,7 +174,7 @@
       "evidence": [
         {
           "resource": "repo://AGENTS.md",
-          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+          "version": "repo-file-v1:sha256:4e140230271cfcd472dc96ea6a838ed7c3bfb75facf538764a1367ab22ebdcb3"
         },
         {
           "resource": "repo://docs/README.md",
@@ -176,7 +188,7 @@
       "evidence": [
         {
           "resource": "repo://AGENTS.md",
-          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+          "version": "repo-file-v1:sha256:4e140230271cfcd472dc96ea6a838ed7c3bfb75facf538764a1367ab22ebdcb3"
         },
         {
           "resource": "repo://docs/README.md",
@@ -187,10 +199,90 @@
           "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
         }
       ]
+    },
+    {
+      "id": "claim_0085a15e784548be97192b97dde19a76",
+      "statement": "`pyproject.toml` `[project].version` is the single source of truth for the version — currently 0.3.0 — mirrored by `src/hypermnesic/__init__.py`'s `__version__` and the plugin and citation manifests; contributors are told not to hand-enumerate those mirrors but to run `scripts/check_version_consistency.py`, which names every slot that must agree.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L186-L200",
+          "version": "repo-lines-v1:sha256:4ad5369562cecf5a4f6a213bcd594bbb5bf48180fcb43192ee8b1149b203c8ef:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZGMzZjM1ODk1NDg5NzI5OTI1N2JjODY3ZTUyMWI5NzBmYmMxZDIxOGQ0ZDNiYmQ2NmMyZTk5Nzg4ODEwNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3ODQ4YWQ1ZDI2ZTYxOWIzOGU0MWJjYzYwOTJkMTkwMWM4YWRiOTIyYzI4NDk1MTc1MjI1ZTZmM2VjYzZiNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhMzM3MjAxZDY3ZWVhZGNiZDFmZmIwMmJjZWUxNzJhNDc0OWExODM3MjY4NzAzOWE4YWQ1ZWM5YzAyOTI0ODkifQ"
+        },
+        {
+          "resource": "repo://pyproject.toml#L1-L7",
+          "version": "repo-lines-v1:sha256:08b1f8630a677fb0ae212685bfc1e84eaccbdaceb93c8277068e184af9af31e1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzAyYTgxYzM4MzZlZGVmMmQwYmExMWQyMzUzZmI2ZGFiYzc3NzE1MGE3Y2E4M2VhMGQ5ZTlhNzAzMTNmZWFiYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFjYjIxYmIzZmQ2YTgzMDViMGEzMWRmZDIyMjIwYTc3ZDIxNjIzMmYwNmYxNGVjZjgzOWZmZmE5MTg2NmJhMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjRkOTI5OTJkYTU3M2NjYTRlNTk5ZmE1N2JmMzgzMmZlZDI0OGNhMzk5ZGU4MGEzMjY5MDdmNTA3MmVkNzkwYyJ9"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L1-L49",
+          "version": "repo-lines-v1:sha256:576c45b7624276b04c05bf1449333d766a6d57687784c34269f6b3008c4541dd:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhOTZkMjVkMWQ2OTcyZjBkZTIxNDNmYjg1MjIyNzM2ZWJhMmQ1MTY2ZmQwNWM4YzRhZThiMmE1ZTdkNDhkYjEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/__init__.py#L1-L11",
+          "version": "repo-lines-v1:sha256:f9ba35b486bf200488a1ffbb3f3e38124c84b4de20b6a87ffba93d852ef35708:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZmMyOTZjNTc2YWU5ZTQwMWU0Y2Q4MDg0YzZlYzhhZWEwMTU5OTE5OGM3YTkzYjA1ZjdhMTUxZTNiZmM3ZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2YjVlOTFjM2JiNzdhYjkzM2MyNWZkNjVlYmE4ODM0MTliZGM1NjkxY2M5NGNiOWRjODQwZThmNGUzNjc0ZWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_08021747280d44638ace5227c2ac925f",
+      "statement": "The engine's live license is AGPL-3.0-only and the repository is public, as pinned by `pyproject.toml`, the root `LICENSE`, and the docs index current-truth pins, while some governance prose still carries pre-flip wording such as planned-AGPL or currently private/pre-release; the pins win.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L156-L161",
+          "version": "repo-lines-v1:sha256:39b9fc137c7712d70054ae525995254c9360087ed33a4796a1e3eb4598c8fc19:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZjNDdiNzc2ZTM3NThiZDQxYWI4YjUwZmJkZDBkZDVhMmFiODMyODg0NDJlNTNhMjhjNDU5Yjc1MzUxZDI5OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWJmNTgzNGYwNWY4NWE4YmYyMTcyM2I3MjBhMTliZDRjZjYzNWYwMDJhZjU0MzMxYzkyMGU5OWM0M2U2YWI5OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWIzMThiZWI2MTc4NDcxNTc5ZjE3YmE3NGZmMTI0MzQxZTA3MzFkYzI4YmVlMTA1MTUzZTg0ZjY0ODg5NThlNCJ9"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md#L7-L9",
+          "version": "repo-lines-v1:sha256:d13b1a3cd8eb0d1363365adc773e18de9850b1e89649503b6d8b6bb5d5244d01:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTNiODZmMzgzODI2OGIwY2I4NWRjYWNkODZjOWJjNmM3YWI3ZWYzOGY5MWMwYmVjOTJlYjNhNGVhMTYzNTZiMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzdmMjczZWQwZjkwNmY0ODIyM2NiNjA1ZGE2NjFjNjJlZDMxMTZlMzNiZWZmYWUyOWJiZTBmZjM0MDM3NTE5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTU0YjJhYmE0ZjMwYjBmY2E0YjUzNzdlYTMwNTk4NmIzMzY0ODk4M2UwMzYzNmY4YTYxZmE0ODNkMTBjMDY2MCJ9"
+        },
+        {
+          "resource": "repo://LICENSE#L1-L4",
+          "version": "repo-lines-v1:sha256:00a3c6620d92599cb821a33ab6745ca3263c3a6c6b41f71812ebca7959b93af4:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzhlNDE2ZDMyNTE1OTBmNjIwNzRmOWRhNjkxOTYxZTRkZDQzYTkzYWY1MTM4ZmIzOTI2NDRkYjljZjVhMTBhMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODE5OTY5ZmY0YTcxYjU0Y2NhYjhlMTY1MjMxNDczZTM3NTk4YTMyYWQzOTBjMGM0OGYzZjkyNmI3Y2ViMjY2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjUxZmVjNWQ1OTM0ZjQxMzY1NjgzZDAwNGQwOTIyMGNjYTIzZDkzMGRjOTJjYmJlZmRkMzllNjYyZWQ5NDEzZiJ9"
+        },
+        {
+          "resource": "repo://docs/README.md#L48-L55",
+          "version": "repo-lines-v1:sha256:2f836edb0792443bfe870a3395b80761655859367f2d2e30221e770f6a7b2b0a:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjE0NmRiMTIyNjI3MWIyNTA5ZWIxN2VlZWVkZjhlMjc4OGRkZDVmNGVhZDkyMmUxYzY5NzgwZDZiYWRkZWMyOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzU1N2UwOWQyYmM5MGVmZTAzNjI4N2NiMDM1OWQwMGNhZDE3ZjRiMzlkYTI2YzU0MDA5NzUxNWU1ZDIyNGNhZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTM2ZjZlNDNkNDVhZWNiNmIyNGViZWM0Nzg2MDFmZTZhZGY4ZTYyZWMyNzE3MTBkZTdlYjQ3ZGNkMDNlMGNiZSJ9"
+        },
+        {
+          "resource": "repo://pyproject.toml#L1-L7",
+          "version": "repo-lines-v1:sha256:08b1f8630a677fb0ae212685bfc1e84eaccbdaceb93c8277068e184af9af31e1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzAyYTgxYzM4MzZlZGVmMmQwYmExMWQyMzUzZmI2ZGFiYzc3NzE1MGE3Y2E4M2VhMGQ5ZTlhNzAzMTNmZWFiYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFjYjIxYmIzZmQ2YTgzMDViMGEzMWRmZDIyMjIwYTc3ZDIxNjIzMmYwNmYxNGVjZjgzOWZmZmE5MTg2NmJhMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjRkOTI5OTJkYTU3M2NjYTRlNTk5ZmE1N2JmMzgzMmZlZDI0OGNhMzk5ZGU4MGEzMjY5MDdmNTA3MmVkNzkwYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7100133b7fbd44a4b9d983c063daaf22",
+      "statement": "The layer cycle is closed and directional: the git-tracked markdown vault is projected into the disposable index, the read path converges and retrieves from that projection, serving exposes both the read tools and the gated write, and `commit_note` returns the cycle to the vault as a git commit.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md#L17-L56",
+          "version": "repo-lines-v1:sha256:098af6a80e90d4bb6f639a5ee650db11ba9617d9dca8b40950d1e765db0953dd:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmYmJjMmYwMjg3MDE1M2M1OWJlMDZjMjMxMGQ0MzJjNjcyZTg1MGMyZDc0OWVmZWY2OGI3ZWQyM2U0MTllN2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YzA2YzU2MWQ1YzMyNzM0MzY4NTI2OGE0NmIzMzkxZjM5OThlZWU4OTBkMmJlNTFmMGQyMWNjNGE1M2FlNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwMWM4NmU5M2VmYmVmNjAyZTdhMTA2MzU2ZmVjN2VhNjVhOTQyNDA1M2JlNDIxYmE0M2E0NTU1MTFhNTAzZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3NTdkNDQ1OTFmOWViOGY3NmU4MzZjYmQ4ZmQ2NjNhMzVlZTg0YTA3ODEyNjg2Mzc5ZDI1ZmEwNDQzYTExMWQifQ"
+        },
+        {
+          "resource": "repo://ARCHITECTURE.md#L79-L91",
+          "version": "repo-lines-v1:sha256:d2c70e4aa0d711142fe26af00d1499a706a06464df5861caa43f55fc9d94a60a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNDczODhiMWIyMTQ1MTM2NDExNjZjZjJhMzU0YWUzMDMwNzAyMzYyZjAyODU2ZDUxNTE4YjkzMzhmZDRiMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5ZGUyYTRmYjZjZWViYmRlMzM4NzExYjc4ZDJlN2NiYmM4OWM5MDRlZGY1NWEyMDRjYThlYzBiMjA0NjYxMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0ZmQ2NjQwNmU1YTg3YjUxYzQ2Y2RjZDJmZDVhZDUzY2EyZDkyNmY1YmEzMzJmNTQ5NzY4M2QwNDBhZDRkYzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f517025ac6384e1e9438b22b81d88bf5",
+      "statement": "`hypermnesic` is the engine-host-local command surface: `build_parser()` registers the subcommands and `main()` dispatches to the handler each leaf parser set as `func`, it runs on the host that owns the vault and the disposable index, and it calls the same domain modules the MCP server calls — so each CLI verb and its MCP tool counterpart must be kept in step. `local-proof` is only one of those verbs.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:5efc7c4464624d95dda4ef11c7935830d278d835addce7fb06b91bc302d50ecd"
+        },
+        {
+          "resource": "repo://pyproject.toml#L55-L56",
+          "version": "repo-lines-v1:sha256:036973bf76e032114b546e85b7f96d4220bcb96e7da675504c078ff532ed0db5:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGVhYjRlYzYzZGU1MTdkYTRjZDhlNWM4MzA3ZmIyYzc3MzdkMzkxOTBhYjY5ZjMyYTVlOWVmODFlYTQ0MTZkZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWMxYjFkYjZkMDMzODdkYzgxM2U2OGE4N2Y0NDk1MGZkZGRhOTFlYjI2MDg0ZGZmMWIyMTcxZTgzZTdhY2Y5MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTQwMDhkNDgxNDdlYTZmNzU3NTk4ZDYwZTFlZDZmMGRlZjczZDFjNjMyM2I3NDBhMGYyODJjZmU4OWY0YmZkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjkwNWJkZWQwNjQ0MDE5ODI4NDkwYjFkNTZjOTA2YTQ4YTk4YzIwM2JlMTY5MDNiNGZmNTIwMmI5NTRmYjZhZSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L752-L1123",
+          "version": "repo-lines-v1:sha256:a9a00142447bcbd9459bf83ef97b369f71889e6e1a1f39f4573f3b28b1cc1a67:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwMjdkMWFiYTJkOThlN2Y2YmVhMzEyNjY5YzkyN2I4NDhkYzMzYTJiZTk1Y2IyMWNjZWU0Y2MzZjE0NmQwZmMwIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiOGFhMGU2ZTRiZThmYzliYmEyZDUxZmE3NDRkNjg3ODRkMGRkY2NlZDJiOWYxMjE4MzM3OGQ0MzNhM2FkZTg1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiMjM3MDY1MjVkN2RiZTlkN2RkNTE0M2Y2NWU2YWU2ZTc1OTA3M2I0OTJlOWZjNmM3MzM1YWJlOTM1NTJiYmYxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzZDQxMzQwY2MyMzlhMTU5Y2U5YjYwMjJlOWY2MzIyODMyZTJlYWQ3NmNhZTllNDc1NGQyMTBlYjhmYjZkNWU4In0"
+        }
+      ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.4.0",
-    "at": "2026-08-26T12:15:12.148Z"
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T17:17:13.834Z"
   }
 }

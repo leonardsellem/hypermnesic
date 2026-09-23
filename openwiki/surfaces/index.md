@@ -1,0 +1,5 @@
+# Files
+
+- [CLI Surface](cli-surface.md) - The engine-host-local `hypermnesic` command surface — all 22 subcommands grouped by role, the handler-to-module ownership map, the CLI-to-MCP twin pairs a change must keep in step, and the conventions every command shares (converge-before-serving reads, preview-by-default writes behind an explicit flag, `--json` output, and non-zero exits on refusal).
+- [MCP Tool Surface](mcp-tool-surface.md) - The client contract for every tool the hypermnesic MCP server registers — seven read tools including the hypermnesic_search alias, the gated commit_note write tool that exists only on a write-enabled server, the guarantees every read shares, and the degradation and manual-reindex fields callers must handle.
+- [Serving Topology and Authentication](serving-and-authentication.md) - The two network lanes and the auth machinery behind them — the socket-level bind and construction refusals, the tailnet read companion versus the public OAuth /mcp lane with DCR, PKCE and an operator consent gate, scopes, token lifetime with whole-grant revocation, and the two deliberately separate state files.
