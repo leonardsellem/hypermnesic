@@ -1,0 +1,632 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:fc8a2a29fb33bbe76485678dd8a86399b5219a6ab1da48d7fb955d19d3764ea7",
+  "claims": [
+    {
+      "id": "claim_9f68b9dff7f248e0ab8e442f581f4d4d",
+      "statement": "The search index is a disposable, rebuildable projection of the committed git tree that lives in the per-repo .hypermnesic state directory and holds derived state only, so deleting it costs rebuild time and embedding calls but can never lose committed information.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L1-L10",
+          "version": "repo-lines-v1:sha256:0323ab03469a8a4b55768d71dce35d39903ff66f0a4592dbf61589054134ad91:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5N2U3MDYyZmM1MWNiNzE5YTFmYWJlZGQyYTc3NTVlMTVlMTUyNWEyMDVjNDFjZGU4M2NhYmQ3YjdkNDc5MGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L741-L769",
+          "version": "repo-lines-v1:sha256:6947dde6b6b3cb015fdf5a246decc2a0c1f94cb2c136f39437ff01be80d56293:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMjg4ZTVlOTU4OTkzZmI2NjhiYzM5OGVjMGQ1ZDE3ZTMyZTFlNzRhZDdjMjhkNWYxMmUyZWZiMjgxNDlhMjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MzQ3NzE3NWQxZDFiODk2MDQ5ZGZiOWJlMjI0MTExZDEwMzQyMWI4MjJmODI2OTY5MjM4MzMzMjFmNWNhNjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyZTFmMGQzODcwMjZhNWM5NWVmZjRjNzJlOTc2NGZiODliNzEzMWU4NDQ4MmM3YmRmMThjYjE1OTNhNzk4ODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYzRjNGM3MmE5ZjhhYjgxZjM0MjRmM2Y3Njg0MWI0YTIwMjEwMmJiMDNhODUyZDhhMzhjYmM5Yzc5YWUwYTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3cc5039173744f3da031962b3d3c0a0d",
+      "statement": "ingest.iter_chunks walks markdown in sorted path order while skipping a fixed skip-directory set and reading files with errors replaced, and it strips YAML frontmatter before chunking — which is why frontmatter relation fields can never become graph edges.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L16-L28",
+          "version": "repo-lines-v1:sha256:34957bacefa45275a5896b2f8169e0225a9b226185c731671e2f73ca7f97d075:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzYTA5ODFmZWU0YjRjMDk3ODVlMzcwNWM2YWI1ZDVmNjM0MTY3ZmQ2MjkxMDU1ZmE1ZTYxM2QwYzg3NzlmNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiYzM0MWYxNzFmZjJmZTZmMjY2YzNlMzI1OTA4ODhlNjU4ZGJkMjFlYTVlYmYxZmUzM2ZkOGY4MzdjNTAwNDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzYjM0MmYzMzgwOThhNDQwMGU4YzI3ZTJlMjcyZDJiOWFhNTBlMWJiNDcxN2QzNTI2ZmVmZDg2ZTk4ODU2OGUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L169-L176",
+          "version": "repo-lines-v1:sha256:6474f9da3867a02436ba4d93c5ddcbacc00e1bcd96f666e971d3fd51231bbc47:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmMxNDEzNzE3ZWIzYmZlZGZmNTA3N2I0ZDg2MjZjZDIzZWM5Mjk4YzRkNWUzMTMzZjg2NTZjZTAwNjI2YzQ3MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2YwMzk2NjcwNDk4ZTM1NWRmNjQ0MGYwZWJmNWFjMGJjYzJiZGJlMDA3NDY2ZTQ2YTIxYjYzYTFiNGI5MmMzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjQ5ZTkxZjE1MWEyODkyMzQzYjA5YTMwMjJlNjFkNmQ1MjE5OWI1ZmI1NTA0YzEwYmNkNDA4ZjFlNzBjZjBhZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODRmNTVhMDRjNzVhMWNkYmJjYWE4NzIyOWI2NzY1YjUxNDFhNjdiZTkyZDc0N2U4NzU5MDA3MDg2ZjEwYjJkYiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L62-L71",
+          "version": "repo-lines-v1:sha256:a1b193e838e67e4aa270a78a4053d0ec478586967b52b965b44d0e418de0ab1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMmNmOTVjYzY5ZTJiNTVlNDU3MWQ2MmYzZDQ1ZjAxN2EzZTJiZTdlZDU4MmVjYjliNWE2YmM4MjA0NWUzNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzZGI3ZDE2N2U2YTE2ZjQ4YzgyZjk4NDk1ODAzYTdjMzk0OGE5YzdjZWQzMDE2NmZhMTY1MjI1MGY3MzRmODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNiZjAxMTI2MzEzNmMzYmNhNzYwMzYwMGM0N2JhNzk0MWI0MjZjOGZhNWRmNjI1OTc3OThiYjNmZTcxMDZmZmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c182fdcb09154779bd59471eb75ac5ae",
+      "statement": "Chunks are built by grouping blank-line-separated blocks under a hard character cap (ingest.MAX_CHARS) while tracking the nearest preceding heading, and a single over-cap block is split preferring line boundaries with a hard character-slice fallback — a margin that keeps any chunk inside the embedding model's input limit.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L20-L23",
+          "version": "repo-lines-v1:sha256:abc4dd9764f412e1f19a186391b94313ee65467c2188edc070a89b5468a75082:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTllNWZlYmZlMjFmYzRlOGQzYjUwZTc4NTAzMDBmMDhmZjgxOWExZTQ4YTljZGRhMWRlMTQzY2YyZWFkNjAxNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU1ODVkN2JkMDhjOGM4MDVmZGRiZDdiMzVhOTJmNGY1OWRmODhkZjY1MDI3MThiYjMzY2MwYzc5M2FiZjJjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWI3YmRjOTlhNTg2YWI5YmYyNGM5NGMzMmM3NzViMjliYjliMWExODQ2NGJlOTBlMTk1ZjI4OWY1ODhiZjU4NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDQxMmVlMDgxZmI5M2VmMzJiMTQyNDIyM2ZhMGViY2U1MDI0MGYzNzg2MjU3NjUyNTg2NzdiYjkzNzVlNWQwMyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L26-L51",
+          "version": "repo-lines-v1:sha256:faad4b002a294ef26b4252039d5bfb9878866970767352eb08fe6374877fc3a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxNzZiM2M2ODQ0ZDk0ZGMxYjQ4ODQ5NTIzMDU4Y2FlNjc4OTlkY2UxN2YzY2IyNDM2Yzc0ZjYyOGFhZGZlOWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhZmZmYzU5M2U1MGRhMWNmMjUzNjM2NTMxNGViMWMwZTNjMGQ2NWIyYTY2NmFiNTA4NTZjMjg3YjE0ZjU3OTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQwMTQ2Y2EyMDE1NGQ5NDg2NTY3Y2RjNmE4ODJjZTZhNDM4ZTA0NTIxYWM3NmNjZGMyZjhiZDA5MzRmYzc4MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwY2UzZjI0YWI0N2MyZjVhOWQzMzdmMzc3ZWQ4NTczZmE1NjU4NDA3NjQwMmYxYWYwNTRhM2RlZDYxOTQ2MmYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L73-L108",
+          "version": "repo-lines-v1:sha256:8210c58985831c616236ffe1502bdc17986af00087d60281107496e111b1bab9:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4NTE0OGMyYTNiNGU3YjVjYWNiY2I4YTZjOTU5ZmM0ZjAwZGJhOWM4ZWU2YTI1OGEwNjI4MGM2MjAzNTJjZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhMjBmMmNjYmQ0OWY3NjI4N2MxYTQ0NzZlM2Q3ZjE3ODdlMjU1NjNhN2Y0ZjI0Mzg2ODRjYmUwN2YzNGQxMDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY1N2UzMTUwNzI5YmViYzcwYWNjYzNhMzgwYmRkNDUwMTExNTY0ZmFmOWZjOTEwYWNiNTI4YjFmZWIzY2QxNDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0ZDBkNzZmOGI1OTBlNzNkYzk0OTE5OTE2OGRmOTNjOWFiOGY1NTliODEzOTkzNzJmNTA1NzliOGE5MzIyZDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0664a12e4e54e869c704694b8aa1899",
+      "statement": "Note identity is resolved by ingest.note_title as frontmatter title, else the first level-1 heading, else a de-kebabbed path stem with a leading ISO date stripped; the rule is deliberately level-specific so a note opening with a level-2 section falls through to the stem instead of adopting the section label as its name.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L111-L140",
+          "version": "repo-lines-v1:sha256:be1b2050ac36caf90f2647fd587d73503079d94314c7b1b5b08bb06d11f6bea6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MWYyOTc0YzAzMmQxMDFkZmI5YmNiYjZjMDIzYzAwNDg3OTgxNDhmZmU2NWExZWRhM2MwMDhlMTc4NTNiOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkMzgyNTZlZTgyMzk0MDg3ZWZmZDIwMGRkOGJkNDU2MWY1MGNkOTk5MmExY2EzZTIzNzA3NmE1ZWE5MTY0N2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3ODNkMDAyYTAyMmRjNDVlMjI5ZDZhZGFlMzZjOGYwZjQwY2Y1NjAwOWFiZGU3N2ViYmRiNmI5YWJlN2I0M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjMDFiNjM0ZWJiMjdjN2U0OGUyZTc3ZTkzZGU4YzE3NDI2MWNlZWVmNTUzNjQ4ZDVkMzUzZWRiNTExZTcyZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee29b0a7a3f941319df975a1c1b542a4",
+      "statement": "ingest.doc_surface derives a bounded per-document surface (title, all section headings, lead paragraph) as the doc-lane representation, and ingest.chunks_for_text exposes the same chunker to the write path so a newly committed note is chunked identically to a full rebuild.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py#L147-L159",
+          "version": "repo-lines-v1:sha256:223c4f8687f45b98a658a1d126ae2b7a212a1cc500f7ba650b20b05e7b42da48:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiMjYzZTAzMzdjZTFhZmEyODZlOThlYTFlZTM3ODg1MmFmMDhjYTQ1ODlmN2FhOGNiM2IyMWZhZWI3N2MzM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTYwMGE3M2QyZTAyZjM1MmI5MGZlZjFkOGQ2MzgxMWJhNGE4ZWUwYzFiZWFhN2FlNDY1OGYzNmFhMmUxOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI2ODI3ZTU0Zjc0OWJlYzUyZDg0MDExMzE3NzUwOGYwMTNmNjU1NzI0YWI5N2M2NjkyNGQ3MGVlOTQ2ZmJiMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjMjI0ODcwOTljMzg4MGVhZmIxZmYzMjAxODRmODllZTBiNTU3YzhjYzFiNzM5ZTIwOGY4NjViNGYyMzY5ZGMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L143-L166",
+          "version": "repo-lines-v1:sha256:c6f2f9a14c097415d2f0809e0f8d3096a7e47e2411af5271cc9b5e71fb5b42b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2Y2NhNDI3OTcyN2Q2ZTAzZTdhMWRhZDIyNzE4YzRiODQ5NWM4NDI0OThiMDhkZGViZmQ3MTZlY2ZlYTJiNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1NzU4YThhMzEyNDlhYjI3MDAyNTVmZTFmZGRjNWZlNjUxYjZkZjZhNmVlNGYyMzFjOTFhOTg5NDJhNTdhMGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzNDg0MTgzODhmMTZjYjY3OTNlNDExYzY2ZjQzMGRiMTMwNjIxMTQyMDBiNWRlN2Y4MDFhODMyMWIyMTY0OTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5ODgwNWU4YjQxMGNkOGM1MWRhMjllNTJmOGU0ZTNhMGY3YzI5MjA0ZjI1YjBiYTQ3ZDY2NDA2YTExZDczYTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/ingest.py#L179-L184",
+          "version": "repo-lines-v1:sha256:725bc6b395d6b009435906b813a1ac85f709ed8ff92fd61d3fdf14a0ef568a52:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTVhMGYwMjRjMTQ4YWRhZDhlNGQ0N2QxMWJkNjA2NTA3YjIxNjY3ZjAyMjI3YjNiZGMwZDRkYmM4ZjRlZmU2ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTA0NGI2NzlmOTgxZDliMjIzYzVmNTNhZjU1MDFhOThmYzhiYjUyMTVlODA3NjZhNGY3MzE3M2E5MDc1OTdjNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGMwY2FiOWEzYzY4NDliOTE0NDkzMDliN2UzMzNmNTgzODA2YWE0NDcyZWE2ZWY2MmU1YzFiMWI0MjU5ZWY1MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDhmNmE3YWFlYzgyOGFiMzRiNDY3YTIxNGI0ZTdmMTBiNWMzYWRiN2JkY2ZhNGFkYjI0MTIyYTg5NzRmYWIxNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_42c744179967498da5c43004a45a2033",
+      "statement": "The projection's SQLite schema pairs each chunk row with one FTS5 row and one sqlite-vec vector, links each indexed path to one docs row plus one doc-surface vector, and keeps a meta key/value table, all created idempotently by Index.create_schema.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L131-L157",
+          "version": "repo-lines-v1:sha256:e4a757f91eb377c28c7edb97a43248cb2ff14dc214e7e7950fcd7d1299e3fc5a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1MjVhODFmYTc1NTQ0MDVmYzU3YjBjZmZlZDM4ZGQxZjhhYTFlM2EyYzQ2NGY2N2I0OTM3YWI0OGMyM2RiY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkOTMzNWIxOGZkMjFmNWFlMzEyYThhMTdmOWJjYTQxYTE3NzI1ZTY5YzljMzM4ZjFhYWJhYmEzYTg2NTVjYjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxYmMzY2MxY2I5YWQ5MjE5YjcwY2ZkNDc5NDI1ZjczYTY1Njc3ZWJjMTIxZWNhY2EyYzkyODZiN2YyMmIyNGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyNmNiZTE1NmFiYzFkZWZmZmJiNWY2NjJiNWI0NmZlZjM5YzIwNzZhM2U4Mjc0OTZiMGI2Y2VjZGE1MWM5OGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0732e1852a1241a78d7dff2428c9aaa8",
+      "statement": "The meta table carries the checkpoint_sha slot — the commit the projection corresponds to — and that value is only trusted after git confirms it names a real commit, since it is what makes read-time convergence possible.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L330-L341",
+          "version": "repo-lines-v1:sha256:c63a3d370873236436808a7820446d6a2c904daf6757cad41dc75e25f3d3744d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExZjFhMmNkOTk1M2M4YzY2OTVmM2ZlZTA4MmQ5ZmNiYTRhNzhhNTBiZGU5NDRkODA4M2ZlMTQzNTMxZTQ0MzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2YjBlYWZiZWIwZTRkNmJmZmMwYTM3NzNjMDI5NDE3OTRkMDkyNTQxYWVhMTQ5ODU2MzlkZjY2NTc0NjQwMjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0ZGJjNTQxZjBlMWFlNWRjYjRkZjcyZDFjMzhiMDYxYThkOTQyMjg1MDhiMmRhYmRhZTE3NWI0MDkzNzU3YWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxYmMzNzE0ZDNjOWQyMDU5ZTRhNGE2OThjZmU2ZTAwODNiN2U4ODcyOThlNGU3NmFmYzY5OTQwZDc2ZWNhMTEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L483-L502",
+          "version": "repo-lines-v1:sha256:7df6d00bd3242047fc8a32f7562341f4e9647deb48c4aca67f520ccc48f57f1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4NGQ4ZmRhNDczZmM5MTFjZDA3NTIyZTk4MDk4NGU3ZGJlZmU0NGQ3Yzk3NjYyZThjNjYwNjY5NjkwNTlhMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhMzE0ZmVlOTM3Y2E1NjJkM2EwN2YwMGM0NDU5MWY4NTY1NzllODViNDI1NmUxZWFlYzQzYzI4N2I1Mjk1YmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNDI4OTA3NzYyNDA5MjYzNjMwZWM5ZmE0YjAyYWQ2NTA1MzcyZmRhNjQ3MTRhYTBjYzIxZmRkNjI1ZGQyYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3YjVlMjFiN2VkNDk2OTQ5OTZiMDlmZTBiMjJmOTM0N2NiMzIxMjg4MjExMWRiMThhNzM2MmFlMmE4YjNhMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aba7a1026090497393a7714aa49721d0",
+      "statement": "Dense retrieval uses the sqlite-vec KNN MATCH ... k = ? query shape rather than a brute-force distance ordering, and a test fences the SQL against regression to the slow form.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L78-L81",
+          "version": "repo-lines-v1:sha256:a376307e116950d3a51f79f3a8e16376e11621abd37f13952a4d42f3d6496e34:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDAxNzFlYjYxZWJlZThlYTUwMWUyMmM0NDgxYzA4OGQ3Y2UyNWJlNzdmYWEyOWE4MDBmZGExMGM2ZGNhYzAxNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2E3OTUwNDBmNzY0NDYxN2M1N2UyYjFlZDBiZTZmYTdmZDA5Njg1MGM3MzE5OTg0NTU2YzVhODBiNzJmODU0ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTBlODdlYWFmYWJkMTkxYTgzNDk0ODBkMWRmMzBhNjIwMTI3YzVkNmJjZDAyMDk2N2MzNDIxN2ZmYjEyZDQyNiJ9"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L65-L68",
+          "version": "repo-lines-v1:sha256:1a1be15ad157bb2b2fcd8172302ff3172ed2268e0888237e09945b25790d5282:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjhlNTMwMTM2MTk1ZDU3Y2M2ODA5Y2NjZTZlMzZhZDg3NDIwZGIwOGFjNjExODdiOThiNjQ0MmE0NjQ0ODE2ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjgzNDZhNjA0ZjJjNGQxZGVjMDg1MmM3MGMyYWE1NTcyNjYwOGQ5ZmY3ZDYyYjNlMGNlZTQ1ZDFmY2ZiMzRlNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2U2NzFkZTc4MTU4NTQ2NTllZTRiYmJmMzg3NjhhMWI3M2I3YjAwNjAzYzlhYzZhYzljY2MyZDYxYzJkMDRmZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmVkMDY0MjZlNTNiYWM0MmZhZmFlODY4YWQ1OThiZGZlNzEzMjU2NTQ3ZDljN2ZlMDUwMmFmNDlhZjdkMGZjMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ff2b6d8711e343cf90202f5f87eebbb2",
+      "statement": "The lexical projection self-heals on open: refresh_fts_projection_if_needed rebuilds the FTS table from the already-indexed chunks when the stored FTS text version is older, which needs no embeddings so degraded lexical recall repairs itself without an API key.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L159-L194",
+          "version": "repo-lines-v1:sha256:f4253a0b5ce117eee77c116de71b3b9b7c4b5fff80d4e102914f54256970f80f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyNDJmNTc2NDY0YmVmYTkyYTViNmI1MjBjYjQ4ZmVjM2Y0MjUwOTViYTAxZDFiZWZmMWQyN2RkNDczNDIwYzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxMDQyNGJkZTNhZDkxZmY4ZGFlYTgxYTRhYTUwNGIyZmU5ZDM3OTIzZjU5Mzc5MTUyZDU0M2Q3YjRkZWFmNzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0ZmY0N2MzZDUyMTk2NTkyZTg3MWY5MmZmMjcwOGVmMzdjYTkyZWIyMGEzNzE4NTIzM2E1MDdjOTMxMWJjYmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwODg2ZTA4OThkNTBiMTc0YTFkM2JiMTBkNzAyMzk0YzM3MmJlOGRiNDI5YmUwNzdhMmE2ODIxMDJkNGI5NzAifQ"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L141-L182",
+          "version": "repo-lines-v1:sha256:88a4c1ddb64e918b924f7cf759869a2295cebd248f87839b34371f1a9f55c998:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3ZGI4MmFhZWY5ZTQzN2NmNTE1ZjU5YmE2M2Y0NTU5Y2U1MWZkNTZjZjU0ZjczYzdlN2MzYjA5NzA5Y2ZjNDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNiODdhNDY1Mjg0M2UzMDdkYTZhYzMwN2NiMDIxYWQ3NGJmYTQxNGQ3YTIzOWRkMjA1YWYxM2ZkZjcwYzgzOWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_edf27e21f70d4e83a4e5aaf2a9ec0690",
+      "statement": "Index.conn checks the database file identity (device and inode) per operation and reopens when the file was swapped, so a long-lived server survives reindex_isolated's atomic os.replace instead of serving a frozen snapshot or failing writes; a missing file and an open transaction deliberately do not trigger a reopen.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L95-L129",
+          "version": "repo-lines-v1:sha256:240803554367672c1441ee7c7b2d384375b5e61b2f32cb0d48479ead72a2c295:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiNDFhNzgwMDcxN2JmNjM1ZGFjNWM1MzA3NDEzZGI4YjFkODBlZGE5NGRjZjdiN2IwNjBmYzUxYTliOWYwZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZTJlYzU5MDNmNTMyMWEzZTQyZmRiNmI0MmUzMzhlNjZkZTY5NGQ1NzVjNGRlMzRhNjllYmM2Zjc5YmM1ODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiMDIxMzNlZjZkYmQ2YzRmNmRmYzEzYjllM2NiZjQzOWI4OGI0NmU1NWRhMzUxYzE5ZjZlNzY1ZjY3MDkwZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyMWNjYjExOTA1MWU2MjEyYTE4MGIyYTk2ZmM4ZmJiNzFjODVhZjE2ZjFiMzliM2Q0OTlhYTI0MzM5ZDVkYWMifQ"
+        },
+        {
+          "resource": "repo://tests/test_reindex_isolated.py#L96-L136",
+          "version": "repo-lines-v1:sha256:78af8aef79eff9eb1a967a8891c18cbbc59e159a697c2d29b1089e679f2749e6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3MGRhMDMyZmJmZGJkMWI0MjRlODE0YzIxMmFlNTg0ODRlNzZmNTdkYzU2ZGJmZDEzYmY4MDM3MzZkMzI0YjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxZmZkYTg1ZjM5NDllOTI4NmI3ZGE0ODdhMzljNzNkY2M1YmM2NTg5MWFmY2M0M2ZmNDg3MzUwYjI4MjVkMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4NTZhZDdlZTQ4MzUzYjAwZDQ1MmU2MDA2Yjc2NGU1N2Y0MDgyOTkwYmQyMzAyZmMxNTViZDFlYjIyOTFkN2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_03508f6865354a52950b28ce1674f308",
+      "statement": "The engine ignores its own state directory by appending to .git/info/exclude and never edits the tracked .gitignore, asserted by a byte-identity test.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L60-L74",
+          "version": "repo-lines-v1:sha256:003527beb8fac5b7e20c0d0daca0f9d9248bbcb2f731c6e7610dd9a75979f370:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmNGJjOWZkMzFlMDkzNTM5YjUzYmJiOTRkZTM0ZmNmNmQ1MTYwNzgyNWY3YTFhNjQ4ZjgwZWVkZmFhZTc4NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiM2QxODFlYTI2NDg0NWZhMjI2NTk4OGI3MWJhYWQ0ODZkZTlmZmY5MzZiMWEzODQyYzlhM2FmMTI2MWRlYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlMzY1ZDAzMWE1ZGIwYmJiZmI0NWM3ZTg0ODYyZDc1NWNjMDA5Y2UyNjcyNTAwY2RlNjM0Y2I1Yzk0MjQ0MDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhNzk1MDQwZjc2NDQ2MTdjNTdlMmIxZWQwYmU2ZmE3ZmQwOTY4NTBjNzMxOTk4NDU1NmM1YTgwYjcyZjg1NGYifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L113-L124",
+          "version": "repo-lines-v1:sha256:7b5c3a0cda2736cf397e890d6120884c8e54c8a0b22f9030975b804a92f6c3cd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkYWU4YWE5NjBlMzM4NDRkMTBjNjA2NDUxNGRmZDc0ZDhjYTVhZjIxYmI4YWU4MjcwZGI2NzIyNDAxZTNjNWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhYmY1OWEyMTIzY2MzODgxYjNmNmRjYzJhZTE5N2Y1YTEwYmNlYzAxM2U0MTk1N2FhYjI0MWMxOGQyNzAxNGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2MWRmNDZiOTNjNTM4MTVjZjhhMmJkY2VkZTUyY2MwMjRmYWM5YWI3OGFlY2FlYzM1NGM0NGQzMTVlZjJhZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_31208e6a4ffd4e06a274cf35cc1583ed",
+      "statement": "The embedding model and dimension are pinned once in config (EMBED_MODEL / EMBED_DIM) and enforced by config.assert_embedder_agrees at build, reindex, and dense-fill entry; the dimension is also baked into the vec0 table declarations, so changing the constant requires a rebuild rather than a migration.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L18-L20",
+          "version": "repo-lines-v1:sha256:59a412e0f17f8a06c92f14a509fb6c4976180495dcdd2593f248d86b705c4879:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmMzNjEyY2U0MDc0MzVhMGE2NWMyMGRlYzkwZmUzMjVjY2I4ZTllNDlkZmQ0ZGUwMDdhNTlmMjZjZWNhODMxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmIzODQ0YjQ1NjNlNThjODcxMTNkNjEyODU0YWIwNjRhODAzMzc3OWQ1YWE5NjEwMjg1MTk2ZjcyMWRkOWZkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGJjMzQxZjE3MWZmMmZlNmYyNjZjM2UzMjU5MDg4OGU2NThkYmQyMWVhNWViZjFmZTMzZmQ4ZjgzN2M1MDA0MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmM4OWZmNWM1OTIyMzljYTNmMTA2OTZhYTQ0Zjk1NjRiMzBiNjJjODY1M2E1ZDcyYzEzNzZiZTBmZDBkMzIxMCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L183-L188",
+          "version": "repo-lines-v1:sha256:f0b8b66c03d8ac743209a9c9d3c29f007eb75a0e1271c44b274da4bdedd6a406:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGU5NTU1MmU3ODU1NGVjMzExYjc1NDVlOWE2YzQ0NDdjZWViZmIyYzg5MjRkNGZjYzkzM2UzMDU0MDc5ZTcyNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjA5ZmNmY2Q0MmRlM2JlYWIxNGU2MDg5N2IwODBmMmYyNzA3YzI2OGM1MWVhMTgyYmI1NTYwOThjYmI2NjExMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjdiZjE1ZTI2NTQ0ZmQwZDQ5NTgxZGVmNjQ3MGM1OTNmZmMxZjE3NTY0YTZlNDYwZDYyNjY5MGVlMWNjYTY4YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTkwOWE1M2E2MThkMDI4ZTFkMzAwMGMwYTdhYmNlZWNiZTVmYjM3ZjRlNTExZWZlNDY2NDNmYWQ2ZTY2ODcyZiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L138-L154",
+          "version": "repo-lines-v1:sha256:aa06c3b480930720da294b4b05c786a123ca92b96b71a5386e54a5cb4035ea62:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxZmY3MGJmZTUzYThiMWQ2NjI0MTA5NmY0NzliMmYxMzYyMTkyN2M5ZGIwNzhmNzIzNzI0NjhkMjY4NWVkYTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlOGU4NjQ2MDUzYWQ5MWM2NWJkODI4NDA3M2QzMjkwMWQxZDYxZThhNGZkZjlhMDIwZWM4ZmZlNDcwOWFhYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyNmZhNWIzMGFiODZkOTkzYjEwZDU3MDc3ZmMwNDg3ZmE0MDJhYzRiMWNjMjU3YzFmNDAzYjc2MzdlZmZiZTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_80e7e0cb975b4bb297dcb8541b7cba47",
+      "statement": "embed.OpenAIEmbedder passes the dimension to the provider explicitly, validates every returned vector against it so a short vector cannot be stored, classifies provider failures, and enters an in-process cooldown after a rate limit that refuses further calls so reads keep serving lexical results instead of hammering the provider.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L36-L38",
+          "version": "repo-lines-v1:sha256:8f522b4dc8c4dafc69bdc6f1ec9f1de3016f2b67db45dda13b9f9974a2b33e66:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjA3ZWMxMjMzNjM4N2Y2YWNlZjQ5MTU4ZjE0Y2M3NzM2ODA2ZDRhMDk1MzgyZDI3ZGUzNTY1MWEzMTZiNTQ2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOThkMGVhZDQ4NGU3NWZkYmVjNTkwMGMwODQxMGUwMTlkMTA0YzE5YzM0NTJkNDZhNDhlMTg3YjlmZGRmYjM2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTNhYTA0YmQ0YzdkOGYyN2U0MjkxYmRjMDMwYmVhM2I1NTdmMTA3ZDdiZWMxNWM0ZTYzMDg5YjA0MTAxZDRlNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTQ3MGE1OWFiZmVmOWEzOWI3YmIyMDFjMjhjNzkzZjgxMGJiMzJiMjZjMzYzNzRkZGZkNjVkMDYzMjYyOTAzYSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py#L24-L31",
+          "version": "repo-lines-v1:sha256:b08d28c4079a0d532b76fff9be9e529e6a54408192843c4c8b311bc6a9e0658d:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDMwMDg2N2UxYzkyN2Q5NjI3MGE4YTdkZDUzMjNiM2M0MjQyZDI1MTRiYzYxMDQ3OTgyZDE5MWJjYzQ1OGI2NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTI4NjhlYzE5ZjhmZGY5MTkxZTVkMDcxN2M1YTZhZTlkN2ZhMGFkMDM3NWRkNzBlYWJiOGVjMjM1ZDk4YjBjOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWZiZWM3YzdhODhjOGU1MjllMDU4ZjFmY2RhYThiNTA5ZjFkNWU5ZTdjNTRiZjIwZTIyOWQ4MTk3Y2FhODcyMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWJmZTk4MWVkMjIwMDVjYzRhMzMxMmI2ZjYzODE0MmIwN2JhYjg5MmRiZDk4NTQzMGM5OTNhYTViZDZiYTJhYyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py#L63-L93",
+          "version": "repo-lines-v1:sha256:f0aa082c714e4a982fb670cac1a705c5e59b44c95a9fe7b0ce2aa066de0026df:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNTc0OTAxYmQ2ZjRmYzBmNTU5MThmMjM5OWIyYTVkOWIzYTQ5YjMxMmEyOTdjY2Y4MTg1Mzc2M2YzN2VjMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhM2NlOGQ5ZTU2NjllYjU5ZTEyNzRhM2YyZjRiYjM4Yzg5NzUwMjkxZjRiMWFlNDUxYzgwYjk3OWEyNWZlMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0MTg3ZWIzYzllMDdhNTI2ZTA2M2I2ZDJiY2UwM2NhMWRhMjMwMmM3NzRhMGVhNDNhYjQ4ZDBhYWJiOWE1Y2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiYmI1MzdmNTQxMzM5NDg5ZGY5ZTBlMDI0Y2Y3MDQ2NGRlMTc1NTUyNzBlOWYyZTUxYTU5NTMyNjQxZWVhNzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5db3c61cd18044e2adac6441fc47ceda",
+      "statement": "embed.smoke_embed_or_die embeds one vector at startup and fails loudly on any failure, verifying that the credential is actually read by the SDK rather than merely present; the key is resolved from the environment or a gitignored .env and never written into the index or any structured output.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L8-L11",
+          "version": "repo-lines-v1:sha256:19026a26ec4eac04855c65c10112024bae78b0b5daada89be713964dc31f625a:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTUwMTJhNzFmNjQyYTE5NTIzZTg3YzE5ODY3YWJiMjc3N2MyOTNlYjc4ZjkxNTZiMzNlYWQzMzU1MGQ4ZDgxZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjNmYWNkZjVhMWRjMWNlZjQ2MWUwODY3MjM3ZGJmYzlkNzc5NGE3NjZlNTI4NzY5MWU4ZjlkMGI2YzA0ZTZkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py#L96-L109",
+          "version": "repo-lines-v1:sha256:563613e4071f0f2f6e3e39bc9f29873bcd1680a718a5262aa313e70a6c8c19f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiOTYwNzM2YTgxNDhjNzA4YzBlYTA4YzA4YWM2YzYzZjk1NDc5Y2Y2ZmExZGE2MGI0OGRiNjExMmQyYjM0ZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNDRjMWNjMmQxMGVlYzgzNzY3Zjc0YTY1NjFlMmFmMDUxYjY0ZGQ1MTA2MGExMGFlODEwYTI2N2QxZGRlZGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjODA5YzYzOTljZTA4MzRlNTNiMGIyYTBjNzVhNGJmY2I3MzgzOTM5ZWM3YjE5MDA5YmEyZTM0NmJjZWM3NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L137-L146",
+          "version": "repo-lines-v1:sha256:a82e5915bc2d7ab7e007ad044247d80d7a9bbf7abb3cec0300585b2e8af61c6a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZGEwZWY3YTQyNjk4MGQwM2VjMDgzMzkyZjkxNjI2OWFmYzM0Y2FiN2I0ZGI2MTIyMWUxYTZlZGNhODQ2NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwODkwZjkwOThlYzVmODNjYTNhZWE4YmFlOWZiOGFjYTM2MTFmNTU4ZDJiNWU3NzZlZGRlNWY4NjUzYzhlZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhOWY5NDU3MDk3OTlhNTdjMDY2MjZjNDdkOGQ4YzZkZjI4ZjU5MDViZDg0ZTI5Y2UyOGUwMDliODBlOTAzMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5YjViODdhNzhmYTMwODc0MzQ2NWQ5NGFjZmY1M2YyNjY2ZDM3OWUxOGU0Y2E1ODQ3NzRhNDQzZGFlNTU1MTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f68981f407c4444db47f003bb82e0fb3",
+      "statement": "index.build_index takes the single-indexer flock, deletes an existing database only after the lock is held, streams chunks through the embedder in batches, builds the doc-surface lane, and records HEAD as the checkpoint; an optional state_dir keeps all state outside the indexed repository.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L741-L808",
+          "version": "repo-lines-v1:sha256:f5ecbc0a518a4d4fa41c0517f0755b7f2c08102bd78ecf7fe35c6c7e80adcad6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMjg4ZTVlOTU4OTkzZmI2NjhiYzM5OGVjMGQ1ZDE3ZTMyZTFlNzRhZDdjMjhkNWYxMmUyZWZiMjgxNDlhMjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2MjQ1Y2U2YjY1OWU5MDAxOGFmNTMxOWU0MWFkZWM1NzA2MmE5ODM4OTE3ZWIyNGZhMGRjNjJlZTc3NDI3NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyZTFmMGQzODcwMjZhNWM5NWVmZjRjNzJlOTc2NGZiODliNzEzMWU4NDQ4MmM3YmRmMThjYjE1OTNhNzk4ODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjYTE3MzAwYTIzZTYwZjBlZGVlMTEzYTNmMWNlYjY4NWVjZjQ0ZGUxZGRiMGZkYzI1NGI5OGEzMDM1NDQ1MTgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py#L183-L185",
+          "version": "repo-lines-v1:sha256:8194d7d5f6c47367183eeab90af1ca6385c9f05f4d28707011083e3171c15425:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU2OWNiNTE3Y2I2Nzk4OGJkNDdkOGNiMjk2NzIzNWMzNzMwMDNmOGRkYTcwNTc0ODc5MTEyOWU2Y2JmMzYxNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU2YmU5OTRkNmVjN2M5MTU0OTRkMWJiMWIyMDYxNjlhNDQ3YTNmN2YwNWYxODRhOTFjZjhmNDkxNWJjYmMyYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjBjOGExMzYxNDA1ZWU3ZWQ2MTQ1NDk4Mjc4NWM2YWIyYjIwNGZkODg2MjBlYzI1YTZiMzJhMzMzZjE5N2ViYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWVkNDY3NDRlYTViYmM1NjI0YmM2ZGEzZGQxOTIzMjE1YjEyMDJhMDY1OTFmOGJlY2MxNjA5YzI2NjljMDBmYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_18bee547bae940b1a64f2cfcd9865946",
+      "statement": "index.reindex_isolated builds a complete fresh index in a detached git worktree at HEAD against its own state directory so the long build never holds the live lock, then takes the live lock only for the atomic os.replace swap, falling back to an in-place locked rebuild when git or worktrees are unavailable.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L664-L711",
+          "version": "repo-lines-v1:sha256:dfae9457c76941d21a0d03f7cf30b39394cf0a86bf4fb1ba10609d46e16d562f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDNjODU5ZDA3ZTZhZDIxMDI0MTM5YTM5OWNhZWZlMTVlNTM1ZGNjNTg5NzE1YTI4Y2Q3YWI4N2JhZGY0ZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhZThmZmQwYjVmMjQ0MTQ1ODg2NmVkOWNhZDhkZDZiOGZhZWJjMzA1OTY2OWEyNDkzMTEzOTg0MzZhYmZiNWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhNmZmYzlhOTExYzBjNzdjZjdiMmE2YTRhZGJhYzU4MTliODAwOTdlYjcwYjMyNzE0MTc3Y2M1MTczYzgyNWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwZDlhMDQ1NGNhNzI4NzA4YmNhZmZmMTAyNTRhMzY0OWQwMzg1ZGQyNjM1YzdhZGExZjY5ODE3YzQ2ZWViOGIifQ"
+        },
+        {
+          "resource": "repo://tests/test_reindex_isolated.py#L42-L63",
+          "version": "repo-lines-v1:sha256:67ca70a4b4b8e1951202a4f6f09fff825c052e2f0482f93022b0f9942d886864:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzNjcwNmE0NTUwZGMxMjQyMjM0NGU0MzdlZjM1MmE1NTM5OTliYWY0ZjMwMDQ3ZWMwNjM2NWZiYjA0ZmEwZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2NGI2NTYyMjYyNGUyYzk1M2IwM2UyMjlkOWUwNGQ3NDM0MWZkMTljNTIyYTRkYzA5ODJhOTE5ZmFmNDU2ZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_299fe630622648babb26897b32af6763",
+      "statement": "Delta replay reads committed content via git show HEAD:path, replaces a changed path's lexical rows (and removes every row for a deleted path) before advancing the checkpoint to HEAD, and leaves a path's existing rows intact when the content fetch fails transiently rather than blanking the page.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L437-L458",
+          "version": "repo-lines-v1:sha256:479900249a352bd9f82e886af0b5cc56c84409479f8796a06c24c7eaba20af6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiOGJmZjliZTkwYWQ4YmE0MzMyMDY2ZGViZGQ0YTc2MWRkYTg3NDk5MzlkZTgxY2Y4YTgwMTUxNGMzMzE1ZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiN2RkYjExY2YxMWQ1MzJjNTViNmQ3YTEyNWIwMjFhZDRlOTk4MzU4OWFmZjNiMDgzZmRmMWFmYjk3MzVhYjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNkYTVhZmQ1ZTEwN2RmYTExYTNkNWUwOGZlYjJlZmEzNzBjNTYxZjA1ZGI5NTNiNmYwMmRiMmVkOWI2YzAxNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3MWFkN2RkODY3NDAwMzJiY2FjY2JlZGZiNDI5MjI4Y2Q1MTFjNmI1MDM5OTJlYTkxNGVkMjRiNDk3YmFiZmYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L515-L537",
+          "version": "repo-lines-v1:sha256:b91c3a7ce5c0ccabaf32819c37edb4932614b7b5a89e4b49ccfbe3f5571afb5c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlMjlmYzZjZTlkZTQxMmU2YjZlOGI4OTA4ZjdkZGJhM2I0YjMwZjlhNDBiOGY4MDk3ZjRlNzA5ZGZkNDc2NGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjczOTM3ZWRiZjZjN2U1NjE0Mzc0YjcwYWRmMmU1YWYzYmNhY2E5ZDA2NDUzOWJkZTk5NTA3M2RmMTJhYzQ4NjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0ZmI5NTQyNGFjYzQzMDVkNDllODM3ZmZkNmJlNTZhM2MxMTRlYWJiZDY2ZDJlY2FhNzYwNjBlOTIyOTc0ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlYmZiNzYwNjZjZTZhYTFjMzA4N2YyNmQxYmYzMmU1NDQwNWUyMDQ4MjY4MmJhNDZiNGE3NWRlOWMyZjFhOGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4b61643d75214763aea7168715fbfc78",
+      "statement": "index.embed_stale only ever embeds rows that have no vector, making the dense fill idempotent and resumable, and its budget caps how many stale chunks and how many missing doc surfaces a single call processes; doc surfaces are re-derived from the committed file so a dirty working tree cannot leak into the vector table.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L540-L558",
+          "version": "repo-lines-v1:sha256:51785242d4e1a13bf18f44a6876f60638699991351a390e872b54a7c8a0d8965:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkMDM4ZGRiNTE5N2VhNWM1MjI2Y2JjOGNjOWIyZjY5OWJhOTgzMDEwMTVjYjYwZjBmNTQ2OWQ0YjZkZWU5YTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwMDczMWUwMWM5NzUyMjE3OWM3ZWIwMmM4NWVkOWRkNzQyZTQ5MDdhNzY2MWQ1ZWZlNzRhMWZmZjQ5OTNkZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlNjY5ODBjNWE4YjVjNTBjYWNjMTA2ZjZkM2MwZTQ4NDc4NTE0YmRkYTdkNzZiMDhlYzY4M2JiNGRiOGJhYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxMTliOGNmNmFiYzllZTUxZjQ5YTlhNDk5ZjI0ZTU2YjNkOTgxYzdjN2RiMTQwOTZiODAzNjJlMTcxMTVhOTIifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L561-L640",
+          "version": "repo-lines-v1:sha256:d6c4ea6184efdfb5b305d6d1eccdb8d649cd714c070deee28b325d76d9fccbf8:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiMzdjM2IzYTFiYzQyYmVhM2JiMjRiZmEwMTU2MjZlN2FmMmNiMDhmOWNlOTVlMmQ5NDg4MTIzNGY3YTc0ZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1YTI4ZDYxMDM1MGZjNTgxNGEzZDI5NjFjNzQ1MzJiNjU5NThiMzJjOWM2NjhiYjBkY2FlYTMyYjZmYWQxOTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzMDBmMDlhNzcxY2FjNDE5YWQxODNiMGI2OTUwMTk5NWY2ZTJkNzhhNDc1OGVjMGQ3Zjg4ODU4MDBmMzI3NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkNmY4YTc2Y2ZmNTc3YWE2ZjE5YjEwMzI2ZTExMWY1NWQ4MzJhZTZkMzE0ZGEwYWEyYTVkZWI0YzkyMGQwNmYifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L305-L321",
+          "version": "repo-lines-v1:sha256:23dfd75eb49b0be572cb97421017cc409f9d85f6f826bfaeb5b6b1dded09b673:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwNmI3ZjQzMGJlZTYzNjZiMjYwNGJjODRiYTkyZjk5MTZjM2MyNDBiZGI2OWE0OTNiZGJlZjM0MjNiYzZlMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmM2YyMjQzNmRlYTY4ZmE2YjFiNmI2OGI4YTNhNWMzZDU0OGM0Y2RhYThlNWVjZTYwZTkyYTU1M2FkNWNkNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxZTY4ZjQ4NmEyMDY5M2I0ZjhmMWM4OWVlMGE4OTFiZDkxZTk5MjczZDVlN2FjNGRjMGFhMzJkNDI4ZTY4NDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_13ec1c2b00294def9c2b65b3b8559c6c",
+      "statement": "Two invalidation rules keep the dense lane honest without re-embedding: upsert_lexical invalidates a path's doc-surface vector while preserving its docs row, and rekey_path re-keys a moved document in place preserving its chunk ids and embeddings because a move is the same content at a new path.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L242-L284",
+          "version": "repo-lines-v1:sha256:7198f2ac800f4a5a6aeafd3dc56716d39dbed8af22a6358629b1e3f63c82ae33:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzMTE5ZDEwMmFkMGJmNWZlNGJmNDAxMzI1NDY4MjZhYmY0MjljMGMwN2E3ZGI5ODM0ZGRmYmVhYzkxNWYzYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1YTE2NDYzMzdhMDBiYTlmZWRhYjhhZTFiM2Q4YmMzYTc2YjYxYjYxY2ZmYWI4YzgxZDMwYmZjYzc2MDI1Y2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhODQ0MDdjODM5MjkxMWNlMDNlYzliZDNhYTQzNjNlMmVmMDA0OTljNTQwYjAyNmU0Y2FhM2Y0NzQ3Zjk0N2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4ZTBiZGEwZDMwMjEzODAzZTcwODNjNDMxODgyNjhiZGI3YWEyOGY5MzA3NmU3NzQ3ODU4MGRkNmZjNjFhYjUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L317-L327",
+          "version": "repo-lines-v1:sha256:0fe3bed42b6a32cf4111ce23046996273246437707f4a3c8e006ebe34bc72a3a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1M2Q3YTFhYjAyYzljMTgwNGQ4NTRmYmZlMjA5YmE2YzE0OWFjYzlhM2JlOTJlMjNiNjQxODc1YjA5ZjM3ZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiOWM5Y2M3ZjJjYTFhNzFiOGNjZWE2Njc0NmExNGJlMzQxMDA5ZmUzZmQxNTI4MzUyZTI1ODVmYzYyZjVkYmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmYTI2OTBiOWFjY2MzYzc3ZmU2MjNmNDAxZGM1MDRmYTA5ZTBjZGMyMGFjYjllMzAyN2NhY2UyZGU2OGEwOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRjODQ5NTI4NzI5NGQ1ODMxMTUzYmRmZThjNWQ3ZWFiOTljODk0NTBlYWVkYzVjYmI1OTk4YjMwYjc1MDFhODQifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L230-L257",
+          "version": "repo-lines-v1:sha256:7d04c6d48c75610e44839d9bfd534ac218fc764f5fae08b1edc7e87a8d43993e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxNjhkMGE3Y2E1NmExMTM0Y2I0Mjg2Mzc4MzE0ZmI1OTQyZmZhZDc0ZmI5ZWE2ZTU0ZTRmOWY3MzMxNmY1MjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViYzNkN2YxNTMzMjlkNzAwNWQ1MTNkYTFjZTk1YzM3MTUyMzNhMGRkYzNiMDYzMzFmZTdkY2Q4YmQyNDE4ZGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_34f9e0c706ce45f3b8aa5291dbba9c85",
+      "statement": "index.ensure_full_coverage runs the unbudgeted dense fill before analytical reads (salience scoring and connection proposals) and returns False instead of raising when coverage stays partial, so centrality and similarity are never computed over a half-embedded corpus without saying so.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/connect.py#L73-L91",
+          "version": "repo-lines-v1:sha256:59a345d41c1ce1ddf16d68eac470d1495f84c762ebadb099cb125bf7b94e1d60:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhNzQzZTVmMmVjYTNmZTU3ZmQyMGQwNmJkMzg0MTIwNjZlZjRmNTc5OGI4M2FhZmRkNjdjNTNiNmJjNmRmZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3NWQyM2E2Njc2ZThjNzI5MjZlYTY0MWEyMjA2ZDMzZjJiOTY5NGEwMjYzZWZmZTJjODE3ZDFhYTVkNzEzZDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkYTA3ODU0ZDYwYmE4YzRmY2ZmMjA4ZTI0NjZjMzZkMjVkODFmZTY5NTFjMjEwYjNmNDBjNzgxM2Y4OTAzYzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhN2VkZThlMjI0ODUwZTk1N2U5MGIyYjFkY2ViZjY4MGJjMmRhYzgzMzE2YWMyNTc2MTJjYTQ2N2QwZWYxNzEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L643-L661",
+          "version": "repo-lines-v1:sha256:b385c39b5bc71994f2a13cd537c08ada20bc150937aa9ad496df11b2f267b54a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxOTFkZDNmODNkYTVhZTM4Zjk2MDgwMDdiNTdjMjQzNWY4NGZiNGIzOWJkNTAzYjkxNTBhMzFiYmRjZmM3MGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlZWIxOTk5ZmFjNTVjNzU5N2Q3YjU0Y2JmMTRhNzQ4MGFiMjQwMTViNjNkYWI1ZWQwMzEwY2NmMzc2NjY4MWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkODE2YTEzM2ViMWRjYmUwZGUzZWQyYmQ0MjA1ODViYzI4ZjdiOGYwYzA2YjIwMTBiMzM2MGMwYmNkZWNmMDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzZGFjYzQxZmJjMWNiMDVjMzFlMTQ5ZjdiNzE4OTBmODc5MWZhYzAwNzAzMzRhMWU1OGI3MzQ1Nzg1YzkyNTYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/salience.py#L97-L110",
+          "version": "repo-lines-v1:sha256:6f4267aaff78851a51c5fa64c43102d256e233b6c539b39019cfb1d6317e08a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyYTJjMjdhNWNmN2M4ODhlMmM2NGYxZWUxZWM5NDkzYThjNGFhNzNhNTkwY2QxYjgzOTU5NTNiZGE3YWNjYzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkNjQ2NDA1YTZmZmQ3MjM0ZWYyYjJiYTIxOGJjMmFhZjJkYWQzMmVkZGRiYzNkNDgxMTQwMzc0OTIwYTBhZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY0OTkxZGJlNzkwOWYxYmU4MWY0OWRhZDMzOTRkZTMxY2RiZmRmMGMyMTRkN2YwYzg1ZTczMjBjNWI4OTY2ODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0NTQwMmM0MjZjNmE5ZDZiMDc5ZDFlOGE0YTFkYjRjMTE0MzJlMmM4YzdjMmRhZWZhMzI4MzUyZWNkNzIwNWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7196af3762d47978e390ffe83216a29",
+      "statement": "index.apply_working_tree_overlay indexes tracked-modified and untracked markdown lexically and drops rows for paths gone from disk without advancing the checkpoint, so a replica projecting the same committed SHA never sees uncommitted edits.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L714-L738",
+          "version": "repo-lines-v1:sha256:fe99771f81dba65a52cb343e6460fe0a0caf501ddb87c8cc23ce0295e18a273a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1NjQxYmUwODJmM2E4NGY1ZmU3M2U5Y2Q4OGQzOGI0Y2QzNGQyMjBlOTNiYjVlYTNmNGVhNWMwZDk4ODUyNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlM2VjYjY2YTFkZjRiODNkMTg3YTgzOTkyM2M5NGVhYzcwNGRlNzFhZTc3ZGU1YTljNzg1YjlmNTUzYTg3ZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MTI2MGU5M2ViYTI5ZDI3ZmFhYTliODAwZmIxNGY3NDYwMGRiNWU2OGE2MmUwMTUzZTk4MDJhYWZmMjEyZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZmI4OWIzODhjNGJlYTZiMDJlZjk1YWY2ZWYxZTdjMmZlYzZjYTBkYTg2YWM3ZjRlZDNhMTlhOTkxYWMzYmUifQ"
+        },
+        {
+          "resource": "repo://tests/test_index_projection.py#L48-L69",
+          "version": "repo-lines-v1:sha256:170e8fecd67f5e540252f16e1443d4399d3c8a0baf7321fd5fb3d5fc7165e604:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExZDZiZDEwYTA2ZmYyNWI2NzMxNzA5ZWY4YmE2MjM2MzQyMDEwYTU1OWRmYzQyY2VhNjYwYTljYWMzYTg5NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlZDRlOGZhMGFiM2QyMWRlNjg3N2U5NjFjOTA0OGVhZDM5ZGFmN2EzNWVkOTU1MDQ2ZjA1MDI4N2E5MTdkMzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9583b7933cc4440f898317e0c508ca61",
+      "statement": "retrieve.search fuses the lexical, dense, and doc lanes with reciprocal rank fusion (1 / (k0 + rank), one weight per lane, equal by default) over a candidate pool larger than the requested k, and records on each Hit which lanes matched it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L134-L183",
+          "version": "repo-lines-v1:sha256:7d84cb9dfb5d950cc01b9926a3704cddaa95ce6e4b79fa4ccc6a4e5ea6e39bfd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0MjJmMTg2MTQ2NjViNGMyOTI0NzVjNWE3NDcwNmI2MTE4NDIzZGJhOWNhY2M0MDYyZDdkNjM0ZjcxNjI4ZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMjM4N2Q1ZWNiYTUxOGE1NzcwNWZmNzJjMjU1NjYxZjFlNWZlYzhkZmRjMzhiNjY1MGVkNzUyYmNiNTY3MjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkOGVkZTgzMDE5NzNkNmJkMzVlOGU0NjY5OWEwYWYzYTY0MjIwZmQyODZjODczMDZhOWU1NTJjY2M5MGMzZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlOWJkZTNmNWJmODU5ZThlYjUwYjc3YjUxYTdmYTJjZjBhMTNhMTc5MTY1ZmQxNjMzZjllNGZmODgxNWYyMzAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L97-L110",
+          "version": "repo-lines-v1:sha256:0154b88c98f0be51954f14ca038af9ebe7dc8adef9e6c16ea7754810ccaa6d45:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxZTNiYzZlZjMzMzNkYWI4ZjdhOWM0OWQwZmUxMzdjNjRhMTg2YzljNDkzY2M1OGEzNDEyNGEyMDhjY2FjOGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhNTBhM2FiYmZmZDBkODc1YjllODAzMTYwYmJkNzA4ZWQ2NjgyYjNlOWU5YjM2YzI5MjMyNWY0NTZkYzI3ODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4Nzg1N2M2YTRlNDAzY2Y0NjlmNDJjZDBhNDhhZTg0OWZkMDk1YjExZThmOGJlZTc4NDRlNTU3MDkyMGFhNmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4YzJlYjBlOWY3MmQ0YmUxNWRhNmI4NmRmYWI2YTMwYTNjMGM4ZDZiMGQ2NTJlZGMzYTRjOTE2NzhjZWVlMWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_112c0ffa922641f282881442d0cd9ccd",
+      "statement": "The lexical lane phrase-matches the query and, only when that returns nothing, falls back to an explicit AND over the query's salient non-stopword tokens; an OR-of-terms query is rejected because it floods the candidate pool and degrades fused ranking.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L349-L379",
+          "version": "repo-lines-v1:sha256:7e33dfc8f5633841893a3d1a62b55772eb1ccc846b3a75c917a5e85209b88298:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2N2NjZTVjNmQ2OGUyNDU4NmQzZDg4YTI2MDM4NzE1NTgwMmFlNzYxMWIxZmE4ZDA5ZjUxMTkzYWIyZDk2MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyZDQ1OTNjZjIyYWUzM2QzYjFhZmI4MGU5MWFlMjQyMDlhYzA5MDdhODdiOTk0YTYxOTYwNjFlNGFmZTA5MWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjZmM3NzNlMTA4YmM1NDVlNDIwODAzOGZhOTI0ZTY3NjIzYzEyMmZlZjg3ODkyNjExN2E4ZmJlYTA4YzE1OTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmYzZiMDZmYmQwOWI1Mzk1M2UzZWIyZDZkYTk0NzhjZGI5YzJiZWJjZTlmOWEzNmNjNTIzNzk5NDFkMWMxOTcifQ"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L90-L116",
+          "version": "repo-lines-v1:sha256:b248e39f97154b0e04784276465be7a1870be9e05a2651c6805c66b48f7a28db:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYjRmM2E3YzYyNTFlYzI5NWFmYzE4ZWE4Y2ZhYTJhOTE2NmI5ZDQzZDRkYjAwMjQ2ODE4NWVhMWZhMjVlODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhZjFiYmEzY2YzZTc5MGJmMzk2MDM3NTUxMDFkY2NlOTdiYmNkYzdiMjNiYzk4OTAzMTIyMTVhYmY5M2Q4ODUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_887f224a811948bc852d186bb5e240d3",
+      "statement": "The doc lane lifts a matched document through its first chunk id and is skipped entirely when the index has no populated doc lane, which is what aligns whole-document natural-language queries with the right note even when no body chunk matches.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L229-L240",
+          "version": "repo-lines-v1:sha256:b5f9ca0d3467d4fa6cd301bd6e55ed86bb3ff8576676ba52c8296e52b46f6a0f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1ZGM2ZTZiN2QxYzY3NDliODZhMzE1Y2M2ZTdkZjkwMGYzNzRiZDM3ZGU4NTVjZmE0YTY0ODUwMTAyMDNjODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzOWM3MzEzNDk3ODRlMTdlOGVhOWU2NWU3YWYzNTMzM2Q3YTBiYTJjOTU4ZTE1YTc1M2UyZDllMzFiNzlmNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2MDIyZDg0Y2ZhNzcyYWJhNWJkMzBiNTM3OWM4MGUzZTgzMjRkNzk1NTE5MjQ2MzA2NjMwM2Y2NzFhNDgzZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkNDcwZTZhNGU2MzE0YmM1MzA5OGVhNTQzZmVjZWIxNmMzMjBmNGMyNmM2NzZhMDNlNDU4NjdjNDRjZjk1YmQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L173-L181",
+          "version": "repo-lines-v1:sha256:46f898c2f722d7f8ebc00142dc713637eb09daf58fc20b93fbb0df7f72d36079:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGJjNDRiZTIzNTg2M2ZhYjAyYmUwNDRiMTUyNGRmMGI1ZGNhZTcwZDVjOWJhZTE2ZDM4MGZmZjFhMmMxNDYyYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODk0NzgzMTVlODJmMGNiYjkwNTJiOWQzNmE4NmY5NDFjYmMxMmEzYmRkNzVkYmU5NjUxMWMwZjRhZjYxYTFkNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGY1NjA2MjczNmY0MGUwZTkwNjU0YjYzZjk4NmEyNGFhN2M2ZTAzNzgwNTZjNzExNjNkZjViMmRmNDY3MDQzNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjRkZjU3YWY0OTRmMmYyODk1MjFkNGIxMDFiOTkyYzNjZTg0OTYxYWMyN2I1YWQ2NmUwYzdkMzhlZjk0OThjMiJ9"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L243-L259",
+          "version": "repo-lines-v1:sha256:dd6fad1788e6a840863cc10f8b195bdd976284c1ffff14f44e73112297ba79fd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwZTZkMTBkMTcyZjU5MDkwZWU5MjhkM2MwZmRmNWZkOGE1NDY3N2RhOWJjZmQ4Yjg3MzRhNDlhMjRmMTIzOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwM2NhNmM3ZjUyMDEyNjBkMDkyNjgwOTRjYTNjOTI0Yjk3ZWE1NDMyZTdhODQ0YTNjMzJlNDNkY2M2ZWZjMTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_367e8a4d14d04590bfc1702abc28f347",
+      "statement": "Optional multi-query expansion fuses only the dense results of the generated variants alongside the original query, deliberately keeps lexical on the original query, and falls back to the un-expanded query on any expander failure.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/expand.py#L1-L8",
+          "version": "repo-lines-v1:sha256:949281c2832db159944cd76875934719b02c202fa2e54ca5b7886c132c77a82b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTI1NTNhOTczZTg1YTUzZjExYmZjZTRjYmIwNzlkZGUzNTA5ZTNmMTY0OWM1MjEyNTZmZDdlM2Y5ODQ1ZjYyMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/expand.py#L46-L62",
+          "version": "repo-lines-v1:sha256:592281e3e8e6c9919ed9872e477ca6e61f1ff31625714e54a1c041b2e4c9128c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiMTMwNTViMWUzN2UzOGUwODAzMTUwOGI4YjMwMjY3YzU0ZDhlMjg3YzBiNTc5MTRjOWRjODQ1OGQ5YzRhZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5NWJiNjMwZjc1NmMyMWY1MWQ4OWE0OGY0NTcyYzhhYTQ5N2NlMGIyMGI3NTAxMGQzODM0MDcyZjYwYTZjNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZGZlNDM0MmUxZjMyOWUwZjFiZjZhNTUzMjkwNDRjODQ0YWE1MTRlZDdhNGQ1ZTAwZDI5MDU1MGY1YjVhNDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L121-L171",
+          "version": "repo-lines-v1:sha256:888ad8133f28c4e8c418d86bab73e7c8ee9cc4adfd57eb873fc2e19877e4e1ec:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MGY2ODZlODQ0MDEzNzIzNWVkZDhiYzNkNTcwYTc1NGQyYmVkMzY0NjVmNmQ2OWE3ODk4YzY5MDYyMzhiYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyYWRjZWFjMTA1NDgwN2VhY2M0ZDVkNGJhYTVlMWMyZDIwZDczYjQ5NTY5YmJiNDNlYjJhOTYyZGM0ODIxNTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI4MWIyMTVhYjdlYTM0MjhkZjA2MDUwYjI5MWU1MmY2ZmNiODc3MTk3ODRhMzFiNGMwNDZhNDVlNTljNmYxODAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzMDk5NzNkNDY1ZWIwNTUwZTQ5MWNlZjRiYzA2OTc1NDQxZTY2YzQyZDllYzEzZGI3MjFhOTFjMWU1NTJiNjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_609f3d3129614be181a5292a2475857a",
+      "statement": "The optional rerank stage reorders only the top-k window while preserving membership at k and defaults to off, existing so the parity harness can equalize rerank level without pulling a proprietary reranker into the product path.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L1-L12",
+          "version": "repo-lines-v1:sha256:f1d9b069d9057d69dbc9f74e2962bbc91f4185f5346282843ff519057e9da7ad:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkYjI3M2MyYmM1Nzk1MjZiYmEzMzRjNTdmMjRiMjA4NmI1Y2EzMDY0YTYyZWVjMGZiMTE5MjViNTU1NjAxYWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L205-L210",
+          "version": "repo-lines-v1:sha256:c9d77ab76c2243b9f599ecc27af6dec6e9bb56aac00aa6799927698894106147:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTJlZjAzZDViZjE0NDE2OTcyYmMzMGNmYjQzMGZkMDRiYmM3ZjFhMjVjMTU0YWE1MjNlYmUzYjEyY2E3ZjhjYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTJjYmY1MWI3NmM0Njg1OGVjMzFmYjFhY2E4MmUzMGI1N2MzNGJmMzlkMmUwMjNhMWIxZTBjZjRiYTQwYjNhNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGNhNTgyOWMyZDRiZDYyNDU3ZGRlMzk1YTNmYWY5ZDQ4YjRhYmE3MGM4ODEwMGU0MTU4MGYyMWNkOWEwODM3YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjgxZjY4ZmVmNGJlZjRlZGQ4ZjE0NDgzMTNhMDNhNWUzMmJhMTJjNDk1MzFlNjBlYWNiMjc2Y2MxMDE1MmNmNyJ9"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L262-L274",
+          "version": "repo-lines-v1:sha256:e88c14337c81b4c931e100cad3b348097576e4a0296b1debe650116fd14436c0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0ZWE4ZGE1NDIyNzE0OTE0YTdiMjMyYTliY2E4MzNlODNmMDhiYTk4MzllYzI1YjE2NzZlODdiMjRlNDcyNzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhZTY5MDU1OThmMjBjYWU5ZTlmMmVjOTRjMjdmZTlhZTg5MzEyMjczMTQ2OThmMmMxMWNlMWU1MWFhYTgxZTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1505b270f721495facafa4d3bc3811af",
+      "statement": "Post-fusion, search collapses hits whose chunk text is byte-identical to a higher-ranked hit (keeping the highest-ranked copy, opt-out via collapse_duplicates) and can exclude one caller-supplied path; the oversized candidate pool absorbs those drops so the result does not shrink below k while other matches exist.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L114-L133",
+          "version": "repo-lines-v1:sha256:1e5c9b50cb0ff5baa0ab04a3a35ca47cded1a9bd8f39bc92ff4bf4e490abfbda:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2YTcxNTI1NzJlZTg0ZjEwOTA2Yzc0YjlmMmE5MjQzNGRkYWIwZTNjNDI4MTNiMDRlNTk3ZWZjZWM5NTFiMjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4YzJlYjBlOWY3MmQ0YmUxNWRhNmI4NmRmYWI2YTMwYTNjMGM4ZDZiMGQ2NTJlZGMzYTRjOTE2NzhjZWVlMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1NTFmMWMwN2IyMjhiZjZkZDlkMWZiYmZmMzE5ZmQyZmVkM2QwOTgyMGZiNzgwZDUzZjY0MDZmNmExMTEzMzkifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L183-L204",
+          "version": "repo-lines-v1:sha256:5a8f77233f858ec5a1c508da2bde8f91ce35fa2e6dff0ff4f581d31fb8781eca:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMjM4N2Q1ZWNiYTUxOGE1NzcwNWZmNzJjMjU1NjYxZjFlNWZlYzhkZmRjMzhiNjY1MGVkNzUyYmNiNTY3MjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY1OGU0MjE5ZTMxNjgzYTAwMDJjMzFlYWFlOGZhMTYwM2QzNDM3NTM5NmUwOGZlMDhkYWQ5NGYwNGI1MmUzYjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJhMzAzYmUwYWEwZmUwN2QxOGQ1MzhiYThlYTA3MzRkMGEwZGRlNWQ2ZmViZjIzZDc1YzFmZDNhNWRlZmZhMTEifQ"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L185-L205",
+          "version": "repo-lines-v1:sha256:dbe62ac624cd1952be5599700ca791aae90925d77c6370c7181a00e6b8fcc34a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMjVlZDQwYTBmMTlmMGYxMjc5ZDJlNjNjMTRkMjM5NTY3MzgwY2U2YWI0ZTk2N2Y4M2NhODA2ZWQxODgzZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkNWZiYzVhODAyMDBjNzExMjU0NTY5ZjhlOTY2NTRkODdiNzM5ZTg1ZDkzMDQzMDIzYjYzNzFjODQ1ZjkzNTAifQ"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L336-L355",
+          "version": "repo-lines-v1:sha256:d1d76866ba8e7b589afabebbe48fd9afbc4b53f5d8dc9e72e1b0dfca8ee08285:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4ZWViYTQ5OWVlZDE3ZjY3MTVkNTA3YWE3MTRjNzRlODRhN2FkMzk5NzRmZGNkNmVlMWFhNGZlYmZjMWZiZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3ZjRkMGViMjA5ZjFhMDYwNWI1N2JhNzg1MWFlYTEzNmExMDBhY2MzNDM2ZTYxNTNmOWRjNzJiNjhhYjdlZjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8fc39d43fc54ecaae5d4494602ec276",
+      "statement": "retrieve.git_commit_recency attaches the newest commit time per hit path using a single batched git log pass with a unit-separator sentinel and quote-path disabled, returns None for untracked paths, and explicitly has no effect on ranking.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L35-L81",
+          "version": "repo-lines-v1:sha256:9b6346f982b0e78a652832b50ba01a5655ccbd33067ac1d1fe856841591eb33a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4MTNkOGNhNWIwYzAwMzlmMjQxNTE5NmRkZTBlOTUyNmM2OWM5NzZkYjJmNjZhNWJhZGU0NDNjY2VmYjNjNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmNDNjODljYjBhZjJhZTgzYjMxNDg3ZDA2Y2YwOTYzZjU4ZDkwNDEzNTk0OTYzOTM3NGM2OGZmOGZiOWMyYzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwNmJiNmI1M2ZjNDcyZjNiZDczNmNmMDI1MWY2ZjgwMTI1NzBiNGFjNjk4M2MxY2EwYzBlYWM1NjFmYzk0OGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjMWYwMmZkN2VjMWQ0NjJjMGNiODE4Yjk0OGZmZTRmNzE1YjJjMmM0MzI2MzBjMjMyZGZlMzRkNDI3NDNmYTkifQ"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L314-L333",
+          "version": "repo-lines-v1:sha256:04995084a7b5cfef7c2464945bcdc2d52e008cf3a5fb85ac8a412dd79c87ee51:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZTU3NGVlOGNkMGNmZTVkZjc0NGRlODBhMDMwMzU0OWNmYTdlYjQ0Y2FlMGJkNDE1MzFkMGUxZjBjNmVlOWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkMjViNGIxZTI5NWQzZjMzOTk1ODBlNmFlNGU3YzhjMjc2YjRiMGNhNWUzNWZjMjYwYWJmMjc2MjZkNGI2NzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_68d95140ad0c481ba0f305a5482c0158",
+      "statement": "search tolerates orphaned fused candidates whose chunk row has disappeared, skipping them instead of failing, because a concurrent projection update can briefly leave stale FTS or vector candidates visible to a reader.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L186-L193",
+          "version": "repo-lines-v1:sha256:2e66f6cfc5167e42efd5070e31e18aff1ef8977d6150df7d528f377131f52eeb:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTU3YmIyYjU2MWY5OTcyYjJiNjBkNzhhODIxMGI2MDMwMzdhMzNhZDYxNjIxZjdiZDkzNDRkNjQ3ZjExZTA0NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZhZDA1MmM0NGI5NTNmMGQ4MzI4NmEyZGRkZWMyMTg1ZTdmMTg5ZGIwZTRmNTAyYzZmMDZmMzQ3NTg0NTRhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2FhYzA1ZDVlN2IxMTQ5MThlNDJhOGExYWM3NWRjM2YwNmNjYzgwYzM0YThhN2MxNDJmNDE3ZTEyMzI5MDg5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGJmNDU4NjI0YTRkNGFlYzE0ZmUwNGIxMjljOTlhMGIwMzgwYmVkYzkxY2YxODBhOTc0NTMxNGMxNmE2M2Y0ZSJ9"
+        },
+        {
+          "resource": "repo://tests/test_retrieve.py#L119-L138",
+          "version": "repo-lines-v1:sha256:78fe3342b51447cb6673ed68fb2500bcd4bb73d9fb9ef9ee34a114cc39c5a9eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3ZWI5ZDdjNDQ5NGNjOTg3ZWFmNzc5ZGJkZDZiMTM0MjQwYzg2Y2RlZDU2ZjRlOGJiYTI0YWY5YzY5ZWQ5YWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3M2MyMmU0OGRlZGY1ZDhiNDFmNzgwYTViM2M4ZTA3M2NjYzUzYWY0MjUxZjk0OTgwYjA3Y2U0OTFkNjgyNWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_519b08ad5bd749a2ace96dbb06e27091",
+      "statement": "Retrieval degrades instead of failing: an unavailable query embedding skips the dense lane and returns a SearchResult flagged dense_used false with a named degraded_reason, which the parity harness treats as a void signal rather than a failure.",
+      "evidence": [
+        {
+          "resource": "repo://harness/parity_harness.py#L179-L189",
+          "version": "repo-lines-v1:sha256:f49744a32b5d79c2ba2ee7eda252d2685204e6ead5f06cd5748d9cfc5b601a48:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlOGMwODk0YWMwMjQyODZkNWFiMmM1NmUwZGZlZTdiZTFiOTBmNWZmNWIwOTEzNmFkN2ZjNjI0MzZhZmZmNmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MDkwMjgzZjQyNWM3ZDk3NjgwMmJkNTRkYjRmYzUxZDhjMGY3MjIxZmViMDI2YzgyMWM1MjU5ODhiMDhhNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkNzMxMTkxZDM5NThkMDQ5Y2UzN2E3Y2FkZDIwMzJjZDgwOGNjMjM0ZTM1ZDAwZTk1ODViNmJjMDA1NGUwNDEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L153-L219",
+          "version": "repo-lines-v1:sha256:ea24b48dc180efba4bcd7fba5d2cd29160e20c2cf5d4e938d948dc80ae216c4e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkNTQ3Y2RmZTI1NjYxYzA3MTBhMTA0Nzc4MTE5YTJhYzQ0MDMyYTQ2NjY0NzQ5YjYwNTYwNDRjMWI3YmQ5MTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5YmIyNDdlODkwZDBjODcxYmVjYzEwNWRmOWY3YjgwN2IxN2U1YjRiMjIwMDgyYmE5OGNmZTAyOWU0ZjIxODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py#L84-L94",
+          "version": "repo-lines-v1:sha256:c0e00e70efa0904e2166e29dfc40dc21e24a9bd1dbf3738cf1b547abb114cf2f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZmJhZTBiOTFkNDRmYzBkNDlmNWRlNjkxZGE2ZmM0MzFmMjYwMTM0YmY3MzFlMGUyMWY3NjQ4MDk0MzM0Y2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3ODA2NTdhNDk1NmFhOTU5NGE5ZWY2MzNhZGNjNGRjMmJkMDJiM2U3NDdkNzdjNzdhOGY4ZjcxMGE1Y2QxNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmZTk1YTlkYTdhYzFjYjhjMTZhNTY3MDJlOGIwZTRlMmYzMzU5MjJjYWY0MTEwM2RjZTA3NmQwOWRmNWI5NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiNDc1NmM5YzE0ZGNkYmE5YTAxYzgxZGQ1M2M3NGJlM2E2NWVhMGQ5OTg2NWQwZTc5YmYxZGZmZTIyOTZkN2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_450aa296a5e6459c9cfe58ca76070e78",
+      "statement": "Read surfaces merge convergence's degradation with search's own (degraded or converge-degraded) and forward manual_reindex_recommended, so a client sees a degraded or behind projection rather than trusting a thin result.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L188-L203",
+          "version": "repo-lines-v1:sha256:ec5b795e78e5adf305ebccac76df17eab93de9819dc671be026ab36e59acad50:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyZWZlM2QwMzIyOGRkMTY4NTdjODZlNTIxNGEwZmIxNTZlNjViMTYyOWVlMzZhNGI2YzIzYmFlMzhhNzE4NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMmNmZmUxM2E5NDM3ZDcwZjlmY2E5YjU4MDcxOTdjZDBjYTE5Y2U0OWZiNDFmMGU0MjlkNDZkYjQxZjIzNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzNDVlYzViY2Y4MGNjMTdjNzUyMDE4YmM5NWIzNTdmNWRhNTc5ZDA2ZTJiODc5ZGJkNzhjZjRiMWQwOGY5ZjgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L444-L459",
+          "version": "repo-lines-v1:sha256:41c7722f8175dfc7a3cf15715b941e35daf9bb36398f248c3c90be6782ffb3ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExMWU1ZDZjYzJlYjE1N2FhMTk0MjY2NDNjYzBiZDhhNTNiOTJlNWIyYmYwMDM0NmRkNjZiMmVhNjkzNmY3OGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkOGUyNDQ4YTA3ZjEzMDY3OTc3OTVlYTE2MTRiN2JhOTRjOTVkN2Y0MWE5ZTcwYmFhMDBjZjRlOTM3MWI4NzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyMzA0MGM5NzQ3NWY4MTMzMGVmMGMyZTc0MTgyMzVjY2ZkNzJkOTc4ZjJjODg2NGNhMTg2NTA3YTJjNjBjZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_defbd272c1564bc7ada4339352a6b3c2",
+      "statement": "The knowledge graph is built from page bodies (Graph.from_repo for a working tree, Graph.from_index for the projection) with body wikilinks as the only edges, and targets are normalized by stripping a display alias and anchor then resolved by exact path, .md-suffixed path, or unambiguous case-insensitive stem, with ambiguous or missing targets treated as tolerated dead links.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/graph.py#L1-L7",
+          "version": "repo-lines-v1:sha256:0ea80576d9043ae04a699df350cfc4895f36d198730fc222b3bdf60716f673a1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDI4MjcxOWUyZTNiZjg4ZTc4ZTAwYjYwOGUzYWFlODQzYmNiN2NlZGVlZDI3MGU5MjBhNjJkZjliNjViOTYyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/graph.py#L20-L82",
+          "version": "repo-lines-v1:sha256:e7003d48ac0ceff6ea6adb5c4e345032c3b8b8b987fd1a12725dc8d62bd6a795:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyMTE3MjQ5NjMyMTc3MGYzZGNkZGFlNjlhMGMyNjY3NzM0NjcwNTc1MjlhYmU5ODIxN2U4MmUwNWY0ZDkyZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjOTk0N2MzZDZjN2VhNjE4ZTBjMTEwNzhjMTU4NjQ5YjA2MjVhZDNjZDU2ODQxYmU1MmY3OWU5OWI1N2QwZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzNDJmMDFjNDljYmJjZTdiYzE2MzJkMTA5OWQ1NDlmM2VhNTI2NmI3YWExMGE0NzViYTMzYjhkM2FjZWUxOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhMDI0ZDY3YjFjMDE0ZWRkYTI4OWM0YmJhOTVjZjM0MzI2OWYzZDQ3OGI2MjA3MGMxNmU0NzgwMGJhYTJkODcifQ"
+        },
+        {
+          "resource": "repo://tests/test_graph.py#L24-L38",
+          "version": "repo-lines-v1:sha256:4aa22923f86fa6f1172b7d38fb5e276527389bc5405633a2dcf96e2d943cf5d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0YjczYjQwNTI0N2JkMmRkNzFiY2E3MzZmNjE3NDA0ODUxN2QxZGYwMWI0ZWQzZjAzODNiMDdlYjAwZjg5ZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1NGE5MTNjZjkxZTdjYjA5NTExMzNjNjUzNzFhOWQxOGQxN2MxZTU4MjIxNzhjYTY1ZTg2MTdhNjJkZWE5MzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkMjY2N2UyZmQ1ZGU2MDdjNzk4YTYwMGEyOTZkNDY1ZGVlZDZjMzdiZDc2NDBhY2RjMWFmYWZmZjJmZWEzMzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c494f28e02f54e67b94ed9f266170245",
+      "statement": "graph.build_context walks both incoming and outgoing edges to a bounded depth, is cycle-safe, excludes the start page, and returns a sorted list so results are reproducible; it backs the MCP build_context tool and think's context section.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/graph.py#L103-L121",
+          "version": "repo-lines-v1:sha256:591b09b13d79e79db6ea81bdb55e1c1f13938732cb69aedc6467fa7db483ac2c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzN2M2YmJhMWE3NjdiNmQ2YjljNDliODkxYjFhNDY2MTE5ZDFmN2IxYWQ4YjNhZmRkNGRlMzcwNDgxMmE3YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2NzRkYzYxYmQ2YWVhN2ViZmM1OTI0NTEzYjBhNDg0NGIyY2E3YzFjMzBkMzBlNTZmYjA4ZmJjZTZmNGM5MWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViODVkYWFjZTQ2Y2ZlODE3NGRlNzllMjk1Y2M4YTU2OTE3MWQyZGEwMzlmMDBjNDk3MmVlZWYwZmRmNmUyMmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L492-L502",
+          "version": "repo-lines-v1:sha256:bf9a70c98b3f544fa95346c9c046991a569f041332535af18a6bb664a0cc8f7f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiOGJiNjBkMjFkMjMwMTk4ZDM0MGM2NTFkY2JmOTVmMTM5ZDhmOWM1NGU4OTBhY2I1MDkwOTU4MzAwZGM3OTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMGFlZmViODEwNzcwOTE0ZThlNzcxODI2ODE5NjNhMjE0ODc0M2NiMjQ4ZTdhYTFmZGQyYjI1YjQ0NWI4YWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1M2U3NzI2YjAxMzZiN2JjODNhZWU5MTNmNzgzMmIwYTIyNjIzOWExZDc5Y2FmMmNjYzU1NGE5ZTEyZjM5YTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxYzZmYzhhNzY3OGI2ODc2NzhhYWZmNTQ4N2YwMTMyNGZkZDA1ODBiNTA5ZWY3OGM2OTc1ZmZiMjA3YmYwZDgifQ"
+        },
+        {
+          "resource": "repo://tests/test_graph.py#L40-L54",
+          "version": "repo-lines-v1:sha256:5a111360c0763709fe7f516562a7ca51d5e3dad6f9f61767a9e56bc34849b933:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3NDkxMTJhMjc1ZDVmOTk0M2Y5ZGM2MTk4MjdkYzI3NDMzZWYzMGMxN2Q1MWUwMjI5ODNjM2RkN2RkYTM3MDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhYzE0YjU1YzY1ODUxNDViMDBjNTk3ODFjYWExMTY0ZTFlY2FkMTM4NWQ3OTIzYjYxMDlhZWZiZmQ1YzJkN2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVhOWNlOTNmMmQ2NjVlYjhmOGIyN2Q3ZGY1MzY3NDdjMjU3MDczM2M4MGU0MTlhNDg3NWFhZDVhYzA0NTcwMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4YTcyYzU3MjU1YjQxN2UzMTNlMDY1NWVlMDU4NzEwZDVhZjczMjViOTIyOGU1N2NiNDdmYTc2MGM3YTQ0NWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_436f8a066a4e4e25bf06e92eafb2e821",
+      "statement": "Graph.resolve exposes the same matcher the body-wikilink resolver uses and returns None rather than guessing for names whose stem is shared by multiple pages or that match nothing, so entity resolution can never invent a wrong wikilink target.",
+      "evidence": [
+        {
+          "resource": "repo://harness/parity_harness.py#L193-L220",
+          "version": "repo-lines-v1:sha256:94daf8ccc35f8224e158c0292d7fe85720d598e6d3362827a1ef58f47e596383:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiYzM5MjJmNjY5OGVkNzA2YjdjYTI1ODA3NDNjMDVhNTM1NGE2MzFmZjk3ZjNjYjkzYjEzNzdmZDFiYzM3ZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlMTYyOTE3MDI0NGM5OTZkMzA3NmFjOWMzYWY4YTI1MDNkZDNiOTAxMDExMzNkMWQ0MTE1YWNiYjRkOTJmNTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNzMxMTkxZDM5NThkMDQ5Y2UzN2E3Y2FkZDIwMzJjZDgwOGNjMjM0ZTM1ZDAwZTk1ODViNmJjMDA1NGUwNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjOGU4ZDFhMmJlN2ZkYTEzMjZiZTAwNWRmNzNkYTgxZjlhYTMyYTY2NjUwMTFiZDMwYzc4YWVmNzZiOTQxNTYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/graph.py#L84-L96",
+          "version": "repo-lines-v1:sha256:078896e559a4d589ac619523904eb29875f53909ed58c1b4fff930005fa341fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3NmU4NzY2OGNhMTg4YTg0ZmQ5OGUwMzg2ZGZjZGQ2YTk0YjU0YzRhNTU4ZWVmMDY1NzU0NDY1Nzg2YzA2ZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0MmQyY2Q1Mjc2MWUyMzAwMTJmYTJmNDk2MWI4OTQ1MzZjMTM4MzQ4NGRjYTQwNDc2NmViMmRiMTAwNWViNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiYzgzN2YzNGQ4ZTJlMzdiOTY1MjZmNTY5M2JhNjg0ZGEzNDk4NDEyZGMzZWI4MzdhZDcxNzk0ZGZiZDExY2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyMzliMDIxZjA1ZGI5YWEzN2MwNzVmYWMxNTg1NjI2YTk3YzJlYjcxYjM1Mjg1NDI3NTg3MmE0YzFhMWU5ZmQifQ"
+        },
+        {
+          "resource": "repo://tests/test_graph.py#L80-L101",
+          "version": "repo-lines-v1:sha256:5746e43119cf606315415601ffd2bb774987e81677e914e756e3c9f2aed86cf7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2Mzg0NDBjN2Q2YTg3ZGJhYWVlNDNhZDYxMjNhYTU5ZWNlMWZkODQ3YTYzNzc1MTYxODA1NmQ0NjYzMzM2ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwNzBiYmIwNmQ2YzI3NTJjMDQ1YTU0OGNkNzg5MzQ4NzdiZjAyNGFhYWQ5ZWQ3MjBkZGUyYzRmMDMzZDE1NmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3OTY4NDU1Njc3Y2I2ODM0OTM4ODZhZjBkYTE5NTUxNDhmNmQ1N2ExODliZjMwMTQzYTkwMWU0YjZhZTdiMDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f244526863e44785967ace9ca61b62f2",
+      "statement": "Graph structure feeds the analytical and thinking surfaces — salience link degree, connect's already-linked filter, think's related-but-unlinked pairs, and the MOC generators — and the serving backend drops its cached graph whenever a convergence pass replayed paths or applied an overlay so graph reads follow the projection.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/connect.py#L38-L60",
+          "version": "repo-lines-v1:sha256:bee343f994eecba98d6c16108e291db63f8c483b063a0d9948280b8e4f72eb9f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljMDJlNGY0NTAzNzY1NWUzZDJlYzFhNTBlNGVjZWQwOTI1ODZlMzYxNDZmODRkMmNmOWE0N2YxOGFkMTNmMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4MDE1MDQ4MmE5MzM1NmE1YjBkYWNjMGI1MDBiNzVmNTI4ZDk0NDA0MThmNGFiOGIzYjcxNGJmMzZlYjlhNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxZjM3ZTRkNGUyY2E5MDk3Y2M1MTJlMmRjZjRlYjEyZmEzYTA5MGI1MWU5YTM2ODFhMjI1OTljOGJmYjIxNmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkNzA3MmRkZWM0MDAyMDM0MWY2YjQ0NTFlOTVjNjA3YzRkNDc2NmI0ZTNmNmFmNjA0NzdhYzVjMzc0ODczYmMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L268-L288",
+          "version": "repo-lines-v1:sha256:29bc85f1e525fdb1e750c70c543929f3b4e13230215a7d0c7ca11138dfa6bab3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwZDI3YWEwMTc4YzliM2Y4Nzg4NzkyZjJhMjk4NmEwOWY3MjAxOTU3NDMyN2Y3MmQ4YmQ1MWNlYjI2M2I4OTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzNjY2NWI1MTkzYzQ2ZjBhNmExNTlmMGIwYzU5NzBhYjc3ODZjZDg2ZWNiMTJlZjM5YWZkMGY3ZTAwMTcxNDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0NGUxNjkxMWM3NDYzZTVkZDYxMjEwMjBmN2QyNmQzY2IzY2M0ZDc0NWQ5NDdjYTY1MTE5YzY2MjVjNzk3MGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmYzQ0OGI3NDUxNDNmMTg3NmM2ZTQyN2IxMDRmYWZlMjEwZDBjODlmMTMyMmI3Zjc0Y2MyZWMyNjQ5YjIxOTMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/salience.py#L112-L125",
+          "version": "repo-lines-v1:sha256:8937657374c890c5af75600e758768978c7a1f5664e0d46a3ab51a75d79ffd41:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYmUxZTFlOTFlZWUyM2U2N2UzMGEyNWZmYzk0MGU5MjY3ZDcxNjY5MGY5ZTA2MWM4NjIxZTRhNGU0MzcwN2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2MTZmZjhlNjQyMTAwYTNjZDgxMTY2YmZkNTQwMjFhMGRkYjQyNGRjZDQ5MjJkOWYwMjhmZmUyYmQ0ZTRkOWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5NDZjZDNkYjY3MjEyZGZjYzg3ZTlkNzViZDFhN2ExODU1ZmQzODBlMDA0MDkwMGFhNWM2ZmE0NzY3NjU0MTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjM2JhNzRhMDMyMGE2MWFmYWJjNGJmOWQzMTQzMTkwNjhhMDQ5N2MzOTUzMGUwMjgwYTY4YmRiYzYxZTE1YjcifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/think.py#L107-L152",
+          "version": "repo-lines-v1:sha256:285420e7a5d3d7dc7b640e53b32b99e6d11925f77ef3df6d20d27461a5efd618:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxNTUwYzI1NDJjYzNlYjFhYWM1NDIwZWUzN2RkNjMxZDBlZWRkYjk2M2MyMjRlMmMzZTQ2OTg0YmY1ZjM0ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NTI2YWZkNzhlMmJiZGM0N2QwODZmNjliOTdhZjYwZTQ5MjAzZDNjNDlhMTAwMDNmNTQxNzEyODlmOTYxZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2YmExYjJkYjY4Y2JjNmM3NTZmODQyYTM5YjdkYjQ4YWM5YzM4ZDRlOTMxMzI1YmE5MDYxNDg4MjVjMDY2MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4MDNjZTk1YmU0ZTZkM2EyMGIzZTg0ZjBiYTUzYjMzYTQyNTI4MjMxNGEyODRjMTYwOTlkM2I3NDU3YmMyOGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_963a32ab59dd40248e6e0384233d86ec",
+      "statement": "Index.note_vectors exposes mean stored chunk vectors per indexed path (absent for paths whose chunks lack vectors), giving salience and connection analysis read access to the projection instead of re-embedding note text.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L399-L418",
+          "version": "repo-lines-v1:sha256:1dd5a4f3e4efbfbf36b0206a14e4e89ede80bbd75f936753cde7a6144942ea15:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3ZjA0ODU1MjNhZTM5MjRlOGJmNDc1YmU0NWFmNjY0MWQ0MzRmNmZhM2E2ZDBhY2M2YzJiMzU4YzVhMmYzZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiYjU0MmE5MDcwY2FhNGM5OTg5ZmQxN2U0NGE5NmIwMmViNTBmY2JjZWQ2N2VhMGU0N2FjODgzZTg5NjgwZGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRkNjViYWMzMjRjYmE4MGE5MWNmMjk2YzRkMzczN2I1NzA5MTgwOWViZDhkNGJmNmUxMmU4MGJlYzU0OTAzYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiYzE5NjQ3Njc0NWMxNDZlMmYyYTNiZGI1N2I3NTYxNzcwYzBmMGVjOTgyOTNjNzRhNDI0OGJlM2EwOTUzNjQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/salience.py#L108-L120",
+          "version": "repo-lines-v1:sha256:2ce4ee2a8159670a87168918d51e462aa0d91a3ca3744e3362d7c3798bb9cc36:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMjBmNTk3MmRlN2JkZDg1ZTU3NTdhNTExYTcwNTg0N2Q4ZmZjZDRiZDVhYzkwODgyY2Q4NmZhYjhkZWVjYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzNWQ2YmQxYTZhNzkyZmFjMzI0MGQ4MDdjZjIwMTNmZTBhZjQ5NDc5YTljM2UwYTQ4MDU2ZjVhMWRjZGY2OGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0YWVhNTIwOTJhNTA3NWRlN2FmN2ZiMzU5NzNhODdlZmY2MDU1MjA4YmU5NGRkOWRjMDcxOGQwYmU5OTc0MzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFmY2U5N2RmOTdkYjNmY2E5ZjllODQxZDM2NDdmNDJlMjZjMmNjOWI4NTA3Y2IwODQxMWI3ZmU4N2JhZWFlMjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1ed929dd48a648fab3a86b79832c716d",
+      "statement": "Index membership is a security boundary for note reads: the MCP read_note tool checks Index.all_paths() (derived from chunked markdown) before reading, so traversal paths, non-note files, and files producing no chunks are absent by construction and return found false.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L300-L301",
+          "version": "repo-lines-v1:sha256:bd322148a0e969eaec451bffb39899a00b298dcb9a2fad79a923e513505789e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWQ1MjdjNzA0OGQ2YmI2YTIyMDlmZTBhNDhhYjYzZjA0NGY5ZmRlYjdhYzE0MTY2NTA5MGZlMjBjZjZlZTVjZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWY1NzNmOTVlOWRjN2M0ZDYyNmIyNDk2NDYyMjc5ZjA3Y2E3M2FkZWZkMThjM2Y2ZDVlNTQ1OGU3NThmY2FlZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWE3ZjE0NzViMzU0YTQ5MzNlYmM5MTliODg2N2I3OTMzZDkyMWIyYmZjYjljYjM1NzVmZWIyNDk2ZjQzMTFlNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTcwYzM0NjQ3NDhmMTA5NWY5NGVkZWZhOTg5ZjJkMGQzY2RiYzRjMWNlNGU5MWNhMzhkMzlkMmUzMGQ5ZTYwNSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L303-L315",
+          "version": "repo-lines-v1:sha256:d41ee663365b5baab310b59ad678a46ef9a2f88b3d2f25597f48d78aff536b37:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlNTAzMWQ4N2JiMDJlNjdhNWI4MmVhN2U0OTg4MzhhNmFjMTE4YWJhM2QwNzc2YmViYjdkYTc4MWE4NTJjMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYzUwMmVkMjE3OGRjZmM1NGE4NzNmNDE1ZDBmNWRhZGU5MjFmNDk5MjIxODljZDE2OWZjMDBjM2YxMTk3NGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNGJkMTY5MTJmYmU4ZTAyMDZjNWM3M2QxYTVlNmVjMzRhZTMyODkzZmI0MDBjODQ3MDMxYzE5MzFkYTYzZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlZTkyODQ3OTgwYWQzZjFjMDg5NmMwODgxNWNiMjhhYzE0ZWY1MDQ3MTM3OGMyNzk5NmQwNGFjYTlkN2Q3NWYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L578-L586",
+          "version": "repo-lines-v1:sha256:b0acd44d6b1543a771213f11c811f61657246922ee1e54603c92ce737e6abc22:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNkZTE5NWJjNjMxNDA4YzEwYTE2NzM3NGFmZmFiNTQxNjUwMzcxOWU0NGMxZTk2MzhjNTIxNWRkZjlmZGQ3NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGMwYWVmZWI4MTA3NzA5MTRlOGU3NzE4MjY4MTk2M2EyMTQ4NzQzY2IyNDhlN2FhMWZkZDJiMjViNDQ1YjhhYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzNmOTNmMzI4ODU5ZTNhYzdjMTRhZmE1MDU4OTI4NTQzYjZkZWY3MjA2NzhjMTIyOWQzY2Y3YjI4MjdmYzEzYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTNiYTczNzQxN2ZjOWQzNWI2YmJlZGZkNzdjNGIyYWI2MTdkMTM3MjcwMDhhMWJlOGM1OWYxMjQ0N2RhNzBlOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3edeac93cc284aa78dd6867e750ec578",
+      "statement": "Index mechanics are tested offline with a deterministic FakeEmbedder so dimension invariants, KNN shape, and rebuild reproducibility are exercised without network spend, while the live provider path is covered by the smoke embed and benchmark harnesses.",
+      "evidence": [
+        {
+          "resource": "repo://tests/conftest.py#L26-L56",
+          "version": "repo-lines-v1:sha256:20cb50fc3b6c82df2b032f2b9f1b5e75b076047ea3d9515388b001fa72aeaf38:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxM2ZlNGE0YjI2ZjY5NjZkZjc3M2EzMmJhYTYyYzhlNDljZDA2N2YyZDIzMWNhNWNlOTBmYmFjNTZjZjU4NjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1MzBkNDY2ZGUwZDczOTA4Njk5YTIwMTBkODJlNGJmNmM3NzZlOTVmYjcyMDEyMDViZGVlZWVmZWFhMmY3N2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0ZjNkZjFkMzIwMjY2ZTJhZTIzZDc0NzIyZDhmOTEyZjAxMWJjMDFmYWU3OTQ1MmQyNzRiYjA5NjYwZjVmMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhZjY1M2Q3MTQyOTg4YjBhMzc1OTI0ZjViMzJlZmIzZjJjNTg4OWUwYTM4N2IyNGQ3NGIxYjU3MTQ5ZWJiOGYifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L1-L8",
+          "version": "repo-lines-v1:sha256:9c498a97e392b3fc4fea899f1157e66cb622e64a2962de2444b03b7f730dea64:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGVhYTc0YzdjYWJkYjI3MTJmNWVjMDQ4NjliYmExOWViMjM3OGM4MmNiNzUzOWJkMGExZjdiMzMxNjMzNjdlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWRlNGYzOTk0NWZiMzU4ZTRmMzRiMjE0ZDM1ZjQ5OGU5OTZmMjgxNGIwZDhhYWRjNjk5MjA5MzA4M2RlMjgxMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_471f7071e0c745a8a73c5d19bde91dde",
+      "statement": "The git-first write path projects a committed note into the index lexically and best-effort after the git write lands, so the note is immediately findable lexically while its dense chunk and doc-surface vectors lag until a later fill pass.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py#L233-L250",
+          "version": "repo-lines-v1:sha256:f5f15ad9508998ff4b4cbba362159dd80bcb331ce11f1e7a1060c91df8144640:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwNzI4ZDBkNmRlY2YxY2NjYWY0NDBjNWUzMTA4N2EzY2RhNjllZTg0ZThjMmNkNjY5NTE2ZDJjODFmYWE4OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxMWI2NmIxMGNkMjIyMjU5MDM0NGZiODFlZWZkMWE1NDgxMjY4YmJhOWIwYzE5Yjc1MWMyYzUwOTc5MGIxNDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2MmE2NzU3MzZkNTZiYWIyZDIwMDhkZmU2ZDIzOGNjZTE5Mzg5MmQzN2I3ZDg1NjUwMGM1MWZmOTRkY2FjYTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ1YTdhM2IwYTE5MTdiZTA4OGUzYjNlMGI1ODg4NmJlMWZlMTVlZTU4YTFjOTc3OGM0Mjk5M2Y1ZTc5M2I3OGMifQ"
+        },
+        {
+          "resource": "repo://tests/test_embed_stale.py#L46-L59",
+          "version": "repo-lines-v1:sha256:3dca13ffa53e979b302cce4c064cd2d1bb6d7454bcdd9139b8ab26457f50864b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4N2I3ODFhZTE1YmM0MTg0ZWFlOGZiYjEyOTdlNWY0ZTYzZTBjMzFkN2FhMzUxMGQzYWZjZGNlMDVhNmYxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmYjgxNmE4NjMwYTVjZTk3NzU3OWI2MTdjZTllMDY1ODA4MDE2ZTJjMTIwZjFmYWQ2ZDFhNDE1MDRiMGRmNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlZTk0Yzc3NTMyMTRhYWYyYzFkY2FkNmU2ZDA0N2QyMmZlZTNiMzBhZjE1ZGRkMDYxOWYzZjE0NmNmOGUxMDIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

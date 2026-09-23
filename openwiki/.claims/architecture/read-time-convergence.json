@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:ca35f8b22cc8c0adf9a9fa698b0b570baf99e8f654d681032c9c97175cb62ff3",
+  "claims": [
+    {
+      "id": "claim_d3ee279000e94148a4c87bbbc4e6f485",
+      "statement": "Every read in hypermnesic runs one shared convergence step first: converge.converge() is invoked by the MCP read tools through _Backend.converge() and by the CLI read verbs, so a note committed moments ago is recall-able on the next read without a manual reindex.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L186-L189",
+          "version": "repo-lines-v1:sha256:329e8e2dd688b74e69202866ea5e5163bffe2608ad66dc5b9035f5da90671115:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGMxNTMxYjBlNTViNDNjNTczMzM3ZThlOTkzZDE0N2E3MWU4Y2QxMzcxNmFhOWJkNTUzMmVkZDgzYjFmYTkwMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2NkNjJkZWJhN2U4YWYyNGQyOGVhMWRlMmUxNDY3YmViZDhjMjdiZWFhNzJmOGZmM2JiMjJiNjc2ZTlhZGE4ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjViMDQyMGMxNTJlYzUzM2EwNGIzOTJiYjA0NDM0YjgzNzU0NzhhMTBjZDliNjQ3NzYyNmE5YjQ2OGNkMDAxMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWE2OTNkYTA0MmRhM2I2ZGFiYmFmNWZkMzJmMmMwNjA0NGU2MDVjZmVmOTI1OTI0YzQ5MDU4Zjc2YjI4MDhiMyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L93-L107",
+          "version": "repo-lines-v1:sha256:17b05121df6ac2718828254634a53a7ed77183bad32fdf0c5005692062052428:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NzE1MDkyNzk4ZDZiNjIyOWExMDA4YjkwNzcwOWY0MGM1N2M0ZjU2OTkyY2M3YjlhNzVjNjUwMTZmYzYwYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YmZlYTI3YzhkYjNiZGU0Y2Y4OGYzZDhmMGY0ZWU0NmQ3MmM5YzFmOGUxZmRhMjkzMzI4ZGU1ODIwNTc0MTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhMjhmMzA0MGRmYmViNjhjYzk0NjA4NDdiODVkYjU5ZDNlMGFkNzA5Nzk5NzFhNzM0YzQ5NWEyMTBiOWViN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0YjVkM2ZkNjE1MTJlMmNlM2MxOTg2MTQxMzcwYmJiMjRkZWI4ODZhZTkxOGI1MTYyNjRlNmU2MTI0NTVkMjYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L268-L276",
+          "version": "repo-lines-v1:sha256:128f42c22203ffe942c31e589cf525c6e696204f83bdb27aa1741d294aec41b7:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDBkMjdhYTAxNzhjOWIzZjg3ODg3OTJmMmEyOTg2YTA5ZjcyMDE5NTc0MzI3ZjcyZDhiZDUxY2ViMjYzYjg5OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzcyZjk2OTVjNzQ2N2M3NDc3M2M5Y2U3ZmM0MjljNWQwZDBlNDg3ZjNjNTFkMTVkNjY2OGEzZDI0MDcyYmI5NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTQ0ZTE2OTExYzc0NjNlNWRkNjEyMTAyMGY3ZDI2ZDNjYjNjYzRkNzQ1ZDk0N2NhNjUxMTljNjYyNWM3OTcwYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzI3MTg0MmUxM2QzMDUyMzdjNjUzNzhkOTA5ZjA5NmQ5NDk0YTM3MjY2Mjk1N2JkNDVhZGMxOTNjZWZmYjBkOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8712d0d7b4d94ebbb01877aaba4812e9",
+      "statement": "A convergence pass reports one of four terminal statuses — converged, debounced, lock_busy, oversized_delta — together with replayed and embedded counters, a degraded flag with a reason, the manual-reindex signal, overlay paths, the observed HEAD, and whether the checkpoint advanced.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L39-L69",
+          "version": "repo-lines-v1:sha256:488e7f12e88c88705f6e143b8c00d4fbfcebeeecc93a8d38ab2aef22462fc236:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZmJhZTBiOTFkNDRmYzBkNDlmNWRlNjkxZGE2ZmM0MzFmMjYwMTM0YmY3MzFlMGUyMWY3NjQ4MDk0MzM0Y2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkNzIxZGQ0MGM3MTE0NzUyZWVhMGQzMjIxNGJmYmRlZmFlMzJkYTY0NzE5NTljNTMwZThkNTExMjQxNWQwNzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmMjljNmM5ZjM1NGU2YTIyOGMxZWZjMDI2NzNkZTFkZjQ5Y2I2Mjg3YTEwNjIzNzEzODhkZWFiNzAxZGVmOGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5a50e2da0bb24d948afb9279c33a4e11",
+      "statement": "Convergence is debounced by a timestamp at <repo>/.hypermnesic/converge.stamp that is checked before any lock is taken; passing debounce_seconds=0 forces a pass and is the mechanism behind the CLI --now flags.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L898-L901",
+          "version": "repo-lines-v1:sha256:4fc11b952dd0689e1bd65d76f62fd7b72d1e1dec7a23bb5095c16bd07d4c56c3:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTZlNDQ1YTJkMGZkOGQyYzVlNTI4YTk0Zjk5ZTFlNTJkYTg5YWU2NTM0ZTY3ODY4MGUyNjVlYzU4MWFlMjI2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGYxNmNkMjEzNTM1YTJiZGMxYWNlNWUyYTFmNTAzMjVmN2VkY2ZmMDBkOGFmODJhMmUzYmQ4ZTcxZGY4ZDAzMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGYzMDVjNjc0MzZiOWE3NDAyM2U1NWFkOGJhN2VkMGNlMjk1NGZiMTE3NWE2MDZlZDZjN2FiYzQyNGNkNzc5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjNhNGE1ZTQ2N2NiOTYzMWFkZWFlYzQ4ZDU3NTk4ZGM0YWE0NjE4ZDg4MWNlOTU2ZjQ3MzNmZjRlY2UwNGJiOCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L105-L110",
+          "version": "repo-lines-v1:sha256:60d8dffac10df2d11c066cee7e6767a631ce704c7544899ff1e390d324fd18c9:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDE3MzMxODNjOTY2NzY1NmE1OTc5ODFhMzM1YWJlNGYwOGE3ZTgyYmZmMWM0ZWJlZTNmMDExOTY0NjlkMjA2YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDMzZGQxM2I2MGMwZjY1ZTY1YzA4Y2ViNzMzNDZhYTUxMTg1YmE3NDE5YTU1Mjk4MGI1ZGQ3N2VkMTA1ZTU5YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTEyZTEyMjhiOWNiZjNkMGVkOGIyZTYzZTAzNzcyNWZiYzFiMzZlYWVjZjRiNjEyOTA2OGQ5MTE4NDNmYmRlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTAzMTM4NmY2NTM1ZmMyMGFkYzkxMzkzOWNmZjI2ZGE3MTY2OTdlZDQ5ZjQ1NTdkNmY2YTUyYWUzMzY5ODk1YyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L72-L90",
+          "version": "repo-lines-v1:sha256:c35acea8cc8f5c416d0cfecc8d363cec15e932d87cea0ccb4828b4e641036e53:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ODk2ZTI3NTE3YmRmMjViOGE4YzU4M2NlMjg4OTk2ZDcyNTk0ZjJkNmNkMDhmNTBkMGI4Zjg5MTczNjVlZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwNjJlNThlYTBiMGZkMTk1YmEwNzY2MTNiNjMwZDU5ZTY3YmQ0NzBiYjE5ZTk3YTIwYzkwMjM2NmU1YmEwZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmOGNmNmU2MjBjMDg2ZDAzMTIyYzIxNThkMTY2ODZkMmIzYzBkZGE3YjY1ZDdkMjc4YjVkNWFlOGE2MDMxMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkNmNjOTVhYTc0MDc0NDg5MmQ0NDI5OGY1NDQ2ZTY1MmUwMzBkZjdjNTg2ZTkwNjQ4NDFjNjBkMzA1YmZkOTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a0bc4710b549428f83d01d0b0b252e27",
+      "statement": "The debounce stamp is written only by passes that actually ran (converged and oversized_delta), not on debounced or lock_busy outcomes, so lock contention delays convergence by one read instead of suppressing convergence for a whole debounce window.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L136-L140",
+          "version": "repo-lines-v1:sha256:8d6866f628f503d045887a2eaf021f87d9626613524b0ed6a6b8a9eba244c25e:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzY0MjEwZjMyNzUwZmMyZjQxMjg4MDM4YzIzNTAyNjBjM2UwMmMxMzAwNDczNzE5MmVkNTc1ZTVjZGQyNWYwOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjkxYjNhZjhiZmQxZTZmODU2YzY4Y2IxMGM5NDMzODQyZGU3ZGZjNDVjNmE4MGRlNDljZjdmYzg0ODNjYTAyYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjMxZDgzMTA3ZTU0MmZiNTkzMDBlYTc1YTg4NTU0ZWNjMzRhODc5NmNkYmViN2UwYTgyZWU1YTdlYTI4NTJiYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDg5M2FmMmZlMTQwZGRkYmZmYjFmODZjMzdmZDEzOGQ3MWUwMzEzMWQwZDFlNDE2MjNhYzc5MmU5NTliMGY0ZCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L169-L174",
+          "version": "repo-lines-v1:sha256:43c57cd8013a4dead2687577a05691ba973daf66b4e480de892ff16f0d672020:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTc3ZjYxOGJlMDZlZDYxODA3YzdkNzAzMzdlZmI3MDdhMGM1MTdjNzk2NzJjMTJmYjI2MzUxYWMxNWNlZTdhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODk5MGE1NmNmYjU4Mzc5YTc5NzJiYTk4OTRhMGYxNDJiNTJlNDBhZjQ0MmYwOWFmN2I5NjFlYjc3YjAyMDFhMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDAwMTI5YWUwOTdiMWIwYjQ5NzBmODg3OTdhOGU4ZjVlNTQ3OTVmMmUwMGVjMjc1ZjkwNzA2Mzk0MDkwZjcwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjg0YTBmMjNiYjNlNjExYjE5NjM2YWE2MmFhODk5M2EwYjUwNTM2YTdmMTk5MTdjODAyY2MwNmJkOTc5YjZjZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9af02151875d4f8980d5c6b94a232a7e",
+      "statement": "A convergence pass takes the single-indexer flock (.hypermnesic/index.lock via serialize.index_write_lock) non-blocking; a held lock raises LockBusyError, which becomes status lock_busy with the index and checkpoint untouched because the holder is already advancing the projection and a read must never stall.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L112-L116",
+          "version": "repo-lines-v1:sha256:c1ad957867e70cbd64d413d6960d91481dba47f20199b5a5622a09d345cff4a1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDI2N2IxYzc2NDFhZmNkMDk4YzcyZmE4MWU4MzQzZjI1NDU1NjhhMTQ1MGNjMzdiMzViMmI3MjMyYTNhMzQ3ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzM2NmIyOGMyOWI1ZGY1MDY5MzI2NzlkZjg4ZmQzZGI2MTg1ZDk3ZDQ3MzEyNDNiZmVhYjJlYzZmOTMzNmEwZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTEwNmI2MDMyZGJkZTRlYjQzNzExOGNkYTA5MmZlNTJiNjg5ODkyMTVlNjVhMWJiYzg1NGQwNGViNDI0YzNhZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjBhNjRhNDBlNDM3ZDlmYmFhMzk4ZTFmZWE3MGQzNjZjZTM1MmVhOTIwMWMwNDIxYzFkMmJmNjg0Mjg1NGMwOSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py#L134-L135",
+          "version": "repo-lines-v1:sha256:61e8fbdbc1a7b68a21d9ed0633cfcfe6bd4a3aa9f0589ff5230fb310b8750e4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGMzMjViMDc1OTMzZDg3OGE3YzI2MTBkY2E0NWY1YzVmMTI4MWYxZTg1NTMwN2YyZjk0NDdmYWY0Y2Y3YTM0OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzkzZmQ5Yzg4MTBjNzk3MWI3ZWQ0ODg0NTIxN2YwY2E0NDM0OWU3NzliNGQ2M2I1MWEyYWQ3YmI3OTVmNWI0OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGQyNmQzODcyY2EzMTRjNjM2NzcxZDI0YTRhMGU0YzcwMDA4OWRhN2I4YTY4NjFmMThhZDY5NTNlYTYyNzgzMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTYzN2FkNGZjMjdjOTE4YmMzZjlkMTliMGJmZmE1NDg0MzU4ODQ4YTIxZTgyOWEyNTEwZWFkNDdlNjVlZTZjNyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py#L183-L185",
+          "version": "repo-lines-v1:sha256:8194d7d5f6c47367183eeab90af1ca6385c9f05f4d28707011083e3171c15425:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU2OWNiNTE3Y2I2Nzk4OGJkNDdkOGNiMjk2NzIzNWMzNzMwMDNmOGRkYTcwNTc0ODc5MTEyOWU2Y2JmMzYxNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU2YmU5OTRkNmVjN2M5MTU0OTRkMWJiMWIyMDYxNjlhNDQ3YTNmN2YwNWYxODRhOTFjZjhmNDkxNWJjYmMyYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjBjOGExMzYxNDA1ZWU3ZWQ2MTQ1NDk4Mjc4NWM2YWIyYjIwNGZkODg2MjBlYzI1YTZiMzJhMzMzZjE5N2ViYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWVkNDY3NDRlYTViYmM1NjI0YmM2ZGEzZGQxOTIzMjE1YjEyMDJhMDY1OTFmOGJlY2MxNjA5YzI2NjljMDBmYSJ9"
+        },
+        {
+          "resource": "repo://tests/test_converge.py#L130-L143",
+          "version": "repo-lines-v1:sha256:591db362ba9a8d1aa500230e9f564938d3b8498de97fbddce606bc6dba53fca3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMDVjZDM5MTA1MDg2MzRkMWI4YzJlYzZmZmFkYTEwYjZjNjMxMWM2MDAxYWEwNGU3YzUwZDMyZjQ2ZTk2Y2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4NWVjOTJiODU4YTRmNDc3ZTU5MTgxYzVhNGYyZTFlMDBlYjk0ZGU2OTRhYjI1Y2VjYjg5NmZkNmYxNTc2MDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiNmJlZDVkNGUxNGI2MWY1YWRlNTY5MTNlOGE4N2EwNDk5N2NlN2FkYzU1NWU1M2M5NDcxNjg4NzQ3YWE0YjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e36152f90c5f48eea5950411320b37b7",
+      "statement": "The convergence pass holds the index lock across overlay, replay, and dense fill, and its dense fill calls index.embed_stale_locked rather than the public index.embed_stale because the public wrapper would acquire the same lock on its own descriptor and self-conflict.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L112-L176",
+          "version": "repo-lines-v1:sha256:b5469172a5f1d6276950f047e12f45b6f7b07ca7756bf04386184ad06290d704:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyNjdiMWM3NjQxYWZjZDA5OGM3MmZhODFlODM0M2YyNTQ1NTY4YTE0NTBjYzM3YjM1YjJiNzIzMmEzYTM0N2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MzQ3NzE3NWQxZDFiODk2MDQ5ZGZiOWJlMjI0MTExZDEwMzQyMWI4MjJmODI2OTY5MjM4MzMzMjFmNWNhNjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExMDZiNjAzMmRiZGU0ZWI0MzcxMThjZGEwOTJmZTUyYjY4OTg5MjE1ZTY1YTFiYmM4NTRkMDRlYjQyNGMzYWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L584-L591",
+          "version": "repo-lines-v1:sha256:655b602a087e7be7cd5fcaa442dfd0366af6c86d65cc2c60a12d786aa1f697a1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTI4ZDQ0N2Q1OTI5ODMwYzU2NDc2N2UzMTZiMTE2OWVjZjg2OWVlMDE4NjM2ODlhNjM1OGFkNTEwNTUzMzQ2ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWQwN2Q1YTFiYjdhZDhmM2FmY2I2NWZlOWVhNmExNjZmOWFjOGFkMThhZjBlZGJmOWVjMzY4MjU0YzIyNThlNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjE0Mjg5MDc3NjI0MDkyNjM2MzBlYzlmYTRiMDJhZDY1MDUzNzJmZGE2NDcxNGFhMGNjMjFmZGQ2MjVkZDJhZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTBmOGQ5ZGNmNTgyMDliNjc1ZjkzOThlNWZjYzFhNTcyYzg0YmFhZjVkZDk0M2I3NDFjOWM0OGVlYWQ1MTFmYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5716ccbad86f45f79d68a867cf4389f0",
+      "statement": "index.changes_since_checkpoint computes the delta plan with no lock and no mutation, and only trusts a stored checkpoint after git cat-file -t reports a commit; when the checkpoint is missing or unknown the delta becomes every markdown file at HEAD rather than a diff.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L483-L502",
+          "version": "repo-lines-v1:sha256:7df6d00bd3242047fc8a32f7562341f4e9647deb48c4aca67f520ccc48f57f1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4NGQ4ZmRhNDczZmM5MTFjZDA3NTIyZTk4MDk4NGU3ZGJlZmU0NGQ3Yzk3NjYyZThjNjYwNjY5NjkwNTlhMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhMzE0ZmVlOTM3Y2E1NjJkM2EwN2YwMGM0NDU5MWY4NTY1NzllODViNDI1NmUxZWFlYzQzYzI4N2I1Mjk1YmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNDI4OTA3NzYyNDA5MjYzNjMwZWM5ZmE0YjAyYWQ2NTA1MzcyZmRhNjQ3MTRhYTBjYzIxZmRkNjI1ZGQyYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3YjVlMjFiN2VkNDk2OTQ5OTZiMDlmZTBiMjJmOTM0N2NiMzIxMjg4MjExMWRiMThhNzM2MmFlMmE4YjNhMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ae0c5639f1284d26a1e5066d74126a4e",
+      "statement": "Delta replay reads each changed path's content from the commit (git show HEAD:path), re-chunks and replaces its lexical rows, removes rows for deleted paths, and advances the checkpoint to HEAD; when the content fetch fails the path's existing index rows are left intact instead of being blanked with empty content.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L505-L537",
+          "version": "repo-lines-v1:sha256:5ab6e48ca358cb63f89650bff298bf36eae553be56a9cb14423bcbf0d5cc4249:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1MmE1OGY5NWE3MmE0YTk1OTM4ZTFmYjY5NWVhOTczYjhkNDFhMzc0N2YzNmZjOTRkYjkzZWE3Y2NlNDlmNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjczOTM3ZWRiZjZjN2U1NjE0Mzc0YjcwYWRmMmU1YWYzYmNhY2E5ZDA2NDUzOWJkZTk5NTA3M2RmMTJhYzQ4NjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3MGFmNWY0ZDhlZTlkMjFhODVjOTFlZDRkZDIxNDQ3MzY2MzFhMjJkODQwMTc3MzQyMmRlNWQ3ZTQ5MjNlNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlYmZiNzYwNjZjZTZhYTFjMzA4N2YyNmQxYmYzMmU1NDQwNWUyMDQ4MjY4MmJhNDZiNGE3NWRlOWMyZjFhOGIifQ"
+        },
+        {
+          "resource": "repo://tests/test_converge.py#L288-L307",
+          "version": "repo-lines-v1:sha256:afb46b80bfc3c08f974391760fee0cef5472016a97b01d45598034b723276c4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlOGNlOTk0Njk2NTE2NTQwY2U5NDE5NDY3Zjk5Zjk2MTg3YWRkZmNlYzM1MmFhNmRjNzFjZTZjNGFiN2MyMjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2MzM3OTM2OWUzMmQ4NjgxMzM2NDA3NDQ4N2RkZGRmZDVjNDczMWJmYzI3MzgwN2QwMzdlZDZlMWZkZGRjZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_370a2059024a4df7b90aab0387330cee",
+      "statement": "Delta detection uses git diff --name-status with core.quotepath=false, decomposes a rename into a delete plus an add, and filters to markdown outside the ingest skip directories, which is what prevents non-ASCII paths from being silently dropped from the projection.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L432-L451",
+          "version": "repo-lines-v1:sha256:238cc94ffa77d9bd4f310f5a2fc7ced1349dcf506e4b7fcad77fb918d69a6441:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzM2I4ZmY0NGU2ZmFiY2ViODQxNjUyM2U3MzFjMWMwZWFhMjY3YmEzMjcwNTViZmIxZmJlYjJmZWFmOTBmN2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MmEwZTlkNzRhZmRjYjI2YmI0NjUzZjkzODVhY2UxZjRmMzk0YzA2MTEyZTQ5YTEzMTdhYzE2ZGY3NDJkMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2ZjAzNWM5MDIzMzI0YzNlNDYyMTQxOTYyNGQ2ZDc3YTg3MjgzNjljZmQ3YmM4YTk5NzJlZjgxNDZkMTZiMzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2MTQzNzhkYmUyY2M5OTFjMDFkN2NkNDVhZjBmY2Q2MjRiODk0NzlkMGFlODBiZmU4NjFjYWNjM2NiYTgwNGYifQ"
+        },
+        {
+          "resource": "repo://tests/test_converge.py#L274-L285",
+          "version": "repo-lines-v1:sha256:5380e20a65b26034dc70d0e3d127170d7bdade9c591de6f562e10a4aa8ca1f99:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkMDliYjZjNmVjM2Q3M2JmZGE4YWU0OWI4MmU2MGU1ZTBlNTJhYTk3NTdhMGEzMDE0NmY1NDc5YTZkMDBlY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhNGFiMmUxZTAwM2YxNmUyMzdiNDQ3Mzc3Mzg3YTM2ZjM5OTQ2ZTcyMzVmZGVkYzk4MTc3NjQ1NGMzMzYwYzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzNGZmY2NjZTYzY2E0YWFlMGFlNjllOTkwNDM1MjliNGE2N2IyOGYxMzVhNjI3MWRiZjMzYzVkMGJhMTAxNDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d50de5467c14249b2a322a306ad25a0",
+      "statement": "The dense fill is bounded: per read it embeds at most CONVERGE_EMBED_BUDGET stale chunks and at most that many paths missing a doc-surface vector, processes only missing rows so capping stays idempotent and resumable, and recomputes doc surfaces from committed content.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L561-L576",
+          "version": "repo-lines-v1:sha256:949e90dbaf0fbd73d77bbffece7c5d6d310a63839b300dda70023ac63ba9e10d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiMzdjM2IzYTFiYzQyYmVhM2JiMjRiZmEwMTU2MjZlN2FmMmNiMDhmOWNlOTVlMmQ5NDg4MTIzNGY3YTc0ZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2M2I1ZTVmZTk3MGVmODhmY2NjMjQxZGZlYTkwMGI4ZWMzNWJiZjRlYzVhNWZjMDM0MDIzM2RiZjliMTUzNGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzMDBmMDlhNzcxY2FjNDE5YWQxODNiMGI2OTUwMTk5NWY2ZTJkNzhhNDc1OGVjMGQ3Zjg4ODU4MDBmMzI3NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3ZTRiN2YyMzA3MmY5ZmNlNGY1YTZlMTBjZThhZWQ5MGZmNjdkY2JmOTg5NmNkZjI0NTQ3YmEwYWEwMjEzMjQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L584-L640",
+          "version": "repo-lines-v1:sha256:de5b313c61ba416fd8a750a7024e86ebf020fce492583d9ddf1ddc688d2de8e0:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyOGQ0NDdkNTkyOTgzMGM1NjQ3NjdlMzE2YjExNjllY2Y4NjllZTAxODYzNjg5YTYzNThhZDUxMDU1MzM0NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1YTI4ZDYxMDM1MGZjNTgxNGEzZDI5NjFjNzQ1MzJiNjU5NThiMzJjOWM2NjhiYjBkY2FlYTMyYjZmYWQxOTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNDI4OTA3NzYyNDA5MjYzNjMwZWM5ZmE0YjAyYWQ2NTA1MzcyZmRhNjQ3MTRhYTBjYzIxZmRkNjI1ZGQyYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkNmY4YTc2Y2ZmNTc3YWE2ZjE5YjEwMzI2ZTExMWY1NWQ4MzJhZTZkMzE0ZGEwYWEyYTVkZWI0YzkyMGQwNmYifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L305-L321",
+          "version": "repo-lines-v1:sha256:23dfd75eb49b0be572cb97421017cc409f9d85f6f826bfaeb5b6b1dded09b673:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwNmI3ZjQzMGJlZTYzNjZiMjYwNGJjODRiYTkyZjk5MTZjM2MyNDBiZGI2OWE0OTNiZGJlZjM0MjNiYzZlMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmM2YyMjQzNmRlYTY4ZmE2YjFiNmI2OGI4YTNhNWMzZDU0OGM0Y2RhYThlNWVjZTYwZTkyYTU1M2FkNWNkNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxZTY4ZjQ4NmEyMDY5M2I0ZjhmMWM4OWVlMGE4OTFiZDkxZTk5MjczZDVlN2FjNGRjMGFhMzJkNDI4ZTY4NDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cf2a2e9fee544f02ab11d43de7bbbad4",
+      "statement": "An absent or failing embedder degrades a pass instead of failing it: the lexical and graph catch-up still completes and the checkpoint still advances, the result carries a named reason (missing_embedder, rate_limited, cooldown, or embedding_error), and vectors are written only after a batch returns, so partially embedded state holds real vectors or none rather than zero placeholders.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L147-L167",
+          "version": "repo-lines-v1:sha256:51468be85960db27fccedaf814ff68a7d4e9640cb1af44f262b741a9a3f8ef0c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlMDFmNWI3M2Y4NTMzMjE3YjRkNDUzY2U3ZjBhZTNlZTRmOWMwNjE0NTI0N2VjZTYyMGMwYzM3YzZiZjkxZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxMDM0ODFjNTdkMGYwZGMwZjc2Y2QyY2M4YjM2MDRjNGU4Mjk2ZGE0MTIyYWRkMTllODE3NDVkYzdlMzMxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRhMWMxZmMyZTQ2M2RiNzNmZDk3MjFlNzM2Y2E1YThlYWIyMjc3MGNkMjllZGI1NDdmYjM4Y2YyNTZmZjUzZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJmNmJhMzVhYWJiYzJlNWYwMjhjNDVkZmNiMzJjNGM2OGFiOWNmZmEyNjAzNWY4ZjE5ZjE0ZjJlMjY5ZWVhZGIifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py#L63-L93",
+          "version": "repo-lines-v1:sha256:f0aa082c714e4a982fb670cac1a705c5e59b44c95a9fe7b0ce2aa066de0026df:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNTc0OTAxYmQ2ZjRmYzBmNTU5MThmMjM5OWIyYTVkOWIzYTQ5YjMxMmEyOTdjY2Y4MTg1Mzc2M2YzN2VjMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhM2NlOGQ5ZTU2NjllYjU5ZTEyNzRhM2YyZjRiYjM4Yzg5NzUwMjkxZjRiMWFlNDUxYzgwYjk3OWEyNWZlMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0MTg3ZWIzYzllMDdhNTI2ZTA2M2I2ZDJiY2UwM2NhMWRhMjMwMmM3NzRhMGVhNDNhYjQ4ZDBhYWJiOWE1Y2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiYmI1MzdmNTQxMzM5NDg5ZGY5ZTBlMDI0Y2Y3MDQ2NGRlMTc1NTUyNzBlOWYyZTUxYTU5NTMyNjQxZWVhNzkifQ"
+        },
+        {
+          "resource": "repo://tests/test_converge.py#L164-L180",
+          "version": "repo-lines-v1:sha256:f40b842ea442ebac0214daf58745f3f6561d1fdf7f8856b726e6d5b4ea059000:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjM2U3MzM3YjRhYjhmZGM2OWU1NWJjZmVjNDVmNWU5ZTQyZTc3OGE0NmRlYTk1NDBlNjhhYWM1ZTcxNTdhNDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwYjcxNWI2OWE0MGIxMWYyODU0NTI0MzBhYmM2MzAzMTVhNmQzOGI0MDYwMGQxNGI3NmUwNjhhZmFmYWY4NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2ODYyYmFhZTNhZGY1NjBiZjE0YTlhMDI4M2JhZjE4M2Q2Y2I4MjVmYjJiM2IwNjI4NzNkYWQ2ZTE3NjcyMDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_05c5a8e93dae4621afb5ff3d5dc472cd",
+      "statement": "The projection tracks freshness with two independent measures: the SHA checkpoint advances on the lexical/graph replay, while dense lag is tracked separately as stale chunk ids and paths missing doc vectors — which is why a dense failure after a successful replay is a degradation rather than a rollback.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L141-L145",
+          "version": "repo-lines-v1:sha256:2cd30f3c507dad7db08b3191b94e2acd86d60ad89507c88ab6bb62f7c272ff7c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGMyODZjMmNkYmQ4NDc0YzZiYTAwNWMxZjA4MjE5ZTcxZjRjYWZiYTI4NjgyMDg4YzFiYTdkZWUzOTA3ODFjMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2FhZDA0MTE5YjlhMDg3NTc3OGNmMDgwOTFkZjUxMDc2ZGM4YWZhOGE1ZTE2OWE2NGYxN2FkYjFlZjRkOWFlNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNkZTNjYTc5NTdjYmMyMDZiYTUyNTJmZTRiODM5MGM5YmUyOWRhZWRlYzc1NDBmNzQyYzNmMjEyMjJiYTFlOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDQ3NTEzMzdhODg0Mjc5MDIyY2JlMzFmZTUyODM2NmNlZjFjMjk4YzE1MGM3ZDExNTU5ODYwMzhmNTcxYjU0OSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L303-L315",
+          "version": "repo-lines-v1:sha256:a708d3c1c1c8b0c15203dc37b17678898e183a232c2bc795f130252592e144dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NTMyY2Y2Mjk0Y2MyZGUwM2RlNjAzNmI0NjE2ZDY5ZWRlZGUyODg3NGRiZWIyYWIzNjEyZjk1ZWNjNzNmYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjMDYwOTk5MWE0ZTkzMzExMzYzZDBiOGVmNjc5OWM0NDIwYjFmNzczYmM1MjgxOWUxMTgwZWM4MmRlNDMwM2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2Y2VmNWVhYzk5MzU4MzI5ODM0YTg4OGM2ZTE2Mjc1MjUzN2I0ZWY5NjcyMTNiMzExNWYzMTY1NWUyMDQyYTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiMDA5MmRjMWVlOTYxMmI0NjQyMDViOGQwNzNkZDA1ZGFhZGQ3ZWNiMTg4NTg0YmJjZmVjMzNhYjE3NzU0MzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_394f08d11f8042fc9f1fb9b1eacb4c68",
+      "statement": "A change set larger than CONVERGE_MAX_DELTA_FILES is never replayed inline: convergence serves the current consistent projection, sets manual_reindex_recommended, and leaves the checkpoint unchanged, because a partial replay could not advance the checkpoint to HEAD and would redo the same work on every subsequent read. The same guard fires on an index with no usable checkpoint, where the delta is every markdown file at HEAD.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L131-L140",
+          "version": "repo-lines-v1:sha256:8af35cc9802b50c39e544c5e961e227716e2981a86622e9084dbef35761c3244:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxZjgxN2U0MmQ1ZTIyYTBmNGQ1ZTBkZDZlY2M3Njc4YTM1NzdhMzFmOTU5MmYxYmI2NGExZmM2ODk4NmM4N2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MWIzYWY4YmZkMWU2Zjg1NmM2OGNiMTBjOTQzMzg0MmRlN2RmYzQ1YzZhODBkZTQ5Y2Y3ZmM4NDgzY2EwMmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5NjY5MDc0ZjczNjRiYWM4YTZlYmQzYmUyMTcwMGZlYzBkYmYwOWI2YjgxYmNhMTJlZWU1NTgwODRmNGMxZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4OTNhZjJmZTE0MGRkZGJmZmIxZjg2YzM3ZmQxMzhkNzFlMDMxMzFkMGQxZTQxNjIzYWM3OTJlOTU5YjBmNGQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L500-L501",
+          "version": "repo-lines-v1:sha256:5e491de5e136618d9363982e64672478404973933459e331a4dc6dae09260b76:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDVlZjBlMjE2MGM5YTBkMTgwYjNkNTBhNDcyZTdiNTdkZDJmMzhhYzViMTQ3Nzk5NTg0ZWQ3ZWM2MmQ3YTNjNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjhhZjIwNzY1YjgwMTY3ODI3NDQyYjZiNWU2NTQ2MDM0NTdiNTUzYmE3N2NmNjAyNzZlMjdlMjg1ZWU5YWU3ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDdhMDVkNDhmOTU4NzhlMzZmNzQwMTlkMGMwZDhlYTZmYzhjMWMwMzM0YTg1ZGM4OGYyM2Q5MTNiMzNlZGQ5MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjcwYWY1ZjRkOGVlOWQyMWE4NWM5MWVkNGRkMjE0NDczNjYzMWEyMmQ4NDAxNzczNDIyZGU1ZDdlNDkyM2U0MSJ9"
+        },
+        {
+          "resource": "repo://tests/test_converge.py#L148-L159",
+          "version": "repo-lines-v1:sha256:cc808add83cd896dc6405e65668a6dc664e8c37699b8b8e355601b6ca38af6dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkMDY2MTY5ZGU1YmFmYjlmOTE5ZmIwYjRmZWYwZjJhZDdmZmRkZDVmMjU1ODFiMGQ0OWU2YzdmMWFjYTdjMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdmOTNkYmExNjNkMDBlNGQ1ZDI0M2ViNmM5OTc1MzE3NjFhMDRiMjA4ZGFjMzE1OWZkNDI0MGFlODg4ZjNmOTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyMWQwZmIzYzE0ZGRjZWFkYjNhMzg0MGJmODVmNjgxYjRhZjBmZjZmODhlM2Y1ZTA4ZTFhOTI5NjFlY2JlOTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_535e559aa43c4196849a2ca6d7f2d0eb",
+      "statement": "Convergence never performs a full reindex — it never calls index.reindex_isolated, which stays a manual, explicit operation (hypermnesic reindex, with --isolated building in a detached worktree and swapping atomically) — so no read can start an unbounded rebuild.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L102-L111",
+          "version": "repo-lines-v1:sha256:27d2ccce56f1d3ae02d90a2a555ab00b8d5fde8cb11d6c1ecd5ac6a30a5b58af:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhNzE0M2NmMGM5YWMyOWVmNjM0Y2NhOTg3YzljNmQ5ODdlZDZkODE2ZGMwZGMzOTdkODk3NzFiMmFiODgyNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1ZDA2NDBlYzMyNjc2ZjY5M2M5MDY0YTJjODY3ZWQyODU0MGRiNTVhYWYyNjZlMmNlMTdjMThjMGM3MWVmMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjNDJmN2EzYTI5ZGZmMzgwM2IyYjFmNzY1MWY0NTQxMGQ4MmMxYzI3ZWIyYTRlNzhmYmZjZTUxNGEwNzEyMDcifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L8-L12",
+          "version": "repo-lines-v1:sha256:a587fe0cbb910c6e5deeb3eed1d8e3205a36c4fb9f8002be81a4b44dd3fa738a:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzc2ZGM0NzE2MjdmNjkyNjlmYWUxYzVhZTA0NTQ1MzFjMDk0MGE3ODQ3ZDA3ZWVkMWU0NTBhMmNlNmJiMzA2ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTY0ZDdlZDNiYjkyZDM1MDMyMmYyMmRmNmU0NWMzNmE4YmM4NWIwMTc2NmQyNDljNGNkOTU3N2I4MTAwZWIyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2U4MDBhZjEzYmM2ZTg3OGU5MmMxYzliNWNlNGQ0N2UyZjIzNTBhYWVjOGViYmYwZDVmZGNjOTMwMzhjYTMyNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTgzYmFjYmZjNzcwNjAzN2EwOWQ2OWEyNjlmMmU1ZWM3ZDQwMDJlOWM0NDdlYWJiODVjNGM0ODBkOTQyODE4NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L664-L673",
+          "version": "repo-lines-v1:sha256:9efefee94a6828c0e4926f219fdd48a9b4f6e44e2d7ce90856563d000e77252e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDNjODU5ZDA3ZTZhZDIxMDI0MTM5YTM5OWNhZWZlMTVlNTM1ZGNjNTg5NzE1YTI4Y2Q3YWI4N2JhZGY0ZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2YTcxNTI1NzJlZTg0ZjEwOTA2Yzc0YjlmMmE5MjQzNGRkYWIwZTNjNDI4MTNiMDRlNTk3ZWZjZWM5NTFiMjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhNmZmYzlhOTExYzBjNzdjZjdiMmE2YTRhZGJhYzU4MTliODAwOTdlYjcwYjMyNzE0MTc3Y2M1MTczYzgyNWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzYWNiN2RkMzZiN2FkMWEyZThlNTVkNzY1MWI0YzEwYTAyYWQ2OTc0MzNiNDRiMmVlMWNmOWUxYTk0NjI5NjAifQ"
+        },
+        {
+          "resource": "repo://tests/test_converge.py#L258-L269",
+          "version": "repo-lines-v1:sha256:0a46fcc499c774d71d9637126603357034cbf69d7b294fa595b47ffd0026215b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3NzgxMmYyMjhjMDZlNmJkZTRjN2M1ZjkwMTU1ZjkyZjYzM2Q1MjlkZmExMzVkZGI0NTYzYTQyMGI5YTI4OTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzODhmODZiZDgwMTJmMWM1YjdjODZjOWQxOTBmN2NlNTJkOWEzMmM3MWVlZmEzNzkyOGI1YjdhNTBlYjlkMTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4OGYzMzMxZWM0ZGQ1OTAyZjkxNzJjNDQ3ZTVlMTA2ZWVmNGMzNGQ4ZTlmMjhkZDAzMzVlOGQzZWJjYjMxYmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_142efe4009d947669293aa4711362a2e",
+      "statement": "The manual-reindex signal is advisory and only surfaced: every MCP read tool and the CLI's retrieve and list-folders outputs include manual_reindex_recommended, and nothing in the engine rebuilds the index on that signal. The same field name is derived elsewhere from different evidence (doctor from missing vectors, memory_control from the checkpoint disagreeing with HEAD).",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L193-L203",
+          "version": "repo-lines-v1:sha256:ae8794da735bcedc22e4c467a37878b32dafde5aa6fe8ce57d890cfd3dcd6e54:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiNDAyZTQ3MjFjZmZlZWEzMjNlMzMyNjFkM2U0NDY1ZGE0ZTY4M2Q5OWMwNjBkZjcwOTBmNmY5NTIyZjk1ZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhNjkzZGEwNDJkYTNiNmRhYmJhZjVmZDMyZjJjMDYwNDRlNjA1Y2ZlZjkyNTkyNGM0OTA1OGY3NmIyODA4YjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzNDVlYzViY2Y4MGNjMTdjNzUyMDE4YmM5NWIzNTdmNWRhNTc5ZDA2ZTJiODc5ZGJkNzhjZjRiMWQwOGY5ZjgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L345-L353",
+          "version": "repo-lines-v1:sha256:ba82d038ca9295fb070b896dfe8565c8aee77152479242b6d1ed6057f1ede0f1:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzY3N2ZlMWYxY2QxYmEyY2ZjYzcwYTY2MWVlYjFhYjhhOWMyZjRlMmQxMmE5ZWYyNGQ1MTk4NjY0MmMwMTc5YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWY1NDhlZTI5NGNhOTczNTBhYWVlYWYyN2YzMjg4NGU4NDk2Y2RjN2EwMTY5MmE0Y2NiYTBhNmJiNTExZTE2NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjE3MjNmNTg1NzJjNTIwMzViN2RkNGFmMTJkYWU3YjQyZTIyMDc4NWUzOTgzNGU4MmYwODgxNjhmMmQwZmUwZiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L444-L459",
+          "version": "repo-lines-v1:sha256:41c7722f8175dfc7a3cf15715b941e35daf9bb36398f248c3c90be6782ffb3ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExMWU1ZDZjYzJlYjE1N2FhMTk0MjY2NDNjYzBiZDhhNTNiOTJlNWIyYmYwMDM0NmRkNjZiMmVhNjkzNmY3OGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkOGUyNDQ4YTA3ZjEzMDY3OTc3OTVlYTE2MTRiN2JhOTRjOTVkN2Y0MWE5ZTcwYmFhMDBjZjRlOTM3MWI4NzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyMzA0MGM5NzQ3NWY4MTMzMGVmMGMyZTc0MTgyMzVjY2ZkNzJkOTc4ZjJjODg2NGNhMTg2NTA3YTJjNjBjZjAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py#L129-L131",
+          "version": "repo-lines-v1:sha256:d6ff1e8acf4e1ab712b73b6887d2c33995b2f40319e61f01f21f1413923dcea5:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDM1OTc4MjVlOGY1MDMxMzI5OTdlNWFjMzQ1YmFkZWY3NWNhMWY0NTA4N2FiOTBhNGZiNzUwNTY1NTM1MmQ0OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzRmOWI5ZjNmMmEyMTMyM2I0Y2FhYzU0OTJjMzlmMDU5ZmRkOTgwZjIzMDY4OGNjNjgxYmI4YzAwZjBjMzc5NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWJhZDA2Mzk4NzU4MGQ1NjVlYzI4YzgyNWZmMTU0ZDAyMGJjMDg3ZDg1ZDlmZGY3ZjYzNGZlMjlhNTU2NGNjMyJ9"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L417-L432",
+          "version": "repo-lines-v1:sha256:4b78940aaa90880c55fbb305cd7994dcb6e3e71b6dd0aa4f5059b8b1e03805fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1N2M5Nzc1YWQzNjY3NTBmNDU4ZjkyOWI0MjQ4YTliNjUxM2U0YzIwOGU0ODJmMDU1ZTliOWE0M2UyZTJhNWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMTY2MDkyZGExMTg0ZjdkOWNhMTI0ZmJkNGFiNzJiN2FmNzMwYmNiMWFlMDFjOTIxYTY0ZGMxNDM4M2JkOTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwMmJmOTU4Y2ViYTRlYWFjMWFlODZlZjg5YjE0MTY1ODhjMGE2M2U4MDc3NmJiNTZhYTdmMmU2MWFmM2EzMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkNjk5MWJkMGU4M2EyMGJiMjY3YjU4ZDE2NjQ2ODQ2YzRiNzFkMzczNTkyM2UzNzgyNTkwMjdjOWFmZjhjYjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_52e561649bce422583085fe646bc5d3b",
+      "statement": "With authoring_host=True the pass re-applies the working-tree overlay before the delta plan — re-indexing tracked-modified and untracked markdown from disk via git status --porcelain — but keeps those paths out of the dense fill and never advances the checkpoint, so a replica projecting the same committed SHA never sees the uncommitted content.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L118-L127",
+          "version": "repo-lines-v1:sha256:84d328bd280ab83afc08ec0e0c9959f9cbe4cbd94bd9c3dc3e1369a0c926f756:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYTVjNjZlMTdiMTQ1Mzk3ODM0YjhjODU0ZGM0MTkzZTIxMjUxODBhODk5NmExNGMzMTg4MzMyNmIyZWZiY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxMDdjZDUxNjRhZjk4MTgwMDMzYWM5NTlhZGU0ZDBmZGZmMTVkNDMzNTIyNGM0MjU1YzdmNWI2NmZhOGM4MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5NjY5MDc0ZjczNjRiYWM4YTZlYmQzYmUyMTcwMGZlYzBkYmYwOWI2YjgxYmNhMTJlZWU1NTgwODRmNGMxZjYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L714-L738",
+          "version": "repo-lines-v1:sha256:fe99771f81dba65a52cb343e6460fe0a0caf501ddb87c8cc23ce0295e18a273a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1NjQxYmUwODJmM2E4NGY1ZmU3M2U5Y2Q4OGQzOGI0Y2QzNGQyMjBlOTNiYjVlYTNmNGVhNWMwZDk4ODUyNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlM2VjYjY2YTFkZjRiODNkMTg3YTgzOTkyM2M5NGVhYzcwNGRlNzFhZTc3ZGU1YTljNzg1YjlmNTUzYTg3ZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MTI2MGU5M2ViYTI5ZDI3ZmFhYTliODAwZmIxNGY3NDYwMGRiNWU2OGE2MmUwMTUzZTk4MDJhYWZmMjEyZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZmI4OWIzODhjNGJlYTZiMDJlZjk1YWY2ZWYxZTdjMmZlYzZjYTBkYTg2YWM3ZjRlZDNhMTlhOTkxYWMzYmUifQ"
+        },
+        {
+          "resource": "repo://tests/test_converge.py#L226-L253",
+          "version": "repo-lines-v1:sha256:848b0b217f86cae7a38865e43274f95f4f8f942567af2a37dd118dff856b6087:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1OGRmMTY3ZWY4YjM4M2I1YzY1YTJlOTFlNGQ4NjM3MTFjYjQzZjdhMDg2NDIzNTU2OTVmYmY5YzgzOGNhMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3MjRlZmMxYjA1NzdkZTA5M2U0NzJmNDM5OWJhODhmM2M4NzEzZDk5MmMwNDRiYThiZmFjYTUwY2VmNzNmODEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f43f6659c906439e8402591796248d72",
+      "statement": "The authoring-host overlay is best-effort (any failure yields no overlay rather than a failed read) and is off by default in the serving lanes: build_server defaults authoring_host=False and build_cloud_server never passes it, so both network lanes are replicas by construction and the overlay is reachable only through hypermnesic converge --authoring-host or a programmatic build_server(..., authoring_host=True).",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L471-L476",
+          "version": "repo-lines-v1:sha256:4066fbb25b0bf2df7cec9979a1fe3d7489331769e2c8a06360b68dc3abc02776:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzBhZmQ2MmFlNTYwMTA4OWVkZjNjN2UyNWU0NDMxMmRjYjU5ZTY0OWZmMTM5OGNiMDE2ZmIzM2U4YzkwY2NiNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWViYWY3NmZhNmI1NDRhYzkwZjY4NGQyYmVjNWQ1MTU0YzZmOGZiMGFhMjdlYTU5MzAyMjU0MjkxNTdjNWFjOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzYyODZkYTBkNzU4MjVhMTJhNDYwYjhkNTY2MzE4MjRhMGI3OTQ1YTg5YjcwOGY3NWM3ZDUxMGFmN2E5NTYyMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGY4MjFmYTg0ZGJiNzU2ZGUyMTdiMDkxYmFhYjgzMDZjNDliNzU2ZWY4NDZlYTc2OGIwNWM3NTVlY2I5N2QwNyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L898-L899",
+          "version": "repo-lines-v1:sha256:732fcbd4ccd1c352d42af5e0dbd491546f4cf191768ad239f7666118ea988192:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTZlNDQ1YTJkMGZkOGQyYzVlNTI4YTk0Zjk5ZTFlNTJkYTg5YWU2NTM0ZTY3ODY4MGUyNjVlYzU4MWFlMjI2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzRhNTdmNjk5ZmE5YmM5NTI3NjEwOTFkMjczNmU3MTM0MTRkOGZhNzI3Nzg5YWRjYzA2NTdmM2RkZGU3NDA1MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGYzMDVjNjc0MzZiOWE3NDAyM2U1NWFkOGJhN2VkMGNlMjk1NGZiMTE3NWE2MDZlZDZjN2FiYzQyNGNkNzc5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGY5MzQxOTUwNWQ2N2FiODE4MjE5YjRkMGJkYTg2MmU1NWFkOTBhYjk3YTI2YTEzZDg2MGQzOGQ5ZTg5MjYyYyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L122-L126",
+          "version": "repo-lines-v1:sha256:0a53f004473279a60aab70a236101a4f44601b4a707347097fb7b1e0d564994c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiYzE0ZWEzMmI1ZjVjMjkzYjc3YjljNDg5MTYwOGY2NmZiYjllY2NiOGE2YjYzNTNkMjM1Zjk2N2RiZGZjNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ0MWJhZWQ4MTJkOTUxY2ExZGNjNjQ5YThlOGFhM2Q0NjU3NzdhMWFiZWM2Mzg3MDE2MWNjN2NjYTk3ZDUwYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjYyYmVmMmFjNGRiNDk3ZjczODNiOTFlYTBiNjNkZTU5MDkyNTI0Mjk5MzIzNDJhNTg3YTMzMjQyOTEyZjFlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2YxZWJhZjdlYTVmY2NlMTFjM2NjOGMwYWY5NTk4NWNjZjJjN2MxYjI4YzVlNWRlNWVkZTY0MTQ3YzhmN2E3MCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L250-L256",
+          "version": "repo-lines-v1:sha256:5e3472635a205dfb0061cab692b343b089070405aa8655a741cd4bc289e3b365:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTVkNDYxMDdlODc5Zjk4MjYyNDMyOWRhZjY1Mzc2ZDAyYmM4ZGUzMzkxOWQyYzM2MmQ5MGZiZTg3OGU3NWE4YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODcxMDAwMWI5Zjc5MTc2ZTg2NjNkYzc4NjNhZGZhMWQ3YjMwOTI0OGE3OTI3OTA3YjVlMzM1OWIyOTU1OWIwNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzI2ZGIwNDRkNjMwNTU3ZWQ5NzhmNmQzMjcyYWY3NzUzYTg3YTYyOWEwMDY3ZDlmOTFiZTBjYmJhNTYxZTRkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzIzNDIzZWJmYjMyYzlmMWFlMzZkZGJlYzAxNzEyZmVhNWU2YmM0MThjZmQwZWY2ODNmZDkxZDNlYzI2MDk3NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L960-L963",
+          "version": "repo-lines-v1:sha256:316190fec149fc75321998737353bb6a0347453c0409fd08eceb99485e17f6fe:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjM3ODhhMjcxZTRlNTkxYWY5MTZmN2RlMzY2MzMxYjgzYTRiMjZmY2QyOTIwYTA2YmY0ZTE0YmFjZDYwYzI3NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg2MTM5OGVjZjExYzVlMGZlMzJjZGM4ODA3MDQ4MTkwYjkxZDIwMjUwMDVlYmYzNWQ4MWUwYzQxOWE2ZjgyYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTc3ZDEzM2FiYjlmZWVkNWE4M2E3MjMyMjA5YmVmNGUyMjBiYTVjZjYxZTEyNWEwNjY3OWE5ZjE0N2MxMmVkZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzkxMmVjMDdkZjEyYWE4YmFlNTJmZjQ5OTQyNjg0ZjFjZDVjZjc3OTc5NDJjNTVlZDBlMjZiMWM5MjI2M2I1MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7d463b4af2d14d5b956ac0f79df472f0",
+      "statement": "Convergence writes only the .hypermnesic/ projection — the index database and the debounce stamp — and never writes the repository, even on the authoring-host path where it reads the working tree.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L23-L23",
+          "version": "repo-lines-v1:sha256:b7e7ccc624af8eff415e361d2eca1d2dfa9d589b9db814354610d8c4e7293111:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjdlN2NjYzYyNGFmOGVmZjQxNWUzNjFkMmVjYTFkMmRmYTlkNTg5YjlkYjgxNDM1NDYxMGQ4YzRlNzI5MzExMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjdlN2NjYzYyNGFmOGVmZjQxNWUzNjFkMmVjYTFkMmRmYTlkNTg5YjlkYjgxNDM1NDYxMGQ4YzRlNzI5MzExMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWZiMGYyMWM2YzFjMTI1ZjU4YWIxMTA4M2ZjOGFkNTEyOTMxNzA5NGFiMjQzODgyYjY5ZDAzZTE0ZTk2Mjc5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWFhZjc2MzdjYjZlN2U1ZGI4NWQ2MzQyNzQ2MDE0ZGYwNDFjY2Q1NThhOTIwYjI5ZWI2YWM3MTlkN2JhZjVjMiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L72-L90",
+          "version": "repo-lines-v1:sha256:c35acea8cc8f5c416d0cfecc8d363cec15e932d87cea0ccb4828b4e641036e53:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ODk2ZTI3NTE3YmRmMjViOGE4YzU4M2NlMjg4OTk2ZDcyNTk0ZjJkNmNkMDhmNTBkMGI4Zjg5MTczNjVlZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwNjJlNThlYTBiMGZkMTk1YmEwNzY2MTNiNjMwZDU5ZTY3YmQ0NzBiYjE5ZTk3YTIwYzkwMjM2NmU1YmEwZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmOGNmNmU2MjBjMDg2ZDAzMTIyYzIxNThkMTY2ODZkMmIzYzBkZGE3YjY1ZDdkMjc4YjVkNWFlOGE2MDMxMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkNmNjOTVhYTc0MDc0NDg5MmQ0NDI5OGY1NDQ2ZTY1MmUwMzBkZjdjNTg2ZTkwNjQ4NDFjNjBkMzA1YmZkOTYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L714-L738",
+          "version": "repo-lines-v1:sha256:fe99771f81dba65a52cb343e6460fe0a0caf501ddb87c8cc23ce0295e18a273a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1NjQxYmUwODJmM2E4NGY1ZmU3M2U5Y2Q4OGQzOGI0Y2QzNGQyMjBlOTNiYjVlYTNmNGVhNWMwZDk4ODUyNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlM2VjYjY2YTFkZjRiODNkMTg3YTgzOTkyM2M5NGVhYzcwNGRlNzFhZTc3ZGU1YTljNzg1YjlmNTUzYTg3ZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MTI2MGU5M2ViYTI5ZDI3ZmFhYTliODAwZmIxNGY3NDYwMGRiNWU2OGE2MmUwMTUzZTk4MDJhYWZmMjEyZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZmI4OWIzODhjNGJlYTZiMDJlZjk1YWY2ZWYxZTdjMmZlYzZjYTBkYTg2YWM3ZjRlZDNhMTlhOTkxYWMzYmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3f313223d1c6401fbb3a924aac7a2d31",
+      "statement": "The pass is triggered from a known set of entry points: every MCP read tool converges before answering and clears its cached wikilink graph when paths replayed or an overlay was applied; each CLI read verb converges with --now available to force a pass; hypermnesic converge is the manual pre-warm; and the opt-in post-merge hook runs that same command as an idempotent managed block terminated with || true so a convergence hiccup never fails a git pull.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L400-L421",
+          "version": "repo-lines-v1:sha256:7f7a7fc35329def6ca32a3d288db54f41110bb080b150c588bb4170e472295b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzZTc0YTI0ZjE3YmNmODgyMmM0NTI3MzRlYjJiOTI0YWJmYTU5NjkwODNkNzU2MGNlNjQyNjQ2ODNhZmY1ODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmZjljZmFmODQ5ZDVkYWEzNzA4ZmFlNGFiNTMxNTE1MmY1YTFlZDUwZTgwMDJhMmY2NDYwOTAwMTlhMDA2ZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwYzNmMjYxODdlYTk0ZjBiOGZiMjdmZDU2MTc2MjA5ZTFhMjMzYjExYzU1NmM4NjcxODdkYTAyZTM1NmUzYWYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L102-L108",
+          "version": "repo-lines-v1:sha256:08cf5c370b535975b9fee79b34b0f3df525e1c505e595d33f035a5e672b6cc01:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzllYWQzMjRhMDkyYTFiOTBlZGI5OTI3MGI1YmU4ZDc4MWMxNGJiNzZlNjUxMDMyMGE4Y2JiNzg5NjgwODFjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGZkYmZiZjI3YjcyYTYwYjBlZTU2NGU4NTA2ZjRmN2NhZDNlZGUzMGMxMTVlOWRkOTdkNDExYTUzOTBhZWYyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDRlNzNhNDg1NTYyNzE1ODZhNGI5Yzc3MjIzODA4NWIwYThkNWUxYTMxMDU0ZjU0Y2FhOWU3Y2UxYTc1NTg4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDAwOTNiYWYxZGI2MGViMjMyMWM3OGIxYzg2NDhkNTI2ODE0NjM4MzE3ZGIwYzdkNDQ2NDY5MzhjNTQ2YjZhNSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L63-L75",
+          "version": "repo-lines-v1:sha256:86fceb0345f2dc1103204747217f103c85513324c085ab2c83e15cba1527e1cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmMTM1ODhhYjJjOTE5ZDBjMDEwOGNiNDFhNzBhZDhkMTFmODNiMjc0MDI0NGE1MDk5MjY5ZGYwODQ2YmE4OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkNGNhNGY4YmVmYjQzZmIxNzUyOTdkZDA1Y2I3MjA0NTBlYjliN2JiNmM0ZDlmYmFmMTg1ZmIxZWMzNWY3OWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMGI1ODFhOTc3ZmU4OGY1NDEyMGQ3ZTljYmNiYzJmZDA5MDE4ZTBjZjJhMjYyYTNhMGQ3ODg4OWJhN2VhYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1NTA4MTE3ZTkwYWFmYzM4MGExNjM0NDFhYWI3MGIxNjAzMjZjMDdjOGM0MzYyMjg0YjcxODdlYzk2ZGVmOTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L268-L276",
+          "version": "repo-lines-v1:sha256:128f42c22203ffe942c31e589cf525c6e696204f83bdb27aa1741d294aec41b7:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDBkMjdhYTAxNzhjOWIzZjg3ODg3OTJmMmEyOTg2YTA5ZjcyMDE5NTc0MzI3ZjcyZDhiZDUxY2ViMjYzYjg5OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzcyZjk2OTVjNzQ2N2M3NDc3M2M5Y2U3ZmM0MjljNWQwZDBlNDg3ZjNjNTFkMTVkNjY2OGEzZDI0MDcyYmI5NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTQ0ZTE2OTExYzc0NjNlNWRkNjEyMTAyMGY3ZDI2ZDNjYjNjYzRkNzQ1ZDk0N2NhNjUxMTljNjYyNWM3OTcwYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzI3MTg0MmUxM2QzMDUyMzdjNjUzNzhkOTA5ZjA5NmQ5NDk0YTM3MjY2Mjk1N2JkNDVhZGMxOTNjZWZmYjBkOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e6e3e78dff914758819d8a35bd2a89ff",
+      "statement": "Analytical reads deliberately bypass the bounded pass: salience scoring and connection proposals call index.ensure_full_coverage, which runs an unbounded embed_stale(budget=None) under the same single-indexer lock and reports coverage_complete as false when the embedder is absent or fails, so centrality and similarity are not computed silently on a half-embedded corpus.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/connect.py#L85-L88",
+          "version": "repo-lines-v1:sha256:b89b8edf70b2987b05635bebf7ba3cef523b630c33bbc174efc292cb26bd7006:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzQxM2E1MmFmMTQ4OTM5MDBkNTVhMjNiYzliY2RjMjRmYmU4YWZkN2NiZWI1ZDdkZjdkZjQ2MWI3ZjEzOGZkYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjhmN2M2NTJkMWQ4ZDA3ODMyYzc2ZTlkY2QxNTNhYjhmMTE1NGFiMGZhZDkzYmVjZGJmZGU2YTlhNzhmNjNjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWExODc5ODI5NDEyZjc2ZDE3ZmU5MjliNzE1MjJkZGYzMWY0OTAxYzVkZDBlZjEwNWFjOGIwYjQyNDJlNmRhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjNiMDEyYmZkNDE1ZGMwYTIwNzI0OTVlYjUyNGQ3YmFlZGNiOWEwOTBiZTMyMTA2MDVmNzVkODZhMzliZTAxMiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L643-L661",
+          "version": "repo-lines-v1:sha256:b385c39b5bc71994f2a13cd537c08ada20bc150937aa9ad496df11b2f267b54a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxOTFkZDNmODNkYTVhZTM4Zjk2MDgwMDdiNTdjMjQzNWY4NGZiNGIzOWJkNTAzYjkxNTBhMzFiYmRjZmM3MGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlZWIxOTk5ZmFjNTVjNzU5N2Q3YjU0Y2JmMTRhNzQ4MGFiMjQwMTViNjNkYWI1ZWQwMzEwY2NmMzc2NjY4MWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkODE2YTEzM2ViMWRjYmUwZGUzZWQyYmQ0MjA1ODViYzI4ZjdiOGYwYzA2YjIwMTBiMzM2MGMwYmNkZWNmMDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzZGFjYzQxZmJjMWNiMDVjMzFlMTQ5ZjdiNzE4OTBmODc5MWZhYzAwNzAzMzRhMWU1OGI3MzQ1Nzg1YzkyNTYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/salience.py#L104-L107",
+          "version": "repo-lines-v1:sha256:484fc50a6594dd6db77b2af68541fb47f118a4d72aab06eb0f56c3656019488f:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDFhOTQ4OGUzZjlkMDBlNDZkYWZiMjcwMTFhMDQ1NGNhNmEyMmRhODM2OWU2ZGM5YjY4ZGIxMDc4OWY4M2IwYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2MzYTQ5NzBiMzJlMTBhMzdmMGFkOTAzMDU5OTE3ZjBjODY5OWEwOTQ2Y2Y5YzQwMmM4YzQ1YzAwZjc5MjM1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDU1MGQwOWRlZDAzNTM3M2I2MmU2NWQyZDIzMjAzMTQ4NDIyNGE0ZGVjZjFlOTVmYmQ1NjBmZWJjNThiYWFlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjk4MDgyMGNkYzU5ZDk0NDU5OGY3YjA4YWEzODViZDAzYmYwM2FjNzhkMGY2YTk4NmQzZjIyM2FkMjQ5MDM4YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_043ca31e38684d1ca53468425c88fe21",
+      "statement": "The write path holds the same index lock as convergence for its whole locked section, so a converging read during a write reports lock_busy and serves the pre-write projection, while the write's own best-effort lexical upsert makes the note findable on the index it wrote into before the checkpoint catches up on a later pass.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py#L147-L159",
+          "version": "repo-lines-v1:sha256:223c4f8687f45b98a658a1d126ae2b7a212a1cc500f7ba650b20b05e7b42da48:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiMjYzZTAzMzdjZTFhZmEyODZlOThlYTFlZTM3ODg1MmFmMDhjYTQ1ODlmN2FhOGNiM2IyMWZhZWI3N2MzM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTYwMGE3M2QyZTAyZjM1MmI5MGZlZjFkOGQ2MzgxMWJhNGE4ZWUwYzFiZWFhN2FlNDY1OGYzNmFhMmUxOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI2ODI3ZTU0Zjc0OWJlYzUyZDg0MDExMzE3NzUwOGYwMTNmNjU1NzI0YWI5N2M2NjkyNGQ3MGVlOTQ2ZmJiMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjMjI0ODcwOTljMzg4MGVhZmIxZmYzMjAxODRmODllZTBiNTU3YzhjYzFiNzM5ZTIwOGY4NjViNGYyMzY5ZGMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py#L186-L190",
+          "version": "repo-lines-v1:sha256:9cb4367a0e3c1a62a44e34589dc2436b7d77b2d38a34e7f8ae172578c32a1943:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTg0MmVhYjg2NjBhMzU1MjZmODQ1NjZhMTZhYzJkNTQ4OWIxM2Y3ZjE1Y2EzMWEzMTlmNzQ2OGNkNzUxYWRiNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTYzNDc3MTc1ZDFkMWI4OTYwNDlkZmI5YmUyMjQxMTFkMTAzNDIxYjgyMmY4MjY5NjkyMzgzMzMyMWY1Y2E2NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzU4MmRjYjQ0ZjQ1MWIyY2VkOWU4N2Q4NjkwOTVkYzc4YjU1NGE2MWI1NGYxMzg1NGRjYWY1Nzk0YWZhOTY0OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDUyMTNlNzVmZGY3NTUxZGY0NjQyYjBkMDg4M2RmNWRkZjE5MjVmYmUyYWI3N2NlOWEyMmIyYWU3YWE2OWIxZCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py#L233-L238",
+          "version": "repo-lines-v1:sha256:df8f7bcb790ac6be81a2e9b02ffa873e0144521df42db0c8a2d7afdf5a0bdec4:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzA3MjhkMGQ2ZGVjZjFjY2NhZjQ0MGM1ZTMxMDg3YTNjZGE2OWVlODRlOGMyY2Q2Njk1MTZkMmM4MWZhYTg5YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGM0ZGQ1MjJmNDZlNGU5NzhmMGQ2Y2E4Y2I2YjhmNDY2ZGZkNmZjYWIwNDMxNGI2NmMwNjAwYWRlNGFjYWU1NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTYyYTY3NTczNmQ1NmJhYjJkMjAwOGRmZTZkMjM4Y2NlMTkzODkyZDM3YjdkODU2NTAwYzUxZmY5NGRjYWNhOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDNmMDlmYzE5ODk3OWExZGFmMTkzZGJhNWFjZDFiYjllMTEyZjU0ZDNiMjQ5YTZmMDA5M2RhMjI3ZWYxZDZjMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c8a7527d7a82443a9304ced04fabc032",
+      "statement": "The convergence knob surface is three config constants whose failure modes are directional: CONVERGE_EMBED_BUDGET trades dense coverage against first-read latency and API cost, CONVERGE_DEBOUNCE_SECONDS trades burst cost against how long a just-committed note stays invisible (mitigated by forced passes), and CONVERGE_MAX_DELTA_FILES trades unnecessary reindex nagging against unpredictable read latency on large changes; each is injectable per call, which tests use for determinism.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L26-L34",
+          "version": "repo-lines-v1:sha256:eced9c87546ac4a12f4017406ec0a0f34be6fe4afa7905cd95c89495e1f615fe:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTg4OGUyYTFmZmU2ZTEzYjU0YjYzZTlkNWRlMDE2NThjNTZiN2YyZTNkNWYwNzNjNDNkMGYxYTU0MDRkNmUwYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTQyYWVlNWVlMjIxZjEwNGI0Y2QzYWNjNmYxMDdiNzhjYTYxMDJjMzExNjUzYTQxM2M1ZDZhZDE5NGZmMzhiNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTUzOWY4ODMwNTc1NTQ0YTU5NzNiNWQ2M2ZjZGQwODRmZTVmYWNlODdmZjg5ZmIyMzUwNGQxZmY0MmVhZDhjNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2EzZjExYzNkNmNkYTFiNWI2MzM3ODFlMWI3N2JjMmUxNTY5M2UwNzU0NDkxZjA2Yzc4MGUzNDNiNTI0OGZlYiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L96-L107",
+          "version": "repo-lines-v1:sha256:dab149cbda2022d1367ac87bf07cfdfa000d2a9a935022c1a7c98210fa4c9127:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5MmRiNDUzNzc0ZWFlMWQ1MzYwMjMwZDEwYjk2OTk3MzJiNTg3MjIyNDI4ZjRkMjJiYTA2ZDI2MTRjNDc4MTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YmZlYTI3YzhkYjNiZGU0Y2Y4OGYzZDhmMGY0ZWU0NmQ3MmM5YzFmOGUxZmRhMjkzMzI4ZGU1ODIwNTc0MTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyNzYwM2MxNmNjOTU0YTY5YTVkMDAzYmU5ODJmN2E3ZGVkOWZiNTJkNjI1ZDZmOTQwNTkzNzE2OGMxMDk1Y2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0YjVkM2ZkNjE1MTJlMmNlM2MxOTg2MTQxMzcwYmJiMjRkZWI4ODZhZTkxOGI1MTYyNjRlNmU2MTI0NTVkMjYifQ"
+        },
+        {
+          "resource": "repo://tests/test_index.py#L349-L352",
+          "version": "repo-lines-v1:sha256:07520cead36d3321948642db7e0377f8ec105a0c277a0c93c6b7b751a027661d:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWMwYTNiYzVmZWQzYTc1ZTY3ZTBkMmY5NmNhYzJjYjBiYjg1MTFiZTNjMjg4N2IwMDhiNDFlMzk1YTFhYjdjMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjNiN2I3ZTBmZjg0NzFmZWUwYjUzMTlhNWZlZDJlMTY1ZmQ0NDcyMTYyZWNlYWJkMjY5YWQxM2E1NTFjMWRmNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODQ2YmFmOGZhNTgxNGRjM2Q5YzEzZjE5ZTE2YTQwZmUyY2E1OWEyMjc0ZDk4ZDI2NmVjNTI2Y2ZkZWRjOGQ0NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0636ec22b8e416faee3b2c464f7cabd",
+      "statement": "doctor directs operators to hypermnesic converge <repo> --now --json when a dense key is configured but vectors are stale or absent, distinguishing that condition from a missing or unbuilt index.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L295-L300",
+          "version": "repo-lines-v1:sha256:61b82c70a3079f9ff49b2f007396bf9af03f9005c448cde80e2d1e3dd148666c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzZhYTM2M2E1ZGMxMjIzZmY2YzE5YWZlNGI5ZGEyMTI3ODZkNmE4NDgzYmVkZDYxZDc2M2I3MmVkMzgzODM3YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTAxNWIwZGNjODMxNDNmNDhlODA0MjliZGE4ZTlkMjZiZjIxZmZiMWIwMDVjYzdiMTUzMzk3MmM4OTA2MjZiNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjM0MjJjZmRlYjQ3MGY4YzFkNWJjYmI3MmRiMjMwMjhmNTUxMDIwOTU5MTllMTdkZWYzYjdjYTdjNmY0NGM1MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODA3MDBhOThjYzc5OWZiMmI1YTFiMWQ4ZmU0MmI3ZjZlOGNhYjEwYmUyYjM3ZWQ1NGU1ZDdmMzI1MWNiMzcyNiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

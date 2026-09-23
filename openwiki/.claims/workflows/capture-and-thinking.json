@@ -1,0 +1,474 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6bbf42117355ca38bed2b4db9ca7371e7552b97d74153373f9570d83595e9428",
+  "claims": [
+    {
+      "id": "claim_d9ea02e4052a43c1b66fc0e1a9658591",
+      "statement": "Capture and triage are deliberately split in time: `capture.capture()` lands raw text in `sources/` through the write path's immutable free-append fast path (committed immediately, zero organization demanded, no proposal in the moment), and `capture.triage()` later reuses the read-only `think` path over the capture to propose a placement, connections, and a grapple prompt without ever auto-moving or auto-filing the note.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L1-L11",
+          "version": "repo-lines-v1:sha256:49a2bf49d68daaa1e3ba348b4a403da8e59bc47aa91df0a4ff7db2a0c7cf544c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwZDVkZDAwODdjNGM5Y2JkZTE2NmZjYWE4ZGFjMGRkOTZhM2FkMjQyMTUyZTA1MmUyNDBjMzc2N2FhOGJlNGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L24-L37",
+          "version": "repo-lines-v1:sha256:8bd090750a4eac47506b95271b8291b68110893bbde1127e86c99d60509917e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5N2Y5NGUxNzIzZmYzM2VkNTZmNDJjZGI5NmUyNDdhNTA3MGE1OGJjYTlkMjc3ODJlNjE0MWQzYjllMGZhMGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExYjc5NzJiMDg0OGZkNmM3N2U1NzM3MDBjNDhmZjAyMDFkNWYxZWMxMmE2MDUwYzhiMzNkMDExYmY4ZGM5MTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkYzRmM2I0M2ZhNmI0ODA5NjMzNDM2NGMzZWUyY2Y5ZmFkZWYxOGMzNmM5NmQyZWM3ODkxMTQxMmMwNjE5N2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkOTFmYWU5YTg4NjBiY2NkODk1MmU1NGM1NTliYzc4NmZkYzZjMTZmYzA0NjE0MDRmOWZkMDdjOTMyNzU3NzQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L66-L96",
+          "version": "repo-lines-v1:sha256:46b63d9638be2272f9f3926515d99434048adf54b4f1ce3daf6de4f150678680:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlZjljMGZkZTM0NGRiOTlkMTVmMGZkYTBjYzYzZDUxYzNmNzk0NjcyZjI3Zjg1NDNlNjNiZDFiNGNmYmI4MGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMTliNDBmNzBjNDM2MmE0MmJmMDIwMDdjNGIxNjI3YjE3OTEwMjE2NmMwNzA2ZTAyM2E1ODIzNjQ5NmZhYjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhMzQ3ZmYwM2M4NzQwOGM1ZTk0NDdkZDNkODEzOGI0MzZlNmU2MWM2MzlmNjc3ZTgyZWE4MzhiMWE3MzE2NDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a36e6acb3f6d40e69c97496b6dfd1cd2",
+      "statement": "A capture's write is scoped by `allowlist=[\"sources/\"]`, and because its only change is a file absent at HEAD inside an append zone, `propose()` routes it to the free-append fast path: `commit_note()` lands it straight on HEAD and the result carries `fast_path=True` with `branch=None`, so the raw note is durable immediately with no proposal branch.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L33-L37",
+          "version": "repo-lines-v1:sha256:658e95571a3c8e710782a5f74ff0a609656121963d39d1f7dc604e6449cd55ff:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjZhY2I1NzMyZTY1OTdkY2FiNjc0MzEwZmExN2JhNzRkY2M0MGFiODQ0ZjhkYmQzMzhiMTNlY2Q1NjRhMzBiNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTFiNzk3MmIwODQ4ZmQ2Yzc3ZTU3MzcwMGM0OGZmMDIwMWQ1ZjFlYzEyYTYwNTBjOGIzM2QwMTFiZjhkYzkxOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmIwYjMxOWZkZTVkOGE2YTQ5YjBlNzRiZGUxMDFkZTlkNDE3OGZkNTEwOTVlZDIwNzQzYTI5MzQ0ODg2MmY3YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWQ5MWZhZTlhODg2MGJjY2Q4OTUyZTU0YzU1OWJjNzg2ZmRjNmMxNmZjMDQ2MTQwNGY5ZmQwN2M5MzI3NTc3NCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/propose.py#L221-L228",
+          "version": "repo-lines-v1:sha256:061377e1830fb2527260341fc8fcedabd428376087159b05e63f8aa9b23f46de:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ZhNGJkMjkyZGQ0N2YyMjRkOTViYzA0ZWFlZTA1MTNjZGM0NDcwYjE1ZmMxNjQ2ZThlYmViMjQ2ZWRkMWYxYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmQ1ZmRhZjI2NmRlZjM1ZmQ1MzNmZjRmMDk1ZmY4Mzg0ODAyY2M2ZTdmZDBjZjBkZDJiMjAzNWFkNWI1M2I3YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWUxMGE0ODQyOWY1Y2MzOWU5N2FlYjc3OGJlYWEzNzY0ZWZmYjljZGU2OWZmMWJlOGQ3MTM4YzU3ZWEwOWZlNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2IzMzM4N2YwNDRjZmM4NDJkZjEzYmIxMTEwZGE4ZDc3ZGM0OGUzNmIzZmM3M2I5ZjI5NzQ5NTBlMjk2NmM5MyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/propose.py#L296-L306",
+          "version": "repo-lines-v1:sha256:0a6e5e80607341f5faaea3d67d8f82d5cdd4069d82179716f8285e89cf005d9f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkYTlkMzY3ZGNkYjliYzUzNGI3Y2M1MDU5MDM0YmQzM2U2NzEwOWJjZWYyYTk1ZjUyZjQ4ZjhjYTc5NDFlYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmOTMxNDI3NjkwODQwMDA5MjMwZDk0NjQxMGIwNGMxYWE3NmRjODJhMDlhMTQzNTM3NmFkM2VhZGE0OTE0MmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1NzVkOTVlMzFiMTA1NjJjNmI4NDdlZTViYTAyZGVmMGRjN2U2NzBkYTUxNDIyYjA3MmE0MGRhZDE1NzA1OTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_capture.py#L29-L40",
+          "version": "repo-lines-v1:sha256:15d3fd6ec656858e51fa9be9a5bc73426d8448e9ada0dcc96b2b5047c11a4c7c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZmQ0YzFmZDJjZmM0ODMzOWI0MWM5M2IyNDVjMzJmNzJjYjI0YThkM2M2NDhhZDM3ZWJkNWI3MGJhNDkxZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5M2EyZmI4MjRkMjRjZDlmMDVjMjE0OTQzNGQ4NTljYWJiMmQ5MWM2YTJkOWRlY2YzODNkZmVlNGI3ZWMzYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhNThlZWM3YWE0OTNlODkzZWUwOTNjNDk0ODA1MWJjMWFmNzMwMTE3NDU1ZjAyZTRhODQ2MDk2YzZlODM3YWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e00481eee91b4c7698c004bdd3e1dfcb",
+      "statement": "A capture's path is content-derived (`captures/<stamp>-<sha6>.md`, where `stamp` comes from the caller's `now` and defaults to the literal string `capture` when omitted, and `sha6` is the first six hex digits of the body's SHA-256), so re-capturing identical text re-derives an existing path; because the fast path applies only to files absent at HEAD, that second call resolves as an idempotent no-op rather than reaching an overwrite.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L28-L32",
+          "version": "repo-lines-v1:sha256:26cae2acb079ee582b240a596a72d0566e114caf2b03f7d346cdf7d1d1b970ed:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2IxYmUwYTU2NGQyMDA4ZjY0NzE2NWY4MTk2OTRlYjdiYjJmOWU4ZWE5NDhjMmYzZTI3MGY0Y2E2NDQ3YjAyNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWIwMTJkYTYyOGE0YTZlYjBhZWFmNzIzOWZlMmQ1MWI5MDA2MjQ5Mjg2ZTc4ODg0YzRkYzMzOTUwNWQwNjkwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjFkMTlmYzQ2ZjljZDIyMTA1NWQ3NDZmZjdiY2M2OGZhMDdmMWRhOWVhZjgwN2Q2ZTI4YWUyNzIxNTYxOGU4NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODZjOWNmNGY4MzMwYzc2NDZkYTI1OThhNmI0MDczZGY5MzVlMzlhZDdhNTdkZTcxYmY0ZGY2NjlkNzg2Y2Q2NyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L63-L66",
+          "version": "repo-lines-v1:sha256:2be4e9d2f4bc04f3b2dc4df9154e05e10b84fc10c789017eb6a6b5b69c940a35:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDllZWM3OTQwOTQ0ZjE4OTYwYjg5YjgxODdmNmJlNzMyZWVjODIzMTM1ZmIyZjU2ODAyZjZjYzA3ODNlODJhYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzBkNzBmMTc0ODNjNmJiOTllNzhhZmRmN2MwZDM5NDJhNzcxZWI5YzlhZDZiMzA5NGIxZTQ3MTlkMGRjNDFmMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmU3MmQ1ZjU3YmZjOWNlMjI3ZDljZGUzNjdlNzlkYzUwZTQyMTMwYzA5Y2E4NmRlNzc5ZTllZTc5ZTc5YzkxZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGRlMTJiZTcxZGEzY2M4NDI5M2JlZTNiMGQ5NDc3NDk5MzNmMDBjNjk1MWI4Mjk5YmE1MjNiNDNjZjIwYWUyOCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/propose.py#L225-L239",
+          "version": "repo-lines-v1:sha256:79db5b895f121c8260bee9fc8a85eb2dc25339c3dfdb9fe45f9078094b8f41d4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwZjUxM2E5OWFiMjI1MzhlYjQ2MDk2ZDgxYTYxYjYyMGNiODQ5MTlkOWI1YmJiMzkxY2E0MGEwNzUwMjIxYjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOGU5ZDYyZDE5YmExZDk1MjY5YTAzMjI4MzAwNDM1MTU1MDhjY2RkNWU2MzExMjE3NmNhOGZjOGRlNWJlOGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4Yjk2N2M5MDFlMjQ0YWJhOGM4NGM1YTFiMDgxYjI3YzcxNmI0N2M5MWExMDMyOGQzM2U2YzQzYTUzOGI5MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlZDQ5MjNhZmNhMzM0NThjNTMwNDdlNzM5NjNlODZiMGUzZTAxNjkzMmY2MTVlNWVhNzE4YjAwNDBmOTdlM2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fd0a34a061e64eb4814a09c1f1d77b37",
+      "statement": "`hypermnesic capture <repo> <text>` is the CLI entrypoint for raw capture: it reports `{fast_path, files, commit}` (or the same as JSON), and it attaches an index handle only when `<repo>/.hypermnesic/index.db` already exists, which makes the index projection best-effort.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L344-L358",
+          "version": "repo-lines-v1:sha256:35c515442d9e46586a133c484b70964aafe8ccf29db1ec787e34366dca0ae47b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5OTAyY2U4MWUzZTYxZjVkMThjZDk0NDljNWIyMjhmYjc4NWUyOTE5MjliYjFjMWIwNmY2NDgxOGM5ZDNjNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlYzMwMDllNThhZGM2MDMxZDgwZDhkZTJkNzAzN2QxMWNmZmM4ZDBjOWY1YWZjZTNjMTgzNTdhYTRlMmRkMGYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L871-L875",
+          "version": "repo-lines-v1:sha256:a6dad9b4ad047e8a943d434733a5c35a85aa6d6ddfa7b54833b849cd614654a2:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjRiYTliOWU0MWEyMDdmYjJmMzNiMmEzYjNjYjdlZTBmZDNmZjk0NDM1OGNkMDQ1ZmE3MDA2ZDU4M2Y5ZDY2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGQyMjAzYjVmNzFhMjM0MzZjYzI5MWZmMWM1ZWY1ZmFmNDJlMzExNmZjOGU1ODM0MmIwMDI1ZDIxODgwNGMxZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTI1ZjE5MzVkM2I4ZDNlYjI3NzVmYWY1OTQ1YTMxZWNmMzE2Nzc3YzNkNjQ1M2Q4ZjlmZjI5MTA4YmE1ZWU1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTZmMTI4ZjEyMWQ0NGIyZmNmYzZjOTQ5NGQzMTY3NmJiOGM4NTI0NWUwMTJiOTVhMTdmOWVmZThiZWVmZDNkZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9c55c93856964d1c90e31beeab6c02bb",
+      "statement": "No capture tool is registered on the MCP surface: the read set is `search`, `hypermnesic_search`, `build_context`, `think`, `resolve`, `list_folders`, `read_note`, and `commit_note` is the only write tool, registered solely inside the `write_enabled` branch — so a remote client's low-friction raw landing goes through `commit_note` rather than a capture tool.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L588-L603",
+          "version": "repo-lines-v1:sha256:0c1b00164a48255c2a8f0bc6e9c34ee2a2462755cf0c5cf5704ab4a11b2483bc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNTg1ODE4OGYyNzJlNGI4ZjdjODYwZDc1YTkyY2IzZjM3OWM5NThiZDNkNmIxYWY5NjVkYmM5OWNmYzBjZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2MTU1ZGEzM2RiOWFjZDU2YzQwZWUxYjNkZjNkMjNjZWMyMTRiZWQwZWFmYTlkYjg2YzZkODJjZmZhNDk5MjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjNGExYTZjZjI4NTdlZTUyMjRkM2QxNjVhNzBmNTUxNmY4OTNiZTljOTRkMjhiOWJkNDFiNWVjMjEyMjc0OWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwZjIxZDA5Nzc0MjA2MGY3MDFhZjA1NTY2ODBkOGIzNzY2ZGFkZDMxMmUwYTQ5MWY4YWI3OTQxNjQyMDJmZjUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L969-L970",
+          "version": "repo-lines-v1:sha256:cf7b1ff4ac174b931be568b44e7616237453661ad69e94a44d9c4e8e83d4b80e:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzM0OTgwOTc2YWNlM2Q3NTZjMDdmODM3Mzc0NmVmM2U0ZTRmMjk5MWM2ODZmYmQ2NDg5MWYwNDI3YzAwYTAwYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmM1MDRkZTI1MWU3MWVkM2ViNzliOTVlYzRmNjY1YzU3NjZmNmQ3YWRhMzQ5N2QwZGRkYzg0MTY5NjM1NjE3MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWEzNjRiMGJhYmQzZDAxZDM4MjFkODlmZGZmY2M0Njg5NThmYjc3Y2JjNDZiYjY1MTA4YzZhMTY2YTQzMTAwZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzRkMWFkYTFkNmIyNWQ0OTRiY2IxODlkYzJiZWIwYzIxNmZmYWJjOTFmYzk1NjA0NDNlMTE5YjBlOWE1MmZjNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a258bb9faba46f28da6d096911aa745",
+      "statement": "Triage derives its suggestion from thinking mode over the capture text: it keeps the first five related note paths excluding the capture itself, suggests the first related note's directory as placement with explicit `(undetermined — no close neighbours yet)` and `(vault root)` fallbacks, uses the first grounded question as the grapple prompt (with a fixed fallback), and proposes the rendered note at `dashboards/triage-<safe_slug(capture)>.md` under `allowlist=[\"dashboards/\"]`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L40-L44",
+          "version": "repo-lines-v1:sha256:147409c916a077509f0a040075568a36b7a030b7130a83ec52dbbc01bde8a7c1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWM3YTMyYWYyZDlkNjU5YWJlMGRjNmVjZTBkYmFhMzYzYzMxYjBmOWM0Yzk0ZDlkYTFlMTU1ODQyYjNjN2UyNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjUxODAxNDQxMDYyZmZmZDA2M2JhOGJlZGUxNzVlZmI5MGQ5MjY2NjM2NzZmNDg3NTMzMzE5YzkyYWQ3NGQyZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDc4YzIyZGY4MGFlZWM5ZDQyNWFjNmRkODA0MjEyNjU5NDlhODFjMjMyMjdmNDQzNzEzMThkNTZiMGE0MDk2ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTg1ZTU2OWZkMGJkYjViMTlkNTU3ZjVmZGMzMjU5NDQxYmEwNDc4YjFiODdkZTY0MTZmMGI4Y2MwNmZkZDg1OCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L76-L96",
+          "version": "repo-lines-v1:sha256:2b2bb0ddad148fb214acdf0ae5c28c1d8d94d49134a7823300bb340c73ffe3f9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlMzNkMjAyY2E1YjEwYzc1NmFhN2NhNDY4ZjQ5NjNjMWI0MjMzOGNhN2IyNGNlMGY2ZDUzOGQyZDNhNzc3ZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMTliNDBmNzBjNDM2MmE0MmJmMDIwMDdjNGIxNjI3YjE3OTEwMjE2NmMwNzA2ZTAyM2E1ODIzNjQ5NmZhYjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmYjUwMTgwZDRiZjMxNzM5ZTRhYWRkMDZkZjU5MzY0MmNiZjI1YWRkOWEwYmNjYmJhMWYxODY0MTE5ZjI0NWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da21b26f6fb34d799167afab92b2d137",
+      "statement": "Triage never moves, renames, or rewrites the capture and creates no branch when the capture path is missing; the proposal lands on a `hypermnesic/proposals/<slug>` branch, and the returned result carries `thought_wrote` — the thinking step's own `wrote` value — so the read-only proof is attached to the artifact instead of being a docstring promise.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L72-L75",
+          "version": "repo-lines-v1:sha256:831d478aa6d8a9fb8ba9547b5cbf9cb980a3fcab964a2c98edaa4b55e42b6ddc:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmIzYThlZmEyZTIwMTM0OTMzNzIzNWFlZTc3OWYzYmYwYTUzYjUwOWM0NTIxZTcwN2Q0ZDAwZGE3ZjQzMzgwYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTFjMWI0MjlhODljZWJiYjMzZjRhM2U5ZDMyYjVjYWYyZWFjNDAyYTg5ZWI5ZDc1NzBjZjJiZGNiOTk3NmNiYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDA2NDMyMDIzMTcyNmE5MjZiMWY2MGIyZGFlNTBmMmMzYmI3Y2QzMzYxNjk1N2NhMDdkYTdhYWVjZmJlZTZkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmU1MGQyN2M2NzUxZmM0MzU5N2IxNDk1ZjVmNWZhNDI0ZWE3ZmE2MWY0MTk5NTExODk5MGYwZThkN2FlM2JmYSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L86-L96",
+          "version": "repo-lines-v1:sha256:d553c0cede122f257a6803f02b58c65a7af0200c8bb6d7399619fc75afd8120f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlOTM3YjZhMjZhMWQ5MDI0ZmFmMWZjYjZlNzBjYTI4N2U0NTRhNGYwMGFhZWM2MzViODBiY2Y1Y2Y3MTA1NDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMTliNDBmNzBjNDM2MmE0MmJmMDIwMDdjNGIxNjI3YjE3OTEwMjE2NmMwNzA2ZTAyM2E1ODIzNjQ5NmZhYjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzOTUzZWM4MjMzNTFmZWJmMGUzODUzY2Y5ZDFlZTQzZWU1YjI1MzA4NWJlZmMwODg4ZTBhYjU1OGQxZjkxZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_capture.py#L45-L84",
+          "version": "repo-lines-v1:sha256:7e42eea85f0592f525421374c08412bcd42bd444daf9fa7d06b7c40b9b8a1f8b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5YjZhNTMyYmVhMjUxOTI0MTJmM2VmYzhhYTg3NGEwYTcxYThiMjUwYWNmM2VmYjY0NDFmMWYxYjViZjFmMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlM2IxZGY3Y2I1ODE2OThjMTI0YjM5M2IzM2UzNTc2YzE4OTlmOGQzMDFmZjIyOWIxYWM2NDBkZTEyNDI3NDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhODZjNjY5YzViYmYwODQ5MmEzZDJmOWI1MDhhYTMxMjBkZTg5NGY3NzA3NDI2NDU0MGE3MWQ4ODA3YWI4NzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_098bef84e3e94843a1c4cd80c7e528f0",
+      "statement": "`capture.backlog()` lists the raw captures without mutating them, reporting path, a whitespace-collapsed snippet capped at 200 characters, byte size, and a stage derived from whether `dashboards/triage-<slug>.md` exists in the live working tree; because proposal branches are committed in an isolated worktree, an unmerged triage proposal still reads `pending_triage`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py#L47-L63",
+          "version": "repo-lines-v1:sha256:dd2623175705b5078f2073691bd294bcfd861089099980586ac2f5f2d67bc5c0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2M2Y2NDdmOWI2ZjA2MDRkZmJlN2ZmODVlNTQ3ZDQ5NDM4Y2YwYTRmNDQ0YWQ1MDE5YzkzY2FkYTEzZGQ3ODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4YTRiNzQwODRhMTBkYjMzYTY4ZTg3ZDgxOGE2NDdlMDI0Mzg5MDIxMzEwZWI5NWE2YTNkYzBkYTU3MDIwYTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhMmRmZTA3YTQ1ODE5ODU5OTg1YzgxNjJiNjBjNjhlMTkyOTA4YzI2M2JjZTg4MzU0NjNhNjVhYTRlNmY5ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5MDU3NDIzNWZjZGUxNjQwZjFhMWFjMDdjMGQxMDM5NzcyM2Q0NjBhNjJhMGZhY2E2MzA5Nzc0YjllMGFmMzIifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py#L198-L245",
+          "version": "repo-lines-v1:sha256:567961ceb4c1b0bd3d8327c1491234ca2eeb78bdee11183649b7c71e58e2bcad:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlYzczMjcxNGJjYmVkNzZhMTNjYjBiMjZlNDljZjFlODcxZDkwOTI1MTJhODgzMzk5ZmJiMTEzOTNhMmRlOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhMDAxYmJkMzZlYWNmNTRlMzJmZjk3YTk4MjAyODIyYWQ0MDVjYmI0YzkyODg3NGEyNTE4NjEyOWQ2YzM0YzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmNmYxYmYyYzlkY2U3NGVkNDhlMDY5OWRjNmI3YmMyMWFjYWEyOGRkN2FlYTdjNjA5YmQwZTBhODBlMzJlMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3MmU4ZDhlZWQ0NzM1ZTEzOTc5ZTM0ODg5NjRiMTY1MTEzOWEyMzZkZjU4MDA3ZDFlZjg4ZDkxMTg2OTRmZWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b6744d7229e742dbacbe16ca6154611c",
+      "statement": "The capture backlog is composed into the daily-review surface as its `Capture backlog` section, while `capture.triage` is reachable only as a library call — the CLI exposes `capture` and `daily-review` subcommands, not triage.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L344-L358",
+          "version": "repo-lines-v1:sha256:35c515442d9e46586a133c484b70964aafe8ccf29db1ec787e34366dca0ae47b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5OTAyY2U4MWUzZTYxZjVkMThjZDk0NDljNWIyMjhmYjc4NWUyOTE5MjliYjFjMWIwNmY2NDgxOGM5ZDNjNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlYzMwMDllNThhZGM2MDMxZDgwZDhkZTJkNzAzN2QxMWNmZmM4ZDBjOWY1YWZjZTNjMTgzNTdhYTRlMmRkMGYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L877-L891",
+          "version": "repo-lines-v1:sha256:51299fc054f2716d811831f53485d5579c589a9076e22472a3c2552eb64a0c90:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljNmIxOGNhMTBmYzRjNzc1NjMyNDA5NTk1NTE4MGRlMWI2MTNiODlmYzQ1MjNlZWUyNWRjZTBhNWM1NDRiYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MWIxZDFkOGUxYWQ2ZDViYWQ1ZTJmYTM1MmEzOTQxZDhjNzc1Y2MxMzljNGRhZWFjZjFiYjNlZWZiYTY2YWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhNDgzODdhYTdmZTc5YzJkNjc4YjAwZjU0OTVhOTYxYWIzMjZhMzU1YTc3YjljNTMyZDQwMmNkOTUxYjJhNGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhZTlmNGMxZjJjZWQxMTdiNWE0YjY5MDE3ZDQxM2Y3ZDRhNDMxODI1YTI3YjNkMGUyNWE1MTBkNWM2MWU4NTAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/daily_review.py#L41-L52",
+          "version": "repo-lines-v1:sha256:5fa60e871d1c84cda38635440648da795221f22be4fcdfed15f91413e7c18acf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1MDliZDRiZmIwMGMzZGE0OTY2YWFhZGNkYWM4MTQwNTJjZTQ5YjdhZTAyNGVhMGNhNzkyYTRhNDFmOGM2MDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlZmY1OTNlNmY3NTJjNTY3YjE4MjRkMTdhM2NjOGRjN2JkYzVkNGJjNTViMmMwZTU1YmZlZTZjM2NjODIyYmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzNDc4NThmYzc2YzFmOGZlYzFhOTdmYjEyMTU2MWY3ODYwNWVkZWIzNjgyN2JiNmY3MWU3NGE5OTg0ZGRjN2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwMjI5ZThiZGViNzIzYTRiMWFiNDdmZDYyZGE3ZGYyNDQ1NTNhM2EwNDgxNTUyMzYxMzE5MTZjMWQyMTdlYzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da111b170e394399ba172ae6f634b28f",
+      "statement": "Thinking mode's no-write boundary is structural and observable: the module imports only read surfaces (`retrieve`, `graph`, `ingest`) and cannot reach `commit_note` or `propose`, and `wrote` is always False and published by `as_dict()` so both the CLI JSON and the MCP tool result carry it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py#L1-L14",
+          "version": "repo-lines-v1:sha256:dc35cd0b4e01fd1b112cd9e7f2d4d35f3dc9647c5198e58944c98bad6d5160f6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhNjY1ZGU1NmI0ZmU5OGNmYjBlNGIzYTQyNmUxNmE4NmYyYzc2ZGYyMmQ1MjgxM2QzMGQxN2ZlYzdmMjc0NjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/think.py#L173-L176",
+          "version": "repo-lines-v1:sha256:a7f6013608c73bbe8e4cc004584e3fbc708032052e3698c911dcc07448454289:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2MyYzIyNzZkNjllNTY5MzIwNjcyMjdmODYwZjQxY2QwZDM3ZThlNzU4ZTczNWZkYjQxNzVmMmY0OWUyY2JiNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGVlN2FkMGMzNzMyNGY1ZTcxNzNiZWQ2NTZmNjgyZmYzMmJjZTU2NTRhOWE4NmY0OWIzYjRkYzQyY2JhMTcxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDhlMGNlOGIwM2RhMTVkYTQ3NGNmZGUxYWQ3ZjU0ZjI5NTFjMWRlMzE3NWY0YzBjZjMwMmIwM2Y2ZjljOGM4NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/think.py#L53-L65",
+          "version": "repo-lines-v1:sha256:43539c45a0c3d49e30538d77c7fb9dfb756f33fae2de73b9dba75cefdc9d2c2f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZmJhZTBiOTFkNDRmYzBkNDlmNWRlNjkxZGE2ZmM0MzFmMjYwMTM0YmY3MzFlMGUyMWY3NjQ4MDk0MzM0Y2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzMTdiOTFjMjUwNTM1MDhlZmI0NjZjMmI1ODU2YWIxMGU2ZWRiMzJiYzJmNmI5MjU3MjM1MjIyNDg0MGQzNTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4ODdiMmEyYjBkOTRjODdhN2Y5ZTg4MzZkODcxMWM1ZjIzNGVhNjI5NzkyMWY0NTVmYTY5MjM1NGRlNGM4ZDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_592881d1eb714a059a37427cf165e6e4",
+      "statement": "The read-only boundary is enforced by the test suite, not just documented: a test scans the think module's import lines for `commit_note` and `propose`, other tests assert HEAD and the index path set are unchanged across a `think` call, and the read-only MCP tool set is asserted to be exactly the seven read tools with no write tool.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_think.py#L262-L271",
+          "version": "repo-lines-v1:sha256:fb02e4333a9a5cf6d5bcee42c5065ff4fa215faccf75228083305ae650c86656:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5MjYxMmQ0MDZiOGQ4ZDQ0ZDAxMjhkYzI4OGU1N2JmOWQ2YjIyOTM1ZTVlMWM5NWU0Yzg3ZTI4MDA2MWFlMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NTQ0ZGQ0NzQ0YzE0Mjg0YWRlOTgzODE2ODc2OGQwYzlkMGQyM2VjM2I5YWEzNDhlZjI3YjFhNGYyOGNkZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2ZTE1ZWZmMGNiMGY1NGY2YmY1YmVlMjZiNGVlOTFhOTM3NzU2ODJlMjE4NzVlZDBlYjlkODZiZDA4NzY3OTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_think.py#L297-L311",
+          "version": "repo-lines-v1:sha256:39385f316e5bfaf825eefa85321eb069628c8bcb3cbc6f06d9d46a9f5425218d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2NjhkYjcyMzdhMWI5ZjNmZTY1MjE0ZGU5Y2RmNjVjNGYwODZjZDlmODAyMzhiYTlhOTg2YTIwNGIzOTk1MGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkNzRmOTM0MmMwNTA1MTI5ZDExN2M5ZmYwOTM5MjI4YjA2YmUyYWMyMWRhMjhhZWNjYTE3NjBlM2ExYzYzNmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZmMWJiZTlhOTFjNDhjNTU3Mzc0MDA2MTJmODg2ZDIxMTVmZDdmNjdhOGY2M2NjMzE1ZDU0NDJiNGQ0MGQzZWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1YmEyY2JhMzE2ZTdkZWVlZTU0YjFhNjc3NTZmNmQ0MmNlOGI1YjhmY2M0MDE4ZmE2NzE5Y2MyZDgyOWI2YzUifQ"
+        },
+        {
+          "resource": "repo://tests/test_think.py#L44-L57",
+          "version": "repo-lines-v1:sha256:02ad7be5b5ade30a16e350ae3e292d13dfdfcdf6fd8a5b60d67dcab18d67705e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxNGY1ZTQ5Y2Q2NGFlMzg2NDc4M2IwZDNhZjkwNTUwM2FjYzRlMzg5OTM0MGIxOTE0MGFlZjBlMTUzYjAzZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiOTg2ZWNjODFiNGRjYzFmYmRiMzExZWY1ODIwNDVlYmMwYWYxNWE0N2ZjZTgwNGViMzQwNzFmMzYxNDQyNjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzN2I0M2JhNGYwODY5YThiYTNjNTRkOWViNzQ5MjM0YjkzZmNlYjZmMDA3MGVhYTA4NTcxOTc2ZWZkMjY5YTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7ea39b5eaad74983b8df5b16611bce91",
+      "statement": "`think` reasons over distinct note paths rather than chunks: the Socratic prompt fires only when at least two distinct related notes exist and names both by resolved title (otherwise `questions` is empty), and unlinked pairs are computed over the top four distinct notes, capped at three, dropping any pair already joined by a wikilink.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py#L80-L126",
+          "version": "repo-lines-v1:sha256:b5abf6725151a2fb563be1749b6c1a8d8b74a73d01d1be64cbf22a5bddc2306d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMTZhN2UyMGJjMTIwYTg5Njc2YjYzZGMzZDQ1OWM1ZjQxZDlkOTA1ZTI5ZThkZTllZjc2ZjEyNmQxNjE3MzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0Y2Q3ZjAzOTY4Yzg1NDczNGNkMzdjNjQ5ODIzNWIxMjA0YjVlMDkxYjlhNjQ2Nzg3OTUwYTQ2ZWRhOGQ0OTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmOGNmNmU2MjBjMDg2ZDAzMTIyYzIxNThkMTY2ODZkMmIzYzBkZGE3YjY1ZDdkMjc4YjVkNWFlOGE2MDMxMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwZmQwNjM5ZDBkMGY1MjIxODA4NzJhYzRkZjE0N2FlMjViN2U3OGZiZjA0MjBhMzA5MjhmMDBjOWYxOGIzYTAifQ"
+        },
+        {
+          "resource": "repo://tests/test_think.py#L194-L208",
+          "version": "repo-lines-v1:sha256:c28361c68b6cf16ae01c4408e4a4087b0cedc48370352091b31cc15e59e354a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYThlZGRjODBmZjJhMTI4NzVlNGUxYzRlMTI3YmJmZGQ4N2QzYTEyNzI5ZDlmZjczNTdjNjZlNmM2ZTk5NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxZTJkZjA5MDE5M2NiNzJlN2NkNmM4ZWJkOGMyYzZkZTI2OGNmMzdhOWY1YTE0MjU3MjRhYTZmZmIwMTRhMGYifQ"
+        },
+        {
+          "resource": "repo://tests/test_think.py#L222-L245",
+          "version": "repo-lines-v1:sha256:b0573171e6be5d2572a08281b3bb87363149bfdee7bcb1a707cb71cf68fbab9f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NzViODc0Y2EwYTBlMmRiYWQxYTdkOWFjZDgwZDdiNzA5MTE2ZDNiZDk1ZTUzNTk0YTYwNGIyNmE3ZDdiZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlZTRlNWFjMGQ3ZjkyYWQxYTcwM2IzZGYzODljZjIwOGY4NzQ3NWFiZWE4ODk3OTY1ZThhNzU5ZjQwMTU1ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4NjM4MWNmZThkMzgxOTBiYmFmMzg3NTk5ZDBiYWEwNzcyYzRjNWQ1ODkxNjRiNDQzZWNjNjNlYzgxZGNlMjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_07181a13f24d4adbb2b6c452d10ed18d",
+      "statement": "Passing the active note's `path` excludes it from its own results, and when that exclusion removes every retrieval hit `think` falls back to the active note's graph neighbours as low-confidence `graph`-channel related notes at score 0.0 instead of returning a blank surface; a related note's display title is resolved from the file (with a stem fallback) rather than from the matched chunk's heading.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py#L129-L152",
+          "version": "repo-lines-v1:sha256:2d619c763fbb1afed403a2a803d6726f16392e71b789af13659d818e4d334a9a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0ZmQ1NDhlODNjM2Q4MGZlN2MzOTlkZTQ0ZDg3NTNlMDc1Y2Q1NThkN2IzZjFmZjRlMTAzZjJmNjliMmQ4MmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NTI2YWZkNzhlMmJiZGM0N2QwODZmNjliOTdhZjYwZTQ5MjAzZDNjNDlhMTAwMDNmNTQxNzEyODlmOTYxZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhZjExNDAyYjFjZmM4NzA4NjMzOGFiZjRmZTQ0ZjFjMzRlOGRjNjdiODMyM2Q3ZWM2Yjg0ZTA2ZWFlNGY5ZWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4MDNjZTk1YmU0ZTZkM2EyMGIzZTg0ZjBiYTUzYjMzYTQyNTI4MjMxNGEyODRjMTYwOTlkM2I3NDU3YmMyOGYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/think.py#L29-L43",
+          "version": "repo-lines-v1:sha256:15a74e2424a2d6f0b6930f2591b63fd8f8ec77c7940086342680d3e7c6f80cc2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1MjIzNjgwYjYwZDQyYjMzZjgxMjEzNTg0Yzg0NDEwMDFiMzEzMjgxZTY5NGM4ZDZjMTgxNGJlYjYxNjlkZjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjczZjczMzFkMjA1YTc4NTMxMDA5YzJmOTYxNWQwZjI1NGNhOTY0NzQ3NDY5Y2E5Y2MyMGY5NjVjZmRhODdmNGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhNjQzMTI4NzdiYzMxY2UzMTM4Y2Q4MDVlYzhlODBkMGNlMjk3NjQ5MmE1MDM4MjQ0ZWVjN2MwOGFlM2ZmYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3ZmUyOWZmNmI2OTRjYjEwODlmZTZjZGUzYjhmY2FmMmE5M2FlNTVjZTEzM2FjMGMzN2UzOTM1NGE2OWViMjQifQ"
+        },
+        {
+          "resource": "repo://tests/test_think.py#L130-L144",
+          "version": "repo-lines-v1:sha256:41a3b7efb7fac94a580a527a98f6535f96552875dcbb052bbf2d05605b75c187:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNTIyMzJiYjc3ZjA2NWFkYjE5YjFlZDQzY2U2NjQ3MmY2NjEwYjczYzM4Y2JhNjg5ODBhYTIxNTc4OWRlZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg5NThlYjRhMWNiYTI3MTM2MGEwOGQ3OGU0MjZjYjVkOTIyMjllODE3NDE5OTRmYTJkNTRiMGRmMjYwZDIyMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlMjU3NDA3YWEwODMzMTg3YzM1ZjdkODBhZmFkMWQ0Mjk3NmVmN2NiMzMxYTUwYmJmZjMwMTJmYTNjM2Y5NzIifQ"
+        },
+        {
+          "resource": "repo://tests/test_think.py#L72-L93",
+          "version": "repo-lines-v1:sha256:60e4345069d3dbff553fb9d5bf5e7bfaf4c4e288fcf24b7352a1b86eea2fc7a5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxZTIwMWYyNGM5NWM0MmFkMmEzMWViNTE3OTQzYmU2MjYyZjY3Njg0ZmZiYTkxYWFkZWE2NTE3OWY1NmEyNDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YmY4ZTVlZjhhMzE5YjRhNzY3MGFlMmU3NDExZWY1NmUxY2ExYmQ5YjBlODUwYmUyMzRhMzI5OTE2MzVjYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2MWJmZGExZWQ0YzI4NTU3NzgyNDExM2NjZDQ4NjljNTFiNTMzZjk1OGViN2I3ZWExZWQ3YjAyNGMxMzA5ODYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_71823fcb61044510a2e1fb514f917d4e",
+      "statement": "`think` degrades rather than failing: a no-match topic on the lexical channel returns empty `related` with a \"nothing relevant yet\" `note` and `wrote` still False, and dense unavailability is reported through `degraded_lexical_only`/`degraded_reason` taken from `retrieve.search`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/think.py#L180-L196",
+          "version": "repo-lines-v1:sha256:7dc0bbf399427f10616e91b49e579db767f1c2a622dc21953ccb880bc131d948:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MjQ0ZDUzNjg2YWNkNjI0MjQ1ZDU1ZTRhOWNkMjAyMGIyZWNhOGM2ZDI3NjFmNGM2ZDQ2NGViZGEyYTRjZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwOGMyMTgwOTdlNTE3NWRkZTY3M2QyYTYwNWE4MmFlYTUyMjlmMGM5MTM0OWNjOTQzMmNkZWFiNjcwODNmMGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4ZTBjZThiMDNkYTE1ZGE0NzRjZmRlMWFkN2Y1NGYyOTUxYzFkZTMxNzVmNGMwY2YzMDJiMDNmNmY5YzhjODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEwODQzMjUyMWRlNzZjYjZiZjU3NjBiNzVlMWY3OWY4N2FjNjZjNjc1NzQ4ODBmZTg4YzYxNjIzNzFiZTM1ZTgifQ"
+        },
+        {
+          "resource": "repo://tests/test_think.py#L276-L284",
+          "version": "repo-lines-v1:sha256:a6fd5966d4a6e51f31d44d0aee9ab6ab351964cbc025c921d3813a647e678723:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDM1OWY2ZDgyMmRhNThiMzc2YmMzMzM0MDc3NmUwNzcxZjc2YjBjMzg5NTBkYjVkZTkyNTRhMzg5MTAzOWIxNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZThkMjJmMmE4N2UzY2M3Mjk3Y2QwMWE5OTQ3ZTVmNWU1ZWUyMmI4NjIyZGY2YzNlZjIxYWU2MGIyMzg2NzE3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTdiYTFkNjFmMWExZDgzNDg4OGVlYjIyMWQ5ZWE3YjFjNDA3OGZhZDhlZjQyYmYwODM5MGQwMWIzNjRiYjc0NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e43c85b111bc45c3b81d8786bd2b0fe9",
+      "statement": "`folders.derive_folders()` is a pure function over the index's path set returning bounded folder entries `{path, writable, protected_reason, note_count}` with a recursive note count; writability is the write guard's verdict on a synthetic `__probe__.md` placed under the prefix (so a nested protected directory like `projects/scripts/` is correctly non-writable while its parent is writable); entries are sorted before the node cap so truncation drops a deterministic tail and reports `truncated`/`omitted`; depth is clamped to a ceiling.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L40-L45",
+          "version": "repo-lines-v1:sha256:eb05c21b2d582a22dc1d123916284deaca3e18aacbd4595154cc03a84fba8fe2:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYThiNmRjMzA4YTQzNWQ2YzFmY2NhM2ZhNTJlMWJiNDdmOThjM2M4YzFmYTc4MGJmZTQwN2M1M2YyMjIxZDdmMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzAyYzlmYjQ1YmRhNDI1NTJhM2U4NGRmZDk1Y2M2ODU5ODc3YmVlNDY2NTJlYzJmNDQ2NTY3MzRjNzliNDBmYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWQwYTUxY2FjOWNjOWZjMTU2MjRjNjJmOThhM2U3ZGE0ZWVjODMxZDZjMDQ5NzYxMDgwNzYzZDEwZTNkYjdmZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDNjOGQwN2M0NmQ5OTJmZjQwOTBhZDY5MGU0MWQ2ZGE5NDRiMjAyM2E3MWZlOWMzMzY3NmEwMGUyZjM5YWVlYSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/folders.py#L114-L151",
+          "version": "repo-lines-v1:sha256:4e029430d067a3d6dffb1078565dc834363eac7c41e35d059fe1cbf9711667fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwZmJhOGU4ZWRiOTUwNTYzZjIzNTQxOGY1ZDI2M2YyY2RmYWU4MDdiYjc0NWNlNjM0ZTVhMzVhNGQxYmVmMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3MzAzNzMxY2MzYWNhOTlkMDJiMDMyZWExZTliYjg5M2Y4MzY3NGU2ZDc0NzQ5MTUyYzYxMWE3NGY1MWJhMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3MDE0OWUwNjlhZDY3ZWNjZjQ3MzY0NmZmMWM3NTAwNTBkMzI5ZDExMDAxOGRjNTc2Njg3OGVhZmExZDYwN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_folders.py#L50-L64",
+          "version": "repo-lines-v1:sha256:5d5d582cc0dcb10ca3fb3b7e2c5a1f7944d18dc0f930193b9ce18301f6981dbd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkODVhMTNhNzlmNWM0MzA0M2UyYzc4YWM5YTQxMzEyMWQxZjM4ODI1MWU5NzlhZmFmNzIwNDQ0ZmZjZDdkZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZmM4OWIxYzVhNzY4NWI3YmJiZTE0OTNjYjM3NjczNDIyYTY0NTcwNTdmOTgzYzhjMDRkYTA0ZTM5ODJkMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiNDA4MDhjYjVkMjAxYzVlMDkxMjMzZjYyOGI4OGUxYzVlNTZiOTU5NDkyZDRlYmU2ZWQ2NGMzNDIxMzk3MDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1ZGUxNTM4ZDk2OGQxNjYxNDg0MjZmMTE2MWVjZTE4MmMwM2ZlNzYxMTk5MTMyM2M4MTFhOWY3N2VjZDZhN2UifQ"
+        },
+        {
+          "resource": "repo://tests/test_folders.py#L99-L106",
+          "version": "repo-lines-v1:sha256:9751955e0a2caf646255416d26c67d5dfa5f63ba810dfcf970b37b8850a94901:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWRkYjI2NDJjODMzOGEwOGU2ODdlZDc1YWJlNDRmNmIzNDczNjMwYWE3NTk3YmI2YTVjMzAxZWIxMzExNTUzZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTdkMzYxYzg2NzRlMGQ2ZjNjYTRlMTU2ZDNjY2VhMDlkNjk3YzI3MDcwNjZkOGQ3MWJiNzQ0OTMzYWZmZmY2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzcxNTM4OTk5ZDhiNjkwNzkyMTg4MjBkYjM4MmRlMjJiZTc0MDE4NWJmMjFkOGQxNzJmNzNkNGQwZDgyZjJmNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzdjYjkxZDdhNmZhYTk3N2NkM2ZkMzdiZDMwZjllODJiMjRjYWJjOTI2MDgzOWYxZTY4OGJkMTA2YzM4YmVjYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_14c7c68da3a54643936760e3dc3f11e6",
+      "statement": "Folder discovery and the write path share one coercion site: `build_server()` computes the effective write surface once and passes the same value to `commit_note`'s allowlist and to folder derivation, and the CLI `list-folders --allowlist` reuses that same helper so a preview matches the live write surface.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L309-L316",
+          "version": "repo-lines-v1:sha256:f6054eaf393395706af7b6f3f4170a523e4e079182cb8a7de9153676853711bb:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTk5ZGZlOGJjM2IyMzQ2NjBhZDI1YzU2ZWFiNzFkNjFhZmZhNTRjZjU1NGQyMjY4MmJjZTIyMzY5NWUxZTJmZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDM0YmFmNzM5Y2ZhMDE3M2E4YzVhZjU2NTYwOTk4Y2U1MjQ1ZmYwMzdiMDg0ODcyZjBiYzM5MjA1NmRiMjI5MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmEyODM5MWJjYTc3MTFiZjBjOTQ1ZTFhNzExZjExZTY1NzEwZGQ1NWE3NmQzNzIwZDI4ZTkyZjc1NWMyYjgxYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDc2ODNjNzk5OGQ0YWNiOGZhMTU5MmVhYzdjMGU3OWEwY2EwYWY0ZmQyMTQxYTBjMTNmNTdlMmUzNzU1ODE2ZiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L439-L442",
+          "version": "repo-lines-v1:sha256:574fbb0e0b844d693144c027d2c30bae5c91a3faa43a0413ebf56a530da7928b:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGM4M2VkODY1MzI5YjllZTBkNTljMzFiMzZkMzk1ZWJkZjBlNDY0MTM3NDc5YmU4YjUwNTFiZWY4NWI4ZjQ1OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzA1YTllMTI3MzU0ODZiYjk5MTllM2Q1NWJiNjA2ZTY4YjE4ODVmYWE4ODM3NmNiMzE1NGMzZGM4NTliMDI2NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjZlM2E3ODUyYzAyNzQyNTRmZTczZTMxZTEyYmM0YTE1NjdiNDk4NGJjZWE1ZGQ4YmZiMzFlNjE4ZjEwYmM1ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjc3NmQzZTQyYThjZDU1MTdlYzI0NjIzZDUzYTZhMDllYTE5NTE2NTFiNjUwOWJhZGE3ZWU3ZDU1YjBjYmY0NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L588-L596",
+          "version": "repo-lines-v1:sha256:9a7503c32acfb675bf8390f68f633d22bdd4cfd30415990fddc0ba7823f4742e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2Y1ODU4MTg4ZjI3MmU0YjhmN2M4NjBkNzVhOTJjYjNmMzc5Yzk1OGJkM2Q2YjFhZjk2NWRiYzk5Y2ZjMGNkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGM0YTFhNmNmMjg1N2VlNTIyNGQzZDE2NWE3MGY1NTE2Zjg5M2JlOWM5NGQyOGI5YmQ0MWI1ZWMyMTIyNzQ5YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QxNzFkNmVkNmQ0ODEwODhmYWUzMmQzNzgyZWQ5MmJkMTE3YjQwNDZlYWQwZTU0MjQ2NjJiZDAyMmM3NjQ2NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e6ddec69fddc4f8aa9a29fec752c9ccd",
+      "statement": "A malformed folder root fails closed rather than being normalized into something plausible: `normalize_root` rejects absolute paths and `..` traversal, the CLI exits non-zero with the message, and the MCP `list_folders` tool returns an empty, leak-free listing instead of an error a caller could probe with.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L313-L321",
+          "version": "repo-lines-v1:sha256:db9ea8005b2eb20a57c0631dd2fe358439e13d771cd40260023a70f51072dec4:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWRhNWM2NmUxN2IxNDUzOTc4MzRiOGM4NTRkYzQxOTNlMjEyNTE4MGE4OTk2YTE0YzMxODgzMzI2YjJlZmJjZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTdiZjhlNWVmOGEzMTliNGE3NjcwYWUyZTc0MTFlZjU2ZTFjYTFiZDliMGU4NTBiZTIzNGEzMjk5MTYzNWNjMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjJkMzk2N2NmNjRjNjU3ZmJlODlkMGJmNDZhM2YwMWNmNjIzNjkwYjMyMjBhMTA3ZDQ2OTY4Y2QwZTBlMTU1ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDY0MzRhYmEyNjBjNmQxMDFmNDRmMTRmMWY0MDI0YjVmY2M1YjUwZTk3NjI3Mjc0OTBhODVlYWRmYzNiMDg4NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/folders.py#L42-L55",
+          "version": "repo-lines-v1:sha256:0f93d7b44c74622596db6cb804d74381e4b57ee5408534e6fbc3374cd661b6b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlOGU4YjIyNTNkMzUxZDNiZGZmNjJjOGFiNTc5MTE3ODI3NTc4MjJkZjkxMzRmNmM2OTM2NWFiMTdmYWQ3NDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5MmQ4YTY1NjVjZTBjMjRiNTRlNTU0NzJhNDFmYWY5NGI4Y2Y5ZmZmNzUzNTRlZDA0YjljOWMzYmIzNjJiYWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzN2JmZDhiOTg0MTYwZDE1YTA3NTNiMWE5NzAwZDAzNWZlMTI3YmQ4MGJhZmNkNDVlYTgyNTMzMjI2MGNlODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2ZmU2Y2RmODM5NTQxYTU4MDNmNmUyYjJhN2RhMDY3MjE0YjI5YWFmNmI3NWQyYzM2MDQwN2I4ZGE2MDQ5ZWYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L549-L561",
+          "version": "repo-lines-v1:sha256:20b1d8700a113625e54df30a74b930fdae3fc347889f64ea10eb38ce8a93198b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNWFmODA4ODg3ZWY0ZjAxMjc0NjgwM2I1NDAyOTAwMTRhMjM1Nzg2YjI3MTE4YTA1YmIwMTUyMWZhMzRhZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkNmNhMDI2OTE3NWNmOTJjYThjM2M0ZGQ2MDNhMDM3YzU3MjUxZDVkYjYwNThlMmE3MDBlMDdkOGYzYmRlNmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3OTQ5Mzk2MGRiN2RiYjUzYjgwN2Q1ZTVkNDBmMGRhN2E5NThmMzdkMWJkOWYyYjhhYmJiMTY2NTgxZDY4NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4MTk2M2E2N2VlNWMzMDE4MmIwNzNlMTRiYjY5YzgwMjE5MTA5M2E4MTBlNTM2ZDY0ODhhYTVlY2QxNTllNWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7749832ffc1c4ff69954929e4f0386c0",
+      "statement": "`agent_instruction` is the requested root's direct `AGENTS.md`, falling back to a direct `CLAUDE.md` only when `AGENTS.md` is absent, with descendant instruction files deliberately not aggregated; the content is sanitized before it leaves the remote read surface — host-local absolute paths become `<local-path>` and private/tailnet (or any `/mcp`) URLs become `<endpoint-url>` while repo-relative paths and public URLs survive.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py#L58-L111",
+          "version": "repo-lines-v1:sha256:d41fe239383f082cbc727632b989e35d4ec156acc63366e53e3257c2b21e4776:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkYmE4NTcxNDIxN2ZjY2VmYjljMWE5ZjNhMjAwNmQ2MmM0YTlmNmQ4ZmY4YzA2YzkxZTI1OTgwZDVmMDA3YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTYwMGE3M2QyZTAyZjM1MmI5MGZlZjFkOGQ2MzgxMWJhNGE4ZWUwYzFiZWFhN2FlNDY1OGYzNmFhMmUxOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkOTIyNjI5MTllZWJhODMxOGVkZWNiOTU1YmFhOGU0MDFiNTk1MzdhNThmMTQ5OTlhNjEwMDhmNDM0N2ExOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmYzdlM2E2NWFjZGFkYzg1ZGI1MzkxZDc5MjNmNmYwY2U2MzJlODYwZDJlYmMxZmY4ZjQwY2NmYjQ0MWJjMDAifQ"
+        },
+        {
+          "resource": "repo://tests/test_folders.py#L126-L148",
+          "version": "repo-lines-v1:sha256:77362662838a6719398392fbf5ee5ca48920bb4874ecbde63a24bdb13a1760be:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzODNlMzA0ODQ2NGI1MmVjYzNiNTZkNzExZjYzMTE0MDlmYjJiYTIzMzNmZmIxYmMwYmFhN2U3ZDdiZGU4MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjZjVhNjFkNjRkNmFjMzUzZTI1N2I3MTk2YWI1Yjc1ZTBhNTZhYWI0MzI4ZjYwMTU4YmRjMjVjNzM2YjM4OTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmMjUwNGYyYzNkMmYzNWU4YTcyZmZmYTA2Nzk3NGI2MGZiNmVlMTIxZTVkZjJkMWQ2YWZiNGQzYmExNDZiZDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_31d4ae7d3f294baeac7eb8cf27b5f424",
+      "statement": "Because folder paths come from the index's path set, skip directories are structurally undiscoverable rather than filtered by a second rule that could drift from the index's own exclusions.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py#L120-L124",
+          "version": "repo-lines-v1:sha256:a783eb62cf7ec8db76ef881987db1134f186a892b944ec8c4fa45157b37a7d80:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWE4NzUwYzkyMjc4N2M3OTM3Zjk0ZWE3NjA1ZGE3OGI3MTYwNzQ1Y2MzZWI1OWJhOTU2MTg0YjlkZjljNjM0MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU1NzcyZTdjMjJjZDk4OTkwNTQ2ZTMyYmVhODM3ZDJkNjlkZDYyZGVhYzgxNjY5ZTZlOWUwYWQ1NGUwNzRjNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjhiZDE0ODRiMzViOGJiMGE5MTIxMWQzMDE1OTg1OTc4ZGY0ZTcyYmU3MzY2YTE3NDNkODUwOWEyYmIxYjY5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjllZDlkZmY4ZDFmMmNjYjdhNGY3NDZjZmY1Njg2NzZmMmU4YzMzYjBjOTI0OTA4NDNhYmZmZDU2OWMyYTQyMCJ9"
+        },
+        {
+          "resource": "repo://tests/test_folders.py#L151-L163",
+          "version": "repo-lines-v1:sha256:d01da6dd6082cd9b5031366cdc8940ad9679d19db7184357c3f4990533ca0815:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2ZjQ1Y2UwM2M1MjNjYWQ2NWY2NzE2NDJkMTJiZGMxMjY2ODYzMjA5ODIyNzMzNWI1NWVkMmVlMmQzOWZmZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmNjNhMjJiNjk2MDhiM2M5MTE0MTAwNzMzMmJiODEzMjhkZDA4MTU0YzFkMTljOTUxZjY2YzgzNjEzOWE5OWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d7a116023de4d0aac42e75b7527d564",
+      "statement": "Sidecar routing is keyed on extension and complexity — images and scanned, table-dense, or equation-bearing PDFs go to Docling; simple native PDFs and DOCX/PPTX/XLSX go to MarkItDown — with only permissive libraries in the `sidecar` extra and lazy extractor imports, and a conservative complexity probe that reads the first three pages, treats under 32 extractable characters as scanned, and returns an all-false default when the probe libraries or file are unusable.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml#L37-L45",
+          "version": "repo-lines-v1:sha256:81bf2498c0669e7e544d71d6662bc978408cb99c799639db339ba04a7be5a44c:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjA3NzE2Mzg3NzgxMWQ1NWFlNjViNjZiZmU3ZGY0MWM0NGU3YmRkYjc4NTQ1Y2E5OThjNTRkNWQyN2NkNGFlYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjk0MTZlMDlmNzhiYTMxNmMwMzI1NjgyMTNiODU1ZWU3NTZlNDE1NjVkOTE4ZjA5NTE5YzgxZmQ2MjBmNDA2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzQ3YjdlMmQyMTk3OGEzYmY5OWY5Mzc3YWFhNGVhN2UyY2NhODg2Zjk4YTg0NmQ5NjkzMWFiNTY4ZDg2MzY5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGEwMzA0NDAzY2VhYTExMDRlMTFhN2JkZjE1YWQzNzU0MDhkMDU2NjVhMDM4YjY1ZTQxMjc4NGRlNjE2OGIwMiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L1-L9",
+          "version": "repo-lines-v1:sha256:e8563167af33d19df013e630f24854f350bd80933e8568b6e744ba5374a65b7f:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTRhZDNjZTJiNGEwZTdkNDUyM2Q4ZTdhY2E2YzFhZWU4NTAxYzIzYjU2ZGQxMDI2ZDA4ZmM4MjkzNTA2ZDE5ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODhiMjYxMjczMzkzNDE2N2U2MzBhNGE4OTA5OWM0ZjEzZTQyNDFhZTU3NmM4MTk1YjkyY2U5YTc1ZjFmNTMzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDE2MzQwYjFlODhlOGVjYzhhMmZmOTJjZjcyNDVhZmI0MTFkMzczOTE5M2I1ZGQ1ODVlZTRmYTJmNzBlZDg5ZiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L159-L166",
+          "version": "repo-lines-v1:sha256:946d210ac5ddaf58b25ca23a541d3fd244ee62088ce1616284a34a8e8e49dd2b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmI5ODliMzNhZTQ4MjdkZmEyNTFiNzk4OTc5YmIzZWM5MmMxMzE4YzE4ZDYxMWEyMmI2NDBhMDU1NTdiYjRhYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmY0OWM4YTFlNWU5MjY1MzQ5NWEzYzc1ZWEwOTRjYWRiZjExZTVjNDExMmNlODU0ZmViNWQ1MDMyMWQ1MTFlNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmM3N2RhMzMzMjU3ZWU1Yzc3NDZhZDYyNDU5NWZmNmM2MmJkNGMxYzQxYTcyZmNmZjZkOTg1MzRiZTRmZWI3YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGRiMmQyMWRmNzEwMDU2MzZjZjJkMDRkMjY2Zjk5NDY5NDk4ZmVmODE4ZWExMjY2MmRiNzRiNjkyZTcyNDljNiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L47-L88",
+          "version": "repo-lines-v1:sha256:275cebbee869bfaae046f1222283d126597c1d982474a339e50199be541a3e3f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjZGEwYTk0NjY2N2Y1NjZkMjMxOTExZTc4YWI0ZTgxZjJlZDY5OGZjYjBmNzgzNGEzOGNjMWJiODU3YTY3ZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkYjE3NGRkZmFhOWFjMTQwYzdjMDM1NmU2NDI5ZWU4OTFhMDIxMTM0NDVkNDJiZDBjNjlmN2UwM2NmZGI3NWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3NGY2MDYyMmMxNWM0NjliODkxM2IyYTBjZjZlZmY3M2E0Yzg5NGNhMjc0ZDA2OWU1N2U4YzA5NTU5NTk4MGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmYWY2ZjMwMDE3MWUyYmJlMDQxNWMyYWEzMTJkNTIwMjI4NjBiNGRmZjM5MTI1MjMyNmQyNjZhMDhmNWRjZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dbde5bd3e993440f907776c9fb3df4c4",
+      "statement": "`sidecar.needs_extraction()` re-extracts on exactly three conditions — no sidecar text, a `source_sha256` mismatch against the source bytes, or an `extractor_version` differing from the module's `EXTRACTOR_VERSION` — so an unchanged binary causes no churn, bumping the constant deliberately forces a corpus-wide re-extraction, and unparseable sidecar frontmatter counts as a mismatch.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L133-L143",
+          "version": "repo-lines-v1:sha256:7bcc9fbfed2f4baca2c98fd989c4bff8a7a70d97f54300bf067e4e2606294408:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3N2E5MjEzODRiYzk3YWRkMGQ4YTU1ZjVhNjI4OGFhNmQyMGE1M2Q4ZTc4ZmYzZTM2YmY0ZGE4NDU3YmZiNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1YmM0NzExZWNjYTA0NTBhZmM4MzI3NzlhODg2NzZhN2M2OTYwZmEzZGE1YWY0MTBlZTAyZDFlMDE1MTU5MWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNDY2NzgxZjY0YmU5ZjIwZGY3YWY3NWJkMDAzOGM3Zjg0ZDc5YmZjNzdhMzMzZWQ4MTdhODI4MDYzZDM4ODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3MGU2NzRjMWEyODBmMzlmYzVkYmVjZTBiMjUyZjE0YmI3ZjY1NjRjYjQwZDQ3NjYyOWQ0NmJkZDlkNzQ4MmEifQ"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py#L44-L68",
+          "version": "repo-lines-v1:sha256:5fe703230e8a14c07417724d9fb2368d90ebe9a804f44c1654375f0a86cfedd8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyMzNiZTM0NDRmNGQwZmRiYjE1ZTQxNzM5OTQyOGU4N2ViNDU3NTUxOTUwOWNiYWIzOGJlYjY0MGY1ZjNiMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlNTQ5YmQzYjMzMDY3ZWJjODAzM2E0OGI3NjQxMjA2YTNkNDdiNjA1OGFiMGMyNDYzNTQwNGZiNzdiNzRhZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYwNmQzNGE1MTliYjg2OTlhNjMwMDBjMTE3OGEyMWE3MjU5NTk4MzFlMDJlNzM0OWQyOTZjNTQ2NmNhYTg3YmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1OTRlNWE3YjVlYjFhN2U2MjA5MDEwNzIzN2NiNmQ0MGNiM2JjN2FjZjI4MjRmZWY5ODBhNDE3YmE0NjE2YjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d77639689254481c89133a7b747abe44",
+      "statement": "`sidecar.build_sidecar()` is pure assembly: it routes, extracts through an injectable function, computes the hash and fidelity label, and renders the content-addressed provenance frontmatter in memory at `sidecars/<source_rel>.md` without writing anything, and `SIDECAR_DIR` is deliberately not a guard-protected directory.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L104-L110",
+          "version": "repo-lines-v1:sha256:0b1b8a643918f66502d1fef941a0ee109b8f6ba3b8496054746aa378a140e9d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWMyNmY1N2MwYzEzMTIzMzNlM2JlMGZhZWQ3OGViMTZhOGViMTg4NWYyYzJhNDQxYTFlY2I1ZjU0NzllZjU0MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWZkNTA2MjkxMGEzZGZkZGQ3NDhlOTE2NjRkNmI1NWRhYmRmNTQ2MmQ0ZTMzNmUzMDYzYjE1N2E0MmRiY2Q4MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTM3YWY4MmIwYmRmNGE0NmI4ZjRiYmJkMDE5MDQ5NzVkNDdiYzdjMDg4MjdkM2I1YmZhNTk5YjBkN2IyZjAwMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzVhYmU3ODY4NmU1NjYyMWIzMTYxNmJiMTZmODI4NWRlMDYwOTYwODZlYTE2MDc2NTc3ZGYwNGMyY2ZiMDEwYyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L169-L197",
+          "version": "repo-lines-v1:sha256:1b8bdbb166aba88e322fcf8b9ab7ea8a0ae4699ae25b0b0af0fb7c24e61b523b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjYWM0OTMxNjg1OTkyMjYwMjhjMmExNDE4NGY4YjEwMWVmMzUyMGI3NWVmMzU2NjY2NGM1NTM0YjRhOGE3Y2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkOGJkM2Y1MzNkZGQ0N2U2MGQzNTlhZWJjOGQ5MmFlMzVkZjhkNjgxYWUwN2FhZGI1MzkyMTI4ZDA4ODJiYmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyNmRjYTZjYmU4NDRmMDMyNGZmOTZmYWRkZDY5NDI5ZWY1YmM2MjczZTMxOTAwNTMyNTVmMjAyZGU1YWM5MzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzMzA0Mjg3ZjNmZWRhNjM5ZTJhYTI4YWUwNWEwMTRlZTFhZjA1OGI5MDk1ZTc3YmRiZDQ0MTk2OWYzZWVmZTgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L36-L39",
+          "version": "repo-lines-v1:sha256:7fab66f5d6f563097993cb0674b9f5514b3222f16882d8d65e918d0e289fb2d6:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjc3MThiZTE3MGM5YjM2Zjg0MmU2NGQ3M2JhZDQ2MzJkNDQ5NDFkZDMyMTVmM2FlZDhhOGFhYjY1OGY4NTVjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjYxMTA4MDI1NzhkNWI3Yzk1MzI3ODJlYzVkMGE5OGNiMTdmMzhhZGMzYzI5ZWI1Yzc3ZTZkZGFlNjJjZmVmNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDY2OTQwMWZhYzFmYmZjMzYwZTM5ZmJhMmU1MDAxMDI4MWM1ODU0YWViYjU3YzY4YzYxYTBmMGFhNTI0NDFhOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjNiN2JhMjIzNTJhZDZlOTJiNjdkNWRhZjg2OTI5MDc5YzgzZjQ0MzY5NGNkOWEwNzg2NWZlZDE5MThkNTMwYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0e832a4e7be84ea0a7348c42b2d87c73",
+      "statement": "Sidecar writes are proposals, never silent overwrites: `cold_start_proposal()` extracts a whole corpus into one batched proposal (not one per file, which would be the PR flood the global proposal budget bounds), and `reextract_proposal()` emits one review-gated proposal per changed source, both scoped to the `sidecars/` allowlist.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L202-L230",
+          "version": "repo-lines-v1:sha256:37413c371f9d4d17f2c33eabb49ef343a6b099950ca99991e5bd16e7f23c7dbf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0MTNlODEwNGVjMjcwM2UxOTEzMmU1MGRlZWU5YmE1YmY4MmYwYTM5NDBjM2Y2ZGIyZmIxZTc3M2ZmOWMzZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1NTM2Zjg2YmZiYTgyN2IwZWNhNzdhODk2ZjE5NTI4MDFiNmJjMjAwNjlkNjBiZTg2MTFiYWMwZWM0MTM4YmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmM2NkNmM3OTg3YWZhOGJiZDU0YmEzMDBjMjY0NGQyZGRiMzQ4N2VjYTFkNTI0MzZlOTIwY2U0YTVlZGU4NTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py#L118-L147",
+          "version": "repo-lines-v1:sha256:60766ee466477b7b8b324b64a7454fb8cbd31af31346ebed53a8a2c768a9f044:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiN2MyM2MwMTZhMWQ4OWVlZjgwZjJkNWM1OTA5NjFhY2MyMmNlZTU3MzM1ZDg2NDhkMmUzMTJkMmJlMDllM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1MDk0ZTIzYzVjNjBkNThhMzkyNmY5YzgwODdlZDY3NzJjODkwMWE5OWQzNTcxYWMxZWUwNmUwYjgxYTU5Y2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmOTVjMWIxYjUyNjcxMTJkNTkxNDRlOTIzMzI3YTlkM2ZmYjRlNTRmYTAyODgyNzFmYjE0NjBlZWQ3NTc0ZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4746af6c2e524eb387161478264596ed",
+      "statement": "Every sidecar carries the `source: sidecar` trust tag, and `sidecar.trust_tag()` derives that label from either the path convention or that frontmatter key while returning `source` for everything else; the current posture accepts sidecar content and no code yet restricts sidecar-derived chunks from write-capable tools.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L113-L121",
+          "version": "repo-lines-v1:sha256:30ba040f46700a29539650b78faf7f734a3761d30d620bf245e83d58e9e38e40:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDI2NzkyNzQ5ZGJkMzBhMmIzMDA4YzJjYjQwNGZmMGRmZTYwZjNhZWJmNjliNmJiNTczOGQzNDFlYTEzNzY3YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmI3Yzg0N2RhMGVkYzU2ZTEwMjAwY2ZmMTQxYTFhOTI0YzRhNTU4NDc0YzQ1ODQ1Y2U0MzYzYTZmNzhhMTAyZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDdlZTQ5ZTg4OGZmZDNjMjRkYmVmNjNhMWI3ZmFkMDQxNzdjZDU2NDcxYzc0M2E4MDZhMmY2NWE3ODI3YWY5MiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L183-L192",
+          "version": "repo-lines-v1:sha256:b907ba18770be29e2df51c8a44fce56cef3457486872da7d0f65778694cd87a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmNzc1ZTY4MzFhODZlZDQ0MDRjNDZhNDJlZmIwMjkxOWZjMTgzZGI1ZmI4NzcxMDU4YzE1ZTlmZTk0Mjc5ZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUwZTQ2OWJhNDk5MDkwZTg0ZjdhMzUzOWE0YWFkNDExMzVmMzhiZGM4NTY4MTcyNzg3NDQwMzMxN2ZkOTcwYzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4OWQ5MjU3ZDE4ZDE1MjQ4ZDA0N2I2MTc5NTQzNjk2OWZlNGUwZmNmNDA1NWRjNjllYWRkMjZmZWExMWFkYTIifQ"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py#L94-L99",
+          "version": "repo-lines-v1:sha256:0dcc313b0916924d010bb2cf28319dcfaa1430af75dbff11b5e18237bb687c58:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2QyNmFjNGFmYjdmMTIxMDRjZWEyN2QyYjUzY2I5ZTU0ZmRlMWYyNTExZWIwNDNmMGY3OWE0MjFkYmVhYmU1OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDUyNjA4ODY0OWY3MWRiZTFmYjUzYzUzYTNlNTU0ZmRhNDE2ZmRkNDlmZTkxNDliMzcyNWQ4NGJiZTJiM2JkNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWEyNTllMDk5OThhMmI5YWY1ZWI1YzQwOTliZjBjMDAxYmQ4ZWY3ZWM0Y2MzZGEzNmQ2NWQzNGI1MTg3NDQwMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTU4YjQ0N2UzZDEyMWE1MWNhMWM4MTM3NDljZjAyZDE0MDgzMzkzNjM1NTFiMjA3MDRiNTRlNzA5ODU2Y2ZiZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_eaf326c814174cc6a0bc631e8380debf",
+      "statement": "Extraction records an honest fidelity label — `low` when MarkItDown is used on a table-dense PDF, `partial` for `.xlsx` because flattening loses structure, otherwise `ok` — so a retrieved sidecar is not mistaken for a faithful copy.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/sidecar.py#L91-L99",
+          "version": "repo-lines-v1:sha256:a7ceff82d8e9af36671df6daff495f390a14f81c582e9168c79ef11c4918e012:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTM3MzU5ZjBkNmQzYjUyNTg3ZGY5MTkxZWE0ODc2Yjc5NjgwMGEyZDc3YzgwYmI2NTMyNDJlZmFlNDAzZDE0YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2MwMDA4ZmRhYTU5ZDE1ZWYzMDhmMjViZjc5ZDg3ZWVlOTA4N2U5MmQzMTI3OGVkNjIxNzMzNWJiNDdkMmFlMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2YwNGZiZWRkZjYwZjVlZTI3NDFkYTc2YTVhODY1ODFiYzY4ZWVkZGNjNzViMDFkN2MyY2E0NWMwYzRkN2M3NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWJiZmY0NjhlNzcxZjg2MDM2MjI5NTE5OWRmMTBiMTViNjU2OTU2ZmU3OTE3YTE3MjdiNGFlNmMyMzlhZGFiOSJ9"
+        },
+        {
+          "resource": "repo://tests/test_sidecar.py#L82-L91",
+          "version": "repo-lines-v1:sha256:7578ec7f3607ffd86da58ab70f90256b6b4b2c35f439f9df11befcf41c00bbab:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NzQ2MDgwMGRhZjU2OTY1ZmM0MWYwZWYwYTViNWU2ZDQ0NzY3ZTc1NmRhYjFmNTNjOTliYTA5MDFhOGIxNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwMTYxOGM1ODYyYmEwZWU1OGMxNWMwNDhlMTJhMGYxY2E4ZjZiMzk0NTViNjEzYTcwZGY1Yzc3NWNlOTVhMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1YTNhODg3MDE0NGQ3MGU5NzIwYmU0MmE1NzZhMGU3OTVhZGNlY2UyN2Y3NzBhODEyODhhZjU3OTgwMDg4YmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjZDYyOThhZTk2ZTQ5YTgyNWU3Yjc2YTk3N2NlOWQ0Mzg2OTNjNTNmZGQ1YjQ0NDczM2FlMzM0ZGQ1NzdkNDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_de53c6936a524e8bb384bede16cca490",
+      "statement": "What belongs in durable memory at all is governed by a taxonomy: five decision dimensions (duration, type, scope, update strategy, retrieval mode) plus explicit write / do-not-write lists, where durable project memory (semantic fact, episodic/source evidence, procedural or policy rule, generated summary that cites its sources, raw capture, current-state mirror) belongs and behavioural preference, temporary session state, transient personal inference, secrets, and unreviewed sensitive material do not.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-taxonomy.md#L9-L51",
+          "version": "repo-lines-v1:sha256:83905536f4d79fdebb0d6905f3b64773b963aba05fbdcd3f4032790f7b15463c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjYmEzN2UxMWY0MjQwOGNhYTVjNGEzYmY2ODhiYTZlMTQ0ZDI5NTY3MDc0ZTAwNjhiMTE0MzIyNDkxNTBhNzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmNGQ4NTJlMmNiNDRmZTA1ZDk2YzhlYWFiZTgyYmI3NzUwZGQzOWRlMmI2ZjhjMmYzZTg0OTZmZTRlNWM2ZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1NGViZmE4Mzk3NzRiYTc2MjNkZjI4MWJjYTg3MmFjNDIxNzIwZjFiNDNjMzNmMGE5NDJmNjhiN2QxMzExMTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhODMxYTI4MTExNzNkMWUwNzNjMjg1NTkzNmY3ZmQ4ZGUyZjI1ZTlhOWRmYWQ5MGViODYyZjg3ZThiYjdlNTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bb6868e1729a4fdcaf94a6f3753d75e0",
+      "statement": "Evidence-first is a workflow rule, not a style preference: preserve raw captures and cite source paths, never overwrite a raw capture with a cleaned summary (triage is allowed, silent source deletion is not), and route a genuine removal through the memory-control preview/apply flow so it becomes a new git event with audit context.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-taxonomy.md#L53-L66",
+          "version": "repo-lines-v1:sha256:36985c98b7c6e54d858af36ec60513a1f4d2dc7d9c8bea3b581849b3f5996146:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5NzZjOGQ4YTAzNzAyYmFkMWJmOTNiYTM1ZmU5YTYzN2UyMDdhZGQyYWViZmY2MzY5N2ZhMWNkN2Q0NGZiZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1NzA2Y2M2ZjlmY2I2MTJiOTE3YzQ1MjExZWI3ZTUwYjgxZDgzZDYxOTA1NGU0ZjU5ZGJlNGU3YmNiZDMxMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1YzMyNDdlNzc4ODkwNTNiMWQ3OTMxYTAxYTM4ZTM2YzE5ZThiZDI5YmM2YWFjNjIwZDlmYTYzZjBiZmU1YWEifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/skills/hypermnesic-memory/SKILL.md#L39-L42",
+          "version": "repo-lines-v1:sha256:966c0e4a3d1f21c6c0d9b4f79b81e39d90091a552b36cdf6354317725475a92b:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEzMTNhZDFjY2RlY2JiNjdkOTU2YTNjYzM0ZjRlZDY0OGY3M2UyNzE1MTAyMDc3ZGViZmUwMDVhYTE2MmRmZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjY3NTNiMmZkNDgyNDRiMDAyNTQ3MTk0ODVmMTY0YTFiNGVhNTQyZDQ0ZTkwNWE0MWY2MzA3YmQxMGNjYWE2NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjdkOGMxNDU2ZWIxNTdkYmQ5YWMwNzgxYmMwZDViNzgwMjUzYTc1YmJkMTJiOGVlMzYwNjY2YTcyZjE5YjlhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTA5YjI2ZmI5NjFjYjhlOTQ0Y2IzOWYyZTkxZjk3MGRjZWNkM2IzMmU0MjM3NDY2NjAwZDUwZjc0YThkMjQ4MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7b3ca5b10084cda8daf3311dcc1c0ab",
+      "statement": "The engine only classifies memory after the fact: `memory_control._source_type` reports `generated` for a note carrying the generated marker, `captured` for any path under `sources/`, and `authored` otherwise, which is what backs `memory list --source-type captured` as a way to review raw intake.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L1049-L1051",
+          "version": "repo-lines-v1:sha256:fdbb5538ae0984e34098cecd5a532c60d9383b7c1506aff6c706956c2bc022ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTQ0ZDM5OTVjNTI5MjMyYjM5NWNiNjNmY2VmNWI2YzE3Mzk4ZGZlYWVlODZiMWNhOTUwY2YzNTU3NzM1MDg2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTA3NmFhMTEwNjQ3ZDU1YTkyZGQ3NTExMWVkZDZmYjM1ZjNiMzIzOTJlM2E5MzU5YzVmY2VjZTFhNGFiODNiNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjY3NGU1NjBhZDg3MGYwMzc3YWEyZGRlNDU2Y2U5MWM3YzBlYzhlYTg0N2FiMDNmYTE2YWNiNzcyZjk1YmY0MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmE5MzE3NzJiMGUzYmVmOTQ0ZjQ4MWNlYTkxYTVkZDdiM2M2MjNmZTc2YzE4MzQ1MDc1NWE3OTU2MmQ2NGUyOCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py#L53-L60",
+          "version": "repo-lines-v1:sha256:0d8b5da61b661cdec95d2a5fbae6302af4f1bc9f8b0ff177dbcfee27504e995e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDZjYzY2NWRiZDYxY2Y2ZDhjMWM5MWZlMzM0NGZiMWZlNjk2M2YyMDk5NjViNDdlMzkzZmU0MmI5Y2MyYTY4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzAwMDZkOWNiZTY3NTIzZjc3OTliZjY0MjdlNzdmMzZlMjVlMTdiMjc3ZDNlYzA0NWE3ZDM3MzI5ZjExMWQ3MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDcwMTQ5ZTA2OWFkNjdlY2NmNDczNjQ2ZmYxYzc1MDA1MGQzMjlkMTEwMDE4ZGM1NzY2ODc4ZWFmYTFkNjA3ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGEyNDJkNTJkNTMxNjdkZDQ1NGVhZGNiYzVlMGEzNTFjMmU4YTc4YTkxYzY1ODU0ZjRmNDc2ZjA4NmI3YTljMyJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

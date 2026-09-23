@@ -1,0 +1,424 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:73ba5934a5c4b37845f981c75f09de3d71d4faf54d5b4f4f9fb3434c0094f479",
+  "claims": [
+    {
+      "id": "claim_ab7ee5ff46c24875bad355523345c800",
+      "statement": "hypermnesic reaches external agent hosts through three deliberately separate integration surfaces — an in-repo Claude Code/Codex marketplace pack that speaks MCP over HTTP, an in-repo Hermes Agent pack that speaks only to the local `hypermnesic` CLI, and an out-of-repo Obsidian companion — and the Hermes pack consumes neither the Claude/Codex manifests nor their MCP wiring.",
+      "evidence": [
+        {
+          "resource": "repo://obsidian-plugin/README.md#L1-L9",
+          "version": "repo-lines-v1:sha256:84c11fd63580b2545c2e3862abf02322b6840133e3220cd95556b056b447f8a8:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzY1NjhmMDVhMjZkZDllNWQ1MDFiY2ZiNTk2YzVlZTM5MDFlZGIyMmUxZDNmYjkxMDY3NmVhMDMxMWNjMmQ5NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmY0ZmNhYTI0MGYyYzgxYTA0NGExMWIxZTM5ZTM0MWVlMzA2MzdlYWRkYzM5ZDE0NzM4ZTg5ZGQ2OWYyZGMyMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzlmNjFjNWY3ZDA0ZTU3ZTVjNDEzZDc1NzhhYTcwNDI1MGY4OGMyODc0ZjNlN2NiN2U3MWJkZDEwZTQyNjJhMCJ9"
+        },
+        {
+          "resource": "repo://plugin/README.md#L3-L14",
+          "version": "repo-lines-v1:sha256:c63132a553ff03924072f170af10e57ddc9aedab06ff16d6f70bf9dad30b8d48:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4M2E3NzM0MGQ0ZGRhNzM3NDlmNzYwZWY5OWNkMTVjNDNhY2MzMjExZDA0YzViNWY1ZjkwZTM2YjBjOTc0MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlYzUxNDc3Njc5OGNjYjk0OTA5OThiMDZhMjUxMGI0Mzk1YmM4MmE1YmY5N2M1NjMxZTMyNzQ0ZDQ0NWY5NzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiMjAzM2VhYmJhNTY4YTFmNWJjMDA0ODllMmQ5MmE0NTQ5MTJhYzgzYzM5NzE2MTk5MDVhMDRiNzA1ZjgxNGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjNjJmZDhiMWYwZTViYWRhNTNlMDUxNGQ5NDY3NjM0MmRjNmE0YWUwNDBjZWJhY2MxYTQ2NzVhNGEwOTRmYTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_77ab0a795116425e89dbda6761b6c178",
+      "statement": "The repository intentionally carries two Claude marketplace listings: the repo-root `.claude-plugin/marketplace.json` makes a no-checkout GitHub install possible (Claude Code only discovers `marketplace.json` at a checkout root, never in a subdirectory), while `plugin/.claude-plugin/marketplace.json` serves the local `plugin/`-directory source; the root listing's plugin entry points at `./plugin/plugins/hypermnesic` and declares no `version` or `description`, so those live solely in the plugin manifest and the two listings cannot drift.",
+      "evidence": [
+        {
+          "resource": "repo://.claude-plugin/marketplace.json#L11-L18",
+          "version": "repo-lines-v1:sha256:532cc66f66065d7a275aa0bacbfcba6d42338f9496212360dcc66bb7eb261747:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzk0NjljOTFlNWI2ODJmNjFlYmI2ODMzYWZmN2FmYTZjYmU1N2JlNmI5Y2E3NDY1ZTgyZmU2ZjM5YWY5ZWNhOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzA2NDhmNzdmZDVhOWM2M2IzY2RkMGFmNDlkYWExMjk5MjIwYjc1NDFlODhjYTE3ZWZlMWE2YTExNGI5ZmYyYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNThiMGFiYTFkNmQzZDFhNzIwYjlmZGM0YWU0Mjk3MGU1YmUyM2I1ZmZmOTk0ZmVjNGU3OGVlZWFmYzc5Y2VmMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        },
+        {
+          "resource": "repo://plugin/.claude-plugin/marketplace.json#L11-L24",
+          "version": "repo-lines-v1:sha256:0d0eede64640311e67efabef0cfbacb4849afbde97c154e149a1af4d4bc96798:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5NDY5YzkxZTViNjgyZjYxZWJiNjgzM2FmZjdhZmE2Y2JlNTdiZTZiOWNhNzQ2NWU4MmZlNmYzOWFmOWVjYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNjQ4Zjc3ZmQ1YTljNjNiM2NkZDBhZjQ5ZGFhMTI5OTIyMGI3NTQxZTg4Y2ExN2VmZTFhNmExMTRiOWZmMmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4YjBhYmExZDZkM2QxYTcyMGI5ZmRjNGFlNDI5NzBlNWJlMjNiNWZmZjk5NGZlYzRlNzhlZWVhZmM3OWNlZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        },
+        {
+          "resource": "repo://plugin/README.md#L90-L111",
+          "version": "repo-lines-v1:sha256:9d2459d3ee7badba6b9b1bdab8d0b3ac36fa49a131e13f413f830d1a0d7cf463:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5N2YwNWIzNzBiMTFlOThiNGMwY2ZhODFlOTNkM2E4Zjk0ZTI0MmI4NDFmYjJkNWFlMjM2OGM0Y2Q2ZDc3ZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiOWVmMWYzNGQ3MzVjZGRiN2ZkYzgwYjk3YTIxZDVhMWE0NjZjN2U1ZDc3MTM2YjM4NzAxZDAzNGRmZDlkZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFiOWE1MTk4ZWMyYjZiNjY5ZWUyYTQ2Njc0ZjUyZmViMTc2ZDAzMmRkYjBhMTY3ZjI3ZGQ0OTZmNGEyYWI4N2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjYzA5ZjBkZmU0NjIzYTlkZGM0NGJjZTdiMGNhZGJiMjcwYzEzYmE5NzMwMjk3MDA3NGI2NzlhZWM0YTRmZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f60cd8c9d7a44f6b0e47bce830a35f7",
+      "statement": "The Claude plugin manifest declares only a skills path and must not reference the standard `hooks/hooks.json`, because Claude Code auto-loads that file and a manifest `hooks` key pointing at the same path is a duplicate that fails the entire plugin load — taking both the skill and the hooks down; the constraint is pinned by a regression test.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/README.md#L110-L111",
+          "version": "repo-lines-v1:sha256:c1b28b6366bda186888bd9ea8902d6da80b8c7756a729e32faf99fc7a1c621ab:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjJlYWU2ZDczNGI5YWFmMWYwYjY2MjA1ZThjMDRlNjI5NzUwNGVhODU0NjUxNDBhNDQ0NWVjOTJiOTE1ODI4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2I5ZWYxZjM0ZDczNWNkZGI3ZmRjODBiOTdhMjFkNWExYTQ2NmM3ZTVkNzcxMzZiMzg3MDFkMDM0ZGZkOWRkMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDA2MDQ1MjczNTk1Y2UwNjQ5ODU3YTI0YmU2NWI2YTU1NTg3YmFlYTI2ZmViZjM0NGU4ZjdkYmZjMWM3MDg5NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWNjMDlmMGRmZTQ2MjNhOWRkYzQ0YmNlN2IwY2FkYmIyNzBjMTNiYTk3MzAyOTcwMDc0YjY3OWFlYzRhNGZmOCJ9"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/.claude-plugin/plugin.json#L1-L11",
+          "version": "repo-lines-v1:sha256:a7a4ea82a57fd0a615f8bdfc33d0652ab619dab5506ba6777b83dcfaa8389b1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin.py#L67-L80",
+          "version": "repo-lines-v1:sha256:b74c0234917d9ef315ab9ad1a34059e9a71674cb0356c73451a5f46c2459409b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwZWY5MjQ1YTNkOWRhYjY0YzA3MmJhOWIxNGM4OGI5ZTc5NmMzN2E4NTY2YTA4NGFmMDlhY2RjN2I3ZWE2ODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmY2RlNTA0ZTAwODBiYmU5ZWY2Y2U3MzUzZmI0ZTNkMmUyNmI1NDkxMDAyODhjNjU1YzcwNDUxNzVkZmQwNDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhMzUzY2Q5ZTAzMmMwNzhjYzY0ODhlZWQ3N2FkMDhmOTJhMWZhMTUwMTIwYjMzOWVlZjQ4NGFkZGY0NmFhNDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiZTk4MTY4ZjhhMzQ3OTk5YTdmYTQyZjIxMmUxZmQ3OWVhODlmOWNlYjc0MDY4YjFkMTJjYThhYjAyYTIzMjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e57cbdece51f4698bad52a497d0c5898",
+      "statement": "The Codex plugin manifest declares the same shared skills directory plus an `interface` block that points at the same `hooks/hooks.json` and declares `--host codex` as its host flag; the hook script accepts `--host claude|codex`, and that host value both selects the per-host disable switch and is written into the status record.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/.codex-plugin/plugin.json#L9-L13",
+          "version": "repo-lines-v1:sha256:561746872b11b7b3ae2a876275bf2e4de931067b4f9186b77ec2d72fcdbe8847:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUwY2E3MGM5NmQwMTY1NDY2MWYzMmE2YjhlZTQ2YTVkM2E1MjBlM2YyMDEzOGJlODEwMzI3OGFhZWY3MmUwYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNThiMGFiYTFkNmQzZDFhNzIwYjlmZGM0YWU0Mjk3MGU1YmUyM2I1ZmZmOTk0ZmVjNGU3OGVlZWFmYzc5Y2VmMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py#L158-L162",
+          "version": "repo-lines-v1:sha256:d7c02acbc9f8b087c022e9ca79b30a6abb3cbcca3fe321ae8ecf60f87ab7e45c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWIzOTc5MzNhMjRhODAxZWU5MjMzMjdiZDY5YTAxMDQ5YzA3NzkxNTAyMWNmMmVjMzlkZGE0ZjgxYWE4MzdlNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjFkZWRmYjJhNDBlN2FhY2ZjOGM2NDU0ODkwMGMyNDQ5OGFjYjQ1YTcxNzVhYjY3MWQ5OWEzNzkyMGI0MjFjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDM1YzBkOTU0OWM4NjViZmNiZjc1YTY0NmFjMTc1NmJiZTQ4MjdmNDhkYTQyZWNhZmIzNTc5Njk3MzJjMWYwOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGE2YzUyNThmNTdkNWJkZWU2YjE2ZTdkMzY1NjQxNWQ0OGU3NWMwODNjOGY5ZGJkNGY5M2Y1MzNjNzM3ZTNkZSJ9"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L88-L98",
+          "version": "repo-lines-v1:sha256:da06b8c0e42959e2e459a6404793beb6b91b758d104fdc2281c8e16d510586da:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ZDQwMjQ2OThiOTM0Y2MwYTQxODk5YmZhNjVlMmU4YzdkYTM4ZmVjYTcwNDJiODJiYTNhNjRmNDc1MzllMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1NmEwYjMwMTI3YmJiZjE1NTE0ZGVhMjNhMTlkYTQ3ZWQ5OTRkMjdkODAwOTA3NWM3MDRiYTQ5NzAzMjkzMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3MjJhODI0NjQyN2YxYjUzZjc3ZGVlNTQ3ZmNhY2I2YzdhZDZjMjZmNWZhNjM4YzI3OGRmMDg1MmJkY2M1ZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyYjkwZmE0OGQ1YzYwNjk5OWQ0ZmM0NGI1NTI0MjExYWZmNTMzM2FlZWQ4NTYzZWZkMWFiZDA3YzRhZjM4Y2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_216e4c6a891e46dcbf9118ae02ecad9a",
+      "statement": "The bundled `.mcp.json` is OAuth-discovery-only — a `streamable-http` server whose URL is templated from `HYPERMNESIC_MCP_URL`, with no `auth` block, no `token_env`, and no static `Authorization` header — because a static header would suppress the OAuth discovery the host performs from `{type, url}` alone; the first connect is one browser authorization (read by default, `write` approved at the consent page to enable `commit_note`).",
+      "evidence": [
+        {
+          "resource": "repo://plugin/README.md#L69-L88",
+          "version": "repo-lines-v1:sha256:10d45b63cb541e905cae988a059bf6b878f76ad5a2abef200a1ffcb7021de483:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiMmY4YWY4MmNmODk2YTcwZjZiZmJhODNiZTg5MWVkZDlhOTcyOWY5OTA1ODVmODlhZTQxMDQ4NjA5YzgwNmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1ODY1YzVlNjUzYzY4MWE5NmFlMDk1MWE4NzU1NDIxMmNjNTZhZmY2ZmRlMDIwMzhiMGZhM2E0OWRhYjlmNTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkMTdmZWRmNWVkOGI4ZDY2NWNlYzNjYjYyNzkzNGQ0NDE5ZGZlZjQxOWE5M2Q0ODY4Y2VhMWI3ZjAxMzc1YTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5MDk5Yjg0NGQ1ZTFhMzc0OGY4ZDk2YmY3ZjIxNjE0N2ZmNzBhNGY4NmE2MGRjYTM0ODRlOTQyOGQ5NDU3NTcifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/.mcp.json#L1-L8",
+          "version": "repo-lines-v1:sha256:d0b349517dfd92229313b16afa9625b6b5452d402d985a638d5002d482e240f1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZmYjA4ZmRhMWFjYjk1N2I2MTE2YmQzNzgxMWExZmU0MWEwMTYxMWMwNjMxZWRiZjc4NmQ2ODg5YTI3YTU1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://tests/test_plugin.py#L124-L139",
+          "version": "repo-lines-v1:sha256:d4270b45f7da1ef28bef7effcd6189e4d6e2060d622599e02b5b5d1aad764101:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYmVlMTlkY2I3Yzc4NjkzM2U0ZDllOGUyODllYjFkZTBkYjBmNTJjZDU4ZTlkODY2MzhlZGM1NDY1NGMwOTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMjhjM2ZkODFhMzNlYjc2OWQ0OWYzZmM4NDlmNWU1ZTIwNTk2YzAyNDVmMDg2MzY4ZmEwN2JjNGIxYjhjYWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiM2JlM2JkMWNhYmY4MjkxNGZlYmNiMzlmMjUxNzQzY2MyNmZhOWVlNGY3YWI5ZWEwZjIzZjJmNDZkZThiNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyMTEyMTA3ODk4ZDkzYWNkODczZWYxMzQ4ZWIyZjU3OTQ1NDEzZjU3ODgxMDVkMGUzYmU1ODEwYmVhZDIxOTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_db05c8c0488443568e372ce4e304d852",
+      "statement": "The published plugin tree is distribution-generic and secret-free: tests scan every file under `plugin/` for committed credential material and for operator-specific values (tailnet hostname, specific CGNAT IPs, absolute home paths), and assert the MCP wiring keeps its env-templated URL.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_plugin.py#L104-L116",
+          "version": "repo-lines-v1:sha256:17a12884fec6d410174c731916e3eec6f011fcb9b68f04fe4e8c3b8c5676e496:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllNTdlMGViNDE0NGJkYjI1ZTZmMjc5YzJjMjZmMTRjMTBiZDFiMWQ0OWYwYzI1YjllNzY3YjA3M2QwZTRlNjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNTIzMTRhZTVjNDg3YjEzNTMyNmRjYTU4NTY3MzYzMTI4ZDY4MjAwYjA3MDQyODFhYTgzMWUwNjBhYzAxOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhOWFmZWZkZWQxYTlhYjIxYmEwMGQyNDE2NTIyNWM3ZGJjZWJkMmJjMjlmZTA5NDdiZWYwMzhhNzFlMWQ3ZDMifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin.py#L142-L153",
+          "version": "repo-lines-v1:sha256:32f6d84bf7c1b702e66c9144f2f2acf8628f901b1241d2e96f481c55d822d0c7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwMzJjN2Y3NmE5NGI1NWIwMzk2MzkwZjNkOWU0YTQ2NGVkOGEzMDYyMDZiNmQ2MDZlMzU3NTM4M2YzYTQxNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiNmI2OTdhZGJmYzJjYWNmMGVjYTJlODM1OTA5Y2JiYWQyNTUyOTc3YmFkODY3YzFmNWUzMzkxZDdhNjEwNGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1NGE2ZTI2MDEzY2Y4MmU3NTA1MDYwNThmYTQ5NDQ0ZTQwMDM5YzJhZjAzM2FmZDRjMTI1NmIwMzQ5ZjIxMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljOWY0NmVhODQ0ZjZjY2VkOWVjOWMxZTgwNmRiOGVmMDlkNTcxOGVjYjMwNzBmNzU5MmZjMWQ0YTgyOTllZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d2a5899c14944d548ce68f866368c484",
+      "statement": "`plugin/plugins/hypermnesic/hooks/hooks.json` wires exactly one `UserPromptSubmit` event to `hypermnesic_agent_hook.py --host claude` with a 6-second timeout, with no `SessionStart` preamble and no Bash interception.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/hooks.json#L1-L15",
+          "version": "repo-lines-v1:sha256:8311f4cc7fbc8d01067f32911508595693ec184b291572e6263a4b5cc62e4805:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L78-L84",
+          "version": "repo-lines-v1:sha256:552cfb115c3a4e560685aef8bd8db2c94f9d55e6a4a03d4ba9d0b2ce3197cad0:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDlkN2M5YzBlNTIyYzg1OGNiZDZjMjVhYjJmZjUyNmZmMzk3MTRkYjlmMGE0NjQxOWViMDAwZjkzMjA0YmE3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTgxOTIzMmFkOTE4MGQxYzNjZmU1MWY5MWZlNjRiNjA4YTc4YWY0YzgyMjY1M2Q4Yjg1MDg4NDU4MjE5ZTc5NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjkzYTFlMTViZTdjOGZkNGZhNGY2MDU3YzNkNjBkYTdjMjIwZDFmYTE0NzNkYTMzNzMwZDY0ZGY3ZjlhMTdlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzRhYmI0YzkxNWE1M2U2OWI0YmNmNmZjNTZiZWQ3NzhiZmUwMjc1MDYzYzM5ZTEzNWExMWQzOGZlMjBiNTEwOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b358cabd73164c00a200a3528a6f3e80",
+      "statement": "The auto-recall hook is non-blocking by contract: every path through `handle()` returns a continue response and context is added only through `hookSpecificOutput.additionalContext`; a malformed payload prints a diagnostic to stderr and still emits a clean continue with exit code 0; and any event that is not a prompt-submit variant is inert and writes no status record.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py#L141-L173",
+          "version": "repo-lines-v1:sha256:9c178ce98fe82fdb21e4dc2a441634a11b9153683633baf893b57118b6688eba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2MjQzYTUyNDdjZjNiZTQzMDFhOTEyNTk4MzM4MWJiZDNlODdkMjliNWJiMGQxZDM5NjBjMzg5NjNiNGMwMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1NmI4MTU2MzNlNmE1ZGZiZTA3ZWE3Y2U1NDM0ZGVjODQ2NmFkNDdmY2RlMWM0YTJjOWVmNjE5NzA4YzMwZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L178-L191",
+          "version": "repo-lines-v1:sha256:76bd6e40d81a622ec96e953a43330c8937d634e2c0fac167022ba252475d46d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyODA4YzFjYjdhOTRjNWZiYjIzMDcyZDA2ZTllNDNiNjJhZWE2NGMwMDhkMDU1YzllYzQwY2IwZGU1MjFiMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxNjVjYTQyNjkzZDM3ZjlmODljYjMxYjBhNjJmOTI3ZTJkMWI1MmVmN2QyMDA5NDE5ZmFkODk1ZGJjYjI0MmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzYzhiNWQ0ZWQ0MzczZWE1MThlZWFiODVmZjEzOTdkMTU3YTRkN2FmNWNmZTI3NWExYWQ1ZjlhOGI5NTk5NmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a661eb8e98ec467aae9f0e2e4c08e920",
+      "statement": "Before any network call the hook evaluates gates in a fixed order — disabled state, prompt relevance, endpoint configured, credential available, non-empty query — and each rung maps to its own stable outcome code (`disabled_global`/`disabled_host`, `off_topic`, `unconfigured_endpoint`, `missing_credential`), so an off-topic or unconfigured prompt performs no lookup.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py#L107-L129",
+          "version": "repo-lines-v1:sha256:96e261933e68d03babf73c330de496245e7cea7673d3006e7b8dd19e8e1c6f2e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5Nzc3YzhkYjk0ZmMyZmExNmNkMDhkMzc3OGJmNzhlNDEyMjUwNGYyYjJlZjhiNjJmMzg5N2U5YzA5ZjMyYWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMWQ3YjQ3ODQ0NjA2YTI0OGYzOWE1Y2EwNzg4YTIzOTcyNmJhMzQ1ZTJlMWE1ZTUxYTBhYjllNWZmYjMyNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkODA3MDIzNTQ3MjU0Njg3M2NmOTVlZTRhN2Q3N2JlNTRkZjQyZjBhYTYxMmQyN2Q1NGE5OWZhNTA2YjMzMWYifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L22-L35",
+          "version": "repo-lines-v1:sha256:e6bcdac187910971f0c72215533efe3eadc7289929fdb77c9cd66fbee35d7e9d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4NGNjOTZjYjkxMWUyYzQ2OGU5NDY2YWIyNmQ4ODg5MmMwMzEwMzg2M2I3MWZiMGY3ZGFjNmRlNzA3YzRlMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNGY5YzIyMDcxOTU5MDU2OTkwN2Q0YzgzMmU1MjhhMjRkN2M5YmJhYTJhN2FkODY3MmZlNWI2ODlmMjA1MjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjNzRmNDRjOWVjOWVkM2ViZTI3ODhhOWMyZDI1ZDNiNjgxNzEzYmE0Y2FlY2VhNDVjNzZhZmU5M2I1YjRiMWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8505fad268f445b8ab7da3d1eaf5e36a",
+      "statement": "The Claude/Codex hook's relevance gate accepts memory-ish phrasing from a fixed term list OR a multi-word capitalized proper noun, while the Hermes pack's equivalent gate is weaker — a minimum message length plus a term list, with no proper-noun branch.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/__init__.py#L21-L48",
+          "version": "repo-lines-v1:sha256:77f9ed10676e59900d53fc5af6e4b33c521f1f41931b5ee0664fb7807e8bf0e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyMmVjMWMwNjFiZDFhZDk5NTZlYzQxZGFjMmIxMGUzMTJiZjc5NTA1MWZhY2RhMjE4YWNlMDA3MmFhNzkyZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzOTc0OTIxYTRjYTZhMTNlYjUyODVlOTM3ZDU0NTNlOGM2MWZjOGVjYmUzMzk4NDAzNTAxMjhiNzM1ODVlYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3ZjZkNTJjNWU2ZDBlNTU1YjYxMzdkY2YxNzJhMmEwMzZkMGU5NjVkMDc0MTM5ODQzMWUyMWQyZjE3NDkyMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJjYjYzZGI4ZjRlZjg0YzExYzkyZmFlMDJlZmIyY2I2MjcwODdmNWZhYWExZDIzY2E5ODliMjI1MjIxMTc0NmYifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py#L44-L69",
+          "version": "repo-lines-v1:sha256:10d6313871a5aca5f34f774e2846be14dc04e123b9152e954d43740d80f7877d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliYzA2ZjhiNDFjNTE2ZTUxYTkzYTQ4NTFkMTRkZDFjYmQxYTg5ZDBiNjk1MDQ2MTZhMTc1M2YzYzNhMmRjZWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmMTVmNGY0MTFlZWM0OWRkOTA5MTA5M2ZjMDIyN2ZmNjYxZTFiMjZiZWUyZjE3ODFhYTc0YjMxZjk0NWMwNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0YmMxMDE1MzlmNDFlNjk5Njk3MmJlNTE0YWNiNWNiZDZiMTE2ZjM4YzYzZjYzNzZhNjUxMGZmZTY3YTIwMDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4OWMwZmVjNDY0NGY1YzhjNDhjM2JiNTRhODk4ZmM3Mjk0ZWUzMmJiMjIyYmQyYjE3NWEyMjA4YTMxMWVjYjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_01f8d97443f24ff38f21e75f4fdb0ddb",
+      "statement": "The hook's lookup is one bounded JSON-RPC `tools/call` for `search` with `k=5` under a 2.5-second cap, and at most five hits are injected as `path: heading — snippet` with snippets flattened to one line and trimmed to 200 characters; newline flattening also applies to `path` and `heading` so a stored note cannot forge extra lines in the injected context.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py#L130-L138",
+          "version": "repo-lines-v1:sha256:03ca5c4041099fb14d908ae46c06a90c1408569b9427de837fcede6d1c312eb6:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2I2NmQ3ZTU4YWY4YTgxNjViM2M3ZmJiZGJjNDFiODAyY2UwMjQ2YWIxYzZmNTc5NDRmODE1MWQwODA3ODY1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzNhZjNkNTMzNDkwYTc0OTAwNmI4YzI0NDNlMmM3OGViYzIzMTM5OTkzOTUzNTU4MjcyOWM5YzY3YzA1YjI0ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjVhOTNjNDc1ZTA1ZTk5MTlkZTk4YjY3OTJkYjg2YjBjZTAxZDY1MjM3MTA3YTBmMDFlYjY2ZmE4N2YwZDgxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGNmZWJmODhmNTc1ZmRlN2MzZjEwOTg3Y2ZkMTAyOTMyNWJiMGY1NDViYTZkZmM4ODQwOGQ1NTNmMTQ0M2FkNyJ9"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L172-L217",
+          "version": "repo-lines-v1:sha256:568aeb2f6adf7a99f37ad237c87a973097274ffd6fb54e995d44d0dd73f1cc98:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkMmJiNzI0NDUwMzk3ODJhYzdlOGNlNmNlOTdiYzQ2OTgzYzhjZDM4YzQzMWQxNjhmZGY1N2Y3MzNhMTc2Y2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjMGUyMjU3MDkyOWZkMzM5ODJmNWExMDdjNzE0NzJhNjhlYzZmYmMxYzc3YjRjOWU5YzliYjIyYmJhMzZmZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNkMjViMDg5Y2E2YjQ5MGY0Zjg4NTBlYTcyN2NmYzQ5YTMzODNjOGI5ZDAyY2RmMmQxNTQ3ZjE0NGQ4ZDk4YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4N2MwMzA5ZDllNmFhYjdkZThmODJlNTg5ZGE0ZWY5MzU1ZjM4ZTQxNDc2MTFjMmJmMWZlNWJhZDlkM2UwMjcifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L214-L226",
+          "version": "repo-lines-v1:sha256:26a9459de8f26ff94a37cb044788d1126ff387d60f66e681f99bd3ef4b5dcbcc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5OTYxNGE2YzQwMTE0ZDI4MWNkNGVhYTUwMTczYzAxZmZhNWQzMmUwYjM4ZTVmMGFjODE5MmQxOWMzOWFjZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjMjlhZTQyMjljZGNhMGQ3MWM0ZTA3MDI2NjM3MDUwZTYwOTljZGQ0YmE4YzY3MTZmZDBkYzE5YTA4MTkxZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzNDZjMjgzMzlkOTZmZWNlYWM1OGMzYjk2OGRmNmExZjA5MTQzNWI0MjgzMTJjNzI2Mjk1YjM3ZjRhOWJhYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4NTAyZjM3ZmQ3ZjY0Mjg3NjdhNmI1NjU4N2Y3NDYyN2I4NmZkNmE5YzE0YjRjYmYxNDQ3NzRkNGRkMzRiOTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef122cdb02a14bf188996750d62d7bdb",
+      "statement": "The auto-recall hook has a credential path separate from MCP OAuth because Claude Code exposes no stored MCP OAuth token to hook subprocesses: its working remote path is the auth-off tailnet read route that needs only a URL, so `HYPERMNESIC_MCP_TOKEN` is optional, is used only in the `Authorization` header, is never echoed to stdout/stderr/injected text, and a non-tailnet endpoint without a token stops at `missing_credential` instead of sending an unauthenticated request.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py#L1-L19",
+          "version": "repo-lines-v1:sha256:1fd8f9eddb4b7c42f170aa56644e70bec7b16e29e9e913f86943e294cef08995:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwNDE5ZjQxN2NhOTBiOWM4MGJhODkxNDFiMGEyZDk2MTRmMzUwYzEyNjhmODZlOGY4MDEzZGU5MjY4ZTU1ODQifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L62-L86",
+          "version": "repo-lines-v1:sha256:6d477b5a46029322e5ed5e3086411ec1bc284914e9b2ea135e9ade27f1cde3ea:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxY2VlYTM0NjFlYjFiMWVjZjJhMDIyZjIwZDEyMjdiYmE4NmY0NTA1NmU2NGE2ZGQ3YWZhYjk5YjU5NTJmNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxMzBmMjY0NzMzNmE2ZWEwZWYwMzZmMDE5MWVkYWNlOTE4NDZmZDhhOWIwMTA0YjY1ZGM2YjU5Mjk0YmUzZjgifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L127-L169",
+          "version": "repo-lines-v1:sha256:7598e102f344a63e7f44b631255664ed64e9a1c3e38c800f2a09b1e4959607ee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiMzQ5MWZmOWVlYjllZGEyMjU4NjEzODVhNTM0YTI4ZGZlMGU1MTM4YzI4ZTg2Mjc2ZTY3ZDY2YjQ4ZmMzZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0NDVjMDU2MTI3YWM2ZjhhN2FkMDFiYTE4MDJlNGMwNTkxZWNiYjhiZDljMDBkZmM0NmU0NDFmNjI0YWY1ZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllMzI3MzNlNDFmYzk0M2ZkMzY3Y2IxYzY4OWZjYjA5OTMwMWExYjkzNTM5NmYyYThhMGFmN2E4MjM0NDQyOTQifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L296-L308",
+          "version": "repo-lines-v1:sha256:643b1a46d112e8129f1816f2cb1e8840a46a8dbd49e63fa735b81e82530e615d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0NzQzMThjYzEzMzlmNTlmMzI1MDI4MzYyNGMzNmM2YjU0ZDg3MjM5OGNkNDQxZmM3Mzg0ZDI3ODZjOWQ3NjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiNGRiYzRiYTkwM2RmN2Q2MjNlZDA1Yjk2M2E1MzcxZTcyMDViMTllMzg1ODJkMzdiZGIzYzYxMjQyZDU3NjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhYzM0YjAxOGQ3Yjk2ZWZlODg4NzU3NDc1YTZlNWJlNGJhYjI1ZDIyNGU3YmEwM2E1ODkwMTYxNDc3YTYzMzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiYzkwNGNiZTNhZmRkMzMwZmU4MGMxODdkYWI5Njc2ODNiN2ViNTg5NWU2MGZjZWFmZjZhNWM5NTFjZTNjMzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a06e5c931dd84ff89dd8bb048a3b58b5",
+      "statement": "The hook recognizes the token-free tailnet read route structurally: a URL whose host parses as an IP in the `100.` CGNAT range is classified `tailnet_read` (and needs no credential), while `localhost`/`127.0.0.1` is `local`, an `https://` origin is `public_https`, and anything else is `other`.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L62-L86",
+          "version": "repo-lines-v1:sha256:6d477b5a46029322e5ed5e3086411ec1bc284914e9b2ea135e9ade27f1cde3ea:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxY2VlYTM0NjFlYjFiMWVjZjJhMDIyZjIwZDEyMjdiYmE4NmY0NTA1NmU2NGE2ZGQ3YWZhYjk5YjU5NTJmNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxMzBmMjY0NzMzNmE2ZWEwZWYwMzZmMDE5MWVkYWNlOTE4NDZmZDhhOWIwMTA0YjY1ZGM2YjU5Mjk0YmUzZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9278e10cc5174998bf26b866df7e5236",
+      "statement": "Every prompt-submit run records a non-secret status record out of band with a stable `last_outcome`, a plain-language explanation, the host, enabled/disabled state, endpoint and credential categories, hit count, degraded flag and timestamps — never the prompt, endpoint URL, token, `Authorization` header, or raw large snippets — so an owner can diagnose why recall did or did not inject without reading hook source.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L101-L160",
+          "version": "repo-lines-v1:sha256:457a0c78df56a1292e48da5009d160f294e9f4dae1b3bb25d1077830f48e3169:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTQ5Yjc5N2IzNzZlZmIyZTI2MGIzZmE0MWYzZTI0Y2IyMjEzZjY4N2YzN2QzN2VkMTBmYjgyMjQ1MTE3ZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MjE1ODE2NDg3YTEwNGMyOGM0NTM0ZDY2Nzg4OTU2NDYxMGM0MTQwZTFiMjFkMWUwZDUyMjFkOTdmMjExMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE3NDE5Y2RhOTk1Yzg3NDdiOWM5YzM1M2VmMjM3ZWMyNGEzZTFlYWJmMTQ2NWRhYzdlMWM1ZDA1Mzg4MjMwOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyOTY3ZTBjYThkMGY3YjFmYzQ3ZGFhMDJlNzdhNjMxNDc0NmVlNWYzMzliMzQ5ODU2YmUwNjQwNzIyNDEwNTQifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L20-L35",
+          "version": "repo-lines-v1:sha256:1a2061aee161544fdc4c71dad7c6e16599b9b5d0b01d759e72cbcbe321bdc433:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZDUyYTdlMzc5YmZjNGEzZTcwN2JiNTg1YjY0ODY0Y2QxMjU5NzJkYWY1NTQ0ZGZhZWY3ZGU0M2E4NTE1ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjNjVkOWRkNzk0Mjk5NDI2NDdkMWM2MDFkNzMwOTlkZTA3NzI2YTIzOTNlYWM3NjcxNTBiYzRlYTQxZTRiMGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjNzRmNDRjOWVjOWVkM2ViZTI3ODhhOWMyZDI1ZDNiNjgxNzEzYmE0Y2FlY2VhNDVjNzZhZmU5M2I1YjRiMWYifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L229-L263",
+          "version": "repo-lines-v1:sha256:f80dc2b9fa9647aff742bdfb1ba8920e15c5f1a863062b4a8f0eccaefe6de8c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMzQ2M2FjOWUwZWQxNjM0ZmYwNTMzMWZhNjY1MzY2OTgxZGYzY2VmMTVkM2NhNTgyZTg0ZDMyMjk1ZjljOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmYmE1OTM1ZWU1MTk0MjI0YTk3NWM1ZmNmZjU1YjQwOGVjNzZhZGM3ZDRmN2M5OWM1OGIyY2E1N2YxYTFiNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3OTRiZjAzZGJiZDUxN2Y0YzM4YWJmYmZiOWVhZTljM2NiMDMzYzc1NDBlZmM5ZjQxZmExOGU4MWZjNWU5ZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhNzAxM2U5YWJlOGVlOTdhNjMyZjIyNDc5NmE5YWUzZGNiOTFkMWZhY2JiOTU4ZDA0NWNhYWFjMjRkZjAzYzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c8be6204b82147a599a385f3b1bf5677",
+      "statement": "The hook status record defaults to `$XDG_STATE_HOME/hypermnesic/hook-status.json` and can be redirected with `HYPERMNESIC_HOOK_STATUS_FILE`; writes merge the new record over the previous one (preserving the last successful `last_recall_at`), are written via a temp file and rename, are wrapped so an unwritable path can never block the hook, and a missing file reads back as `never_run` rather than an error.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L117-L160",
+          "version": "repo-lines-v1:sha256:63bacc0de5bb7bb8faedf8b4015cd0183fa94b668754e98e785c302a1df64908:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmODhmMTI5ZTdlMGZhMDQyNjZhZTdhMDFjNzQwZGZlZmYzMGQxMmFjOTdmNGM3NzIwZmQzNDAwYTQyM2RhMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MjE1ODE2NDg3YTEwNGMyOGM0NTM0ZDY2Nzg4OTU2NDYxMGM0MTQwZTFiMjFkMWUwZDUyMjFkOTdmMjExMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyOTY3ZTBjYThkMGY3YjFmYzQ3ZGFhMDJlNzdhNjMxNDc0NmVlNWYzMzliMzQ5ODU2YmUwNjQwNzIyNDEwNTQifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L42-L48",
+          "version": "repo-lines-v1:sha256:569001ff77f40bae279853e78a474dbd463197b7cee0ca2a6171e6ef5ecac0b3:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA4MGExMGRhNjc5ZGJjZTQ4NTViMzEyYmU2MjI0YzZhNTI2MTg2MDEwYjllYjFlNDA4ZTQzNTU5ODE2Y2I4MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2VjZDBhODUzOTkyYTAwMmViNmMyYjQ1NWM5YmY1OTJlNWFjNmM1NTZlOGIzMGMyYzFlNDYwNjEwYWJkYmY5MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2NjNzM3OTRmMzAzY2Q2ZGIxMmQxNWMyYzI5MWJiYmNlNGZmODM1MTk4NDY5YjQ4MjJhMzkxMTAxMTc4MGUzZiJ9"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L311-L342",
+          "version": "repo-lines-v1:sha256:7458cc53084c719e9c8629393f1480fa434b4e22e794d44eedf74ef270903c3b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4NzA0NzEwNzBiYjM3OWVkNjU5Yzg0OTNiZDRiMDE5MDJjNGQ0ZThlMTFjZWY2YmMwMzRlODM4YjhlMzAwNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjMjU4ZDNhZDg5ODhlMGMwNjZkMjA0NWMzMTRmNDU2OGI1YWU4ODg5NmZkYWEwZjk3NzU3M2Y2NGFmNmJkNWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlZGNkYjMxNTVmZjA1OWRhZDU1ZTY5NmRhNmQ2YzQyM2E5ZTAwMTE4MzZmNjI0ZjU3YmNkMDZlMzVkMzI5YTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8acd0d3bf85f4fb6959afee035e39196",
+      "statement": "The plugin ships a status helper script (not a `hypermnesic` CLI subcommand) whose `test-recall` mode runs the same bounded lookup path for an explicit query, prints sanitized path/heading/snippet previews capped at 240/160/200 characters, and flags the record `test_initiated` so a diagnostic run is distinguishable from real traffic.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md#L189-L209",
+          "version": "repo-lines-v1:sha256:4fa871fb4ff1e560d6cd9d25cbcedc6a442f2ab5c1632e75721d9a09480acc97:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0MTc3ZjMzZTg3Yzk3MjM5OWQ4ZDM4MWRkZjUyMDFhYTgzNTlmOTk0Yzk1Mzg4ZjRjNmIxMDYyYzcxNThmYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyNjU5MjdkY2ZkZjUyMThkNDgwZGViZTJlY2M5NjM1Nzg1Y2ViMmEyZTU4Mjg0OTUzZDM2NTJhNmYxNWFmNzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE2N2NiZGJjMzZhY2JlZmQwMmUxZGNiYWY5NmI5MDQyMWEzODk5ODYxYWRiMGQ2MWY5NTMzMDkxMTdiZWFlOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkZmU3ZjRjYjE3YzA3ZjQ5MGIyMzQ0MmNmNWJiOTM0YjE2YzU0N2EwMGYwMDc3MGQ1NDIzOWE0ZDkzYmQ3MWEifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L255-L289",
+          "version": "repo-lines-v1:sha256:12b19bdec5d1749c10fa25d0e9fc58c0831883a71911cbcd7930457c54aeaba2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NDBhYmY0ZDM3NmViNGUzYWUxZjNiZDU3Y2FhYjlhMTg1OGJlMjBjNTdlNzRmN2YwNGExOGQ1NTI4ZGZmMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmYzA5N2FhNjBkMzcyMjdiOWZmZDhhYWYxZjUyNDIxZDNkODdhOTkyYjU2ODM0OWM5ZGM5YmFjMmMzNDI5ZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L361-L390",
+          "version": "repo-lines-v1:sha256:305532effc34ad746e5eccf1363cc239bda8023c38fbd9719de586d3ff0d9514:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExZGZlYjhkZjdmNDA0NjMzNmQ3ZmNiZmMxMWY5NTc0YTRhODhjMjU1NDVjZjcwYmUxMjUwNjEyNjVhMTk0NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzYjU0NmEyZDNkY2M1YjMxNjQ5MDBlMjIzYzMxZjAzYjhkOTMxNThlODk2NGFmMDM5OTYzYTAzYmE3NjMzZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhNGNjODA4ZTM1MWI0NjhlZGFiODA4Zjg2MzZkM2NhOGJkMWRiNGU5ZThjODhiM2UxYWFmMjAxMDVkZjE4MzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8321a0f8995041f3aaed826323257f71",
+      "statement": "`HYPERMNESIC_HOOK_DISABLE_LOOKUP=1` disables proactive recall for the whole plugin install and `HYPERMNESIC_HOOK_DISABLED_HOSTS` disables it for the named hosts; both are evaluated before the relevance gate so a disabled hook does no work, and disabling auto-recall leaves the MCP tools available through OAuth discovery and the local CLI untouched.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/getting-started.md#L257-L265",
+          "version": "repo-lines-v1:sha256:e8588dd16acd7d09bd8cd9dfd1cddc3b7e94e6514171e52aeccac225351fbaf4:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzA2NTM1YWNiNWNkMmI3ZGJjOThlZmNmOTg1MWY2NjQ0YjgyMWE3NzFmMzYyMWZjYWFmM2JiMTNmNjYyNTNkOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjIzNjI0Y2ExNmE2NjRjOTk4Yzg1YTcxM2E2YmIwZWRjZGYzMjEwNGMwYTFkNzUzYjFkODMzYzk3NjljZTI2MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWU3OTg1NTBjYzUyZGVhMzc1ZDI4ZGIwZWFlMWU1ZTlkMGJhZThlMDI2MjI2OWI3ZTViZTA4NDU2YmY0M2E5YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzY4NGRhMThlM2VhNmRhZDlmZGU2YWJhZTkxNzc3Yjc3MDkxZTAwZDVjYWFhODYwMGQyZWI5ZWIzYWNmMGFmOCJ9"
+        },
+        {
+          "resource": "repo://plugin/README.md#L129-L138",
+          "version": "repo-lines-v1:sha256:bee9917dd90cbe56dc011d4ac1261e3f31d10b8d820cd3b0953644c920f27261:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5OWM4MTlkMTRkNWI0NWIyZTVjODU0Yzk1MzczYTUwYzY3YmNhNGRiYTIyYmI0OGQxODExZjU0OTYwOWE3NjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3ZWVkOTJkNzFmOWJiYmI5OGU5ZGZhYjZmNWNhZmQxNzRkOWNhMjZmOWQ4ZDZkNzRjODJlYzU5YTQxZjZhMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlYTc5ZDFkMDAxYjkwY2Q3ODJlZDBhZjQ0NTRmZTJiOTlhNmEzOGQxNjkwZGUwZTFmYWM4M2I1MjkwZDIxNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py#L88-L98",
+          "version": "repo-lines-v1:sha256:da06b8c0e42959e2e459a6404793beb6b91b758d104fdc2281c8e16d510586da:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ZDQwMjQ2OThiOTM0Y2MwYTQxODk5YmZhNjVlMmU4YzdkYTM4ZmVjYTcwNDJiODJiYTNhNjRmNDc1MzllMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1NmEwYjMwMTI3YmJiZjE1NTE0ZGVhMjNhMTlkYTQ3ZWQ5OTRkMjdkODAwOTA3NWM3MDRiYTQ5NzAzMjkzMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3MjJhODI0NjQyN2YxYjUzZjc3ZGVlNTQ3ZmNhY2I2YzdhZDZjMjZmNWZhNjM4YzI3OGRmMDg1MmJkY2M1ZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyYjkwZmE0OGQ1YzYwNjk5OWQ0ZmM0NGI1NTI0MjExYWZmNTMzM2FlZWQ4NTYzZWZkMWFiZDA3YzRhZjM4Y2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1c671e885c8749d7a6f7be8ba96ded26",
+      "statement": "The Hermes pack is CLI-first: `plugin/hermes/plugin.yaml` declares the `pre_llm_call` hook it provides and requires only the non-secret `HYPERMNESIC_REPO`, and `register(ctx)` always registers the namespaced `hypermnesic-memory` skill while registering the recall hook only when `HYPERMNESIC_HERMES_RECALL` is truthy.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/__init__.py#L118-L121",
+          "version": "repo-lines-v1:sha256:025843b94fd1bbe20e80ab359dd5ef78ed9fe389f6313fc5e6e144123d1f549a:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTRkMGVkZDRkM2MzMzkzMDFlMTFhNDBmMGVjZTkyZmRmZDgwM2YxMGEwZGQ1ZDczNTA3NzJlNzY0Y2M4MzI4OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmJmNjE5ZDQ4OWQ2NzBhMTYyNmFhZDc3ZTJiMjQ0ZTZkNTQxYTkxYmZiYjJhOTYwNjk4ZGM4OTY5ZmFkM2FjZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGIwNzViMjQzYTg3ZGM0YTU3YzdlZGIwZmEyNGNkNzUwZWFmZTcyNDk3MTIwMjIzMGI3ZTNmM2Y0OWJkNzRjMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://plugin/hermes/__init__.py#L34-L35",
+          "version": "repo-lines-v1:sha256:f53b2c85eb9a6d48379c1c628bd8c2803f42eb04af4f53b681de3edc94f36b11:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg4NmY1NzExNWZlM2I3ZTJlZTcwZGQ4YmEzZGM0MWY0ZDMxOGI1MjFiODRkOWY4Y2ExMGMwZDU0ZGZhZTI1MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmYwYTg2YzU5Yjc4YjcyNDJjNDcyMDJjYjM3NDBlNzJjMDBhMGQ3NzM2ODdmYzM2Mjk3YmU5M2IyODRiNjM4OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTk4YjA2M2Q5YjQ3ZTY1Mzc5NjI1NTcyY2NlMTk3NjY5ZDU3NjdlMTJjMThiZTA3NTY1MmI4Y2Q5ODFjZThkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmViYzQ1M2ViYzQ4M2NkNmM1MjMzMTQwZTlmYTc2MTUwYzc1MWIyNGRlZjk4MTc5MTAwZjkyMDU0OGQ4ZDFiMiJ9"
+        },
+        {
+          "resource": "repo://plugin/hermes/plugin.yaml#L1-L9",
+          "version": "repo-lines-v1:sha256:daf0e83b863733aa622627ed204097a7941f143420fd83c592ba130a92145fcd:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTA0OWIyNzE1ZDU5NGJhNjhhMGFlNDczY2MwMDRmZjRhNGZmMTVkODljN2ZkNTMxZDRjMWVjNWRiZmNhYWIxMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDI0NTI2MDI3MjgxYzBmZWQzMDU3OTllNTJjMDk4OGMzZDFlMzdmNDBiZjY0ZTRjOGU1NWNiZjBhODFkMGY1NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin.py#L64-L108",
+          "version": "repo-lines-v1:sha256:478e29ebbd5379b5656d2a47a671629bd86536acb5d8d8b72ab799e3cdeeb78e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkMTQyNWIzNjhmNDk4ZDI3NzJhZTJhOTFiYTAyNTIxODYzNDM1MzcwODhjYzMwZmIzZDI5ODVjMWY4ZmIyZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY4MGM2YmM4ZGQ4NWI2NzBjNzI5MTk1ZjhkYjBjNjhkZThiYWU0ZWIxNzBiNzNiZjRhYmFhYzk1ZDM2MjIxNDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiNzM3NDk5ODgyMDU1Y2UyY2NlYjk3OGIyOGRkZGIyNDI0ZTU3YzljMTVmMzYwZjU3YmMwNDNkMGVkOWZlM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNGU5YjczMWM4NzZhM2JkMDhmZDQ1OWYwZjE4OGJiNjRjOTllZjA2ODFmNzE0ZTE5N2UxN2U1ZjMyMTliOWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8c5b160c417e49f6baeda7c0fce4325f",
+      "statement": "When enabled, the Hermes recall hook runs `hypermnesic retrieve <repo> <query> --k 3 --now --json` (plus `--index-db` when `HYPERMNESIC_INDEX_DB` is set) under a 3-second timeout and returns at most three hits within a 1400-character context cap, with query/path/heading/snippet bounds of 500/180/120/280 characters; an irrelevant message, unset repo, missing CLI, subprocess error, non-zero exit, unparseable JSON, empty hit list, or timeout all return `None`, which is silence.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/__init__.py#L15-L19",
+          "version": "repo-lines-v1:sha256:f76e6524b70d4490d07dd2e5b989ca52c77a6d3550da0aad6b6acc0c634de0c6:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjIxZDYwMmI1MmRmNDJiNGE5NjIxNmNhYjc5M2FmYjY5YjM1NWFiNTJmY2Q4OThiMmJiZDQ0MTU4MmFjZmQxOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTAwOWEwYjFmZTM4ZWM4ZWU0ZDI4ZWU1Y2U3MWVlYzU2YTVhNGMzNjIzZDBlZTI2YWI2NzM4MDBhNTY3ZmZlNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDJhNzVkZDRiOGFiNmIyOGQwMTI2Y2MyODE5MWU0ZjA0MTM3NWQzYjA3MmRmYTNlNTE2ZjFiN2UwZTQ2OGE4MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzc4N2YyNjQ4YzUwNDY3MjIzMWY1ZmQzYTliOTUyMzVhZjNjYjFhNzE1OWNmMDUyNmI3OTY5ODIyMGY5NjZhZCJ9"
+        },
+        {
+          "resource": "repo://plugin/hermes/__init__.py#L59-L115",
+          "version": "repo-lines-v1:sha256:e5257b1d00d8f331411a5096b842677e9d29a03be97c0b34878f38cb1715783d:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhYzlmZDBjYzQzYjc4NmI2MjdiMGEwMDk4M2ZmNzcwNGU5N2Q4MTM2ZDcyODJmYmQ1MDEwMTMyOGZhMDc0MjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlNDc5OGQ5ZTRiMmQ3MDYxNmM2ZjRjN2UyOGQzZjk4Y2JkZDU1ODM3MDY3OTE3OWQ2NTVmM2Y3YWVlMWI3N2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyNTg5NDdiM2FjZDEzYTFlMTMxMjFlMTdmNzIxOTVmZmVhMDc0OTNkYTllODQyOGI3NjMyYmJkMWQ4ZjE3YjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0NzFkMmE3ZmFiZDk0OGRhYWM2NWY0MWIzZWQzOTY3NjczZjI3N2VkNjAyNzFiZGVjYzk4NjdiYzBkZGQ3MDIifQ"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin_hook.py#L45-L63",
+          "version": "repo-lines-v1:sha256:609c44a9ad4430ef7c643c82de2dc7a45762a277520afa2e2a66e6bc1d767c30:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhNjkxODgwNTdhMGE1NzI5YTMwMDAwNmQwZDAyMmY5YjliNDRlMDJkYjVkOWQ2ZTEyNDczMmI4ZDUyOGQ5OGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1OGNmNzNhODdiNTlhYmViZmZjNzI1NGJhOGEwZjU2MmIyNjBiNjkzYTg4YmVjNjQxYzJlMTljODkyYjg5YmYifQ"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin_hook.py#L96-L132",
+          "version": "repo-lines-v1:sha256:cb5d04fd16805f16ea7a231d9a0ae60352678416b368497dc76d50eb31f95a12:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMWMxNjc3MDEzMDJlYTAwN2Y5Y2FlYjJmMzJkNGI2Y2ZjYWY2NTE4MDVjYjE4N2IyY2VmYWE3MGIzYTU4NGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjYmYwNjdjNGU3YjI5ZmU1YjZiNzdlNzMxMTdhZjNkYTJlZTdkYzk3ZDIxYzU5MWM5YjRhOGU1ODkyMjBhZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0Njc3NWJkMmNlNzU3ZmI3ODNkMjE4NThmNTk5OGM1YjdkNzY2MGY1MTRjODkwZjViZWZjYjUwNzU3MGM3MTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_256b698b34c7403893a3fafb5b991d31",
+      "statement": "Hermes plugin skills load in the namespaced view (`hypermnesic:hypermnesic-memory`) and are absent from the flat available-skills index, so the pack ships an optional flat export at `plugin/hermes/flat-skill/hypermnesic-memory/` that an operator can copy into an ordinary skills directory, and a test requires that flat copy to stay byte-identical to the namespaced skill.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/README.md#L26-L38",
+          "version": "repo-lines-v1:sha256:6465058bf4ac49e184f1f4297b0eedcaa2d84112bf6a8054f156dd0119adac76:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NzljYTgyMDk2MzEyYmFiZmZiY2M3ZDBlMzY4YzUwMjA5ZDlmOGJkZmRjMTcyZGNiNDQ4NzVlYTk1Mzk1NTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkZDI5OTJhZDNmYjliY2E2MjE2Mzk3MjI1OGYyNDM5NGNjNTRlYjdmNGU2NjNhMmUxODc2ZWNkMmQyNTkzNDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiZTUzNDAxNjE5Yzk3N2I4ZDMwYTdjMTEyNGQ1YjYxM2FmYTFkZDEyZTVkYWYxNDhkYzQ0YWQyYzE4OGIxOWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzYTI0MTAxNjRmMDM5Yjc3NjIzMzZlMWYzY2E5NjE1M2YzMmVmYjg0ZDcyNTM1Yjc1ZjYxYzE5MTZjYWQ5MGUifQ"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin.py#L123-L124",
+          "version": "repo-lines-v1:sha256:ba2445c8cead8d3fa0d4c3a1503b9e49372ded74c4ae0e350b07973ce727003b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGFjOTk2ZDcwZDdiOTI5ZGRiZTk5MDgwZmE5ZGU5YmI3ZGZjYmU3ZjA2NGZmYjRiN2IyYWE3YTIwODMwYzI4ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDdhOTA4YjVlZjQwMjBiZDgyYjIxNjNhMzliZjRhMzgwMzUyNzM5ZWUyMjZiNTFhMjQ4YzJjNWJiMGU5MWVhYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2Q3YjEzZDM5Y2U5ZTEzYzk1ODUwYTg2MjY0MmE3MDAwNjcxYzU2ODU3Nzc4YjJkMmFjOWQ2MzQ0MDM1Nzg4MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjAzOGFjYjYzZmFhZDk4YmRmNGNhMDI2MjdlYjA5YjFjMmY5MTNlMWYzZDBkMGJkOTRjY2MzYWUxMGFmNWFiYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e0f814928e841e7be63daa31004b89f",
+      "statement": "Tests enforce that the Hermes package carries no MCP transport or credential assumptions and no Claude/Codex loader assumptions — no `.mcp.json`, MCP CLI commands, `HYPERMNESIC_MCP_TOKEN`, `Authorization`/`Bearer`, `UserPromptSubmit`, or `.claude-plugin`/`.codex-plugin` references — and no operator-specific values or secrets, which is what keeps the two packs independent rather than accidentally coupled.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_hermes_plugin.py#L127-L145",
+          "version": "repo-lines-v1:sha256:e33e443b560ae24dc3d15c0825880ce44bc7d097094d1f4a2ccd3a4911d56767:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmMTNkNmZiNjlkNzg1ZGQ5YmZhNGYxNTgyYmYwZWQwZmE1MDBiMzU4OTMxZDAzZGNiYTU1ZDA2M2NiMDQzYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhMTI0MDJkMjdiOGFkYjY1YTFiYmQ4ODZlNmNhNDE4YmJkNWEyYjE1N2E3YTkxMmNjNGMwOWUxNDNhZGU0MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5NDQwOTRjZTZlMGRhMTJiNjVlZmZhNjFiNDdjMWIyMzQxNWQ3ODMwMmJhMTQ3MWE5ZTM3YTEzZGFlYjA1NWUifQ"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin.py#L147-L161",
+          "version": "repo-lines-v1:sha256:ee8f3f8aa28b5e3b83b4d6d609c87847c21d5ca11d1637a901ebe2ee5845f268:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNzE3YTIzNDM0NzUxNmEyZGQ2MzU2ZGE2ZDM1NDRiMWZjNDhhMDdjZGFiY2M0NWVmMDMzNDc2ZmEyZTdkOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MTBlYTZjOWExN2IzMjc0MGJmNTMwOWFjMGY2YzBjY2RlNDRkYzQ3MDE2NjJkM2M5MTk2NTIyOTZkZGE0YTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2YTQwY2U0YWJkYmRhMWM0Mjg0OTdlZDIyOTkyNzQ4NmE2NTkwN2QzNzQ2NDNmMmJjZjJlZTJjMjRhNDIzMjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3YzIxN2FlY2VlYTRhMDJiMjU3MWUyYjA2MDg5N2E1Njg0MDExNDk1ZDM1OTU0ZmQyNTcyODIzNWQ5MGFjZTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_56a640249a3c46ca884903ebfcb5e79e",
+      "statement": "The Obsidian companion ships from a separate public repository under GPL-3.0-or-later (first release 0.3.0) while the engine here is AGPL-3.0-only, and neither is a derivative of the other because they are separate processes communicating only at arm's length over the read-only MCP wire (`search`/`build_context`/`think`) with no shared or statically linked code — a boundary that holds only while the companion does not vendor, import, or statically link engine source.",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L379-L385",
+          "version": "repo-lines-v1:sha256:c577bb518d27d5565374fc0dceea06e9a5d3e5fe6945bc059fe996df8b80df99:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRkZmY5MDFkYmRhYjJlZTA3YWRkNzE2MTA5OTk1MTcxMTBkYWYyNmQ4MmM4NTA0ZTI3MTc0ZDc1MTliNmU3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzc3NTI5NTAxZDdmOWE5MDI4NzQ5OTE3ZTNjYjE3YWFkYTUyZmJhODJmNTI1MTgxZmQxZTQzMmJkYTYxYTY0OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTY5ZTBhMWZkYTVhNTJjYmRiMDBhODg1NTQ3NDBkY2FkZWZjNDlhZTE5NGZiY2NiZjhkOGFhYmU3MzE3OTZiMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://obsidian-plugin/README.md#L1-L19",
+          "version": "repo-lines-v1:sha256:39e868917e63576c28afc3be5e5b23ef800b06ef8638e23c661e41f4842c2113:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2NTY4ZjA1YTI2ZGQ5ZTVkNTAxYmNmYjU5NmM1ZWUzOTAxZWRiMjJlMWQzZmI5MTA2NzZlYTAzMTFjYzJkOTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4NjI0NjU1N2MzNjI1ZDJiNTgzZTZmYzEzNjZjZWRhZmE3ZjIzMjkzODgyMWY5OTQ3M2IxOWI2MjNjNGE3MjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5YzU3YjVmZmViOTAzYmNjNDgwN2E4ZDFkMDk2YjhlN2FkMmRjMTMzNzZjMzI3MDQyYzIxMmVlZWQ5NGYwODgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e28f0a831ea54559bd491d69866d71be",
+      "statement": "The Obsidian companion is strictly read-only and enforces that with a static read-only invariant scan in its own suite (`test/read-only.test.ts`, ported from the former `tests/test_obsidian_plugin.py` in this repository, which no longer exists); write, cleanup, revoke, forget/delete, and revert stay in the git-first CLI/MCP surfaces, so a read-only client cannot bypass consent, write scope, protected-path refusals, or server-side write guards.",
+      "evidence": [
+        {
+          "resource": "repo://obsidian-plugin/README.md#L9-L23",
+          "version": "repo-lines-v1:sha256:b9957bb2d360f213f2b07f8de7d1286611790bc1d2c8353271c4f4363552c635:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmNGZjYWEyNDBmMmM4MWEwNDRhMTFiMWUzOWUzNDFlZTMwNjM3ZWFkZGMzOWQxNDczOGU4OWRkNjlmMmRjMjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4YjE1MGE0MzNhMDk3MDgzMjMzYzQwNmU3MzUwZGJlODhlZTYyNjI4MDI2MmRhZTFkMjRiYzE3NzVmYzY4NGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4NzQyMTMyMDMxMWZlNTQ0NmM5ODhiMTU5YmU5NDhjNTdmMzFmN2EyMDZlZjAzYWYzZjZlMWJjNGQzNzg5ZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhMWEyMDAyYTdhNWY5YTg0ZDhhNDYzYTNlNDljMGU4M2QzMDlmMjgwYzExODE3ZmJlOWYxN2MzZGU4Y2VkZGYifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin.py#L235-L238",
+          "version": "repo-lines-v1:sha256:8030c5a9a93edfff92428b243f3fa2f763e55e398081ff85fe8d09f98cf71597:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2Y0ODFkODgwZjk4YzY1YzRiYWJkYmFiMzg1NWE2NWZlOTk4NzM2ODA3YjkyYWQyODZiNTNhYmZmYzhjNzRhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjczYTUxMzA1MGQwNmQxMTIwMWUzMWQ2YzA4ODI5NTc0MWIyNTc0OWFmZTI0MzI2YjdmOWU4ODJkNGYyOWFmZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2ExM2FmYjg2NWJkNTA4NjdkODE0MGM3N2RiMGE4YmM0YWRlZTcxZjdiYWM3NzU1Yjk0N2FmYTlkNTMzN2ZjNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b395a44dda3b4617b5c358795a387bc1",
+      "statement": "Every distributed version string must agree with the `pyproject.toml` `[project].version` authority and the `src/hypermnesic/__init__.py` mirror; `scripts/check_version_consistency.py` names each slot it checks (including nested marketplace `plugins[].version` entries) and fails the build on drift instead of the slots being hand-enumerated or synchronized.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L1-L23",
+          "version": "repo-lines-v1:sha256:80da8184dab997a49debefc4bff11dfcf022b05d9e387e31c2accc2874dd754a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L64-L122",
+          "version": "repo-lines-v1:sha256:2ef921ecc23c61f32f0aa1c455e0c54da1f79cae719b30a865e3e8edf745f1b4:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyNjk0OWE0OWY3ZWIxNjMxNjE4ZGUxN2I5OTU4YjcxYTVjYTI1NDE5Y2MyN2JlNTI5OTYzMGJhOTVjMDljYjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMzRiMTc2NjE2MmIxYzk4YTYyNjkxNWVhODZiZTU4ZWQ5MmRmOWM5NmY1ZDU4OTA5NWQ5NjIwYjc1MTk2NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzMGFiNjFhZGQ2NGU5OTk0YzBhNjMwM2YyMzA3MDMzZTU1YWEzZDAzYzA5NDg4MDc1YjgzN2Q5NTNkY2EwNWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5N2JlYWMzYWM2NmRhOWU2MTc0NmViOGU2Y2Q5OTgwNTExM2JlMjY4MDc2NmZhNzI5MmQwNjkzZmJlMmFkMDEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/__init__.py#L11-L11",
+          "version": "repo-lines-v1:sha256:56b5e91c3bb77ab933c25fd65eba883419bdc5691cc94cb9dc840e8f4e3674eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZiNWU5MWMzYmI3N2FiOTMzYzI1ZmQ2NWViYTg4MzQxOWJkYzU2OTFjYzk0Y2I5ZGM4NDBlOGY0ZTM2NzRlYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZiNWU5MWMzYmI3N2FiOTMzYzI1ZmQ2NWViYTg4MzQxOWJkYzU2OTFjYzk0Y2I5ZGM4NDBlOGY0ZTM2NzRlYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGQ2OThhNmVjNjU2OGYxZjEzYjI1NDE2NzgxODZlODY4ZTQ3ZTUyN2E5ZmVmNGUyNmUzZTNjMmI2MmVkMGVlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fcc1df2114964b0898ddbb6ae34f57b7",
+      "statement": "Because the plugin trees are configuration and prose consumed by host harnesses rather than by the engine runtime, their correctness properties are validated statically in the offline suite — marketplace source resolution, manifest required fields, no duplicate hooks declaration, skill frontmatter and real tool names, user-neutral content, secret-freedom, discovery-only MCP wiring, hook behavior and outcome recording, and the Hermes contracts — with a live install on both hosts as the separate manual verification.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_plugin.py#L1-L9",
+          "version": "repo-lines-v1:sha256:153446aa98c7fa3c843ace19ff133a6246b92de15d609851e43dbf3a845f1031:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWQ5Zjk4N2NmMjY4ZTkxMDhhMTJmNzM4ZWM2ZjQ3OGU3ZThiYTZlZDZkZTAxNzU5Yzc1MmUxNzU0MmVjNDNiNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://tests/test_plugin.py#L51-L116",
+          "version": "repo-lines-v1:sha256:20311cd5d8f1e080d72b702e678898218a3678c560eb79b42ae57bcab360524f:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkNjU4OGFjYTgxYzkxMWJmZjkxZjMwMWY3YTkwNDNmZDg1YmE0YzQ2N2E5MjdiMzgxM2M0N2MzMDYyMDkzMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYwYzhlNzczZTM4ZjJiYThiM2ZiMjlkMGE2NDA3Njc2NjczYTViYWQ3ZWU4YjZjZWVmNDFmY2U0NWU5ZjFmZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhOWFmZWZkZWQxYTlhYjIxYmEwMGQyNDE2NTIyNWM3ZGJjZWJkMmJjMjlmZTA5NDdiZWYwMzhhNzFlMWQ3ZDMifQ"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py#L1-L11",
+          "version": "repo-lines-v1:sha256:a17df1a4a15b1e4109ae22fea38b1864f7c3d69b97f9d1c87ab35c475582782c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhZjY4MGRkNzk0MjcwZDU0YjM0OTkzNjI2MDU5OTc4NjI3YTA2MDZhNzNlMTY5NDA0ODU4YjgxMDI4MDMzODMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlNTBiMTAxZWQ5MjI0ZWI2YWI1ZDg5NzU3ZTkzMzEyNTRmNmNjNWEwZTQwZWY3NmI2YWJhZjQ3MjFjYjg3YzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYWY3NjM3Y2I2ZTdlNWRiODVkNjM0Mjc0NjAxNGRmMDQxY2NkNTU4YTkyMGIyOWViNmFjNzE5ZDdiYWY1YzIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

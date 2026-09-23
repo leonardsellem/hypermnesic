@@ -1,0 +1,692 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:b07b66322fa8027801a4ea7d62ba4a9f2e59e28c9fbe9d5001c8d807f113313e",
+  "claims": [
+    {
+      "id": "claim_fec72cfffba8407e8214c5fcaa399eca",
+      "statement": "Retrieval quality is measured by the committed harness under `harness/`, which is not part of the installed `hypermnesic` wheel, imports as `longmemeval` by stem with `harness/` placed on `sys.path` for tests, and scores the shipped read path rather than a benchmark-specific variant of the engine.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/__init__.py#L1-L15",
+          "version": "repo-lines-v1:sha256:d79a3ac2554a45e20e965031194250cb998f3e9873ea512fd5edd0f67a3cb12e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3YjQ3ZDhkZjg2MjZjNWQ2MDQzYWQ3M2UwY2NmYTRjOWY5MDEzM2FiMDEwODJkY2NhODNjZGY0ZTE1YjRlMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/conftest.py#L21-L23",
+          "version": "repo-lines-v1:sha256:835544042f8f526b18786749155eaaf0a88e2cc202fcb0cd84ad4b045fbef133:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmM3ODQzZjM5ZDRhNWU4M2MzMTI0ZGUyNGRlYTlmMmQ2ZWZiMTRiMWU0ZTlhMTQ5NWMxMGZjZGJhZGJjMTRkOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUwMzMwYjc2YzAxMGRkYzI0ZWYxZjAyMzUwMWQ2NmQyNjcwN2ZjOTM0NTNhMDA5ODVjNTE4MmFjZGJlYWUyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDk5MzhlNTczMmYzOGYyMDZlMTA0ODRiYzc1ODYwN2RkODVmMWNjODhiN2UzNGM0YjQ5ODhlOWMyYjdmM2MwYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTk2MjU5NWIwYjUxMmEyOWRiNGE0MDQwZWY3ZjY4MzNmOGRmZjMyMDU1NjkyYjZmOWQ1MTBkOTVkNWY1N2YyZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7b115432e04f438d91eee914bd113b27",
+      "statement": "A LongMemEval result from this harness is comparable only to results sharing the same reader model, judge model and dataset release, so the harness pins the canonical `gpt-4o-2024-08-06` judge — required because the official aggregator hard-asserts that snapshot — and treats a GPT-4.1-judged column as deliberately out of scope, making the 93–96% leaderboard rows a judge-leniency artifact rather than a memory-quality result.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L32-L99",
+          "version": "repo-lines-v1:sha256:a8522dafa5b4e2e3295e285a878245788b456dadf6a6d016a45bcaa14e7bada6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4ZGY2MDBjNzQ4NzAyNDRkMTlhNGRhODk3MmY1NzM0NTRhZTI1ZGU3OGIzYzBhMDUxMTg3ZmU3YWIyZjY1MzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzNzM5YWM5OTlkN2M2MjNjNjdhMzY2NDZmOTdjOTk5MzBkZDA4ZjRlYTM3N2QxMTgyYTFhOWVlNGRjN2MxYTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/judge.py#L18-L23",
+          "version": "repo-lines-v1:sha256:8be8a374f70e4db3e31f94ae51a7f52cb82452d39e1e4421fd2b100387ed6a6b:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTc1MWRiNjM5ODFhZTMxYTgxM2U3NGJjNjhmMGQ5ZWRjYmQwYzkzZGE5MjZmYTE1ODY4NDZmYWQ0NmFjMTM3NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTk4YTE4NzY3OGEyOTJkNDk5NDYwZTdhOWIzYThjOWRkNmNhNjAzODJiNmMzY2I3YTU0MWFmNTY4ZjA4YzFlYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.py#L46-L53",
+          "version": "repo-lines-v1:sha256:b493e290ba75ecac1b0241ac9775f798f95db6209372715a8419b946d582d406:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU4YjVlMTQ1NDdkZTdkY2RhMTNiOWJiMTQzOTc0N2Y1Y2FiNzBkNzgzNGQ4YjVlYTBlMDA3OGVkNjc0YzY2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTM0MTA0YzA1NjE1ZmMwZGNhOWU5NGI4MTRlNDZiM2M4NDkzYWQ5ZmEzNzA1YTI3YmVkZmZhMzY4OGVmZjg2ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTM1YTUzODFiOTQ4NTU3NDUwNmRhY2NiMmI2MTI4Y2QxZDcyMzdmZDUwYTkxNDQxYjBhYzBjMmJmOGJkZmViMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDQwZDMxZWNiZTMyZGIyM2NkNGQ1Zjg0OWE5YWE1NjdlNTE5ZGJiNmZkY2YyNTJmZDgwN2YzNzNlMWQ1ZjcyOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ffcd3c7e07c42b19b05d64368a5a769",
+      "statement": "Every cited external leaderboard row is attributed by reader, judge and dataset release, and that discipline corrected a planning-doc error in which the ~84-point GPT-4o-judge figure had been attributed to a system that publishes no GPT-4o-judge row; the correction is recorded in the corrections log rather than silently fixed.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L356-L366",
+          "version": "repo-lines-v1:sha256:ca6e23948e9a5c70745e4d7e18cc257b5ef39dcd172647e0bd99cbfd76b38621:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiNDc3ZTUxZmQyMzFhODM5OWQzZWI2ZjY2ZTAzZGM0ZDU0N2E3MWRmOTk4NzBjODhkYmJjOTVkN2IwZDFhYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1NGI0MTRjZGYzOTkyMzI4M2VmZWExYTA3YmY4M2IzOTBhZGM4NjE2OTcyYTgwZWJlMDQ0OWFkNzM5NDhhYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3MDJiZGVhNTdiMDRiMzE5MzI5MTY5ODBkN2Q2NjRlZjZhMzBiNTg3Njg3ZWJiMDljNGE0NDc0ODFkNjIzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQxM2I1YTU5ZmZhZjE4ZmI3MDliOTgwYWMyZTJiMjJjMmExMDgyNmI4ZDQzY2E5OTU4NTFlMWM0NjJkYWE2Y2QifQ"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L46-L70",
+          "version": "repo-lines-v1:sha256:c156d187d8ba2022beb0d3648b2faf3e042a97fead68aa0e67a3ca5dca18651b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMTZiOGZhMWNlZGFmYWFjZjIxZDk5MTYxYjY5OTkxMThlMWJiNjc2ZTQ3NWEzMjM0N2Y5YWE0OTcyZWJlY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzYTliNWYzYmM1ZTVjODMzMzYxMGI5Yjc3NDEzZDQ0M2M5ZjAzYmY5YWE5YWU5OWU4ZTQ3MjI2ZGZjNjE4OGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5YzEwNmE0Njk3ZDk3ZDFkNjE5MTM1MGE4MjEyYmUzZWY4NWQ5OTI0YTQ1NDQyZDgzMDZlZmNhN2ViNzg5ZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0ZGZjZTY3Yjk1NDg0YTRmZmExZWFkNzRiMmQ4Njk4ZWE1OGQwMzU0ODg3NWFiZjg3ODYyNGZkZjVjOTRjYzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2e290d7eee184f1bb50ae0d3e4b1b7fc",
+      "statement": "Because reader and judge strength move the headline independently, the harness publishes two reader columns (GPT-4.1 lead and GPT-4o anchor) under one shared judge, so the gap between them isolates a reader effect, and the anchor column is compared against the matched GPT-4o-judge anchors rather than the GPT-4.1-judged rows.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L208-L222",
+          "version": "repo-lines-v1:sha256:7694b8084f4b6607ce8eba611f37dfa129a15ff9424c5baccfbef0e0ad107b75:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlOGIzYTk4NGJiNzUxOTJhYWEwZWIyMDEyZTY1N2Y4MmI2MmE2NDZiMTFhYjdjZmY4NjEwZThmM2Y5NmY1YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyMWZkM2JmMTNlZTYxZDMyOGY4YjQxZGNhZDUwM2NiOWI4OTEzNTg1NTM3ZGFkNDRmYjc0MzllODQwNDk0OTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyZGNjYjcxZDEwZWFlZTI1OGJjYmI2NThlOTNjZTE0MmI3MGIxNjFjNzE4MDVlMzlhZjUyZjk4NDZmMmJlYjUifQ"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L72-L99",
+          "version": "repo-lines-v1:sha256:7e50d2d9f3feab77a5d87378d07128d5b5299b5f2df5ad56afa1ae5dc8d3578e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjNzAxY2JkZjkwYzYzZjE1OGVlNzAyNzdjNzg1ODVmYzNhZjdjYzU1ZTUwZTQ2ZWRkZDU5ODA0MmY1YTIxMTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzNzM5YWM5OTlkN2M2MjNjNjdhMzY2NDZmOTdjOTk5MzBkZDA4ZjRlYTM3N2QxMTgyYTFhOWVlNGRjN2MxYTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiOWZmOGZjODk5ZTY5OWE1ZDBmYmU5ZWRiNTkwM2UzZjk0MDk4MDFkNGIzMjNmNWNiOTUwMGFmM2U1MThhZGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.py#L46-L53",
+          "version": "repo-lines-v1:sha256:b493e290ba75ecac1b0241ac9775f798f95db6209372715a8419b946d582d406:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU4YjVlMTQ1NDdkZTdkY2RhMTNiOWJiMTQzOTc0N2Y1Y2FiNzBkNzgzNGQ4YjVlYTBlMDA3OGVkNjc0YzY2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTM0MTA0YzA1NjE1ZmMwZGNhOWU5NGI4MTRlNDZiM2M4NDkzYWQ5ZmEzNzA1YTI3YmVkZmZhMzY4OGVmZjg2ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTM1YTUzODFiOTQ4NTU3NDUwNmRhY2NiMmI2MTI4Y2QxZDcyMzdmZDUwYTkxNDQxYjBhYzBjMmJmOGJkZmViMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDQwZDMxZWNiZTMyZGIyM2NkNGQ1Zjg0OWE5YWE1NjdlNTE5ZGJiNmZkY2YyNTJmZDgwN2YzNzNlMWQ1ZjcyOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0b50d9b41eee4ddfbd28d088c5c7fd2e",
+      "statement": "The committed reproducibility manifest pins the dataset URL, SHA-256, release and variant, the embedding model and dimension read from `hypermnesic.config` (so it cannot drift from production), the reader and judge snapshots, the frozen retrieval parameters, the prompt-template version, the seed and the cost assumptions, and never reads or serializes the OpenAI key.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/manifest.json#L1-L36",
+          "version": "repo-lines-v1:sha256:35f174b83ea200a50ab41802bfb683793a3a1a47d7e7e203ca99fe789551111d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.py#L130-L158",
+          "version": "repo-lines-v1:sha256:bb4ea435de2bbe4bd3ded8c5cdaa599628ba14cd606d44a839b894df8d8b6baa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZTJlYzg2ZTA1ZGE0YjBkYzQxN2RmODAyNGE5Zjg1NDc4YWYxM2U4NjEwZTViMTY4N2ZhNTM1ODc4MzRmZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3NWE3NjVkOTkyNGFmNWI3NzNlM2I3MThiY2JjYTkzYjJmYzI3MTJmMzU3NTUyOTVjMTI1ZTM3ZWU3NDg4MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlZDdiYTQ4YzM1ZTAxMDIxYmVlNTc3MGE0MmU1NTNhZGVlZTJkMTM3ZTE4MmYwZDQwM2I0ZTIzZDlmNjFjODIifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L48-L54",
+          "version": "repo-lines-v1:sha256:27750ae9f1e9d91ea7845fd17ea9963a924b060db0aac9b8b3d9efb1d72515fc:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDhhYzMyYTU4NjcwZmQxOTNjNjk5YmFiNDdhMDIyOWU1YjRiMDM0MGI5MjViYjMwMzA2ZWQ0MjY0YjcyOGM4ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDMyZDNmMzU5MTA5MzU3YjlkM2UwYzRkOTgwYTYzNDM3Mzg3NzJkNDVjOGM2NDMzYWI4ZjFlOWRjMzJkYjI0MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmUxMzk5MTY4ZTBmNjNlNGU5ZThjMTIzYzljYTg4ZGQxYzQ2MDBiYWRkNDhkYjYyYWExZjcwNDY4Yjk4YTUyNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjQ4YmMwMjgwMmQ2MjQ0ZGE0YTU1Y2I5MjU2ODExYTZmOTk2ZmFjZDA3YmJmODZkYjVhMzU2ZWEzYWE3NjRiMiJ9"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L78-L84",
+          "version": "repo-lines-v1:sha256:4b18e7850bada3d76bd1ffd996c3356069012dd8f07ec9a5d2f1774a1867eb68:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmNmMTQ4ZTgxMmNlOTlhODFlMzhiZjQyOTU0ZjY1Mjg4OTJkNWU1YWFjOWY5MjUyN2Q0OTE4YTRkNmMyYTlmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDk2MjYyODNkNzE0M2I1MTQzMTU4ZDM5MzUyZmIxZDdiNmFmY2Y5NWUzYzBiYjVhNzczYTQ5ZTk4YzE3ODE0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGUyM2E5ODQ0NDc4N2VjMjcyZDhlYmZjNjQ5ZjRjOWY0NGU1ZTNiZThiZGViMjBkZThkZTZkN2VhNjJlZmMzMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDgyMWQ2OGY5YWI1YTcxMjYzNTI1YzcyYzExNmEyMTkzZDhjZjhmMGQ1Y2Y5ZjQ4Nzk4ZDMwYmEzMDE0MGYxNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2d41ec3490d34bb0bef47fa6829e435a",
+      "statement": "Dataset acquisition streams the download to a temporary file, verifies SHA-256 against the pinned digest, and installs the corpus only on a match; a mismatch raises `DatasetIntegrityError` and leaves no file behind, while an empty expected hash means capture mode that reports `verified=False` and cannot satisfy a headline run.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/manifest.py#L169-L203",
+          "version": "repo-lines-v1:sha256:802bd8dff1c5dbc389d73aee6d418a2efe491f59219d31176fb1c44c31fa16cc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1ZDdlMDIxNjYwOTU4OTZkYTlhNGQxZjYyNzczNzBlYTMyZTRhNDU5ODJjNTg5NTQ5N2NkN2M5MzhiNzI5YjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0MTc2NGUyZjM5Zjc0ZmRiMjk3NGUyMDM0ODFiMjBjNDc2MWU3NTg5ODgyZGIyOTczOGQ1NjQ5YjljZWEwZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg4M2YwMGE1ODcxYmJhOTJhYjEzNzlhYzNmYzU1MDkyM2FiZGMwNDNjZGYyM2M1MGYwYjc4YWZiNTg4OWI5ZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0MTU3NzZhOTlmMTQxNTY1OWRlMjZlYjRkYjI2MTg2M2ZhMTIxOTY2NjBjOTU3ODUzYTYzMTMxOWJmZDliODYifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L87-L126",
+          "version": "repo-lines-v1:sha256:515d87cd05c3d703651c69e35df81dee56f7c288e1c32dceb367d1f30648fe5c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiNmE4NmY4ZWNiYTc2NzgxNDVkMzU4ZTVmNTIwZjQ2NGJmYzc0NWE5NmY4YjU3ODYwZmJkMzFjMDM4MzBhYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1MmQwZTE0MjcyMGE5MGNmOGNjYzY0OTdlNDcxNzE2MzNiYzI1OTg4MzNjOTAyZTdkNjAyZGUzOTVkY2YwMzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU0ODc0MjNjODc5OWM4NTgxYzMwMWRmZjg4MTg4MTZkZTBhMGI3MGVhM2M0ODVjNDg0OTAxNTVkOWJhMTQ3YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhYzM5ZDU1YjFjNDA5YWVlN2MzMThhZThmZWU0ZjEyOWVlODM1OWViMjczNjU3NWJlYmI4MDcxN2E1Mzk2OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_186c2e3bd64c47b6a00dd6e2b51d6b38",
+      "statement": "The materializer writes LongMemEval instances to markdown verbatim — no summarization or fact extraction — at two granularities (one note per session for the QA corpus, one per user-turn round for the turn diagnostic), puts the session date in the body so it survives frontmatter stripping into the index, produces byte-identical files for a repeated materialization, reconstructs gold from `answer_session_ids` at session level and `has_answer` rounds at turn level, and grants `_abs` instances no retrieval gold at either granularity.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/materialize.py#L1-L19",
+          "version": "repo-lines-v1:sha256:60239009233596182c0c5e106491694cf43345bddc0bcddb1c351cd70b4cce4e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0MTQ0N2EwMTFmMTM4ZTI2YzVlNzUzNTE3MmFjOWQ5MTBhYzNkMGE5NDcwMzNjODk4MDk2YjRiYTgzMTJkM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/materialize.py#L133-L170",
+          "version": "repo-lines-v1:sha256:6290b6aef83df3ebc924b4508937910c4b048ef0bab1ef6bde3febb3d0112121:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyMTgxY2Q2OTE3NDBiODZkYjY0OGI3MTI3MzhjM2Y3ZTUxNWRkZWNjNDVjMzFjOWQyMWQwYzg1OTgyM2IxOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1YzQxZDViMDFiYjI4MDE4MTQxOWRhZDMxMGQxYzAzNDRmZTM2MTA5NWM5NTIwOWY0MzRlMzQwOWVlMzFlZjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1ODFkOTQxZTUyOTNmMDM4MTYwM2I1YTExZWQzNzU3YmU0MTVjNTAwMDIzYjk3ZDlkMmU5N2RkZDNhMTkyZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5NzU0ODIyNTZhYmNjOWU1YjgzOGNjZmUwNTUzMmUwNDczMTkzYmUyYzNmNDA4ODZlMGRiODUwMjFiNWNlZDQifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/materialize.py#L194-L210",
+          "version": "repo-lines-v1:sha256:152751d5481ba0b51c9f49feacdd3526f597b4da1fde5933c179f3c1eca323c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0NDJmOGIwMWI4NjdkZTA0ODEzMzJiY2Q1ZjFkZjJkMzQwNjZhZGNiNmY3YjIzMjk5MGFiMmU5MDVhNzFiNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMjM1NzE5OWUxNzliZjA1MmNjOWM3NjFhYzg3OThmYTFiNGMxY2UyOTVhOTExOGJmOGJiZGQ1ZTk1ZDM1OGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3MGYzMTljNjljOGQyYTAyN2M3Y2VhNzg2ODcwZjYwN2MzNGJhYTQ2ZTgxZTUwMzZiYzBkMTJjMDkxNWE2OTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4OGY0ODc3MTRkZDk4M2VkMWRjNTZkMzYyOThjYzljMzRjNTRjMDU0ZDBjYzgxYjkzMjA1ZTNkYzA4ZmM2ZWEifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L176-L233",
+          "version": "repo-lines-v1:sha256:7e4d8de1de80b119145101531eb9d862863ad165327875520c1770c3c051c593:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4ZTg4ZDI0YTQ1MDQ0MTkzOGYzNGZhM2ZhZDFlNzc2MjZkMjFiMTA0YTY0MDA0YjFjYzI1OGFhZGJhODIwZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxZGRhODc1NDVhMWU5ZGFjM2EwNzhlM2M3NDdhOGYyNzg4NTNkM2MxNmQxYTc4NTcxNjVhNzdiMTRlYjBhZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQxZGNmNzE2NGE0ZGQ3NDRlNTFiOGU1ZTk4N2UwMzk2MDM2ZmNlNTBlYmFhMjdkYzc2YWIwNjYxYTU5MDg5MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhYzM5ZDU1YjFjNDA5YWVlN2MzMThhZThmZWU0ZjEyOWVlODM1OWViMjczNjU3NWJlYmI4MDcxN2E1Mzk2OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1d650d1132224f2d8b4507554599b4f2",
+      "statement": "Each instance is retrieved through its own isolated index built with a state directory outside the corpus and discarded afterwards, with ranked chunk hits collapsed to unique session or turn unit ids, so corpora never leak across instances and the source tree is never modified.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/adapter.py#L194-L251",
+          "version": "repo-lines-v1:sha256:4191e526b75f779bcb41b9be33cc0950f0f0bbc364a4d5fb8784d607823aaacd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjMDM0YjQ1Y2U3YTMxNTcyZjI0MWNjNDkyYzdjOWM2MmE5NmI3YTRmMmRmNmVmMzgyNzdlNjAxYTkyNzg5MDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhOTc0YWU0ZjQyYzhkYzRmYzhjOGQyNWMxOTYwZDM1YmJiMzQ3MGRiZmVkZmVkMzE5ZWY4NGRjYTcxYzAzMGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiNDY4YWQwYWJkNWRmODYyMGJiOTRiZGZmZTg1ZjQyMTEwZWNkYThhZjc2NGE0ZDVjM2JhMDZiYWE1Zjc3M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwOTQ4ZTczOTM3ZWJjMmM1MDE4MTQ2MTVhZTU5YzY4OGE5ZDFmM2M2NDExNzQyZmI5ZGYyNTA1ODY3YTc2OGYifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L302-L323",
+          "version": "repo-lines-v1:sha256:2c0f6c3efc9b534ca87977cb53adcf4ba86ff07477a247fcfc11a727090f1899:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4MmJiOGIyNWM3MmU0MjYyMWI0YzZhNGNkY2IxMmYzYzZhNjMzZWUwNjU1ZTJhMTMxZjhiNDI2NjBiODg3M2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4MzU1Mzk4ZmE1ZmFhYTJiYTMyODVkMTkzNTE3NWM3OWE3NTJkNDFlZjk2YmRhYTBkNzg0M2VkMGMxMTFjMGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhNjY4OWUwZGRhMTExOGYwOTRhZTU5MjAwYzdiOTlhMjE4ZmYxNTZlNGZjOTNiMmU0MzcyM2UyZDFkYzQ4MWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyODRhYmUxMWZiMTJiMTNiODJmYTlmZjdiMWI0ODNkMTkyYTQ2YmZiYmM5OTVkODdkOTMyODZmN2I0NDVmOGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4445c74add2146a6a87d038dc9a4bf70",
+      "statement": "If embeddings are unavailable at index build or search, that corpus degrades to lexical-only with no ranking and the whole run is voided rather than scored: the live CLIs call `embed.smoke_embed_or_die()` before scoring, and a void result carries no metric keys at all.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/adapter.py#L11-L16",
+          "version": "repo-lines-v1:sha256:975f955a8d460a944a62fb9b6b37e9c92d3b880e5e637c1dc2d59a86b516772b:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjk4OThhM2Q1MmI5NmVjMDU2YTNmZmU3MTBhNmZkNzA0NzExMzNjY2MwOGM5MTBlNmU0YWQ2Y2I4OThiZWU2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZkZTk4MmUwNDVhOWMxYTQyMzdiNDQ4MWJhNTVlMjk0NGQxZjFmODZhYTYzNDAzNzU0YTUwZDVkMTY0MTEwZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjA1NDYyZjZlMjA2MjQ2NzEzOTM4Y2FmNWY5ZDk0YTlhNDVjODU3OTNmYTlhYWFjNjUxNGI4YmMzMzY0MmNkOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjFhODExNTRhZWI3Yjg5YzBhNWEzMmNiYjYxZjdiNDFkMjJjYjdmMTViMDU0MmZhNzkzMTM3NGQyNTkxYTQ4MSJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/adapter.py#L212-L225",
+          "version": "repo-lines-v1:sha256:c647751ff8d412612ce450e95d44e7b55a346f3284cf95417a710c6d15586ff8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYTVjNjZlMTdiMTQ1Mzk3ODM0YjhjODU0ZGM0MTkzZTIxMjUxODBhODk5NmExNGMzMTg4MzMyNmIyZWZiY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmYjI3ZTQ3MjBlNDI4ZGJjMjUzMDExMWU0M2JiZmEyOTJlNzk5NDE4ZTE2Mzg2ZjdiMzM1ZTczN2I1YTVmZDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU0YTdhY2EzMDc0ZGYxZWM3YzlkMmZiMTkyZGVlM2M2ZDIyNWQzYzU3NzMxNjBlMDNjMGEyNGY4ZjMyMzZjNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjOTczMDA4ZGZlNjEzZjU3ZDVkODI5MTJhNmNhMDkzYWVjN2NjYWQ3NDcxNGY0ZWZiNDAwNzJkZGQ5M2Y2ODgifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L136-L143",
+          "version": "repo-lines-v1:sha256:cfda38f5c6bc1dd0950458274093628a42732b3b9047aca3e26138e986056f9a:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGQwYTgyZGViMzM3NWNiZDEzNTEyZWU1NWNkN2U4MzRhMGQxNWU3YzUzOTgyZTc3NTc3ZTFiZmVlNTFjMjM4NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTg2YmQ2NjMyYjhjNjU5YWRjMmU0MjQ3ZDY4MWViYmFiZDUzMTFkODU2NDE5YzgyOGFhNzNlM2IyNWMyN2YzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWFkYjE0Y2EwZmYwNGU2YTJhNzI1M2RlMmU3OTZmM2E1ZjEyYWMwMjM1OGY4YTM2YWJhMDc5MDRmNTgxNGQ5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmVkYjZkMTUzMjFlYTY3ODViNTlmNGU3Y2I2MGFlZGNjOWEyNTU3OTY5MTA2NWEwM2JjNGQxZWUzODdhY2E4OSJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/qa.py#L105-L108",
+          "version": "repo-lines-v1:sha256:d7eb8541fb8a53d018aa965e63f72b3d167f9073a3a40ab793c02978f05142fc:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTMxNTdlZTk3NTYyNjYyYTRlMmU5ZDU0YzY3ODBkNzk3ODFhMjdmN2RlY2NkZDljZTUyYzNjYmFlNGFjMDA3OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTFjNmY0YWQyOGYzMTM4ZTVkN2EwNDI5NDQwNTk3NzQ1ZTI3YWM5MmU3YjZkZGJjYmZiYzg3YTZjZDgyMDEzNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzY5ZmU0ZTUzYjBmZTM4Y2QxOTI4MzRjYmM0MDUwMzFmMjRmM2ZiYmRiZGE1ZDc5Y2Q2ODc1NDdjMzlkYTQwZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d7a9cbf144e445b697827107276f9749",
+      "statement": "The diagnostic computes the official retrieval metrics — `recall_all@k` (1.0 only when every gold unit is inside the top k), `ndcg_any@k` (binary-relevance NDCG normalized by the ideal DCG) and a turn→session derived session ranking — at session level @5/@10 and turn level @5/@10/@50, with the abstention instances excluded from every retrieval aggregate.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L106-L124",
+          "version": "repo-lines-v1:sha256:6f48b616a811c2e8c4463bd5997040401a062e2fc908a55eadc3890fc01cb03d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyY2E0MmZhMzE0MTFhODE4NjBjMDM0OWNkYjAwMDAzNzRhODdjOTIyZGEwOTY4NjdhMmE3MGQ0NjcxNDU1ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5YThjYzY4ZDdiZWRhZGQyN2FkNjA4YzY0YTExZTM2Y2JlZTU4OTUxYTFlZWFiMDdiNTNhNGQ5NWJiNWQ5ZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0ZTUwOTUwMGYzOGJmNjNhZGU4MDhjZDIzMTc0ODJhM2VlZmVlODY1MjhmNzc3MGExNjQ3ZDY5NTdkMTdhOGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1OGZlMDM0ZmQ2MGJjZjkxODE1YmYzMmRlNjNhNWFhZjQwMDk1ZTY2Y2E3NDVmMjMwNDE0MzQwZDA5YmU3NzkifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L145-L180",
+          "version": "repo-lines-v1:sha256:eb06ad3b15eb6d3d23e8678a846bdf05bc0f2d7b210b53bcca8eec6c7a329e44:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4NTgzMTBkYTBkOTc3MjZkN2Q1OWNkYjQ4OWNkMWY4ODU0YjY0MzdjYzM5MDA4OGRhZDBkNmE4MzJkZGEzZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkYzdiMTZiZjYzNjNlNzRlZTg1ZmIxM2ZmM2NhODY0MGU5ZWY4MDc1OTYwMTJjZGVlN2Y5Mzk5OWM2YTUyZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQwMTE4YjU4NjQ1NzcxNmRmMTgzNzA2NDc2MDM5ZGFkYzI3ZmM0OWQxYTEyN2QyNGNhZTZmZWQ3MWIwMDYxYTEifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L36-L37",
+          "version": "repo-lines-v1:sha256:22088888743951e822684d8cbf9ce01646cb0a286c032dad1c14585e29d9fab2:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzJkZTRkNGNjNzVjNDdlMGJkZTFlYzIwYzgwMzdhMDdiNjZmNWE4N2NkZDAyNjZkNTMyNWViMzYwNWNmYzI5MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWE3ZWQ1OTUyZjBjZjI1ZmRlNWM1OWE2MTEwODQ4NDlhNWZmYTVlZjc1YTZiNTJkZmQ1MGM0OTc5YmFhM2NmMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjY0OWQ3NDZjM2QzYzhjOWFlZWJkNTgwYTMxYmEzNGI4OTJiMjgwMzBhM2U2MDQwOTZiYTYzMjRlMmFhZWZmOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjgxNDYxZGI0NmQzMWEwNTkwZjJhZTg1NWQzMWRlYTUxODNmNjhkYWU0NTIzMDhlNDllMDQ3YmE0YWYxOWU5MCJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L45-L68",
+          "version": "repo-lines-v1:sha256:d7a7fba4a6aa40a879a6cff8b5225f32a0d46947d606fdcdc12b97b79dc7a57f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkYjc0NTM4ZGFkMGVlOGQyMTdlZGYzMDY4Mjk3NzU2YWU3MDQ5MGZlMTI2N2I0YThhN2EyNGJiYjI1ZmFjNGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyMTg3YTczMmQ0OWIxNGJiNDVjMDRiYjQ1NTkxM2VmNzJlOGZlOTcwYTNmOGQzMmE4ZDcyOTJmODI5YWUzMjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI0YjVkZTQwNTc1MDk3YWU0N2EzYzc5YzM5MzE0NTQ2NjgzNWFjMTY0OTczN2Q0NGQ0MjIzMmZmYzAxYWQxYWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1YzdmYzFmM2RhYmIyNGQ0NWNlYTUxZGI1OGNmOTE5MGJiY2Y1ODQ2MDg2ZDljZjFlNGNhOTRiOGFjYjUyNTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_af9d453bbfc74a8bae24fc8deb75f65b",
+      "statement": "Because the shipped search applies no date-aware ranking, the diagnostic reports `recall_any@k` and the gold-set-size distribution beside `recall_all@k` for the date-sensitive abilities (knowledge-update and temporal-reasoning), so a sub-unity `recall_all` localizes to retrieval ordering instead of being read as missing coverage or as a reader failure.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L177-L193",
+          "version": "repo-lines-v1:sha256:b7b49292647b360762783a35deeec09bbc544c3a176b4143d99ca9cd2d46b32c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ODQ5MGMyMTk1MjlhYThlYTAzYmNhZTZlYzJhZjM1MWRkYWJlZGQyYjE1NWJiMmMxYjc3NzQ1Njk4ZjA3YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NjM3NjgzNTkxNmE3YjZkM2I3NzNkNmFjOThmNWIyMzUzNzhjMTk3M2M5MWY2YmQ1ZDBmY2MxNzFjYmRkY2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2ZTU5NmNlYzUyZjFmMjE0YzE4ZWU4Mzg5MTE0ZTFhMjQ2NjgyZGFkN2M1MzdiYWNmYmI3MDIwNTZlMWY0ZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L160-L166",
+          "version": "repo-lines-v1:sha256:4edc2eb32a87ed1f339a9265505777d0af3138fc0564b1bbac300213cd12bcf7:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDYwYTU2OTY0OGM2Zjk1YjRhZjI2MjAxOTE4ZDc2ZjkyNDI5M2Y2MDU2MTU2MTM0ODUzMjBiMmJhOGYwNDM0NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTFlYTdmZTg5MWY1NmE1MjgxNzhjYmE4ZWVlOWNjMWI2Y2JjNjRjMGM5MzlhYzQ5ZmQxNzJlZmMwZjc2NTU5ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjAzZWRmN2M3YjZhMTg2ZmY4MTNmYjU4MDY3YzM1ZDRiN2QyOWQ5ZjAxMjE2OGFlZmJjZjM4YjJhZGUxNzJjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTdjODI4OGNjY2FmZjJjZDdlYWM0ZDJlMTVmNjJjN2I3NDViNTY2ZGIyNzM5OWUxYjdhNWExM2RmMTc5NzI0OSJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L39-L42",
+          "version": "repo-lines-v1:sha256:2144798a3430ceba3783813c44e2a0aa9f001b93ee74abcce7871d18564fcc93:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzg0ZWEyMGQyMzhmYzQ5NWYwYjM1NjQ1MzVlZTdmMmQyZDM2MTVlYmQ2M2VkMTZlYzA5MzFlNmVhNWE3NTY5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU4ZjUxMzBmYjI4OTRmYjJiOGUzN2Y4NGM5YzMxNDFkOTA0NGEzN2U0ZTkwZDYyMjIzZGIzOWMxNDUwYTVlZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzIzMzkyM2Y2ZTE1OTk4ZWE1YjRlNzY4MGZiOWU3OTU2NjgwMGY2ODkwOWMxNWY5NzEwNjRhZTBmM2I5ZjAwMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTcwYjFkYTY3OTBjNTI5NjUyNTllMmI4OGFkNDg5NzhlYzdkYTE1ZWM4NzY2N2Y2ZWM5NzI1MTljMjI5MjkyNCJ9"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L456-L474",
+          "version": "repo-lines-v1:sha256:8fd512dbfcf9f9aa6b3ff3f929e631b335ec22cf869216e3b297ec1c2c7efa65:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3ZTBiYzBmOWIwMTJkMDk1NTNkYzlmYzg2MDVmZmY5MDliOGVkNWFjZmRjMjEwNjRjYzBkNjhjZWVkZWJkZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMmNhZDM3YWRkZDg3Y2E4MzYyNzI2ODY4ZGFhOTkyNDA2NDVkZTBkMDlmNDIyMjIyOGQ1YTA3OWViNjgwNTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxZjcwNGE5NzM3ZWRjMDRmYmE2NTJjMjg4NTM3NjMwNGM0ZTg5OGFjMjcyMTAxMTI4OWJkNjEwYTM0YWJmNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3NTYxNWYxNTg3ODE5M2NjMjFkZjZlYmZjMDc1ZjNiZmRkMDJkZjVkYjYwNWVhYjhkZDIxN2RmYjRkODZmNDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6c364c08520241158dcbd1afde65064a",
+      "statement": "Fusion parameters (`k`, weights, doc lane, near-dup collapse) are frozen at manifest values before any run, while the diagnostic's deep candidate depth of 200 exists only so that @50 is reportable — a measurement depth, not a tunable ranking parameter — and any parameter change belongs in the corrections log.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L123-L127",
+          "version": "repo-lines-v1:sha256:bdc9e30f36eebccd54bac78f9e68f7b798ff99ac5913a2f90424790470185b54:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2UzMmFiZjk5ODRkOGNhOTY1OGFiMmQxYTY2NjYyODUxMWQ2NzIxNjc3YTI5ZTUyY2MyYjkzODE4NzBiOGQ4YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTBmZmUxNjNkODQxMDMzM2YwZGRhN2YwNGRjZjhkZTM2M2Y2MmFlNTA3YzY5ZjRkYzU5ZDAyYzZlNTVjNGZhNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGU5Njk0YzZiNjkyZjZlNmFkYmZlMGQyZjRmNTFiOTZhZDhhYjIyY2YwZjk3MTEzMDFiYjUxY2RiY2U5Njk5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZThjYWYwYTIyOWU2Y2JiMDMzYTNkYzg3NmMzZmJhMjBmNzQ2MTU4YzQzYjRhNjk2ZWE3ZGZmNzA1MjcyMTc3YyJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/adapter.py#L54-L58",
+          "version": "repo-lines-v1:sha256:5bf5a5bcb144adf90bf1f942d387c9c2031f373976c18b7ad6497eef32e954eb:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2NkZmNiNWE3ZjJiMDljN2QyN2ZjMWIwZGM0YTM5N2NhZWE3NjY1NmU0ODUyYjEyODMyZTZhNmQ3MDhhYmIyMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2RmNjQzZTIyNjcxODUyNjVhMWI1YzM3MWE0MjZkNjJiZGFmZGM0Y2Q3MWQxYjMwY2RhYTEwOWU4Yjg0ODU0ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGRlOTE3YWVjZjQwNGY3MzBmNjA0MmYzZmQ4YTU0MmQxM2Q2YTNlYWQwOTA4NWY4N2M0ODAyMjdmMjkwM2Y2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmMxZjAyZmQ3ZWMxZDQ2MmMwY2I4MThiOTQ4ZmZlNGY3MTViMmMyYzQzMjYzMGMyMzJkZmUzNGQ0Mjc0M2ZhOSJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/manifest.py#L55-L62",
+          "version": "repo-lines-v1:sha256:7015370a85f7e30ec2cfb943c1827cf3a3b4e3d369e84221d08d040996a8b194:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDUxNTU2YjM4ZTMxOWZkZjI3MmNkMmVkMjZhM2JhYTNmMGU5NDljMjExZTYxYTljYmM3NDRhYjEzN2I5N2ViMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg2MWVhNTU3ZDcxZmU3MTM3YWIyM2JjNWQ5NzdhMjgxNDMwZTJkNWQ4ODc1YzI5MjljZWRmYmM2MjExNjNjYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGQ4MzU0Y2ViYWQ4YTYyYzZkNWNiNGE2MjQ1ODAzMmQwZTVlNWI3ZTBjNDBiMjlkODFkZWM4Y2E2ZDU1N2E3YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzlhNjAyZjM0NDQyNmExYmY2NWM1YmQ3ZmZlYTYzMWVkY2QxZWNkMmVkZjkyOWVmZGU3NTkxYmEzY2QzMWNlOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f916db7733a64c3dbe0c55697a3dfb4e",
+      "statement": "Embeddings are served from a content-hash cache keyed by `(model, dim, text)`, with an in-process default store and a SQLite store that persists across processes and stores packed float64 vectors, so a re-run re-embeds nothing yet reproduces a fresh run's vectors exactly.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/adapter.py#L127-L175",
+          "version": "repo-lines-v1:sha256:3b5ae7a249e99b928ab2c65bacc69c93c242cbc284ee89cd4482be29beaa8e35:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3OWUzYWUzNjg2YzcwNjRmZGViMzVjOGExYjNlNDk4MjQ2Yzg4ZTEyODkyZDI3MTIwNGZlNmU1OTlkMmRkN2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZjZkYjJiMDhmNTcwNzAzYzZmZDYwYjQwODJmMzExYWJmY2I5NjgxNTRmYjIxZjY1YjYxOWFhYjgwNjFhNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhZjZkZWFlOThjMDE4NmMwZGRkOTkyM2YwYmRhNWQ5NGI2MTZlOTNjODA2OGJhNWJiNzY1YTk0MTVjNzU4M2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY3MDMzZTVlODJkMjllNDAwYmRmODA4Yzk5NDczNmQ1ZTQxY2I2MjExNGZiNzE0NDlkNzY3NDY1YTAyN2NkMWIifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/adapter.py#L83-L124",
+          "version": "repo-lines-v1:sha256:26c61c984cde3bb9b687cbef0d9756f44167e1bb8325f13c05624c4eea7dbb6a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NmEwYTRjYTM2ZmI3NGYxZDNmMTE5ZGYxNzNhMzM3OTZlOTA0YzgyMzJiMTA0M2VmYTM0N2ExZWNmZDk3ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1ZWE5YzM4NzQ3YWI0M2FlNTdlOGMzZTlhM2QyMzIyNzA0OWM2ZjhlOGU1M2FlNjEwZDcxMWQzNjgwYzhjZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkOTZkY2FmYzNhYzk1MTY3OTNiNjZhMGE5YjY2YTUwYTdiMTBhNDg5NmYzM2U3OTI1YWMyNmExNzQ1NDdlOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkYzRiNGZkNGI5YWM5MjEwZjcwYzZmZTA1NTA4NGM3ZTdhMGE2NzgzZDczNzExY2E0NjdjZTdhMjE1MmE1YTMifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L344-L370",
+          "version": "repo-lines-v1:sha256:e1b46ce2893db443a625dbc4ba7be5a9b1cc4712d6db27cc2cf6f089bbc8dafb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzNzlmMTljYWNjZjQyOTdhODkwMmE0NDg0OGIyZjk4NTgyNTVhOGFkMWZkMjc0ODQzOGZjOGU2MWUxNmVlMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzNGMxNWYwNTZlYWZhNDUwNWMyYzkyYWVlMzAxZTdlYmY1MTE3N2IyZDA1MjZlYTkwY2E2M2MwNzkxNDlmN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjNWMyYjY3ODVlOGQzNDA1YmFiMTVmNzQ4N2ZiZmRkMWI3ZDg1OTgyYWJkZDJjNmE4Yjg4MTNlZmEyZmFiMGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhYzM5ZDU1YjFjNDA5YWVlN2MzMThhZThmZWU0ZjEyOWVlODM1OWViMjczNjU3NWJlYmI4MDcxN2E1Mzk2OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_56c4050d14af4d8c8f96c5152b3c5f37",
+      "statement": "The paid Phase-2 run is gated: `qa.main` prints the gate and the Phase-1 embedding cost ceiling and exits non-zero unless `--confirm-paid-run` is passed, and once confirmed retrieval happens once and is shared across reader columns, with only the reader pass repeating under the shared judge.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/qa.py#L139-L165",
+          "version": "repo-lines-v1:sha256:e6bdb435bb1804d5b660c2d0bfaee1ea9fba04c3f5cf42f41d22927a33c3cf6a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NmY0Y2ZhYzVlNGUwOTZhMDliNmRjZTNmMzg1Nzc5NDIyNmI3MDViNTRlZmRiYmUzN2ZmNjlmNGEzMjVhNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiN2M4ODk0MTBkZTMwNGFkOGIwMGZjMDlkNzRjOWE2YzYxODBhNDBiN2ViNTU1MGQzMTFiYmE3YzE4YjQzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1ZDcyZDY0OTVhZTRhOWQ0NDRiZmZhMjZiODBmMzAxMWI3NGUxOWIyMWI1M2I0OTMxZjcxZTVhZGQyNTFhNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4NzVhMTRiNzk3NmFhNjBiZTJjZDZhZGZjMDVhN2Y0N2IzNTZjOTNkMDRhOTEzN2Q5OGQ5YmQ4NmIxNjg1MjQifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/qa.py#L226-L262",
+          "version": "repo-lines-v1:sha256:0934258a1e1d1b72b20471dc16291235fe7f932d615fe58c74f3adf0cc0c548d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViM2NlMGJjZTZlMWRjMDVjNDMyM2JlNmI5YjE0NWM4ZWU1YTE1MzkzMTQ4YmQyMTRjNjg0Y2M4ZDg3NjY3ZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OWE4M2RmZWEzZjdlYjljZmNhMDE2MWMyMzg4MjRjZThkOTg0YmNmY2M3MzY0YjJlM2ZlNDZhOWI0MTdiYWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNzc2MmI3MjIzY2M0ZDA5NGViOTUxOTliNDdkMTAxNjNlNzVmYTI4MmY3Y2RlOWZkMTY4ZDY0MTI2MjhiMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2YjNlYWUyMjNiYjE3OGM5YjY1MmYxNmQzNzM4MzVhZjExMjNhNDQxNWY3MzY4NDc5ODI3OWI2MTJmMTk1ODMifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L852-L858",
+          "version": "repo-lines-v1:sha256:38ed14cee2242d2700051a9c9b4bc7571d1715f15e59ddc866cccdb51aebfe89:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2I3MWE1ZGM3YzA3YjI1NWRhODhiMDVkNGZhNDIzNmJkOGZlMDUyYzVkMjFjOTZhOTllZjgyOGI5MDhkMjA5NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjkyMDkxYzJlZTkxMmJiY2JmYTBjMzk4YjBhN2QwNTY2YzVhYzNhYjlkMzI2YWZiM2ZkNDMzNTVkNmI3MjRiMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDE4MDJkNmVjZGM2MWEyZDZkMDg3MjFmM2NhZTNmZmY3Mzg4ZmZhMTJmM2MwNmVmMmRhMWNjNWZkNjMzZDc4MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2FjMzlkNTViMWM0MDlhZWU3YzMxOGFlOGZlZTRmMTI5ZWU4MzU5ZWIyNzM2NTc1YmViYjgwNzE3YTUzOTY5ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ed53fa84088a404294e6c36eb17ac2d9",
+      "statement": "The reader answers with the official chain-of-note convention — retrieved units presented as a JSON history sorted ascending by date, the question's `Current Date` threaded through, and `has_answer` never present — and drops the oldest units when the assembled prompt exceeds `model_max − gen_length − 1000` tokens counted with tiktoken's `o200k_base`, which is why the 128k GPT-4o column truncates where GPT-4.1's 1M window fits `_s` untruncated.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/reader.py#L1-L22",
+          "version": "repo-lines-v1:sha256:cbb2d19b98107882b5019fb338b7266911b3d554299aad5cc45e738fdc1a687d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzMTgwM2U1ODgyOTk2NzE1ODBlMzBlYTViOTA2ZTEzMGMyYWZhZjE2OGNlYTA5YmZlODViMjkwMzJmM2QwYzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/reader.py#L112-L152",
+          "version": "repo-lines-v1:sha256:7f238ebb813791206fdd1bfd25573172ad040b73508e3dbbc49abd561feb7d93:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzZDAwY2YyNzA5NjRkNDRhMTNkZmFjODc1MmIwOWZjYzQzNWIwZjE5YjMxNmFiY2Y4MWE3YWE2NGJiMTIyZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxMTRkZTMxMWY4NGVjYzI1ZWE4NWZkNDc4YmIxZWFjNzliMThkYjAyNjBhNThhMzM1OTVjNTJiNjEyMjgzMGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1OGE0YzAwNTgyMjk5NTMyYjUyNmIzNDkzMDEyZWZlMzYxMTI5Y2ZiMDY3MzIyYWM1NGNjYzk0MzEwMWM0ZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMGIwMGExNjY2ZWU0MzkyYWMxNjY5ZjY1ZmIxYmNlMzE0OTE0OWIwMWEyMzQ0ZDlhYzk2NmRkMmJkZTg1YWIifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/reader.py#L34-L52",
+          "version": "repo-lines-v1:sha256:51df1933b39e2ccc2a2c0bb98b6e9efe1c07076bc39382612bb1f3ecf660fcf2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMmVhNzAwMGMwMjk3Y2Q2YjkyYWFmZWQwNmNkNzIwMWYyMjA5OWJlNGVmYjRhM2Q4ZWE3Njc2ODc4YTM2MjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1ZjdlYTUyMWNjYTBkY2Q3MGQwMDI0M2NjMTA5YmEyNjlkNWIzZjhkYTkwZmI0ZWI5ZGZhMzU3ODg1MmM0YTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwY2UzZjI0YWI0N2MyZjVhOWQzMzdmMzc3ZWQ4NTczZmE1NjU4NDA3NjQwMmYxYWYwNTRhM2RlZDYxOTQ2MmYifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L594-L653",
+          "version": "repo-lines-v1:sha256:4a7fe2e8488ace775fa03fc1125c397b93adf7f0950baa94758e78155da10174:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiODFhMmQzYTc0NGEzMTg5N2YxMTY4Y2RhNTBjZmUyZDQ2NTQzZDVjY2U1OGZlMTJkY2ZiM2RmN2RiYjgyOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmM2E5MTRhYTNkOGZhNzBhNDNjMmVjYzAzMDgzZmM2OGJiMmU2OWI2NzE1NjY1OGYwY2Q4NmFhN2NiN2RmM2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhODJlYmU5ZWQ0MDdjM2E2YmE0YjAwMzQyOTJiYWE1MmMxMWNlNWFlMjg2MTA3NDAyZGU0NzkyZWVlY2FjZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFiMjZiMDg5YmUxZDZhYjFiZDY2NzRmMzY2YTViM2ExZDQxYTNjYWFjM2IyNGEzMDY0MWRmMmYxMjk4Njg0MTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a6574611e204463788f905474d33d6fd",
+      "statement": "`tiktoken` is confined to the `bench` optional extra (MIT, so the license gate stays clean with it installed) and the reader's token counter is injectable, so the paid reader path needs `uv sync --extra dev --extra bench` while the offline suite runs with an injected counter and CI installs only `--extra dev`.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml#L15-L22",
+          "version": "repo-lines-v1:sha256:3691953c46660448fe833a0e250e29e5f83bcf405dcd3b0c8f195ded1fd84ca7:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2JiZDIzYjA4YTYxYTczZTY0MjAzZjc1MDY2Mzg3NjM4Y2U0Nzc2MzdiYTZkYTNiMzRhN2Q2M2FkYTg0ZjY5OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA3NzhmZDVkODcwOGJiZmI0ZDBmZmVjOTYyNWE4ZjYzOTVhNWI0NTc1MzRlMTg4NmYxNDMwNDk4NjZlYWQyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc5NTgyYWU0ZWRjMzc0YTdiMDI2NDdmZjIwN2Y1MzQ2NzczM2RmOWJkZTBiNjZjNzJlNTMzMGY3NzkxZWY4YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTllOGQzZmQ1YTFlNGVmN2I1Zjc2MDZlMDkyMjdiY2RjMjhjZmU3ZjdlNjIyZTM2MTgwZGFkMDRiNjI4OTBmMSJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/reader.py#L72-L82",
+          "version": "repo-lines-v1:sha256:25d0b451ee21db8037302325162b924b9d26e485f2385ddc18499279ca9a239d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzOTFjYzg3MDE2NmJjZTdkNzA5MWRmMzJhZDlhOTI1ODg4ZjRkODU4YTUyOTMyODYxMGM1MzVkZmNiOTkwMmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmYmM3ZjUyNzUwZWI2NWExM2Q4NmVhY2JkMzIyMjFkZjZjZjJkNTY2ODAxODUxZGMzMDIzMTZjNDBhOTVmYTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMGMyNDUwYzFkMjNjOGIyZjhjZGIxOWNjNzllODgxZTU0M2IyNWQ3NTg0OTAwYzM3N2M3ZDMyY2YyOWY4MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxOTIzZTE4YzY0YjNmZTE0MDViMmI1MzZmYmQ5YmM1ODdkNTFiNTJlYzFhYWMwYmY4Y2UxYTUyZGE4OWMwZGUifQ"
+        },
+        {
+          "resource": "repo://pyproject.toml#L47-L53",
+          "version": "repo-lines-v1:sha256:7b7d119cfda88e8960540496ea5d79f655945a1d6912e1589c6238cc6b6984a7:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWIwOWE4OTZkYmE1YTk5ZDhkNDg3MDYzMTVlZDdkMzhlZmRlYWI2OWRlNWFlZGZhZmM0YTUyMDkzNWVlZGUwNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjk0MTZlMDlmNzhiYTMxNmMwMzI1NjgyMTNiODU1ZWU3NTZlNDE1NjVkOTE4ZjA5NTE5YzgxZmQ2MjBmNDA2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDE2YzZhM2YwYmFiMWRjYTRjNDA0NWY5NzFhMjI1MzM0NjU0YjdjZmVlZGYwY2JlZjY3ZWE2NDJhMTExYWZkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzUwYTdlYzk5ZjllZDAzNDdhMjJlM2M5NGUyZmI2MWVkMWJjMzVmNGU2MGZjMjY3MjcwY2E4YTMwYTI3YTQyOSJ9"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L670-L677",
+          "version": "repo-lines-v1:sha256:e0c4e0586f33b66a4d65661c1eb42be5b2bbf734f7ed5a04efa2339314896fdf:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTYwM2EzNjFiMDZjOWE4OTA4MWVhOWMxNmI0MjhhYjc0ZTRiNDRhMjE4ODFmMWEyNDk0ODMwOGM0ODU0NDZmOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWNlYzMyNzU3ODU0Nzg4YzVkZmFjODQyMWNkMDljNDNkY2Q5NTE5ZGEyYzBkMGJlMzM2ZjZiYTNhMTA5OWVmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzlmY2QxNWNkMDYzM2MwZTFiYjQ4Y2I1MDQzMWRkNmFmYzNjNjJiNWE2NmE2MDJmNjYzMjQyOGM4ODRjOGY0MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b01e2c15eda24575b3c1ea522ee71d5c",
+      "statement": "The judge selects one of the five official per-`question_type` templates (default, temporal tolerance, knowledge-update latest-wins, preference rubric, and abstention selected by the `_abs` flag) from the normalized question type, decodes at `temperature=0` and `max_tokens=10`, and parses the label with the official substring rule `'yes' in text.lower()` so an official aggregator would accept the labels.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/judge.py#L102-L125",
+          "version": "repo-lines-v1:sha256:ab43171fa8d491d0b68397becb693dda4c2d04e721cd80ef079a7ec4c86e1fab:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMzI5YmZhMTUyNDExYTI1ZGQyMTc4N2NjZTVkZGMxZWY2NmFhZjU4MTQyOGU1ODNkZTg2ZTI3Yjk3YjkwM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1OWU5Yzc5MWNjZTQ0NmE2ZTlkMTgwOWVlMGI2NDUyMjk5Y2IyZmU3YTUzYzEzMjM3MWZmMDc3YzU0YmM2MTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMGMyNDUwYzFkMjNjOGIyZjhjZGIxOWNjNzllODgxZTU0M2IyNWQ3NTg0OTAwYzM3N2M3ZDMyY2YyOWY4MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNGQzY2QxMTk4NTdiY2QyYTM2YzAwZTdmMGE0MjFiMTMwYzViODY5ZGFmOTM0OWViZjE5ZjUyNmQ3YTA5NzAifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/judge.py#L128-L153",
+          "version": "repo-lines-v1:sha256:0b564804fdfc61361398886b160d604b4faa959ab90674ee955a13ed1b87dae7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3OWQ0NWNiOTMwMzEyYzFlOWU3MjVhMmNhNzczMjk0MmQ3NmMyZjg2NWIwMmVmMGI5N2IyZjI1M2YxZTg4NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxNWI2MDg1MGMyY2UxNTk0NTg2NWExMGRjZjI3Nzc0MWM2MDg5MTRkYjQyZjhjMzM5Y2UzOTMwZjYwM2Q4MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjMmQyZmJlYTgzZDhkZmZkODFkZTIyMmFiNTUyOWU0ZGExZDI2ODBiYmExOWU4NjE3NTI2ODBkOWVmNGE4N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5MWI4YTRiZjk0NTdkZWU2YjlkYTkzZGNhOWI2N2M3ZjBkYWI1NzU2NjA4ZmIwOGNlMzBkOWJiYTg5MTM2ZDIifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/judge.py#L40-L90",
+          "version": "repo-lines-v1:sha256:96de1ea1424761981d237b60467d2ab58eef75171c8cd49e637441c0a11eadda:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkYWNlY2Q5Y2UyYjg3MTRkMTgwM2NiM2U2OGJmNjkxNDNmYTA1NDk3OGE5ZGZiMjgyZTQ3ZDE5MDY3YzZlMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxNGVhODQwZTY4MjQ1ZjNlMjNkNTk2NGRmMmQwMGI5NDU2MTM2ZmU2ZTJmYTAxZjI2NzJkODdlZDQyOWI4YmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjMWYwMmZkN2VjMWQ0NjJjMGNiODE4Yjk0OGZmZTRmNzE1YjJjMmM0MzI2MzBjMjMyZGZlMzRkNDI3NDNmYTkifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L686-L742",
+          "version": "repo-lines-v1:sha256:4ba674c3240f08a433853fbcbec84bd0ccead70f699e5270414e94c0e2aa06e6:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZGU5Y2ZjMzJiNzdkNjE3N2NkYjQ0N2VkNTBlN2Y4NmY2Y2JjOTkyMDAzYmI1YjEzZDdkNzE1YmI4NTkyOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0MTkwMjQ5ZTU1Y2U1ODc5MDk2ZGY5ZTI3M2UwYmFkMzM4NTY4YmQ3OTdkNjFjZDNlNzVjMmRiNGJmYWQyMjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiZmU0ZjkyMmEzMjM5NzYxNDQ5MjMwY2ZiZjM4OTAxMTI0MTZkNzM1YzljOWQ2ZWVhOWY0MmE4MjgxYjQ1NmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyMDAwZmE0MjcxY2UyNmU5NDM3ZTdjODdjYWIzNGYzZDA2ZTQzOTUwOWFkMzYzNTdhMWFmMzMxMjY0NjlkNDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb3c4df7c937406fbd3f2f4f864b9443",
+      "statement": "Per reader column the scorer reports overall micro accuracy, the task-averaged macro over question-type buckets with abstention excluded (the headline metric) and abstention accuracy separately; it emits `None` rather than `0.0` when no bucket set is scorable, and surfaces reader and judge error counts so a partial outage cannot be silently averaged into a depressed score.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/qa.py#L61-L92",
+          "version": "repo-lines-v1:sha256:793b08293f74bd8390bff171feb51bcc779ec827d19419fe142c2b6375058648:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmY2IyZDg3MWUxYmRlZTcwZTg0NzJmZjIyYjBmMGU3NTQ1OWI2NWE5ODM3YTQ4MDRhZGEzNzBjYTY2YTZmYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmZGQzOTViNzEwNDBkYmY2ZTg2N2IyYzNhZmVhNDQ4YjQ2OTUwZWFlYzMyYzZlYmIzNDM0YTJiZjNhMDBiYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiYmNkYmQyY2M2M2FkMTRmYTliNTU0NzRhYzY2ZDUyYmU4MjBjZTA0OGEwODIzMzA4OGIzZmNhMTI1OTg1Y2YifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L771-L799",
+          "version": "repo-lines-v1:sha256:cdda8b7c1aed862d7397bb658969a17a936da67aeb6ecf3435fdd304477d4d1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViMzEzM2U5MWU1Mzc5ZTU4NzA1NTAwYjAzZGRjNDgwYmI1MDBhODM1YTMzZGNmNjEzMmQxMmEwZTQxMmJjZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjlkNjNjOWU4YTZjN2FjNWVmNzg4ZDkyOTVkYzY5YWJlZjc0ZmI5M2MxODdkOTA1NGFmN2QyMTU4ZWYxOTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZjN2E5NzAwY2M4MWEyMjZmNDIwNmFjYTI3MTM0YzYyYzllOTkxMDEwZjhiNGRkYTc0MzEwZmIwMjYyZGYzODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0YmU3MWY2N2NlYTMzYzg1MDUzZmNjMzMwNGQ2ZmE1MmNiMDM5MDkxMzJkOTZiZTM0N2U1OWI3ZTc0MGIwYTcifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L866-L893",
+          "version": "repo-lines-v1:sha256:d2ebbd5157c15f48fd28e40986fe3c56847fca2ca85060722a995bf5571070a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3NjBhZWEyZmExNmJjZjhlMzAwMzlkOTg2MTk2N2U5OGU2OWU5NzdiYWJjMDk4ZDA4NzNjYjkzODViNzg0OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiYWExMWZlMmYwMTAyMDAxYmViMWUxNTM3NjRhODFlOTY2OGRkMWJmOGE1NGM4MmQ5MWU5N2I1MzM4MmQ1MzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4MjY3NmM4ODhjMWE0ZDlmYTc3MmZjZGMzMDJmNzczYmM3MjkwZWViZmY5ZGEzNmEzOWY0NGMzMjExOTgzODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1ZTRjYjViMWQ1NGRkMjljZWE1YTE0ZTRhMmNjMWU4NjFkODQ4NGIzZGM4YjQ1YTJmMTNjZWJmMzg1MTUzODEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_68a691e79bd043a7ac0cb37f7442775d",
+      "statement": "The paid run uses the OpenAI Batch API with one reader batch per model — necessary because the API rejects a batch that mixes models — plus one judge batch over the reader answers, through a transport that raises `BatchError` on a non-completed terminal state or timeout and records per-request errors instead of fabricating answers.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/batch.py#L23-L91",
+          "version": "repo-lines-v1:sha256:f5b52acf4ff5c09a2bc1187e3845b5dd8e05bcf24e7ae151009056b56b091d01:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNTVmYWJiMDhlOTkyN2ZjMjgwNTMyZjQxZDc5NzRkYTUxNGZjZGEzNWM2OGQ0ZTVkZGI4MDE4ODgwNjE4NzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NTI2YWZkNzhlMmJiZGM0N2QwODZmNjliOTdhZjYwZTQ5MjAzZDNjNDlhMTAwMDNmNTQxNzEyODlmOTYxZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5ZTFiYjg0MjkwYTUyNWFhOTZhNzRlOGNmYzc4YmYwZWJlOWQwM2JjYzQyMTViYzZjN2UyNTUyMGJmNDNlNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/qa.py#L168-L223",
+          "version": "repo-lines-v1:sha256:4609315de4d49b6eabc12d69d70d2a42df037fa137499dafcd854bdb9fb86e52:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwMjM0YjQ0ZDFkOGU1YjA2NjE1ZWVhMzFhYTQ1NzMyOTBlZGI1N2I2Njc5OGI0NDY2ZjI1MmI5MTBkMjk4ZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzZDM2OTgxOWQ0YzE2MDI2M2RlMmNkOTc2Y2YxNzZlOTNlNTk2YTZlM2QwYTI2MjBkNjkyMDhjZmI0YmIyNDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExNTI1OTYyYWNhZmY0MzljYzQwMWUwYzA2ZTM4NzQwNzU5NGJmMTY4YTQ3ZWFkNGVmODc3MTg1YmJjNGE5ZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2YWY4MGNhOTQwMzQzNmE5M2VhMjRmMGQ3MTBmMmI1NTkxMjQ3YmUwZGY1ODNmOTc0Njk0MzhiMmMxYjZjN2MifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L1065-L1080",
+          "version": "repo-lines-v1:sha256:9e75583d462a5555b7f1d3edc2e81225710f3fd691f7bc32fcdf1d9c253addbc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1YWY5MjY5OTRiZmMyMGJkMGEzZDMyZTNhOGUyODc1MDQyNmUzMzU0YjlmNjY0NGRkMzcwZGM1NTYzYzc3ZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5ZDMzMzQyNDBjMmZjNWJiNjJhODM0YmE5NzY0MTA4MDdmYjg4ODJmMmQyNDliNjJmOTk1MTJmMWFlNjFiZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3YjZjNzhkOGNmZTI0YjUyZGQyYzRiYjIwZjFhMjliN2Q0MGJkZDQwYWRkODkzOGExNTNhM2Q2Mzc1YWQyZjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L998-L1034",
+          "version": "repo-lines-v1:sha256:11638be97b187948475fb5651c8db87f01779af0e2a384d03c6a86d284d053d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MzEyMGVkMjBiYjgyZDFmOTg0ZGQzNDYwYzM2ZmViNTgwYmU5YjExYmVmZDJiY2NhMDkyOTJmNTE3MTZmNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1M2JmMTU5OWI4Yjg0NTk4ZDg5ZGJkYTlhNDRhNDdmOTcyMTNjMTE1NzAxYWI1ODlmNjRmNzI3YjU5NTlmZDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1NDEyNzMwOWZkZTJiZWUxOWQzODY1MWRkOWU5ZmJiZmQzM2E5MGM2Yjc1ODk4NjY4MzM3N2U1YmNjNzUyOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4NzczMzMzZDA0ZDMyZDcyY2IwY2FkZGZmN2E3ODEyM2I5NDMxMWI1ZDk1OTAzMjM1NjI3ZDAzZWE4YmMxOWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_54139d8068dc4532ad7a85321724f100",
+      "statement": "A run is stamped headline-eligible only when it covers the full set with no `--limit` and, for QA, exactly the two published reader columns; limited or smoke runs carry `headline: false`, so a synthetic subset number can never be substituted for the headline.",
+      "evidence": [
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L183-L199",
+          "version": "repo-lines-v1:sha256:ea48bf9589c8a6c2780d79804ee43feeec0bccc34f46a1b84cfc8f5379cb7069:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhYTgzYmQ1NmEwYjIxMzc1NzAxY2FiNjY5ZjczM2E2Zjk4NTYxYjk2NDFmOWFjZDFiOTJjYjFlODIwNTQyOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhMTFjMDU2N2QwYTVmOWU5YjEzNWY2NWNkMjUzNzJkZmQ2Mjg3NzVmN2MxZWQyNTNmOGJhZDQyZGQyZDY2NjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyZGNhOTViNzRkOGQ4YWZmMWQyNzEzYzgzZmNmOTVlZGUzY2Y3NmRjYWVkOTA5MDdmZmQzNzY5ZmUwMTRjZGMifQ"
+        },
+        {
+          "resource": "repo://harness/longmemeval/diagnostic.py#L226-L232",
+          "version": "repo-lines-v1:sha256:717fb515f8a68168ade0c2d38a09b7d91fdb43c8e54564f8fa7b1cb1aedf5c86:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmZhZTQ5YWQ3YzY0ZDRjMTI5ZTg4Yzg5YWM4ZTIwZjhlYTQ3NGU1YmYwODFmMzc3MGNhNjZhMDg4N2YyMTgxNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg1MTQ0NGE4ZjAzYzk4ZjlhOWRlZDUxMWQ0YjAzMTViNThhYTgxYWMxMDJkY2FjNzIxYzczOTkxYTNhNWU1MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTM2YmU4NGVhYTkzODc2MTZiMDMxNWUyMTNkMWVlZTczOTEzNjMzNmRjNTczMzQ1ZTk1NzdjNjE3YWZiZjY5OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGMwNGY3MzNiMGYzMDJjMTc0YTNlY2UwZDdkZjc0YWNmZjBkNTgwNWE0OWViOWM3ZDk3OWY4NjdhN2E2NzZlYSJ9"
+        },
+        {
+          "resource": "repo://harness/longmemeval/qa.py#L273-L273",
+          "version": "repo-lines-v1:sha256:768e2a12f25d4dedc54a85389386216bcb628e0b3dcc42153a947d8bce5ba5a1:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzY4ZTJhMTJmMjVkNGRlZGM1NGE4NTM4OTM4NjIxNmJjYjYyOGUwYjNkY2M0MjE1M2E5NDdkOGJjZTViYTVhMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzY4ZTJhMTJmMjVkNGRlZGM1NGE4NTM4OTM4NjIxNmJjYjYyOGUwYjNkY2M0MjE1M2E5NDdkOGJjZTViYTVhMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTRlNzRhN2M3MmJlYzczNjI0MmUzM2RkNzdhNTBjYzhiNTJlMDdmNjQzZGNiOWM3ZWVmYzViYWVjNmE4MGE0NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWY5ODk2YmM5YWFlOTIxNjc1YWE3NmY0NGU4ZTYxODhhOTJjZDE2ODhhNzE3OWMzY2NmYjZjNzNmNjM1MzJiYyJ9"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L526-L532",
+          "version": "repo-lines-v1:sha256:dd9358cec59b1840e310d77d476601fdf0ca0c98c65a26cdc46bc8706066f02c:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTJmZWUzZmYyZjA0ZjQyYjlkMjEzMzhhNGM3NWQ1MjRiOGI4ZDU2YTIwY2M3Mzc0ZGU3ZWFlOGJlMzRkYjQ5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2Q0ZjVkMGVmMjkwMGRlNjM0MzI1M2YxMzI4MmM5ZWZhZTZhM2QyNTg4NTJhMGFhZDcyOTI0ZDMxZGFjYWExMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmYzODg3MmIxYzRlOWEwMzcxODk5ZGI5ZjU3ZmZlOTIxYmM2YTEyMmUyNzI2NDdhODQ0NzEzZTk1NDIzYmZlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjI1ZGI5MjJiMzMxNDFkOThlOGZlNGVhMWUxNTJmMmQ0Y2E2YjBiYzZjM2EzYzhiMjVlZmE1ZGY4N2NlYzYyZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd83a8952650475ba295cb921672d42e",
+      "statement": "Only aggregate and per-ability numbers are committed: the downloaded dataset, the materialized corpus, per-question outputs, the embedding cache and the private-corpus parity fixtures (frozen query set, baseline, results and review files) are all gitignored by design.",
+      "evidence": [
+        {
+          "resource": "repo://.gitignore#L18-L34",
+          "version": "repo-lines-v1:sha256:f826f59647c43c40ef7d07b4195d505a206d7142891b9c6454c3a69621b94e22:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZjAyYzc3MDJkNTgzMDhmZWI2NmM1YWU0MmQyNGY3ZDY0OGRhNTg0ZGY4NDI1NzMyOWJmZjcwZDlhYzBhZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3MjYyMTJhYTk4Mzg0MjU0Y2U3MTA1YWI0MTU5MmU1Y2VmZjFlOGExZjQzZmZmMmQzMmZiYjE5OGY2NDdlZmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI1MDQ2N2ZiN2JiYWEzODQ4NjEzZjM3Mzc4M2EwNGJiOWM1ZDNkMzA4MTY5NTE0ZjM3M2MyMzdhZmQwZWI2YjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1MTZkMjgxMzZkZTE0MDcxM2NhMDg5OTRhMjdhNzg2YTFhN2RkYWNlNWMyMDYwMjQ2M2NhMzQ3ZGZiY2UzYTIifQ"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L293-L297",
+          "version": "repo-lines-v1:sha256:c7f8cdd6aa5526c3522935e15145191aab3da797b4333eb4dc565dcf42dde3a0:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjRiYTFhZWYxYmE4NDJmNzFjZWMyYzk5Y2M0YmE3NzA2NjJhYWY2MGI2YmJkNWI5NDhiMWJkMGU0MmI3ZmJhYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmE2MDVjYTA0ZTBmMDI1NDg5NDE3YTZkMjVjNDZlMjJiNDc0ZWRmNmNjZmJhNWRiZmQwYTkwNzgzMmRlMmQ5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjc3Y2M2MTAyZjFkMmM3MjE0YjdjZTM1ODk2YzFlYjNhZjJjMDUwMDZiMjFlMTNhNjExM2VlYTJhZDU0NWRkYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_58bec9c926a340a889b71a7b5227cd8a",
+      "statement": "Every methodology correction, parameter change and failed attempt is recorded in the open in the verdict document's corrections log, including a Phase-2 Batch API attempt that failed provider validation at $0 because it mixed reader models in one batch, fixed to one reader batch per model with a regression test.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L323-L383",
+          "version": "repo-lines-v1:sha256:303151b526a0901867c8601c8b8c9e7b0ba482033cf8dd36437b045657b16fcf:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjNjAzNzhiZjVkZjE5NzU4MTk0Y2QxMGE2MTdlNjhiMDI1YzhlZDgwMGQxOTYyMWFiZDRiOWJhNzU2NjY3ZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzNTQ4MTM2MTAzOTc3NjZkMTE1MjE2N2Y1ZGRiYWE0NWIwZDFlOGZiNTRmODhhZDcyMDZkNWE1YjY3MzQ0ZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_48c04606d94c4ce09e0b9bd2efaf969a",
+      "statement": "The benchmark dataset is public, so reader pre-training may have inflated the end-to-end QA number; that contamination is disclosed rather than hidden, and the retrieval diagnostic is treated as the higher-confidence signal because it is unaffected by reader pre-training.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L313-L319",
+          "version": "repo-lines-v1:sha256:6d9599e8688f72743fa37e374b35875e463483bacac203c87e0e398766b156c1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2U5MGFhYTNhOWFmMGMxZmYzNWI5NTI5NTVhMzUxMmRhNzY3NmRmN2NlZTI1YTBiMGIwYmI5ZjU5OWE5OTY1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTE2MzE4MzM4NjU1OGZhYWQzZWFmZWFjMmRkYTJlNTNlNzMxOWU3OTU4Njg4MWIxZjJhNWVmMmRhNzkzNjA5NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ed44d44f293b4eeb99285e0ee04b2b42",
+      "statement": "The recorded LongMemEval V1 `_s` results (2026-06-13 rerun at the canonical judge) are session retrieval `recall_all@10` 0.949, GPT-4.1 reader 88.6 overall / 90.2 task-averaged, GPT-4o reader 83.6 / 87.1, comparable GPT-4o-judge anchors 84.2 / 71.2 / 60.2, and GPT-4.1-judged rows 95.4 / 94.9 that are not the same measurement; the comparable Batch API Phase-2 run cost $31.30 against a $50 budget while the harness itself records correctness and error counts, not current-run billing.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L150-L155",
+          "version": "repo-lines-v1:sha256:c9e83e2f12a516f9bf080c6a863a004c214b440351c035f4e217aa03dfbad81c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2QwYTU1NzU1MDZkYjczYWE4MzYwMjAxY2ZkYzI5N2EzNDZmZWVjOThiMjhjNjEzMzgyNzQ2OWZlYWU5MDQ0YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg3MTE4MjA2Y2EwZDZmMjExY2JjZGRhNGMwZmEzNmYzMzMyMzlkYTFlYjU4MWEyM2Q0ZjM0YjRmOGE5ZWEzZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzc3MDcwNDJmN2RlNGZhZDYxMzJlNzQwN2RhNmNiMTdjN2QyYjVlYzFkZDk5ODYxYWRlMWQyMjcxNmY3OTgyNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGMxZTY3YWI5N2Y2YWIyYzZjNDM3YmRhZDc1Y2JkNDljYWE3NTc5ZTFlMzY0MTkyZDI1MTFmMTk1N2ZiMjgxYyJ9"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L208-L222",
+          "version": "repo-lines-v1:sha256:7694b8084f4b6607ce8eba611f37dfa129a15ff9424c5baccfbef0e0ad107b75:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlOGIzYTk4NGJiNzUxOTJhYWEwZWIyMDEyZTY1N2Y4MmI2MmE2NDZiMTFhYjdjZmY4NjEwZThmM2Y5NmY1YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyMWZkM2JmMTNlZTYxZDMyOGY4YjQxZGNhZDUwM2NiOWI4OTEzNTg1NTM3ZGFkNDRmYjc0MzllODQwNDk0OTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyZGNjYjcxZDEwZWFlZTI1OGJjYmI2NThlOTNjZTE0MmI3MGIxNjFjNzE4MDVlMzlhZjUyZjk4NDZmMmJlYjUifQ"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L245-L257",
+          "version": "repo-lines-v1:sha256:49670a5c2581014687a3da517ea73db159d596f1b77899445b746d56d75d115d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5NTMyNGZlZTlhYmM4ZjUxZGY3ZjNiYzA1YjRjYTE5M2MwNWY3MzM4MTE1NGEzM2I1MjYyYzdkMzU5YmJkOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1YjMyZmEzNDUwMTFjOGZhNTBiMzIzNjJmZmNhM2E4MDA4YmMwNzMxMTU0NWU1NmU0MDlmNGJkM2Y5MmVjYmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyOGExOTU2OGQ2NmFiOTI2NDY5NTAxMWQyOTlkZjYyNzJmNGY5YzhlOTAxZThkNmE0YTBlNjJmOWU3ZGJhM2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_80d72f9c78854701b97975cea1febee2",
+      "statement": "`harness/BENCHMARKS.md` is the single source of truth for measured numbers and every transcription of them (the benchmark chart and its data file, the README benchmark section) is required to move with it in the same change; the failure mode is live, with the README benchmark figure's alt text still restating the superseded 2026-06-02 GPT-4o value of 83.2 while the prose below it carries the current 83.6.",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L305-L321",
+          "version": "repo-lines-v1:sha256:cf3483b7e051609a1fa2e6320b1d18d1c3bee4490092fbf1e0443f681e08b3f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5M2JiOGY1NTJjZTNiN2ZkNjU3NGE3OGQ3MTFhNWViYTE4ZTRmYjBmODM2NzIzMWYwZjAxMWMxMWZhOGQ1ZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxYjI3Njc3YTE0ZGQxMjEyZDE3M2Y4NTQ0ZTlmNTgzNjE1MWE2MjBjN2Y4OGFjNDRjYmM3ZWQwYmFkOWM2MWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzMWQ3ZDY1ZDJmMDZmNzMxMzZjYmIwMzdhMmQwMGQwMDc4M2U1Y2JhMDI4NDhjMjVmZGUxYWNkNzQ1MGFmNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyMzc4MTlmN2FhMDNiNTFhODk0NDkyMzAxM2QyMzUzZWU4NGIzNjA5MzA2YmIxNDVhZWEzYTFkYjcyYmE3ZDMifQ"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L367-L376",
+          "version": "repo-lines-v1:sha256:1b227de8c20116a389a1052e0ffa10b9c491697d6fdf10ae7d7f6652844886c3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmY2ZiMDE4MjdkYTQ1NzM5YjYzMGExZGFkMDNiMGE1OTU2YmI4Njg3OWU3ZWNiNTE1NTI1ZTQ0ZmViOTc5MzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5ZDlmZmQ5ODFkMGFjZjNkM2YxM2E3NGE2YzEwODBmYzQzM2YyMmE2MzRkZWIzOTdlN2ZlYTc1Y2RjNWQ2Y2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhOTkzY2FiYjNhZmYyNTdmOTdiMGEyYTlhNjM1ZWQ2NDI2YjBmMzk2MDI3MDA4ZDBiMzI5NjExZGQ0M2FhNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2YmM0OGY2MDVhYTlkMzhlZjU4ZjkyZTViMzkwYTAyOGYxM2NkZDgwMDEyZDdkMzRhNzMyZGNhNGU4YjVhNmUifQ"
+        },
+        {
+          "resource": "repo://media/engine/benchmark-data.md#L1-L6",
+          "version": "repo-lines-v1:sha256:2763b6c8ef8ac22c6a985f6af81a5d7b42df4020c5a663fc31f30f52f326a9f4:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjhlZmFlMTQ3ODEwYjk5MzMwNGFkZTQ2NGZmZWM1NDk0ZDZmZDRlYjk3ODBjYjAyYTYwZTQxNjZjYzgxOTUyNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDkxZDE3MzkyMzlhYWI2YjMzOTk0OWYyZGE0MDA3OTI2YTM3NTdkNmU2ZDdjN2Q5NjU5NzU3YzVmN2QzZTI4OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTQxMzUyMGE4YzgwNjlhZDAxNzhjNTFkMjc3YjM1ZDYxNjEyYzJlNmEzNTk2M2I2ZjFmZTQ0ODVkMGYzZjExMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_cd865a2ddf3f4293bd4d98c54b9f8edc",
+      "statement": "The parity harness scores this engine against a frozen baseline snapshot on a frozen query set with labels independent of both systems, un-reranked on both sides and computed in equivalence-class space, and emits exactly four verdicts: `void` when any query degraded to lexical-only, `fail` on a catastrophic French miss or a metric falling below the ±0.02 near-tie band, `pass` only when both aggregate metrics are at or above the band, and `no_decision` inside the band — which counts as not passing — with the CLI exiting non-zero for anything but `pass`.",
+      "evidence": [
+        {
+          "resource": "repo://harness/PARITY_VERDICT.md#L38-L63",
+          "version": "repo-lines-v1:sha256:b32e0f510ea8087ca5b93ae960685381e0b258b1bc356cadf1114f44fbfe5440:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlYjRhYmQwYjVkNjRiZDAwMTQ3ZjQ4ZDcxNWQ0MDZkODUxNDQwZWQwNDQ3NDQxMjA2OTQ3YTY2NGE3Yjc5YTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0MWIyNzRlYWQ0OWU0ZTAwYmU0ZjE0NmM1MWEyYzk1NGEwMWEyNWYyNmZjNzQ2MmYzMmM4NGNlY2E1MzI1ODUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        },
+        {
+          "resource": "repo://harness/parity_harness.py#L1-L21",
+          "version": "repo-lines-v1:sha256:03453a923809ee330247919c7fd994c38ad0151654cd023f0468a63ef566089b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/parity_harness.py#L110-L190",
+          "version": "repo-lines-v1:sha256:70d47d9f6432d5137919e863f77c8b0aeda58ff6f39ae2c840d06e95ee100e84:eyJzZWxlY3RlZExpbmVDb3VudCI6ODEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4MWY5NDRiYWQ5MjcxNjYwMDYzMTA3OWMwNjcwMDVmZDgxMjE0ZGMxNGQ4YTgwYTc0YTI2MDJkZWQ1ZTNhZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3MTY3ODU4YTFkNzQ1MjQ1NTA3YTBlZTNjMzA5MWIwOTZkNzcwNzhhZWVjNDVlNzkyNGMzMzA3MzdjNWI3NTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5YmY0YjdhOTE2N2RhMjAwOWZkZjNlYWM1ZDhkMDgyODBlOTUyZmM2YWYwMzNkODBhY2E2NmVhNTNmMWJmODkifQ"
+        },
+        {
+          "resource": "repo://harness/parity_harness.py#L256-L299",
+          "version": "repo-lines-v1:sha256:853d3bceb7e0e5631259d05ad85435a6e37e8e3361536966296fa0e2c2ebcc05:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwOTMwOTI1NDgxYmU4NmRjNGM5ODI5NjZmY2UzMDM0YmM2Y2FmOTdmNTJmODYzMGQ2NWJiNGMyMDUwZmJjYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3YzVhYmIyNWI2NzU0MDZmOGMyYzY4NmUwYmJhMmFkYjYzMmY2MDNkM2E0YzZmNTIxZTRhOGMxZmRlYTA2NGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmN2UwYmU0YjYzYmZmNWM2YTcxYzhjNGNlYjRmNjUyMTFiMmNjMDBkOTc0ODdlODI4MWU3MzczN2Y4M2FkMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        },
+        {
+          "resource": "repo://harness/parity_harness.py#L69-L102",
+          "version": "repo-lines-v1:sha256:c9c82ec75894f9f7ee16e88b19c26ae53c48e3cf5f7365503fb60ba61756ac36:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwZDQxNjJkODAyNGYxODA5YzhhYzEyYWZmZDZiNzhmZmUwNmYxMzg1ZTQ0OWY2MjExODA4YzQxM2IyNzZjYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllM2FmOGRiNTgyMjJjODRjYzBkNDAzMWZhMTZiMjA3ZTgyNDAzYmJkYjgxYTVlZmQ2NmJkMGIyZDcwOThhMGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiNDY4YWQwYWJkNWRmODYyMGJiOTRiZGZmZTg1ZjQyMTEwZWNkYThhZjc2NGE0ZDVjM2JhMDZiYWE1Zjc3M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1YzdmYzFmM2RhYmIyNGQ0NWNlYTUxZGI1OGNmOTE5MGJiY2Y1ODQ2MDg2ZDljZjFlNGNhOTRiOGFjYjUyNTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_39d2f6f39c8f4c5598a4d82540ac26a3",
+      "statement": "`safe_to_cut_over` combines three signals — retrieval parity is a clean `pass`, entity resolution is at or above the baseline with zero false wikilink targets, and a freshly committed delta is recall-able through read-time convergence without a baseline index step — and blocks the cutover with a named reason if any signal fails, a behavior the test suite enforces.",
+      "evidence": [
+        {
+          "resource": "repo://harness/PARITY_VERDICT.md#L1-L35",
+          "version": "repo-lines-v1:sha256:69c17d8948aaa4d123a67db87f16253cb96ad43ef1a3c3df11c6b21378f88705:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYTdjOGRlMDgwOWJiNjQxMGFlNDM3YzdkMjdlMDNjYTRkMWMzNjZkNDQ3OWFjN2RjNmUxYTVkNTU5NWQ1ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyODhkOTEzYTQ1ZjFhYWNlMzczZjhmZjA2ZGIzNDkxNDEwYzM2ZTRlYmI5ZGVlYzJmMzAyMzVlMTUwNTI5NDgifQ"
+        },
+        {
+          "resource": "repo://harness/parity_harness.py#L193-L253",
+          "version": "repo-lines-v1:sha256:a52fcae3a249eaed142be2fbe70723f347d64c47c889c4c53766f0b1f55c3a72:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiYzM5MjJmNjY5OGVkNzA2YjdjYTI1ODA3NDNjMDVhNTM1NGE2MzFmZjk3ZjNjYjkzYjEzNzdmZDFiYzM3ZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1OWQ3ODdlMTkzNzNmNmE2MDA1MzM5OGYyMGZkOWE5NmM0OWI4MTUzOTI4YTE0ZGYyMWVmMmQ5YmQ4NDM5NWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNzMxMTkxZDM5NThkMDQ5Y2UzN2E3Y2FkZDIwMzJjZDgwOGNjMjM0ZTM1ZDAwZTk1ODViNmJjMDA1NGUwNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyMGYzZjM4NjhkZjU0ZTRkZjY1YmU0NmU0OGYxZDgxYjIzZWMzZjZmOWU4YmRkNGQ2YzcwZDQ2MmE3ODdlMjUifQ"
+        },
+        {
+          "resource": "repo://tests/test_parity_harness.py#L133-L187",
+          "version": "repo-lines-v1:sha256:b3168cdb0696e496166a398048e459a09f40f527bf8bbc53ef9d47735da3785f:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5ZWY4MjcyMDMxMjQwYTIzMmY3NWM0NWZhNjg0ZmU5MDQ5NGQ5MzFiZDkzMDNjOTNiZWQ3ZDFhMzZkZmM3ZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0YzJkMWFjOTdmNDM1N2UzOWU2OTViZDM2ZDRhYTdiNmRhNGM1MDg2Zjg2N2ViYjYxODcxODgwODczNGE2MjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjYTg0OGMxNjcyMTYyY2FmM2M1YjM0ODkyZTI0NmU5NjNhOWIyYjUyYWFiNWVjY2Q4NTZjMWM2MjZlODU5OTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_60f06c5e021441dfb869428aaf29bfb0",
+      "statement": "Parity scoring treats a query's answer as an equivalence class, unioning exact content mirrors (identical frontmatter-stripped body at two paths) with same-event meeting/source pairs whose dated slug matches after a trailing source-id suffix is stripped, while keeping the date in the key so two different events that merely share a title are never merged.",
+      "evidence": [
+        {
+          "resource": "repo://harness/corpus_equivalence.py#L1-L47",
+          "version": "repo-lines-v1:sha256:76deef2ef0e98290b027d9faeac06ce2c2ac3e0d49961a904e017625e39108ec:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MDljZDkxMThmMzAzZTI3MWQyYzE3M2Q4ZmM3ODg4ZTAwNTI2ZDRhNWM4NjdmYzNjMjU3N2I0NTNlMmM0NTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM2MjYzNjI4OWQzYWU4OTgxY2M0MjZjY2M3OWQyYmYzNzQ1NDNmZDBjZTFiZGYwMjRlMThmYzczNTUzMDM3NDgifQ"
+        },
+        {
+          "resource": "repo://harness/corpus_equivalence.py#L61-L95",
+          "version": "repo-lines-v1:sha256:d552eacf90a35884c1a685db4052ee947a1848169d210105b520378ea6e4f224:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzODBiYjg2YzMzMzNlOGI1NmE5Mzc3MDg4NGJiMTM5NjVlZTQzNjFhOGQ2ZTBjYjRiYzMyYjJiMGMxZmJjMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZjMwMTE2MDJlZDliNDA0NzQ4ZjQyOTRkMTg4OGEwMDJhNzNlODNlMzM5ZThiYTg5NWEzYWM5MzJhMzU1ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyOTEzYTdkODI0OGFmNDQ1MjBjN2JmODA0ODVjMDc4ZThhNWM4NTZiODkyMDBjNDhmMGNjMDdlNGQ1NThlNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_corpus_equivalence.py#L11-L47",
+          "version": "repo-lines-v1:sha256:936652c5d64d2ad097430aee4d9be883e73cf940b0e8417c517f756ed1633426:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzNDAzNzk3YjM3M2U2Mzc0MWQ1NTVmNTljOTZmMTFkOTk3ZjliMjgzNDhjOWIwZjAwOGZiNTU3NDdjYTFkNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyMmEwNWQ2MjEyYTg3OWRmMDViNmM4NGM3YWE0MWMyNDY3ZmZkZTA5OWMwMWYzNTlkNzFiMWQyN2JkNDM0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4YzUzN2FiMDFmZjAyYWQ2NGFjNTI1YzJhMGI0Y2U2ZWVlMWMwOWFhY2VmYzFkODA0NWI4YTgxNzkzNmEzOGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2YzlhMWQ5YzFkY2Y3MTRiYWIxMjEwZGNmODkyYjJhNzEwY2M1ZWEwOTU2NGJmZDA0NjdmZDliNTA5Y2UzNDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_92637716f68a4086862f3b65cf99b76b",
+      "statement": "Parity relevance labels are derived by pooling the candidates of both systems, stripping every rank and source tag, shuffling in a deterministic content-independent order and asking an LLM to judge on document content alone, so the labels stay independent of the ranking under test; an empty judge result keeps the prior labels rather than wiping them, and two judge backends exist (a keyless `codex exec` ChatGPT login and a keyed OpenAI path).",
+      "evidence": [
+        {
+          "resource": "repo://harness/judge_labels.py#L1-L14",
+          "version": "repo-lines-v1:sha256:f24c9f67507b6308c5d53e50b0d274923edf16883e24eb3286dbee12f906b677:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/judge_labels.py#L127-L179",
+          "version": "repo-lines-v1:sha256:8eca52fe2e4b29d9a3d73219fb27504a09728c8c8a977dfcc14a7fd9e88fae6a:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmZDIyMzliMjg2YTVkNDBkZGRiYmNkZmNhNjg5MWRhNGJhOWEyODc2NzM5OWE0NmNhNTAwY2Q0ZGYyOTVkOTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ODZjODNmMWE5OTBhNmUxMGJhMDYwMDE5MDk0ZGI0MDI1OGI0MDdmOTg3MzQ3ZTlhZmJhZWNlZWJhZGQ5ZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQyYjUyN2NkZTI1NTQ1ZWU5YTc3ODEwMDYzOWQ4ZWY2ZjI2NWNhZWQxYWYyYTMzNGUyY2IyMTIyMzI0M2VkNDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmMTg4NDI1YzdhNDU0NzkzMjU1OGMxZTA0MDNjNWM5ZmM1YTNmNTU1MThjOTIwMjYxYTFmZmExZjc2NTRmMjgifQ"
+        },
+        {
+          "resource": "repo://harness/judge_labels.py#L38-L101",
+          "version": "repo-lines-v1:sha256:360cfc5ff81a8cd5f7f40ef46207decf7efec09b56940bd99e9a72877c525062:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYmZiZWQ4NDY3NWNlODVmYjU4NDA5OGVmYjNiYjAxZWI0OGJjZGEzNzBjN2JjOWI2ZDY3MDRlYzllNzU5MDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMmM2YTBkNDFjNzU2MWQzN2YzZDM2ZjZhNWQyYmJmMGQwZDI4NjNiYTkxMTdmZjI5ZmU1MjIyY2I2ODM0MjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZiMWM1NmNkNjQ3Y2Q4M2VlMTc2ZWNiMDYwMzcyODUyZTQ5ZmVjMTY2YTVjMWM2ZmI1Nzk3ODBhODNkZTdiNTEifQ"
+        },
+        {
+          "resource": "repo://tests/test_judge_labels.py#L16-L58",
+          "version": "repo-lines-v1:sha256:f6cdce79583d7033d6e26e5c59057fcfff1f94a74e2ab82283500f391e5b16e2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkZGRkYzczMmY3MGU4MGMwODdmNDdiOWY2OWQ1OTllNTE2YmU3ZGZmZDJiMTE2ZDE0NTk2NzVkN2UzN2MwNTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MWRjYmI2NTMzMzU0NmEzZWZhYzM2YjBlOGY1YjhmOTAwMGQ0NWEzZTkzMGY3ZTlhYTM3ZTFkZGQ1YWNiYzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZjkzMDgzYzE5NzEyMWI5ODI3MDBiYThhZmFiZDE3MjJjZjFkM2U3NDA0NTA5ZTgwZWZhMjcyNDdmNjJmMDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7cf9132b384744d5ae39cbf5a31e4018",
+      "statement": "`label_review.py build` writes a checkbox file over the union of both systems' top-k candidates with each side's rank and a snippet and pre-checks the current labels, while `apply` writes the ticked paths back into the frozen query set and marks the `method` field human-reviewed, leaves labels unchanged with a warning when nothing is ticked, and the review file itself stays gitignored because it quotes a private corpus.",
+      "evidence": [
+        {
+          "resource": "repo://harness/label_review.py#L1-L14",
+          "version": "repo-lines-v1:sha256:7dc4f7b0d557e5727884844727066cb203be055fe55bd7810ccb86c5a39816f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/label_review.py#L44-L113",
+          "version": "repo-lines-v1:sha256:17e942248f4986d6bd1963f74fe9b93740b9721c1b4f9699209c5f8c2ef3b8c9:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0MzJjNDg4MDU4MzlmYzUyYThlYTBkYTU3YjhhOTM0MWM3NTM2YjQ0MTA0ZjhlOTkzY2ViNjM3YWE1NTZkZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxZmQxNDAyYTEzZDIxNTdjYTJmYjY5MDczYTk3YTlmYTc0YTdiNTRkOGI3MmMyNjM2ZjZhYWY3NGE3NDZkZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiNDY4YWQwYWJkNWRmODYyMGJiOTRiZGZmZTg1ZjQyMTEwZWNkYThhZjc2NGE0ZDVjM2JhMDZiYWE1Zjc3M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwZjcyOGNlOWM5MTBlNTc5NTM2M2IxZmY2YzczZWYxZTEyZDRhYWYzMzEwOWQzYzBmOTJjMmE5ZWU0Y2EzN2EifQ"
+        },
+        {
+          "resource": "repo://tests/test_label_review.py#L16-L62",
+          "version": "repo-lines-v1:sha256:19fdc776138f31b010d01c7cd00b9548aa52fcb17a30eabb1ab465c294e04c3a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmYTc2NmRkY2U1OTA0YjU2MGFhNjNlNzE2ZmI4YTAzOWE5NGM1ZjVhNTQ5MWU2MDg0Y2VjMjQ0OTcyZDA1ZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZGIyNmM1YmI1MmM2ZTcxZGVlMTAyYzZkOGU0NDJiYmY4NTFhYzFmOTkzYTJhMzdiZmZmNzZmZDQwM2M4MDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZjkzMDgzYzE5NzEyMWI5ODI3MDBiYThhZmFiZDE3MjJjZjFkM2U3NDA0NTA5ZTgwZWZhMjcyNDdmNjJmMDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1MWE5YmU2YWVhODM0MmE2ZmU3MzFmN2Q4NWEwY2IxZDliNjhmNmM4MDdjMjNkYzE0ZmE1NmJiYjI0MGNlODQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_939efc24b6bd4393a26cfb24ef00c7a4",
+      "statement": "`build_query_set.py` derives a provisional, stratified known-item query set (default 18 French / 14 English with a per-directory cap and low-signal channels skipped) from real corpus documents using agent-proposed labels expanded to their equivalence classes, and is explicitly provisional until an operator reviews the labels.",
+      "evidence": [
+        {
+          "resource": "repo://harness/build_query_set.py#L1-L14",
+          "version": "repo-lines-v1:sha256:ea08ee52c6de422e8e94cacc384fc3b15ca8f1dbbd0c274593a48d3ae7d58650:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/build_query_set.py#L67-L124",
+          "version": "repo-lines-v1:sha256:a846242e775af8e71d8840ae6d4d177599d87691727c5d1bdb08593552591216:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzZDY4YWFkMzIyZWUyODU5NTM5NTNhN2VlODVmNTIxMmVhNjQxYzQxN2JkNTFiZTg5ODUyM2VkNGU0MTVjNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NTI2YWZkNzhlMmJiZGM0N2QwODZmNjliOTdhZjYwZTQ5MjAzZDNjNDlhMTAwMDNmNTQxNzEyODlmOTYxZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmYzI0OWJmMWMyNTdlYjdjODdlNWZmZjAyNTI4OGRlNmUxYTBkZWEwZDFmZjliZjgxYjE5ZDU0ZTQzNTg2NTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkNjk0NjY5OWQ2ZmVhYWJhYTVlZDRkNWQ4ZTA5M2ZlNDRiYmJlZGUyNzllYjNhNjkzNDQyMGI0OGNhYTY0MGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_316bbc16ccbd44f48305f83bea2d342f",
+      "statement": "The portability probe validates clone-and-init over additional operator-controlled repositories with no per-repo infrastructure — the index builds, `search` and `build_context` answer, tracked files stay byte-identical and the state directory stays invisible to git — and passes overall only when every target passes and both a coding and a markdown repository are covered; it is an onboarding-quality verdict (not the build decision) and its targets must be operator-controlled because ingested content is not sanitized for prompt injection.",
+      "evidence": [
+        {
+          "resource": "repo://harness/portability_probe.py#L1-L16",
+          "version": "repo-lines-v1:sha256:cb4a2dfa993c91a3b4e5ab83961b7a5640691b0f88ce9e1097342c102888733a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/portability_probe.py#L51-L107",
+          "version": "repo-lines-v1:sha256:b4daf0ec34a02fd9c59b2ebbe187995f70ebb4cb1b2a71e4420451320e220630:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1N2M4Mjk4M2ZiMjNlYTBmMGJkNDRjZTEwYWRmYWE4ZmE4YWI4OTMwMDA1ZTM0OGE4ZTMyNTJmMTVhMzYwZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4Yjc3ZWNjZGNmOTBkNTlmNGFhMmVmNzRhMGYzZjBkYWNhNjY5NWM4ZTgyZGM2OGI2NDU1MTEyMGE2NmE0M2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzZjE5MGRlN2ExNjdlNTYwM2EyMWRjNmUxODA1NWVjN2MwMWE5MjA0NDdlZjNhNWE1MTAwZDkxYTlhNTE0OGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0MTU3NzZhOTlmMTQxNTY1OWRlMjZlYjRkYjI2MTg2M2ZhMTIxOTY2NjBjOTU3ODUzYTYzMTMxOWJmZDliODYifQ"
+        },
+        {
+          "resource": "repo://tests/test_portability_probe.py#L24-L91",
+          "version": "repo-lines-v1:sha256:35ef1af1bde528721b58a0e983e73d451c3ecd8cd74a1a0632e553580ec04dc3:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4MzA0NDk5Y2FiNWZhN2RlMjlhZjZmNGYwYjI4MmVlNTA2NmE5ZDY1MjQyYTZmMmY2NTVmYzYzOWJmNTM2ODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiNjUxMzhhZGM5MDhiODkxMDI1NmEyOTZiYzM5NDhlOTY3MDBmNWM1MmUxYjcxOGQ2OGI0NmY4NTU0ZTkyMDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlMGQ2NzgwODQwZjVmOTE0YWY3ZGNmOTU5N2M0MmZkYjRkMTEwZDI4MGNhYjgzNTBlZTI0NmIzMGZlMjFiMzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fac7033992204645910f572cce8c3cbd",
+      "statement": "The dogfood preview dry-runs `commit_note` for each operator-supplied input so the diff-or-die gate and the protected-path guard run exactly as live while nothing is written, committed, indexed or logged, classifying each input as ok/refused/gate-abort/missing/error and rolling up `safe_to_cut_over` from the count of blocked inputs.",
+      "evidence": [
+        {
+          "resource": "repo://harness/dogfood_commit_note.py#L1-L14",
+          "version": "repo-lines-v1:sha256:b1e03dfccf8284956536d406c22b209e6c5045031f076cfaccec3652079b1a08:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/dogfood_commit_note.py#L27-L72",
+          "version": "repo-lines-v1:sha256:9e1dbf5ebb3d9042fb2d93a186b2a8afe9038853688760663f0befa114edef07:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYjI0NjQxMTkxYmI3MDFlZmE0YzIwNjA3ZGQ4OTAwNGMxNmMzYzFjNzRlMzk3MjBmZWQ2ZGViZjZiYjc0MTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzMmFhMmQwNTgwM2MyM2ExNGIyMzUwZTBhNGMxNWM0Y2M5ODZlZmRhYjQwNGVkNDgzYzg0N2M2MmQ2Y2QwNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5ZGMyMWM0YmM5YzIzMTMyMzBlODcxZWI1ZDk4YWQyMzgyNThkYWFjNzQxN2E3NjIwY2QxZDk0YWYwNTdhNTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        },
+        {
+          "resource": "repo://tests/test_dogfood.py#L15-L50",
+          "version": "repo-lines-v1:sha256:6ab49d565a80015f9d835cd89c37b592389d03f3cb38044313a470dc036e97eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjMTc4MDRlZmNjMDcwNWRlOGM1YmM1MDJhMDE0YmI0ODhjZWE4NmRiNmJlNjhiNjgxYmViMjIzNmYyMDcxMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyNTc4OGM4YTJiYzA0MmEwNjAwZTM1MTcyNTEyMDM0OWUyNjE3M2VjMDBjNDk3MGVmMzliMWUyN2M3NjgxMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzYWVmMTA1MTU3NTI2ZDQ1OGE3YjQ3NjJhNjk2MjYzYzYyZjI3OWRlY2VkMzYzMmJiMDZkNjcxMWI3NzJjNWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f978ce2dd3e24d0b9dda3b6722bbfdc3",
+      "statement": "The gate audit is a read-only pre-cutover probe that measures how often a no-op frontmatter field write aborts the frontmatter gate on a real corpus and confirms that governance files are refused while ordinary notes are not false-positived.",
+      "evidence": [
+        {
+          "resource": "repo://harness/gate_audit.py#L1-L16",
+          "version": "repo-lines-v1:sha256:4b2fbd7c590e438f2e70a7839fd77d282c288426fbb0b33304dde4bf073923cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://harness/gate_audit.py#L48-L110",
+          "version": "repo-lines-v1:sha256:50a27644f7acdb667dffa8724d7e85a60795d23e9be3cabca8cf3428ac4f0bd0:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxMjViMmJiZTNhMGYwY2Q3NmU0YzU5ZTFhNDJhNGM4MGIxZjM0NzQ5MDE1NjgwOGIyNzdlYTAwMWVjNmQ3NzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0YTAwMzNmZmIyMTcwZmEwMDcxYTFkZjQzZmE1OGRjOWYyODc1MzJhY2UyMzgxYjA4ZTc2NWIzYjhjMjk1Y2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3MDE0OWUwNjlhZDY3ZWNjZjQ3MzY0NmZmMWM3NTAwNTBkMzI5ZDExMDAxOGRjNTc2Njg3OGVhZmExZDYwN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkNjk0NjY5OWQ2ZmVhYWJhYTVlZDRkNWQ4ZTA5M2ZlNDRiYmJlZGUyNzllYjNhNjkzNDQyMGI0OGNhYTY0MGMifQ"
+        },
+        {
+          "resource": "repo://tests/test_gate_audit.py#L8-L30",
+          "version": "repo-lines-v1:sha256:3822ba9ad2801a24a3e76edf68603230f26738d0996a72003c612b4f1583f83e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxN2QzMjIwOTQ0OTZkMGZhYjA5MDY1NTYyZWI4YmI4MGFiZTUzMzU0MDVlOGFjZmU4NmQxM2MxNTQyNzlhMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmNjY1ZTFhYjEwMjhkYTM3ODc2ODQ0MWVlNDk2MDkxZTE3NjM5M2IzMTkzNjE1M2U3YjQ1ZjY4Y2Q3NTQ4NTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzNDg5MTczODMxNzY0OGFjZWUyZmMyZDQxZjA1MGUyN2E1NjM3ZTI2YjE3NDNhNzFkMzgwNThiYjkwMzU2NGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fe469f8443ac491ab0cf6afbe110c6b2",
+      "statement": "`scripts/product_smoke.py` runs a deterministic seven-stage local loop (capture, retrieve, write preview, memory inspect, forget preview, recall after change, doctor status) against a disposable fixture vault with a deterministic embedder and emits path-relative, secret-free JSON; an injected failure stops the loop and names the failed stage, and tests assert the stage list and that no evidence value is an absolute path.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/product_smoke.py#L1-L5",
+          "version": "repo-lines-v1:sha256:a9d33e13c0ddb63b6a17506aa84268394817f225a71ee0ac8818a7d688270b3e:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDY4MmNiZGI0YzhiMDc1MThiZjQ4NmM1ODk5MGZjMzkxNzgzYWEyMGE5MTZiZmIyN2FkMjExZWIxZDVjMzY0MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://scripts/product_smoke.py#L67-L145",
+          "version": "repo-lines-v1:sha256:ec7c7b9c989818bff5d319144a5f0408046e26717c0f1186009f56e19139807d:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NmE3MmQ2OTczZDA5Zjk3YzAwYzU4MDYwNGQ5NDZmNGZkODUyMTVhNGM3OGY0NTUwY2MxNjM2OGRmNDhkOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NTI2YWZkNzhlMmJiZGM0N2QwODZmNjliOTdhZjYwZTQ5MjAzZDNjNDlhMTAwMDNmNTQxNzEyODlmOTYxZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjMjA5MGY5NmJmZDFlYzUzM2RjYmQzNDExOGM2ZjhjMmIyYjI0MjQ2MjYxZTI3MjZmMGU4M2E2NjAwY2FkNTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0MTU3NzZhOTlmMTQxNTY1OWRlMjZlYjRkYjI2MTg2M2ZhMTIxOTY2NjBjOTU3ODUzYTYzMTMxOWJmZDliODYifQ"
+        },
+        {
+          "resource": "repo://tests/test_smoke.py#L36-L72",
+          "version": "repo-lines-v1:sha256:93368cdb1e7ea96823cd30802661122a5cd2da533575e8ad3ab99c1f82a9f8cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhMmM4NGFhMTM2MGFjZDc3MmM2OThhY2U1NjQ3NjFmOTg1YjczZDAyZjdjNzYzZTExZGE4ZTVjNDRhY2Y0M2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4MTQzOTg0NTcwNmIzMDNiYzc0MTQ3Nzk5OGIzMjE0MjM4OTliYzI1ZWNhOThhNGZkMWY5NjM2ZTczZTdhODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3YTcxZjA3NjlkY2Q1NzZkZTAxOTIzYjNlM2Q4Zjk1MjgwOWFmNTQwYmEzZDlkNjNjMmE3NzQwYTFjNmZiMTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8314481feb434e7a9df32594e82a2aea",
+      "statement": "LongMemEval measures retrieval quality and does not prove setup, consent, memory control, plugin observability or remote-client operability; product readiness is gated separately by the local product smoke, the offline remote-contract tests, the remote-client smoke checklist and the first-class product readiness checklist, and neither gate substitutes for the other.",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L323-L326",
+          "version": "repo-lines-v1:sha256:36bdc1b2e1efae2089982783227017535479b275efae6f18982da3ab51e40f4d:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmNiMzEyZjk2ZmRjZjdlMWVlZTM5YmRlZWQ3MWFjMjYzNjVkMjE0MjExZGI0ZDZjZjRhZGM1NGNkMzdlMTdhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNThhNzdlZTBkNDlhY2IwNWY5MjU5MTYyZWVhMzZmNzBiMDEyYjEwZTVhMTg0NjM0MDRiZTYzZTY5NWE2M2RmYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2ZmYjg2NTFiOWQzZDZkMDdmNjVjNTU2ZjdmMWViYWU2ZjhkNmMzMjU3NTUxNGE5NTRlMGIzNzcxZjQxOTBiMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTczMmE4NDNkOWEwOTM3MDBiMWYyMmZiZjMyYjczNGZkZDFlNTUyZTEwNTZlNGU0ODQ5ZjYxYjYwOGViMmU3NyJ9"
+        },
+        {
+          "resource": "repo://docs/guides/remote-client-smoke-checklist.md#L1-L16",
+          "version": "repo-lines-v1:sha256:bfe6e5722ee0e8325869316a055940e36cfa7a055d1a3b9b8e932510f6e68914:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiMDVhNmE5NjhmNWVmNzQ1NzA1ZjYzMDMxNWY1MDBhZTViOGYyMjU4NjVhMWMzYzM5NzY3ZTYzN2JhOGExNzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhOWU5NmQ5Mjc0MmQzMGQ1MmJjYWJmZjFjOThlZmQ1OTc0OTAwNDNjMDRkMjU1MmJhOTg1NGI5YTY4NzE2ZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY0OTc1ZDlhNzgzNDllZTE2ODZkYmY2ZDkwOWEyOTUzNTQ3YzQ1NzUxOTI4YTY5MTUzODc1YWJjZjk0ZjJiODkifQ"
+        },
+        {
+          "resource": "repo://docs/launch/first-class-product-readiness-checklist.md#L61-L69",
+          "version": "repo-lines-v1:sha256:838efd13a154984e3e787dd2f3bba99df10bb7bf662cd9f627ddf268cbc472e4:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTI4NDI0ZDEwNmFjMzYzOWJjMTliYjUzYTJlNzI4OGY0MDVmNGRhM2I5OTgwZmYxOTcxMTU5NTNlM2UxZTEzYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmQ4ZTQyNWY4Nzk2YjRiZmMwMmIyZDRmMjExODUyOWJlMTkwZjJiY2JkMGJlNGI2OWM0MjcwOTUwNzg0NWIzNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTc1YjhiNDliMGRhNDJlODRhZTdmNjFiYTEyNTM2ZTU2YTE5N2JiNWNlNjUyMWI3ZTI5NjNhOTEzY2ZmMzYzMCJ9"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L19-L28",
+          "version": "repo-lines-v1:sha256:9829af9621167b7e5d13ebd15c4d898f2297ed1bf72623671c28ce53797bb055:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExNzM2MzVmZjkwZmYwNmJiMjNjNWIxYjkxZmNhZDdmYTNiYjkzYWU4ZWIyMGNjZjQxMzVhMDMzNDUyNDc0OTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiYjcwYTU2YjI1ODhiMzBhNDZjZmRmYjc0ZTI2NzNhYmExMDljOTE0OTkzZDViOTk1YzYwYjIwZjg2YzhjZDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwZGU5NTI5YTAwNTc5ZTVmNDVmNTAxYmY4YTgyZDgxMTFjMzg1MmUyZjMwYTM5ODcyOTZlMTc2Mjc0ZGVkNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_312dda58a8be4f6392f7a5b012bc3f87",
+      "statement": "The LongMemEval harness is exercised entirely offline with a deterministic fake embedder, an injected fake batch client and injected fake reader/judge callables — covering manifest pins, hash-verified download, byte-identical re-materialization, per-instance index isolation, the embedding cache, both void-gate boundaries, the metric definitions, reader context assembly and truncation, the five judge templates, the three scoring numbers and the paid-run gate — and CI runs that suite with `--extra dev` and never a paid run.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml#L15-L22",
+          "version": "repo-lines-v1:sha256:3691953c46660448fe833a0e250e29e5f83bcf405dcd3b0c8f195ded1fd84ca7:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2JiZDIzYjA4YTYxYTczZTY0MjAzZjc1MDY2Mzg3NjM4Y2U0Nzc2MzdiYTZkYTNiMzRhN2Q2M2FkYTg0ZjY5OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA3NzhmZDVkODcwOGJiZmI0ZDBmZmVjOTYyNWE4ZjYzOTVhNWI0NTc1MzRlMTg4NmYxNDMwNDk4NjZlYWQyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc5NTgyYWU0ZWRjMzc0YTdiMDI2NDdmZjIwN2Y1MzQ2NzczM2RmOWJkZTBiNjZjNzJlNTMzMGY3NzkxZWY4YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTllOGQzZmQ1YTFlNGVmN2I1Zjc2MDZlMDkyMjdiY2RjMjhjZmU3ZjdlNjIyZTM2MTgwZGFkMDRiNjI4OTBmMSJ9"
+        },
+        {
+          "resource": "repo://harness/BENCHMARKS.md#L293-L297",
+          "version": "repo-lines-v1:sha256:c7f8cdd6aa5526c3522935e15145191aab3da797b4333eb4dc565dcf42dde3a0:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjRiYTFhZWYxYmE4NDJmNzFjZWMyYzk5Y2M0YmE3NzA2NjJhYWY2MGI2YmJkNWI5NDhiMWJkMGU0MmI3ZmJhYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmE2MDVjYTA0ZTBmMDI1NDg5NDE3YTZkMjVjNDZlMjJiNDc0ZWRmNmNjZmJhNWRiZmQwYTkwNzgzMmRlMmQ5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjc3Y2M2MTAyZjFkMmM3MjE0YjdjZTM1ODk2YzFlYjNhZjJjMDUwMDZiMjFlMTNhNjExM2VlYTJhZDU0NWRkYiJ9"
+        },
+        {
+          "resource": "repo://tests/test_longmemeval_harness.py#L1-L11",
+          "version": "repo-lines-v1:sha256:f987b8bc2cdffd68e130de83df079bf1a5742678782a84cce94742903fce8827:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZjBlY2YzNjlmNTJiMTZlNTg0YmQ3NWY4ODRmMGFhYmVjYzY2MGEwNmVjN2Y1ZWM3MWE1YTUzZTExOWEzZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

@@ -1,0 +1,534 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:36ee40b52bd3a32fd596709d111a79383249a297f0b47c0e06aa926d5ddf7da3",
+  "claims": [
+    {
+      "id": "claim_eb90c20f72394b718f7a7c623d3dbb11",
+      "statement": "The engine exposes exactly two network lanes — the public OAuth `/mcp` endpoint built by `mcp_server.build_cloud_server` and the tailnet read companion (`hypermnesic serve`, port 8848, auth-off, read-only) — and `build_cloud_server` reuses `build_server` with `write_enabled=True` plus an `auth_server_provider` and matching `AuthSettings`, so both lanes share one tool/guard implementation and differ only in auth wiring.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md#L92-L114",
+          "version": "repo-lines-v1:sha256:51e2f851752c88ba74addb6edeeda83ea1c4bb91328b4b712dd05af35633d846:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3NzY2NjI3ZDlkN2I4YmUxZTYzNWM0YjM4YjkxZDJlMmZjN2ZkZTViNzM2ZWU2YzAxZDExYmFjODc2YTc4ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3M2NjMDBiZmY4YjZkODkzOWZiZGRkMzQ5YTViMTk0YzhhMzhmZGFkZjdjODk0ZjcxYTMxNGI1YWZiNDk5YmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmMTk3MmI5ZTkzYjY2MGMwNDFlNzBkNjIwNDlkMTQ3NTA2ZjgyY2YyZjA3YjFjZTNjYzAwYmRmMGY5MjAzNzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjViZDcwYmYzOGY4ZDE0MWViMThlYTRiMjk4ZTdjMDI3YjJlOGM4NWRmYTJhY2JmM2IwMzdhMjQ4OTY5Y2ZjZWIifQ"
+        },
+        {
+          "resource": "repo://docs/README.md#L13-L18",
+          "version": "repo-lines-v1:sha256:fa7207964890599b75e2b3a20aad3810e4fda9bdabd107a649700b41654f6b88:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTVlNmI2ZGZkMTJlODFiNzQ5MWViMWJkOTAxZDA5YTNiOWI3ZjYyZWFlOGZiMjQ5ZGUyZDkxMGUwMmEyYTgxOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWYyYTEyMTg2NGVjZWExNjdlOWNkMWM5YzBmNDI4NjMyMzQyOTg0MmExNjc4Yzg4MWE2NWIxY2IzYzM2MzIzOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTExNmM2MTM0MDE1ZmI5ZjY0MGQxMTFiYTdkZDJjOTY5YWFmNWQ2YzA1OThiMWIzYmJmNzcxMjIwZTRkZjMwOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDY2YjZmN2NlZDYxYTFhMjdlNjBlODc5NzE0MjJiMDkwZTZlNzBhZWJiMTZiYzJjNDc3OTM4YWNlNjdhYjU1MSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L318-L438",
+          "version": "repo-lines-v1:sha256:5ab9da025f03ddb4d33719c85e87233ec6f8c7c40a32550fb9734fe20b25387a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxNzA0NzhkNzc2ZWM2YzI2YzFiMjM1OTUyMGViNTBkZWQ0MWJkODBkZjY0MTU4M2FiMWM1MDkwM2Q5ZGM5MmVjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwNWE3OGQ0MzgwZWFmN2QzNmM5YTRhOWZiODIzZjUxNGIxNzYxNmQ0Y2U5ZDQ4MTJkOWQwMmNhN2RjZDMwZjI5IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwY2RlMGE3NGQ0ODRlZTg5MDIwOGQwNDQwMmRlNWU2MzJmMjQ1NGNjYjZkMTU1ZmYyZmQ4ZGU0YzdmZmM0MDcxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJiMGMzMzc0NDMxYTNiNDcwOGEwOTU4ZWMzYTQ0ZGY0ZjI3Yzk4MDMxMzUxZTM0MDc3MTMzNzMwNGQwOWExNWMzIn0"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L897-L966",
+          "version": "repo-lines-v1:sha256:07d2ecee78d6a84413c9c439c0d8ea47c7b4530be6224ecdf82613cbc0da87f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZWU3ZTNjN2Y2ZDUxNWY3NDZiNmVmMDY0NjUyYTExY2FhMTc0YjA0YTkwMjFmYzQ0ODAyNDUwOThjMTMzMGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzYmIyODZhOTc5MGUxMzMwNzYxOTEyNDI5MDcwOWFhZDRkNjAwYzgxNjZkYzFkNDA4ZDE4MDczZGExZGEzM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwMWZiNmFmOWVmNTBjYWQ1NGQwMzBlNmQ0NDczZTZhZGE5ZTY4Mjg2Mzg5ZDg2OWZlMDQxODY1ZGI4Mjg5YTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1OWNkMzk4OGZjMzVlNGRhNWMxMDA2Y2UzMzI2NTAwNGE3NmMyNDAzNzE2ZDJlNmM4OTRhMGY3Mzc3ZTE2MmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5ae7697a320447f58ff2fcb2621c95c1",
+      "statement": "The retired tailnet `:8849` client_credentials Authorization Server and the `:8851` auth-on write master were folded into the unified `/mcp` endpoint, but the resource-server verification path in `auth.py` is still built and can be enabled with `hypermnesic serve --auth-issuer-url … --auth-resource-url …`.",
+      "evidence": [
+        {
+          "resource": "repo://SECURITY.md#L49-L57",
+          "version": "repo-lines-v1:sha256:c7f25f47ef522f6805210f3f8deaee99e670bca43c3faed6252ba93cf8fa7ec0:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGZlYjBhNTQ4M2IwYzczOTJhYWNhODdkNjY4OTU5NWI4N2JhY2ZiZDUzNDE2ZmMxMzVmMDE1NTU4MmU4NDYxNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzczZDY2MDgwODA4MmUwMDlmMzlkM2UzMDI0OGJmYTMxNGIwNzgwNWFiYTliMGZiZDcyMTBiYzI1MTdiZGIyNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmFjN2YxMzY4MmM1NjFjMjYxZjE4YTIxYzI3MzJjZjRlMTdmZGM3NGRkZmU1ODdiZmI0OGRkMjA0YTJhMWQxNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmVkNDI3ZjNiYWJmYTFhNzVhYjg3ZGE0NmM2NWZlYmRiZDRjZDgzZmM4YmU2MjNjZWUwNjM4MDIxMTA0ZjJlMyJ9"
+        },
+        {
+          "resource": "repo://docs/unified-oauth-mcp-deploy-runbook.md#L17-L27",
+          "version": "repo-lines-v1:sha256:412c46bc6705993e11098282032fe925d7164b58b1cb77a144e487f94e894e87:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0Njk3NWY4MDY5NzUxMTA0YWMwNmIyYjUxNTA2M2NlYTg2MzU1ZDkxMjZlOWMxNzZmZDBmYTMxNTZmZDg5NzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYjczZDRjNTQ2Y2FkNTJhOTU1ZWY4YTU2YTI5NzYyN2NhN2MzNWVhMjExM2YyZDg3M2I5NDI5NDZjOWMwMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFiMDliNDAzZTFjYzY1MjNiMzdjNTM2NDI3MzkyNWI4YTYwYzc1ZWVhODdiM2Y5NWFiNGQ5MzZkOTNlMGI2MjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxZWMyZWI3MjVlMWQwMmQxZDU0NzlkOTEwZTgxMTA1YjkwMWY2MDczZjdkOGZkN2JmOGNiM2NlZjU2ODA5ODAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L455-L481",
+          "version": "repo-lines-v1:sha256:94a2e54f9167e65ae154a8d0108054387e847430c5bc71c52f1eed48d9804486:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjOTRjMjczZDFjYWVmNDA1ZDc2ZDFkYmU3OGY2MThmZDc5NmQ0ZjIyZDBkMDczNjRhMGUzZWJmMWM2MjIzZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY0N2FhNWNiZDQyNTQ2ZDFhNGViYmNkM2ZhYjM1MWM2MmNlY2NjMTcyNmRiMjcyN2IzNTMxZDczM2JmZWZmMzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2NTlkNzI4ODllOTI4NjJhYjkyZmNlZGIyZGI3N2I4NDY1MjgzYTc5MDA5ZGE1YmVmNmViMTZjZmZiNjBjY2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1bbdd8e5d07748ba8b143af5979bd7a0",
+      "statement": "`build_server` refuses the wildcard binds `0.0.0.0`, `::`, and an empty host by raising at construction, and that check runs before the auth checks so a correctly authenticated server still cannot bind a wildcard address.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L359-L363",
+          "version": "repo-lines-v1:sha256:d8b1545eed2e3620cb8e32c2675f23b80c10c5731398930465884eb3dc83f1e4:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODQ0ZDI2ZTgwNzk1ODZjNjI5MmU2YTNhZTBkZTZiNTExNzE1YTUwOWNjNzFlOWFjNzA3MmY3NjZkOWM2Y2U3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTkwOWE1M2E2MThkMDI4ZTFkMzAwMGMwYTdhYmNlZWNiZTVmYjM3ZjRlNTExZWZlNDY2NDNmYWQ2ZTY2ODcyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTZmYjU2YmQ4MTc3MmFiM2Y3M2VlOTI2MWFiMzU4ZThkYjVhYmUzMWJmMTVjYTAyZDY4MjdkZTk1ZDRkZGEzNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzhhYTQ3NTQyNGM3OTdjYTg1OTg5OTM3ZDM5ODJhNjNmMmFmZDY3YmM5OGIzNWUxYjVkMWI5NDk1ZjdjNDUwYSJ9"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L62-L72",
+          "version": "repo-lines-v1:sha256:f42123cc854ee115269ee9069158f1f18421e4c4a9630c29febda4af7c3d1326:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhN2U4YTdlZDc1Yzg3NzFhZjgzMjFhNDBlODljOGYwZDg4ODIyMTQzYmY3NmY2NmQwMWFmMWUxNGNiMTVlZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhMzg2OWEyNjdhMmNiMTNkOTQ3NGFhM2QxOWRmNGVhOGI0YmExNzJiMjczNzA4Nzg1M2ZjNTBhOTZlZWJhNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjYjQ5MjljMzI0N2RlYTQ5YTM3NTkyZjM1ZGM3OTA3ZDBiZDEwNzQ3OGRhNjMxYmQ2YzFmY2I3ZmMzNjlhNGQifQ"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L836-L840",
+          "version": "repo-lines-v1:sha256:8d618e8ae587e65849084d5747e488e9a69eb12f6817b4dfa0805b28c203a6ef:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTUwNDA1NDZmZTQxMzY2ZmM0YzgyZTJiZjE4ZjI4YjkyNTMxYzc4Zjc3Y2E2M2UyYWFlZTQzMTM0MzFiZDc0MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzc0NGFmY2IwNjkyODIwZWQ5MTg5MDYwMDM1NDM2MDE1YTQ3MTcyNGViMzk4YWU5ZTVjZDk1ZGJjOTViNmViYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDA5NDQ2NDA5YTZkODkxMzY3MjFkOTg2YmUzOWU1OGU0NjJhMzkzNDM2NWVlYTFkNDYxMmQ5NzY1MTQ3MmVkNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmFlMjY2Y2M1Y2RiN2U2MjIxNTI0NjA5NTIzNTFlODhjYTg5YjNhNWVmMjE2NjFlY2Q5MTEzYzk1ZDI2ZTM4YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_654e8dbb2ec340ceac7df092c860e1b3",
+      "statement": "OAuth auth must be configured as a pair — `AuthSettings` plus exactly one of a `token_verifier` (resource-server only) or an `auth_server_provider` (AS + RS) — and `build_server` raises `ValueError` for a half-configured surface (settings without validator or vice versa) or for both validators at once.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L364-L375",
+          "version": "repo-lines-v1:sha256:de4c155200f5304fc3968ae34d784ef3c85f5b93a07ca513631fbab97e052139:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxMTRjNzAzNzAzMjI5OTM0ZGYyMDQ4MzM3NDMwZGY5M2IzMzFkMTE0NGE0ZmQwZjFjZjgwM2VmMTc2M2Y1Y2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4MTEwNTdkNDFjM2Y2ZjZmYmZkOTkyMDQyNWYzZGI2NDVmM2JjZWRlYzIxNDhiOTFlYWIwNTY2YmVjNjFjMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlYjc4NWNkZGQyMGQ0ZTE0MWYyMzlhNjJiMGJkM2VjZDJlNzBkNjJkZTI0OTUzNTQyMjhmMTM5MDlmNjk5MzgifQ"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L795-L833",
+          "version": "repo-lines-v1:sha256:151eb7086c17be95ad5f1cf37db0c5e82943792b32a4be97ed174690846b7a0c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmYzNlYWQxNjE1NjFhODQzYTg0MmUzNzUwMWI5ZTAzMWE0M2M2NDE0YmYyMmFiZTM3ZGFmZDEyZjBlYzJiNzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiZjdmMThiMGY0OTY2Mzg1MDI1NmJjZjk4M2M2ZTc1NDA0YjM5NzZhN2JhY2U1ZWU0MTMzOGYzOTZmZmQ5ZjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1ZjY5YWFjZGYyMTY3MTc3Y2VjNzU2Y2UxZWY0Mjg4MGRmYmRhYThiM2FhMjM5NjA4NjhhZTQyYjQ1YmY1YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljNjFkZmUwY2MxY2QyNzFhNjYxMjJhMDVkMWE2YTM1MGVjNzQ1MmNhZmY2MTg0YTRjOTE1ZTc0MjZmMjdmMjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f310c92f929f4a43bc0e345c767edca7",
+      "statement": "A write-enabled serve refuses to start without auth configured on any non-loopback bind; the only exemptions are a loopback bind (reachable only by the local user) and the explicit `trust_tailnet_write` opt-in, which is itself refused unless the bind is a literal address inside the Tailscale CGNAT range `100.64.0.0/10`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L164-L180",
+          "version": "repo-lines-v1:sha256:35ff4a13cf4026f1ba3d32f200b8a8873c9db74dcab1ac45df6f1079fbdd0766:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2N2M0Zjc2OWMxN2M1MzVkZGU3Y2YwZWE3YWM4MmQxZTMyNWJiNDA4YzAwZjRkZjYyNWFkMGQ2ODc5MDllYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5N2M3MTI0N2FmM2NkMWVkZjU1NWE3ZDEwNzU5MzE1N2Y2ZGMyYTIyYWYwZGU4MmU3Nzc0YWJmMTBmOGFkZTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2ZWQ0YWM2ODVhZWYxYTk2NzRjZThiY2JkMjUyMDM4YWM0NTMwYWQzY2NiYTc0NGYyNzVlODRiNWJmY2Y3YTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmYWQxZTI1YTU5ZDU4NjhiY2UwMTg0MjcyZjhjODdlNTdkNDQxNGI1NWNjZmZjOTcwMTMwODFkOTI5MDc5YmQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L376-L404",
+          "version": "repo-lines-v1:sha256:33bb20071194d53448420da0422e916fc6088f1a15b852bca48e3913a4bd8bcb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxNTVhYjQ2YTFkMjI5MzU4ZGFmOTExOWJjOTQzOGY2MzI0M2E0NThkM2ExYTYyNjlhNDhiMDBiMGQyODdmZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NjJhMTVjNTNiZTY0ZjUwMjQ5ZjMyYmRiNmRmZWMyY2U4NTcxMTBlMWE3M2U2YzFmZWUzNDFiMWZjNjM3ZWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2M2I5ZWMxMjQzZTJhZmYwODdiNTUyZWNlMThiZGVmMGVmZDVkMjQ2YjE3OGE5MGM3NzA3YTM1NTBhOTNjYmMifQ"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L743-L792",
+          "version": "repo-lines-v1:sha256:6ce0153f03c55d3c63e12606ee169f9b05c46ec23210e5dcfa9fe6873f5f40d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwMzcxYjk4Y2VkOGQwOGM1NTlmOWUwOTNiNmFlNzk4NTAzYjc3NmU4MWZiMTJjYjAyOGVmM2Y3ZmE0MzA3ZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0MDFlMmZhYzBkNDdiODMxOTcwZWFkODUyOGQ5MGVmYzVhMjU3Y2I0YTYyMTE1ZjBmYzcyYmFhOTdmZjc4ZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2MTNhODgxYjI0ZTc1MDJkMTlmMDgwODMwMGRiZmQ3ZTc3ZThiYTMyZDgzNmU1MTA2OWQwOGY1MTU3YmE1ZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2YzQ4ZTQyOGYyYzQ2MmJkYzNlMjMxYzg3YTI0NDkxMTQ1ZTczYTVjZmFlMWZjMmNkOTk2ZGZjZTJlMGM4MDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9cd46f161f1469d9448474a18c1eff5",
+      "statement": "An explicitly empty `--allowlist` on a write-enabled serve is refused at construction, because it would narrow the write surface to nothing rather than bounding it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L405-L414",
+          "version": "repo-lines-v1:sha256:3f560bc5dca4f5484e1b60ac150846a4790fa1e56e9da6d5292e853182d1b094:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmNGIyZjhkY2YwM2U1MzdkNzkyMGQyODZiMjI2NjIwMTFkM2QyYjIxZTgxNzAwOTcyMmU0N2M1Nzg2ZWEyYWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4MTkxZGVjNDI3NjEyMjQ5MmM0NTk0NjJkZDE0NzdkNGQzZTlkNmFkZTNlZGE2ZGU2ZjdhM2ZkNzYxOGI2MTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljMTkyODMxZDFmZWIzY2UzYTRmMGZkZmZjZjVlOTI3MzE2Yjk2MGZkZDE2YjA1YjYyNDIyZGJmOGQyMWQwYjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f762d006aa714980a8653c661580acfe",
+      "statement": "The public lane requires both its issuer (`public_url`) and `resource` to be HTTPS URLs whose host is a DNS name; a plain-HTTP URL or a bare IP literal raises `ValueError` at construction because such an endpoint is undiscoverable over the RFC 9728 → RFC 8414 chain.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L794-L817",
+          "version": "repo-lines-v1:sha256:b173ef0fa5d7c1523e3a71ab392a24dcd2da40381ccfba2f010ac52d88e13594:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiOTJmNGM3ZTg1ODYyMWEzY2EzMTZmM2E4NWQzYjAwMDBkNTkyMzgxM2Q0YTI1NDRmOGJlNWFlZTA2NDE1NzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMzM0Yjk3NTBlZTc5ZGYwNDM3OTY3ZGQwMDg2YWMyODEwYTI1MTg2ZWMyMjZjYWQ0ZTYwNmU5YTg5MjIxMGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg3MzQ0NWYzODNjOTI3YmYxZmVhNzBjZjJkMTE0MTVhMTE2YWMyOGYzN2RjOGExZDJmMGU4ZjVhNzFiMDUyNWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NjJhN2QyNTBiMTMwMjExNGFmNTM0NDUzYjBlNGRkMDQ0NGM0OGVmOTAyMDA4ZWI4NGIwZmIyNDFlN2NlZmUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L924-L931",
+          "version": "repo-lines-v1:sha256:28722951652f225ce3fbd1892c1a328fb2f9ab0ae5fd9da41277db841c1c5aaa:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGMxNmRmZjk4ZDRmYzM3NGFhMTAxZWIxMjc2NTQ3MjA0NjA5MmUxYjRiNzZlNjg2YjE4OTZiMDk4YWEzYzZlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDQyODJlZDZhZmEwMTBkNjM1N2I1NjBlNmU4Mjc0ZDZlZGQ2NDQxZmRlZjkwOWIzYWM4ODMzMmJjNDVhNGVkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzQ5Yjg3N2ZhN2EzMmRiMjNjYjA0ZTc5MDE5YTEyN2E5Y2IxMjgxNjY0OWEwYmUwNDczMDIzY2Q3N2FmMjAwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTQyYjlkZTM2YWUzY2Y4MDgyNTA2ODQ1OGJlMTVkNDA5OWU4ODNlNDNiY2Y2Yjg4N2VkMGQxNjkzMWRiNWQ3OCJ9"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L561-L585",
+          "version": "repo-lines-v1:sha256:5f8334c6983d9193d5ef2c2382365e8209b8c8a3b52e26d8dab7ddf4d67bf4a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzYWIyN2Q5ZmU3Mzk2ZmUwMDFhNWYzYzI1OTBmNGVlMDliMjM1NGUwYTE2NTU0NDZhY2VjMWE5Njk3NzRmMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJlYjc2MDUyNzQxMTQxZmFmYmI1OTU3MDUxZDk0OWM1NjdjOThhNjQ5ZDcwNmY4YTBhNTQwMDdiNzY0MTQyODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzMDIxZWEwYmUwZDQxZTdkNWFiOTAyYTNkMjFhMmJiNGMwY2M0Y2ZkZDk0NDU4OWJjZDVlMzdiMDU3ZDc0MjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a1542c62805c451e87405f1445a51de3",
+      "statement": "`build_cloud_server` derives the public host(s) from `public_url` and `resource` and widens FastMCP's DNS-rebinding allowlist to include them while keeping protection enabled, so a proxied `/mcp` call behind the TLS-terminating Funnel is not rejected with `421 Invalid Host header` on the loopback bind.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L415-L432",
+          "version": "repo-lines-v1:sha256:020e5b494e1be55d27eea047612068e51f8b7d82b8e0661c142aa703f2512814:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5YTU3MmQ1YzUwMDdiZTgwN2VjZGE3YjdhZWYyMjM2N2FiNmU0MTI1YTFjY2E1Y2RmNjNlZTBjZmQ3NDU1YzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNDgxMDc1YmJjZDg4YzhhNzg5NjhkNjM2NjhhYjMxMjZjNTAzYmE2MTJjZWNlNTI2YjMyZjE0ODBmMzQzZmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUxNWUxYzRjZWU1OWM3MTI2YjgwOTM0NWViZmEzZWY0YTczNDhjMmM0NzUzZjlhMWZlNTI4OWVmZWYyMDE2MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5MDc1M2JiMzVmMmQ3Mzk3MDQ3YzAwNmZkZDRhNTg5NDdjYzY2Y2VlMmRiMGM2NDIzMTA2ODBlYTNhM2UyNGIifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L952-L963",
+          "version": "repo-lines-v1:sha256:91dd6dd918c3170462552e8bb76b3bce96e7e7dda728bd062d2d266db6088c97:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxZDdlM2JkMWQ4MWRmM2UyMjRmNDMyNTBmYzQ1MTQ0MGYwMmFmMTY2MjdkNDAzMDcwNGExM2JjYjBkN2U3Y2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4NjEzOThlY2YxMWM1ZTBmZTMyY2RjODgwNzA0ODE5MGI5MWQyMDI1MDA1ZWJmMzVkODFlMGM0MTlhNmY4MmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiM2U0YzE0NjE3ZTc4Yjk5ZDI4YTc0ODViNWNlZmMzYmZjYmM0NzZkMGNjMmQ3MmQxMzBjMTllNWMyNWZmMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5MTJlYzA3ZGYxMmFhOGJhZTUyZmY0OTk0MjY4NGYxY2Q1Y2Y3Nzk3OTQyYzU1ZWQwZTI2YjFjOTIyNjNiNTIifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L517-L539",
+          "version": "repo-lines-v1:sha256:36895f19b69cfa3e83ace60cc4f1b5fdfae65493629d3b73f5cd1b3b39c201b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiMWIwMmFlNjk5MjQxMjg5Y2Y3MjM4NmE0ZThhODdjY2JkZDQyOTliNjE0MmNhMDVkNjM5YjA0OTA0M2ExYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiMDFmZWExNTFiYTNhYTgzNWE4YzJjODdkZGVmZjFkZTViMjE0Njg3MzE0NjhmNmI3NDRkODE4OGIwYTc4NGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3MzNkY2QxY2JjNjBkOTEwOTFmNzYyM2E5MzNkOWFlNDVlZjhmZWE2NDBhYWZhMjI0ZmRkNDlkN2QxMzdiYTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzZjBmNWYwMjVlY2IwMzU1NDY1ZWUxMmRhYTBlZmUzZDA3Njk5ODcwMTFiNzYyYTUwMTlhNTJkNzgyMWU1NTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f346e86f77564e9e8f4600b64464222b",
+      "statement": "`auth.StrictResourceTokenVerifier` enforces expiry plus RFC 8707 strict audience binding — collecting audiences from the `resource` field and any JWT `aud` claim (string or array, trailing-slash normalized) — so a valid token minted for a different resource server, or carrying no audience at all, is rejected; it fails closed by returning `None` (which the transport turns into a 401) on any raw-validation exception and never logs the token.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py#L77-L116",
+          "version": "repo-lines-v1:sha256:2e510ebf6365019624dee6b8a04215e6f8e4084fd48b5538510624b2325c40a0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkZDM5NmNhMWNhM2M5M2Y1ZGRlNzQxZTgwNTBlNzA3OTVhODcwMTk1NzMwYTlkNzY5YzdkOGE1NjY2OWI5OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0YjcyMzE4NDdjN2QzZTQ3ODgxZjlkMzAyN2ViMWFkYThmMzk1MTJmZjBjNGEyZTdiYjQyNjRlYWZhMDA2MTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1ZGZhOWFlM2I1MDU0ZGIyYjFiZTRiZWM3OTliOGNjM2M2OTMxNmU3N2JjZTdiNjIyZmY4YzM0YmZkY2FmMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2YmFjYWU4OWViNTRkNDczMGFmOGNmNzJlZmIxYTQ5Y2U2MWVkZTE0MTgzY2E3MTQyYzU5NjQ0ZDZiMTA3NzYifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth.py#L64-L124",
+          "version": "repo-lines-v1:sha256:2cbd685df321d6c49790790a9bcdc1c4ce3fcd95cca0326320e9c0d8d1616ced:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlNTE1ZWFhYWRiODIyMGQyZWY4MWMwMzNmYjkyOGQ1ZWYzY2FkZmE2MTgzYzJhMGY3MjY0ZjUwOTgzMGIzY2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljOWExYzFiNjUzYjFiNjk4ODc4MjExNjhiNzgxNzg4YTZjMTU2MWE1OTFkNzEzOTlmYzdmYmU5MTI4ZDY0ZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllZjBlYWJhODcxZjQwYjI1YzE5MmQ3MTg0NjBjODU5MmViMmE3YjJlNGNiNDAxMjUwZTY3OTY2MzI5ZWVlZWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_82504544ce4a4b06a4c0506b78b057e5",
+      "statement": "The production raw validation strategy validates opaque tokens via RFC 7662 introspection, discovering the `introspection_endpoint` from the issuer through RFC 8414 well-known forms and reading the resource server's introspection credentials only from `HYPERMNESIC_RS_CLIENT_ID` / `HYPERMNESIC_RS_CLIENT_SECRET`; a missing endpoint or credential pair raises `ResourceAuthError` instead of degrading to trusting the token.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py#L141-L224",
+          "version": "repo-lines-v1:sha256:8c4f1df9e695868001a06eef2dcfaad27c64055d1e880bb2dbf48d2e7bd93e59:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZjgzMjUwYTEzMTQ1MThkNmI1MWU0NDk2NjYxMWIwMzE5Y2UyN2RmNmY5N2ViMTQ1ZjUyYzQ0ZGJlMGQ4ZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjMDBiMWVkMGM4NTFhZjQ4MGI2NGE2OGEwYTM2OGU0ODIwZTk0YjI2OWQ0Y2VhMDFkZTk3NDhkZDkwNTgxZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5MWNiYzY2YjM4ZGE1Njk1YjBiYTgxNzI5ODNjNDU0OWU0NWRhNDhmNGE1ODRiYjZhNzQ4M2I4YTBjZGIyNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth.py#L128-L162",
+          "version": "repo-lines-v1:sha256:77eeb1029a3fc9a3f5c4eac54c9d3eefc2e34b59a98c06e46021f43839dfa388:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MmVkNjlkN2M4OTYzYjQzNWZhZWQwMTI0YzJlZjdmMjcyYTZmY2ZkYTg3YzUxMDZjZDE5MGI4ZWY4NWQyMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwMTYwZjkzZmFmYTc3MjliODk5ZGI5NTRiZDU3NWZlZGRmMzA2NzQwY2ZhZDNmNDFmZTBmNDFmNDBmMmRiOGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllZjBlYWJhODcxZjQwYjI1YzE5MmQ3MTg0NjBjODU5MmViMmE3YjJlNGNiNDAxMjUwZTY3OTY2MzI5ZWVlZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a83befc61e204c32b834fb18ccd26918",
+      "statement": "Auth is opt-in and additive: `make_auth_settings` requires both the issuer and resource URLs (raising `ResourceAuthError` otherwise), and a read-only serve with no auth flags keeps the unauthenticated tailnet build.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py#L56-L72",
+          "version": "repo-lines-v1:sha256:a3a9e77dbff98a35d4989db50dfce3371395835cc496530adeb8d9540d2ba58c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4ODUwNDNhMTBhZDk3ZTg3OTJmNWFiMzkxZTcxZjAwMDMwNTg4ZmU1ZTI3MzIxZDEyN2Q0OWUxNWRlYTNiZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzNDI0NDM4MzQ4ZGEwM2FiNDE3YWFjODNhNmU1MThjOGNkNDc3MTVlYWUxZDY4NjBjOTBmOWRhOWFmYTUzMTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFlNzFmYzlhZGJiZTZjN2Q5ZTMzYTFmNzVhZjk3ZTQ1ZTM5Y2Y1ODM5ODhhMGYzMGU4OTFiYmRjNDM3MmE1NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVlMmYxMjhmZDA5OWFjM2YxODNjMDM5Y2JhYjNkMGZjMTAyMjZlMjgwZDU5ZjFkMjY4N2ZjMGFhNDlhODJhN2EifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L16-L26",
+          "version": "repo-lines-v1:sha256:989ad3777dd25619a5eefddc02d8495e61b7df4d33f8557a780d0d4633d51379:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmZWViNTI4YjZjOWNkMGVhNTk1ZWZlMDZiMjQ1NjRjMmFjZmE0NTJmOGU5NDVmMTJiNGVmOTdiNTYxOGQ5OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4ZWM5ZDIxOTI5NDNkMGFjYzYyZDBhOGJmZmQzMjRhNTBkMTU4OTNmYTM2ZmNhYjFhZTRiNDFhYmRmOGU3ZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmNDg2YzZhYzllMjdjNjcwYmY4MTAxNGMzNjM0MTcwM2NjZDdjMTFlOGZhNTg1YWE5NjQ5YTkzZGM2NjM0YWMifQ"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L722-L741",
+          "version": "repo-lines-v1:sha256:be7bcccd49fa29bc65976e865e07e236eab64bb466e37d725eff2b96f4c084ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwOGFjODgxMDQ4NDI4MjU5NjEyYjIyNWIyNzRiYWFkZjY1NzYzM2QxMGViNmY2OWI0MDY3NjZiYjg5YjdiNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZiMWViOTU1ODBkYTc0MGQ2Y2Y5MDk5NzU4N2EwNGJkNzQ5NTRlMTQ3MWJkMGExMDk0MDUxNzJiOTZkMDhjYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyYTRhMWFjZDdmYTJmMjY4N2VmMGRlOTAzYjE5MWNhMmZlNjJlY2E5NzJlMThjOGY0NzkxMWM4YjBiMjY5YjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_606d18f0faff4816884e9821f3e63ee4",
+      "statement": "`CloudAuthProvider.authorize` never mints a code: it stashes a pending request and returns a redirect to `<public_url>/consent`, and only `finalize_consent` with the operator's approval token issues an authorization code bound to the single resource; reject and cancel consume the pending with `error=access_denied` and create no grant state.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L294-L379",
+          "version": "repo-lines-v1:sha256:57d99dd3dcb101617a43d4cdc07f341b2930ada364a4968c82474e804db37476:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1OTQxYWI4NmRmMjE4ZmY1OTdjNTZkMzhlMjI0YTQ0MmEzNGEyYzllMTg3MWQ3Zjk4NDg2NGUwNjU4NDNmNTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2OGQzZjA1ZDRhMWVjMjljYTY5OTM1N2ZhOGZjYjlkYzJiYzgzMWM1MDYxZjBhMjg3ZmMwODY0NWIyYjRjNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlY2ViYjFkNWIxMWVhODBhYjlhZDE1ZDNhZGFlZTA0YjI2NTE1YjgyOGM5OTExYThmMmQwNzcwZGQzYzliZWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1Yjk3ZDI5NzljZmQ0ZmI0OTFmZDcwNjI0N2Q1ODVmY2IzNmY2MTY3YTMwMTAzYTkxNGFjZjQ1YzI4ZDdhMjQifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L68-L105",
+          "version": "repo-lines-v1:sha256:63c3b6cbe1a0754e1a75f6e7f7d2976936df2c072f21870ad3b5ff0aed17b1c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYjMyMDUzYjIzYzA1YjJjYjdmMDE5NTE3MzQ4N2QwY2U0ZDJkYTc4NDlkZTg1MjNmMzkwNDY2NTgzZDE0OTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwNDg2ZGE4MGI5ZGYxZTA1NGM0NTIxMWJiM2VlMTUxZGIzMjYyMjJkNTQ5ZTFhMjQ0ZjM4ZDg5MTAxNGQ1ZTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1YThhNDFkNGMyZmMwYmNmMmIzMTkwMmQ2ZTFkNzk0MzA4NTdmODk2MmNhYWIwM2M4Mzc3MmI4OTkyMGRmZTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_684b1371afcc4b09ab0c60d0cbdf5bff",
+      "statement": "The operator approval token is held only as a SHA-256 hash compared with `hmac.compare_digest`, must clear `MIN_APPROVAL_TOKEN_LEN` (24) characters, and is read from `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` in the environment only (never a CLI flag); `setup` mints it with 32 bytes of `secrets.token_urlsafe` into an owner-only `0600` env file and reuses a still-valid existing value.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L49-L64",
+          "version": "repo-lines-v1:sha256:edc7926299ce024095051e90df8b5caf893c12f2582af76d5caa247a566e9bdc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5NzhlYjgwNDI5NmExZmVhNTVlZTY5Y2QwNGZiZGM5OTdmNjgzNDQ1MTM2NTZiYTg1NTJmYWZiOGNhZjJjMTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY4NDk0ZDM2NTYxZTIxZWZkNjU0NTg0M2M4NGU1ODg3ZjA1NzJiYjY2M2JkOWFlMWIyY2RmNWM5Yjk1OWY4NmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwNzJmNDE5NjViNDE4OGYzYzQ5ODVlNjFkMTAzZTc0Njc5Nzk5N2NjOTNkNDBmMDc0MjlhMGE5ZTQ0NzUzM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjMWYwMmZkN2VjMWQ0NjJjMGNiODE4Yjk0OGZmZTRmNzE1YjJjMmM0MzI2MzBjMjMyZGZlMzRkNDI3NDNmYTkifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L511-L531",
+          "version": "repo-lines-v1:sha256:8ad5d626a3e05f31cee16ed95752e8698d922d9ddaffbd9ccdc1ddbc2371000e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjMzNjMGIxYTEwNzczOTJiOTA2ZGE5MzRhMWU1ZDgwOTcxZjk3Y2IxYzgxNTIxZTJjZTVhZjViOTQyMmI3ZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzMDg2NmUxYmNjNWFiNzZlM2VmNTkwMTJkMGFkMzlhNjg3YWJlMDAyM2I0MzhhY2IxMTMwYTE4ODI1ZTgxOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4OTgwNzNlOWE1ZGJiMGQxODdjNTllNzZlMWU0NDBhYTZjNzRjNGVjMzUyMmFiMjIyN2FhMmEzYTYzNjY5YzMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L351-L372",
+          "version": "repo-lines-v1:sha256:61b603cda517b334d72a85f54388622241f1409e13eea623fda1a5eac8635c3a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmODAyMDZmYzZjNzY0YTAyYjQ2N2ZmZTFlNDU0NDlkMmNhNTgxNTI4Yzc4MzFlYzE4NTY3OWI3MmQ1ZGQxNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZTNhMjdlNjc3OGVmYzZhZGRmODUzYjczM2NmZGJhNzIwMmM0NTA5MDVkYzUyNmQ4ZDYwZTI1NzI1NzYyZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4YWU2MGEwOWE3ODRiNDdlYTA4NTMxNmJmZjkyYzY4MDExZGQ2NzBkODlmMjhkYWY1ZGE5YmI2YWU0MWJjNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NDcwZGZjOTQxZjc1NGFjYjA2M2ZmMWE2MzRjMzEwMzJlMWI1MDcxNTA0YjdjZGY0YWJkMDdiZjkwZjY1YWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_834d78677fb042f5ba46e315ceaf91a7",
+      "statement": "The pending authorization pool is bounded on three axes — `PENDING_TTL_SECONDS` (600) expiry, `MAX_CONSENT_FAILURES` (5) wrong approval attempts dropping the pending, and `MAX_PENDING` (256) with oldest-first eviction — and `pending_details` returns `None` for an unknown or expired id so the consent page never reflects an arbitrary id.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L125-L143",
+          "version": "repo-lines-v1:sha256:f7b525b34a7ac0652bcf7ce963d5d506d32f7706705493aabba53b29d554fdf6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMmIwYzI2ZDc2N2JhZTNjYjM2N2U4MjViZjlmZTFkZTY0ODY5NWExZWJlOWQ5ODUxODA3YjU4Nzc2MzhhZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwNzMwNGI4MjAzMzQyNjllNmUwOTIwZmY0NDhjZmQwNjZkNzE2YWZhNjQyMGFlNzdhODJhMmVkMDlkMWI4NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhMzI5MmM4MDdiYjA0YWY5NDFkMDBlZGM5MTk4NDU0ODlhYWM1ZjNmOTMwM2I3OTg5YTBmMWIxZTkwNjkzYTMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L307-L317",
+          "version": "repo-lines-v1:sha256:af659ac45b2b3d7e5a43e900bcddf8055ea839730ccc9aafe1433942f6c345a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyYTk5ZDZmZWRiYzI1N2M4OTU2MmNjMjQzZjI2MTgyNGJjNjU4NDgwMTFlZTg2YjliYzUwNDgxMWQ1Mzk5ZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5OTVkZDczNzA3YjgyYzE1ZGJjMGEwOTE1OWM0MTU0MTZmM2VhYzJhNWMyNjFlZjJmOGI1MmM1ODEzZGE1NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiYjhmMzQ0YjM1ZTcyZGMzMmJlNThlMjI1OTQ0OTAyOGY0ZDA1Yjc3YjVkZGRiNzQ3MTE1YjI1NjdjZjQ0OWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxZjk5MDE4ODUyMTMyNzc3NGY4YzUxM2YzNGZiNDA0NjQ5YmJlM2M4MDFlNDRjZWQ0YWU2MDNlMzJhNWZkYTgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L49-L52",
+          "version": "repo-lines-v1:sha256:8705921e2a820545eba6c809a3fe06a23f9bc48ae82ded0d32f7ea314364ebc5:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTk3OGViODA0Mjk2YTFmZWE1NWVlNjljZDA0ZmJkYzk5N2Y2ODM0NDUxMzY1NmJhODU1MmZhZmI4Y2FmMmMxMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWUxMDU1OWU3N2U0NzZlYTJiZTMyZDUxNDk5NmE2NzAzOTAzOTM3NjE3NDM1NjA3YTc4MTEzNzVlZTViNjg1NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjA3MmY0MTk2NWI0MTg4ZjNjNDk4NWU2MWQxMDNlNzQ2Nzk3OTk3Y2M5M2Q0MGYwNzQyOWEwYTllNDQ3NTMzYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDk4YmJmNThiYjg2MmY3OTdhZWMwZWRjMjdiMGQyZTRiYmZhNGU1ZWY5YTk2NzY2YTc5MDQ0OWRmOGQ1ZDM0NiJ9"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L357-L406",
+          "version": "repo-lines-v1:sha256:394a16b2b9d13d99346d2b5cba3d84b4bbfb65cdc80ff83e40eec24aa26ab6e7:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjMDAzNzQzM2ZkOTYzMjkwZWU1NjdlMzYxNDQ0YzU2Zjk1OWQ0YjdiNGU5Yzc4ODJmOWVlMTY3MWM2NjA0YmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxOTViMzA3NDQ4MTZmY2YwZDJiZjAwZGRhZjhhMzRiYTNlYWY5MmQ5MzY1ZjYxMWRiYzNkNmY3ODM3NDQyMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmYjI1MzU4N2E3MTRkYWI0ODI0NzIwMjg4OGMzZWEzY2UxOTY4ZGYxZTkyYzNlOGJjYWRlYjliMDUzN2U0MDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjExZWM3YTE0MjI4MjliMzRlNmVlMGE5ZmQzMjk5MWNjNTYzNTZhNmUzYmZlMzkwOGVmNGRmMzZjNWVlMzk2MWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f704f83363ae40238f6126e6957e7fcd",
+      "statement": "The consent page HTML-escapes every client-supplied field (DCR `client_name`, redirect URI), renders a generic 404 for an unknown pending id rather than reflecting it, posts back to `<public_url>/consent` rather than a root-absolute path, and sends `X-Frame-Options: DENY`, `no-store`, `no-referrer`, and a CSP of `default-src 'none'` whose `form-action` allows `'self'` plus only the single registered client origin (because CSP form-action is also enforced against the post-consent redirect).",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L711-L791",
+          "version": "repo-lines-v1:sha256:f58af8c1fd74697e68f4575156a18be1dd1b84aeed45808fbf897d6ebac431b3:eyJzZWxlY3RlZExpbmVDb3VudCI6ODEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZjU0ZGIwZDczZjE1MjQ1Njc3OGNiNDgxNWQ0MmY2ZTVhMmQxMjdmOGI5NjA1ZGRmMzRjYzg0MGY4MGRjMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5Zjg5NmRkYTEzZGM5MDdjYWZkMWU5NGI0NDlkYjNjM2JhYzIxYjg4NWM0ZWIyZTY1YWZiN2UwZTZjZWZiOTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViM2UyNDIxODkxMzY1MzE4OTYwNjYzYzZmYzUxYzAwYmFkNjBjZDEyNGI4NDZmNTI2NDM0NmZlMTgxMjdiMjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1Yjg1ODY4ZDc0MTlhNzA0NzQzYjEyMTc3ZjZmOGM2ZTFjYjllOTA0YTA4YWMyZWYzMGE3NDlhNTg5YjY3YTAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L820-L856",
+          "version": "repo-lines-v1:sha256:436ad79fd5114641f928292d902e0ed7fa595473160ef96a191324f807464d72:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYzQ5MzlhMTM2MGZhYmEzMjcyMTQ3ZDY2MjJhNDI0Zjg1NDA2MTc4NzY4ZmRlN2Y5OTNiNTgwNmYwNWRiMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4YWY4MTEyY2RjMTM4MGZjMmZmYThlMDg1YTFhOTc1MzZhMDJiNzc2ZDg3Mzk3YTcxNDM4Njk1M2RmNTlmN2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkNDQ5Y2ZhYmFhN2ZhNDk4ZDYyMTY1MmFmYjliYmU3YzAwMWRlZWVlNmFmZmU5MDkwMmNlMmMxZjM0Y2YwYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyYTVjOTI4ZmQzMDM0OGY1YjdmNmFlYzJkNmIxYmViOWFiMzFmNGU1YTFkZjJhZTQ3YTM2MjRkN2M2NjlmYzYifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L628-L709",
+          "version": "repo-lines-v1:sha256:5373ba4bc7943747d7e9a7de969518ba47ac60d1245fabb98dd6937abe6e5c13:eyJzZWxlY3RlZExpbmVDb3VudCI6ODIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmMmUyMDY3Nzg2YzMxMDhkZWI5Mzg5ZjQxYzUzMjA4Yjc4YjdmZDc2M2RhMGZmNmZlMzczN2IzMjYzM2FiYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ODllZDBhYWNlYTFkNjdjMzEyYjI1YTcyZjU3ZWYzY2U2MmI2NDJmN2NmYmQ4NDBiNzRlMTUzMTEyMTkwNzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MGFmNDFjMmYzZGIxYzcyYzBlZTM2MmExOTViMzcxMGZkN2JjN2E1NTczZTNmNDM2M2IxNzI0NzgyZWRiYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzMWJlMTdkOTQ4MjMwYmNiYjE4NWVkMTJhNWM4OTAwMGYyMTUxN2ZiN2M4OTZmOGQ1NmNmZjIxNGZhMDQzNDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_eb64ee18658e4a94a78b3c53f9132805",
+      "statement": "`CloudAuthProvider.metadata()` publishes the RFC 8414 document (authorize, token, register, and revoke endpoints, authorization_code and refresh_token grants, `S256` challenges, supported scopes) and lists the public-client `none` auth method for both token and revocation endpoints alongside the client-secret methods, because app connectors register without a client secret and PKCE `S256` protects those clients' code exchange.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L537-L553",
+          "version": "repo-lines-v1:sha256:eb87f89419c74229dfaeb819ec9a5ff6d56552cfb9cf77c9652e68677cba513c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzMWFiN2VhMmU3MTI0NDMxMmVmN2E0Mjk1OGEwMDkyNTI3ZjQ1NGY0MDM2MDBhZGEyNDY3OGMwNjZmNjZlOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyMzA1YTM4YzZmYWZjNjgwZGU5OGM0NjBkYjBmNjc1OWI5ZjFhNjEyMDY0ZmIwZDNjYjdiNmNlN2JlYzE4ZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L242-L249",
+          "version": "repo-lines-v1:sha256:f650906b287a292c39baef0ea4aca84d500e384dbfdac951df690bd700f04a9c:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTg4ZDdmNTFmNjkxNjJlODRiOWM1MzQ1NjY4ZDgyYzUwZjY5MWQ0MjNlNTk5NTYxNzE2ZjkwOTQ0ODExMDg0ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTczNGFhMWY3MjljMzU3NTAyMmQ4MjNjYjI0YTQ4ZDBhZDA4MGQ0YzQ3YzU2ZGU3MWYwMDgzNWRkYzFmMzNhOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWFiOTUwOTBkMGMwZjBjZmU5ZDA5ZmIwNTNhZTQ3ZTI2YzczMTBmYzljNWNkNjAxYzU5ODhlNDlkMmE1OWQ4ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWMxMWM3YjYwMjcxMjYzNjJlZjQwMDVkYTc4Mjc0NjM1OWI0NmYwYzc2NjUwNjk0ZTFiZmFjZjg5NjIxNzQ3YyJ9"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L466-L485",
+          "version": "repo-lines-v1:sha256:56e2008880bc356bd6d145fae7ef3f9dbe5338076f3dfa834934f5d800a5851f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhMDk3MGZjYWU3NTcyN2FlNTEzYTUwOGEwYTFjMjc4ZDQ1Mzg0MGVlZGU5OGE1MDFkZjgyZGZjNzE3NjZkYTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhMWY1MmZiOWUzZjRmZmUzNmQ2MjBhNGNhOWQxMDI3YmI0NTkxYWMzMmExZGYxNTU2Nzc0MzYyMDU2ZjU1ODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhNDA4N2NiNDZmNTY2NmY2YWQ0YzY0OGFmYzI1MDI0NjQzYmZmMjI3ZDNkNjg5YWI5MGE1MjlkOWUxYzA2M2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwMmI4NjkwYzBhNDMyNjJiZWIxODg3YTU1NzFjOTM0YmVjMDBiMDkyNjYyNjdhNjRjOTg4NWI5NWQzZGYzODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_17c454d1112948c3a0fc81b35e9522e6",
+      "statement": "`build_cloud_server` inserts a first-match route serving the provider's metadata at the process-root `/.well-known/oauth-authorization-server` (leaving the SDK's token, registration, revocation, and protected-resource routes intact), because the SDK's generated metadata route hard-codes confidential-client token auth methods.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L859-L894",
+          "version": "repo-lines-v1:sha256:0d796b82783b46cd332064a271584c5468f8c578a5b757b6b77fa62a6998833f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3NzQwNTM5ODYxZTEyMjBhMTIxNDQ5MDMyZWNlYzE3YTAyMTQyYzFjMWUyZmM3NmQyZDU3NTk1ODFiMDA5YTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmMDg0YjVkZjEzNzc3OWRjMzQzNmUxYmUwZTVmNjQ2N2Y1NGNlZTJjNWMwNTI1NzNkNWQxOWNhZDYwOWFiZTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwZjk3ZDFjMmRjMGRlYTc0YTg1ZWY5MjhmMjcwNTM3OGJlNDA5NjkwYTRiZTRmY2VjMjFjMmM0NzY1NjE0ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4ZWUzYWIzMzNlZWUxZDBiNjM4NjUwYzlkMzM5NzJkZjZlOGMwMWU3MjVjMDI2NTNkZTEyYTdkNTBlNDlmYWEifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L466-L485",
+          "version": "repo-lines-v1:sha256:56e2008880bc356bd6d145fae7ef3f9dbe5338076f3dfa834934f5d800a5851f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhMDk3MGZjYWU3NTcyN2FlNTEzYTUwOGEwYTFjMjc4ZDQ1Mzg0MGVlZGU5OGE1MDFkZjgyZGZjNzE3NjZkYTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhMWY1MmZiOWUzZjRmZmUzNmQ2MjBhNGNhOWQxMDI3YmI0NTkxYWMzMmExZGYxNTU2Nzc0MzYyMDU2ZjU1ODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhNDA4N2NiNDZmNTY2NmY2YWQ0YzY0OGFmYzI1MDI0NjQzYmZmMjI3ZDNkNjg5YWI5MGE1MjlkOWUxYzA2M2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwMmI4NjkwYzBhNDMyNjJiZWIxODg3YTU1NzFjOTM0YmVjMDBiMDkyNjYyNjdhNjRjOTg4NWI5NWQzZGYzODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_eaf87deaf56444639cee62829c953ef8",
+      "statement": "The public lane sets `AuthSettings.required_scopes=None` and enforces the write scope per tool instead: `commit_note` reads the authenticated principal from `get_access_token()` and refuses a token lacking the `write` scope before any write, returning `committed: false` with an `insufficient_scope` refusal, because the SDK middleware applies one scope list to all tools and cannot separate read from write clients on one endpoint.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L187-L191",
+          "version": "repo-lines-v1:sha256:9792b90a828bb602ac6ed39a3725a050ab58d00bf5ccf4f38d077c8680d78973:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDcxMTNkOWY1M2M5ZDIyMmQyODM3OTg3MTU1NzYwNTgyZDY4YTg3ZTExNzBjZmQ1OTkzZmQzYTc3ZWZiMjgzYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGYzOWY4MWJjZDY2YWJmZTdmNTc5OTIyYmYyZDI3Nzk5YzE1MmU3M2UyOTFhYWFlM2U3NDc0Njk4Zjg5Yzg0NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGIyMjY2ODllNjk0NGE4YzZkOTIxNzI3OTAxNjk2NTJkMDRjM2RhYjc1MDE1MDg0OTE3MDYzZTVjZmE0YzI1MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjg1MWU5YzliNmZhZWExZDhhMTAwOTJiN2U3MDFlOGRmYTNmOGFjY2NjNzkyYWFhNTk5OTg0ODhjODdiYzg1ZiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L614-L632",
+          "version": "repo-lines-v1:sha256:0fcc6c30272f1c407a52ae04b7447822cb5ea0c7eb87c154411086bb3191e3b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNTYwOGEyOTFmMGZhNDc4OTRkOGQwY2Y5OTJmODM5ZWNmMGI3OGJiNGI1MzAwNWE3YWYzOTc4ZGVjMWU5YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5YmZmZDIzNmJjYTEyNTk1YTQxMDRkNTU3NGU3ZGJiOTg1MThhYzQyNWU1NDYxMDViMjE2MWY0ZGNkNmFjMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2YmQ2Nzc2NTZhOWY0ODhjZjNkOTAyYjE1ZTZmYWI5MGM0MGY4ZTdhMmYyYjQ3YmJmZTgzZDdlMzRmMzExYjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3MzE2NDY5YWNhZGIyYmYxNDkxMzU0YjFiNWVkZTMyNDcyNWYzOTE3N2RlYzA0ZmY4MGIyNjExZTMwMzExNWQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L941-L945",
+          "version": "repo-lines-v1:sha256:b62ab8cbded38aa33ce6af39cf3d9b78d1c4e611b34d3ea17e234c872761840e:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmVhYmZhMGUwMGJhOGI4MWZjMmI1ODc4ZTM4Y2Y3MDFlOGU1YjBkYTBhOTA0YmViMjczZTliM2JjZjEwYjRjYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmFkMTBmMDc2ZDkwOGM4ZGI0NTdiNGVlNjhlM2ExMDI1MGQ1OTFkNWI5MGI4ODIwNmZhYmMxMGU1OWMwYTNiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY0YzU0OGY1MTk5ZjFjMzk3ZGZjMWQ3ZmY2NDg1YmViYWM2OWZkNTg5YTc4NWNmMDRhOTA1MGY1Nzk3Y2ZhZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzVjYmQxNzYzZjlkM2EzYWUwZGFlYmEzMGIzNWZhM2NkZmY4ZmM2YmI2OWE0YjNlYWM4ODZjMjI2YzAxYTE2YiJ9"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L808-L823",
+          "version": "repo-lines-v1:sha256:2b92bbb509eb867548fc0eab5098bda2a4a3aea9e00e692167b7a26a7239715c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1MWM3NGEyYjFjOTQ4ZGZlOGJmYzU0MDI1MDlkZWU5Y2E0ZGFiNDlkMWIyYjMxYjY3NzA5MzgyYWZiNzAwNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxYmY2NTJhOTZlYThjY2IzOTdmOGFlZTY1ZTFjZmFiNTJlZDhhYTgyZjE5YjllYmVmMWFlNzllMGZkNTgxNTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NzUwMGI5ZGU0NGQ5NzI0NTE4YzY2NjYzYzQ3ZjI5ZjA0YzQyYzg3Y2Y1NjVjMmJjYjcwMTYyMTBiY2FmOWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ab7dd1c28c8a4817a818e02d056ced77",
+      "statement": "`scopes_supported` defaults to `read` and `write`; `default_client_scopes` is normalized to `[\"read\"]` by default, accepts comma- or space-separated input, and is refused loudly if any value falls outside `scopes_supported`, while a client's requested scopes are intersected with the supported set and fall back to the defaults when the intersection is empty.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L290-L292",
+          "version": "repo-lines-v1:sha256:97d369d4ee6bead60f645e97ea552ce8c6d2161526d626afaf560beaeb6a3733:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODU3MmY1ZGE4NjA3Zjk0NTFmYzc2OGViNjY1MzM5Y2VlY2VmYmQ0YWQ4ODM3Y2YxY2Y5NTAwZWMzZDgzYmE1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTYxOTNlMjllODQ4MTZlYTg2OGNiNmEwYWYyNzVmZjRkMmZlOTgyNTI1NGZmOTA3ODMyNDk2NTZiYjg1MWMwZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzNiZDQyZTZiYTE4OWNjY2ZhMmUyYjFmMjg1NzY0MzJkZGU4NjQ3OGRiYjdmNjAyMGMwMzg1OGE3OTVjOGM5NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTFkNjBiODc2NDc0N2RmYzMwNTQyMTA3MjU2NGIwMWQ5ZjhmZDc4M2ZlOWI1NDM0Y2ZlN2Y3N2U5YmRlN2Y0ZCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L92-L104",
+          "version": "repo-lines-v1:sha256:4594f0528c2d5df7ff8fe90538a3833b17dffac4b8f39659d26cb96440cc24a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3M2NmZTM3NWFjNzQ2YzgyNjI5NjM1NWRhNjM3OGVmMzU4YWM0ZDVjNmFkMmVhMDcxOGM5YmQ3YWY4ZTA5ZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhMmY5ZDQwMWVmMmM1ODJjMmRlYWJjOTE1ZWYxMjNiZmJkNGUzZGNjZjQxMjViYTBjYjI0ZjlhMzNlNWEyMDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwMzY1YjllZTgwYTdmYmM4YWMxNjVkZDEwNzE2ZWM1MjBkYzJhMmRmZjYzNDY3ODhiYjI5Y2MyYWUwMmQwMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjZGUwNmM5MjNmMTFlNGQyMGY4N2MwNzAzMDA2OTE0NzY2ZDc2M2VkYTUzM2QzMDFmZTQzMmI2YWMzMTAzZTQifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L194-L218",
+          "version": "repo-lines-v1:sha256:412e5bd6235ad5458d66f2cf38b47e7884764f4b6e4bd23bd723f03626ac585e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4NGFhY2MwYzQ3ODAyYmI4Nzg3ZDBkMTVmMTIwM2ZlN2FkNTY1YTQ0YjcwZmJkOTM5ODQyOTdhYzE5YjdmYmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMTI3MTViZWM1OWE0NDFmMTY4MmZmYjUyZTg5YmZhZDk5NzdmNTBmZmY3YWQzZjhhMWQxOTFkZGMzMDhkNDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjM2U2MGE1MDUwYWY1ZmM2Y2E1NzFhM2Q0NDlkNDE2M2NlZTBlOTNiYzJmNWVhZmI3MDA5YTVhNmE3ZmI0MDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5NWJlMWYyNmVhNjIwYzdlZTFiN2MxZmJlNmIwYTYzMTE4NzQxMTY0NjNjMGU5MzU5NGU2MTlmYTA0NTVkZjkifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L124-L142",
+          "version": "repo-lines-v1:sha256:fe02f889e2b61cb0165a9609ecf4f96100c52f286a331ecb6c5956ee87cfc68b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4ZGUxNzc5NDI0MDUyZGEyYTAxNjE5NzQ0M2UzOTI2MGJmZWU3NDJiM2ViOTVjMjQ1MjZkYjY2OTRmOGFmM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlNWM0ZTQ1MmVlYzU0YmU1NDE3OTQzNTBmZmMyYjljNWNiYmE5ZjcxNzFmNDQ4NmUxMDk4NGExMDJmMTcxYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNDg1MWViNTM3ZDgwMjBkNWEyOWYwYjRhZTVlMWU5N2JjMWIzMTI0YjQ0ZDQ0MTg5NWRkNzg0OGFhMTY5NGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_317a465a9dfc4efab5479607307c6caf",
+      "statement": "Cloud-lane access tokens default to a 48-hour TTL (`config.CLOUD_TOKEN_TTL_SECONDS` = 172800, LS-2728) resolved by `config.cloud_token_ttl_seconds` with precedence explicit override > `HYPERMNESIC_TOKEN_TTL_SECONDS` > default and a `ConfigError` for a non-integer or non-positive value; refresh stays 30 days, authorization codes expire after 300 s, and pending `/authorize` requests after 600 s.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L82-L105",
+          "version": "repo-lines-v1:sha256:2eb521e372815c6426b5101f8ffa0fc2851fe6931c1b4557b61d71be6d86c4d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllZDZjNGI1NWY5NGFmZTQ1OTQxMmI1MDBmYzlhZWYyNzIyYjRhYzI2NDUyYTc1NTM3NWY1ZjIyMGMyMzEzMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0MTY5NDg3NDY5NTE2ZmZlNDY0N2QyMGQxMGI0M2E4OTE2YjljYjcxM2FkZWRmZmQxNjhiNTBjZDE3MzRiODciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1YTg0MzBlMGFlZGVlODgzMWYzOGM3ZjlkOTc5ZDUzN2ViYjg4M2I0MzIzZWM0NWRhMmQzZjMyOWZlNzJmNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExNmY4MDRkMTdlN2I4MTIwMGYyMDU2ZTM3MTJkNzg3NjUxNGQzOTMzNDc2ZTY4OTg1N2FlMGNkMzc0MDA3MTgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L161-L180",
+          "version": "repo-lines-v1:sha256:d7a115633b66a97db2f762ee139cb549ced23c8d4b0502d33fc2134c3058e57b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZjE3OWM4MmY4MzhiMjk2MjA0MjU0Yjc3ZTg3NzliMDIzZTgyOGU2YjZmYjgxZmU1OTFlMzViYjlmYTUyMDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzMWJkZTEwYzUxYjgwYjNmNTgxNDFhMGEzNjkxMDZiMmU5NzhkZjE0OTMyZDEwMTA2Nzg5MmYxMjI4N2VhNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkYTJmMzYwY2M1Yjk5MzFjNGJmNWVjNjFkMTkxZjYxODhmM2UxMDRkZDBiMmVhM2FiZmEzNzhkZmZlODAwYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmOTQyMWYyMzkwOWRhZDg3YmVkNGRmMDExYjMzNTQ2MzBmNzUzMDI3YmUwZjZhOTBiZWVhNzdhN2E2M2I3ODcifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py#L53-L60",
+          "version": "repo-lines-v1:sha256:f27e4b289f1d9a2df87005bd24c484930e6ac8a6fc0797e64caf3a06e121f3ed:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGM4MzY5NTUyMTI3NDFkMThlMDcxNjY4OWVhNGVlNjAxN2I0ZjdjYzllZWYzNDAwMTAwZTU0Y2Y1N2E3MjNkNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU4YzNiMzcxMjQ3ZmJiZmUzOWM0ZTZkZjY3N2I4ZWNlOTMwZDJkNGRiMTgwNTU4ZGY5ODliOGI3YTgzOWQyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDI1MDA1MzlkYTg5MjhkMzdjZjQ3MDg1ZTY0NDNkMDk0NTRiMzY0ZWU3MTkzM2YyYmRiZjAwYjgzNDI0NDVmOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGJjNzM1NDhmNjI5ZDZiOGI5YzFiNzkyYzk1YTJjNTdkNDhjMWI5M2Y1NWFiYTUxNWU3N2NmZjJjMGNjYmE0OCJ9"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L188-L214",
+          "version": "repo-lines-v1:sha256:ccdba6481b5371cbecf2541f71268a8b1501c4b8cc0c9a92097ad2a468dd1fb6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5ZDFjYTNlY2I0NzIwMmU4OGYwOTRkNTA3Yjg2ZGI5ZTBkZTJmOTEwMjVmOTc3ZGM5YjkzYWNlZDAxMjI3OWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlN2QxNWRjNmQ4M2NjMWUyZDdjMjY1Mjk4N2EyZDA4Y2Y0MTNmYWNlMzQ3ZTlkNDgxNzRlY2E0NGE0ZDBmYzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4NTdmODNhZGVkZDZhZWVjOGU5MzU0OGU2ZDVjMmFkOGE0NzU4YWFmYzQ2YmRhN2Y1MTAzYTM1NTFkMDU1NjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2NDVhYWE0MjA3YzQ0ZDI1ZmQzYzEwM2U4YjRmYzc2MzM0YTk5ZGU5OWY0MTE1MDQwMzM4YWJjN2JiYmIwMTcifQ"
+        },
+        {
+          "resource": "repo://tests/test_cli.py#L605-L638",
+          "version": "repo-lines-v1:sha256:d7091623cdc7753dccc2a90712110e3fd5f7cd85b3b8f588890cf84bb8e65b15:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyNjkyNWVmZjAxNjUwZGRmM2FmZTJiNzZjYzVmY2FhNDllNzZkOGU4ZTNjODFlYzM3ZGZkNTdkNzRkMTgwZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhYTQ0MGE1NGY4MzY5NTE1ZjA5ZjhmMTRiMWU1ZGQyYjE2NzE0Y2M2MjhkMjJjOTVlMDY5NDVhZmFkMzFmYzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxMGY1MGMwNTdkMTM2Y2U0MTU3NGJjNzQzNmNhNDZmYTE3ZDYzZmE0ZTc0ZGMyNTc1ZThhN2Q2MjIxMDMyYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5YTllYmMyMTZkODk0NTZjMjBkMzUwN2RlOTY3NGZkNWIwNzFiZWM3YmIwOTNkMmY2MTA1NDhjOTUyZGY3NzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_df917325e9234b39b65546d1797c5d15",
+      "statement": "Issued tokens are opaque and audience-bound (`hmcloud_at_` access, `hmcloud_rt_` refresh, `hmcloud_code_` code prefixes, with `resource` and `aud` claims), and `exchange_refresh_token` rotates the refresh token — invalidating the consumed one — while carrying the grant id forward.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L412-L428",
+          "version": "repo-lines-v1:sha256:71ebafa42d4e3ef78b49d9ddc0f603c18589a9af0a446bd18f524a7df5b99c16:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzZThkNmY0MDEwM2RlN2FiMTY0MTcyZjU2YjJiMjVlNzY5NjQ1MGMyMjg0NjhmYjdkYmM5NjNjNjBjYzBhY2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2NWZjYThlNTI5MDRjMmUzMWU2M2M2YzQ5YmQ0Y2U4YTY3OWI1MDczYjFiNTc5YTdmYWExN2UzZjk2M2MyOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhYmFmOWIzZDA1ZWRhMjU1M2Y0YjdkZWE3YzU5OTRhYWRiNTAwYTY2ZTUxM2IxZmM2MTQ2NWZjYzM1ZGYwYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY1OTQzODBiZjllYTU2NzJlZDZlMGYxMjljOGE3ZjZiYzk3YjdhM2ZmNmJkOTYzMzVjOGEzYzZkMDk4NjhkNDcifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L485-L535",
+          "version": "repo-lines-v1:sha256:e96d92b799f054d8076e41847f9fa8eaaa13cd44ca9983392370a5c832c8dfb8:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwOGJhNzI2NTc1ZTJhMjVmZDFiZmI5Y2JhODE0OGVlMzM1NTdjYjVhZjBkZDI2MDQyNzc3NzE4YjI0ZGYwODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1ODdjYzMyNTEwMjQyOGQ2MDE4OTQ1YWQ3OGI1ZWY0ZjhiYzc0NDFjOTE2NjQwYmNmNDkwYjAxOWFkOTFlOWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkZDk4ZDRjZjRjN2M3ZGU0OWYwNzZhYTFmZmU3Yzk1OTMwMDUxYTUyZGFmMTA1YjY1NjE5YjU4NzQ1NDQ1NzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5MTRhMzAzMDZlMzFmZmJkOTYyZjRhMjkwNTJlNmFlMGJiNzk3NDQwNGFlMDA0ZmFjYzI4Y2QyMzgxZDg0MzAifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L347-L354",
+          "version": "repo-lines-v1:sha256:8017dfecdccaeb22746043791981e9da444a46fa1194f8ad8cc5ff46c93d679e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2JkYmQ5NmViM2YzNmE3YmE5OGFjYjA1MWIyMmY5ZDlhNzJlYjc0Nzc3YTY2ZDViZTliY2UxMDJkNTdkNDEwNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGNlNDA5MDY2MmRkYzczZTQ0OTU5MTBkMzdiYjBlMmVhZDRmMWQ1MTA1NTM5ZDkyM2ZkNjNkMTgzZGIyZWZkNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmM4Yjc5MzkxOGIxYmRjZTY1MmVhZTc0NzRhNTQ5ZGNkOWYyNTFiMjM3Y2I5YjQyNDNhZGVmYTE5YTlkYzliYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWYxOGE0ZjA0YTUzNWE3YTAzMzdhNGQ2OTczM2MzYTQ0MTRlZTFkNmJkOTE2M2M3YzIzM2E4NTAxZmUyNDU5OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b46d00624cf749d295199d7a05957afc",
+      "statement": "Access and refresh tokens of one authorization are linked as siblings under a single grant, so `revoke_token` (RFC 7009) and `revoke_grant` kill the whole grant including the refresh sibling; `load_access_token` and `load_refresh_token` re-check the on-disk grant store, so a grant revoked out of band with `hypermnesic clients revoke --apply` is refused by a running server sharing that store on its next validation.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L231-L264",
+          "version": "repo-lines-v1:sha256:2f0525c5988b380d55cac360af8dcfec5f6f826eb635e2b18316bdcf8aad26f8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNzZjMGE0NDU4YTBhNmUwNzUxZTBiNGI1NDk5NWI4YmQ5ZmVmNDUzOWM0YzZiNWY5NzM2MjY1NmY0YmI2MTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZDc1YzUwYmY1MDE2YzY0M2Y2MjQ3YzIzNTliNmY0MzJmNTMxNTY1NzU5YzA0MzhkYjVjODVmM2YyNThmMTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE3OThiODBiOTY2YmM5NTFiM2ExNWVkMTk0MDc4ZmY4MjdjZDMzNjE0ZDhiY2Y5ZGE5OTIxZjRkNWM3ZTZiN2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyYTkwNmE4N2U1MWQzMmFmN2VkODEzMjM4MDliMmU4MzFmYWU1NTQwZmY5ZmNjMTFhNjg2NDQxYTUyYzlhZWYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L431-L461",
+          "version": "repo-lines-v1:sha256:dddf18513194edefb3e3bc1363b0ea057710f5eca0cbc34adf97c664d5955b8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyY2VlYzRhMDI3NWQwODAyYmNkMDlmOTk4NTU1ODQ1MTVlMDNlNmIzMThlMzE3NWNmYjk3MTQ0ZjBmNTc4NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYjdlNzFiOTEyYzYzNzJjNjdjYjQxNDQ2MDAyZTU2MmZmM2UzZDNlYzI1N2Y4Njc0ZWRkNDc5NWJmMGE5MTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExYmNhMmNlMmViNWJiNDVjNThhZmVhOGQ0MzA1OTRmNzFjNTFjMTY4YjFjOTM3YjJkMDE0ODVmY2Q4ODk5ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4ZjlhZTk3MThiMTBhZGEzNGEyYjMzNzc5OTU4MTRlODAwYWI3Y2JjZjRlNGRjNzM5YjNmYWNlMmEzZGU3ZTMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/client_control.py#L92-L127",
+          "version": "repo-lines-v1:sha256:7f1cea9cf65455e3f3587a554c31cf4aef38932fdbda362d656a07ff4002fd82:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiZjEwNWEyY2ViMGE4NTBjNzAzZGI5ODAzZGE3MTIwZGFmOWI4YjhlNDk2ZGI2OWNjMGU1OTYxMmIzMjllZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3MDE0OWUwNjlhZDY3ZWNjZjQ3MzY0NmZmMWM3NTAwNTBkMzI5ZDExMDAxOGRjNTc2Njg3OGVhZmExZDYwN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L254-L297",
+          "version": "repo-lines-v1:sha256:e4965a090a0afbc8da8efc4cb365d0804a3cf04e1e4dc63c340d95e3807cac32:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjMDg4ODg0MzVhNGU2MzVkOGY0ZDAyZWI2M2VlMjE2ZTU1NmM4MGUyZjlmMjE4MjlmZjEwMWExNmQ5NjI5OGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmMWZlYTMwYjc1YjgwZDdiMDlkMDQ4MDc4OTlmOGVjZDczZDExM2EzODk2YWU4NWJiMGFkNmViNGI5ZTgxMWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MWMwMDBiNmRjYTU3ODhhN2FkMWViOWI0MzRiNjRjMDRlZGJjZWZmMmVkNTcxMmE0ZTViM2NhY2NiOTQ3MmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_057f399ac927414aa8dee3397c5648ef",
+      "statement": "Grant metadata is persisted secret-free through `client_control`'s key whitelist to `<repo>/.hypermnesic/client-grants.json` (the owner-facing listing and revocation surface), while DCR client registrations and live access/refresh tokens plus the sibling and grant indexes live in owner-only `0600` `<repo>/.hypermnesic/cloud-oauth-state.json` — written atomically, version-tagged, and refused if the version is unrecognized — so browser-login-once clients keep refreshing across service restarts.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L144-L223",
+          "version": "repo-lines-v1:sha256:b4ae37a36b47249dc8518a6c0d62e3caf337fcef29105cf804ede5024b381815:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0MjNhYTBiODVhMGRmYzBkNDhjNGM0MzA0MjQzMzhiOTQxYTZhN2U3NDAxNDkyNDA5ZTQ3OWYyMTQxZjA0ODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlYjQyNGJhODA5OGQyZjEzYjMyZjI4OGQ4OTNiYmQ1NDI0MWFmYmEwM2Y1Y2Y4ZTY3NDE0YzMzYmFmMzNiNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhMTY3NmRlZGMxYzUxMDAxYmZhNTJmMGFhZjVmMGI0Zjc5ZWQ1MTJlZGFiOTA1MGUzMmZlMGU0NTJmMGMwZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4MjA3YWJmNDNkNmRiZjFiMGI2NjcwMWIzYzM4ODZkMjcyMjEwMWFlYTJjMDg3NDQzNjZhMjExNDUyMGE4ZmYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/client_control.py#L17-L36",
+          "version": "repo-lines-v1:sha256:cfb1f1a243e974e6926d2d6304b9ebf37c47ac85aa9a42f48260da19cfb0d274:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNzBhZjBhODhhZGJhN2YzZjU4NTlmYzE4NjdkMWZhNzljYTc3OTE2MzA4NGQ3M2I3MzhlZWY4MTI0MmY0NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1NjBjOTAwMDhjMWQ2ZmY3MzY5MDI1ZGUxZjBiYTI4ZTgzNjEwNmNhODE4NjczYzdkMzkxYmI1YTJlYzI2YmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkZDg5OTQwNGI4MmY4YzhhMjUxNjI2MjNjNTY1YTgyNjQ0NTY0MzMzOGViNDc5NDVjNzQxMTRmYzIxMDQwYmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhZjhkYjk1NWI1MzAyOWRiNGUwYTNhODQ4NmU2MGE5MWJiMjIxYWRmMWQzYzM2NTVhZDBhNTYxYjEyNzE3ZjAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/client_control.py#L61-L76",
+          "version": "repo-lines-v1:sha256:1a58d5b6e6c4915cf6542f602898943a7110f5695d39dd2128f9072306f736da:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkYTcxOTUyYTY1NmQ5NmE2MDA5YWQyOGM3OWRkZGNkMmJmMWNmZDViZWQzZDIwNDlhODU3ZjQ0MjU5OWFiZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2Y2NiZjMxN2ExMTc1ZWEzNjg0MmY4YzFjMGU3ODllNDJjNDEyNGRhOTY3NWQ2MjY0YWMyY2M0NWJhNDk4OWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiYjNjMzQ3MjEzYzE0ODJhYmJjNmEzNjdiYmJlMmVkYjcyYWY4MWIwNmU3YzZiMGY0NWFhZTIwMjUzOTJlNzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzY2M0YWRlYmNiODNiYjU4M2Q5NjFiNThjOTMyYjg4ZjY4MzM5NzU4MDg5NGZkOWU4NDdmOTFmNmEyNjc5YmUifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L309-L344",
+          "version": "repo-lines-v1:sha256:edef3e5096bdec1ef80b9353b2379e8175aa9b599506333ba64cdd8bd18498c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiODhmZGU5ZWY1YTNjOGQ0MDU3MWViZmE4NzE1MjQxMTE0ZWFmZGFhZWEwOTMyZTI4NDlmOGQ4OTk2NjFhOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0M2VkOWExYzE5NDA4YWE0ZmRkODJhMjczMzE2NGQ2MzNhMDllNmIxM2Y5YTZjNzJhNGFkMGRkYzMxYmQ2OGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5NjZlOTI3NDdhM2Q3NTkzOTIxOTlkMmVjYTNkYmE4YTM2N2E0ZDc3OGVkYzVlNTgxNGI4NTNlZTU2ZWYzMGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlOTUyYWI2ZDkwNGM4NDk5NDkxODM3NjgwMDc4MDZlYzM5YjQ0YTIzY2QxZWYxOWI5MDYzNDIzZmJlNzk1YjUifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L488-L514",
+          "version": "repo-lines-v1:sha256:ea388419c69ab6e5eac53263142fdbf82f76ecabb387a25a287a021e39f782a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhNmUxYTc3ZDAyNDE1Mjg2NjczYTI0MDlmOWQ5OTg4ZDY1NzY1ZmJmZmFlYzAwYzNiYmZhNjhiNzk2OWE5MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmZjNTAxZTdlZmYxOWU2N2VkNGE4ZjMxNGIxNTUwOTI2MmIyOTFmMDFlY2FkMzA5NzQ5MTJhYTk3MTYyOWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4NTQ1YzYyY2ZjMGUxYzJlZjEyMDA1Y2I4YTY3ZmViZDdiYzhhM2Q5Mzc5YmZmZmYyOTkzODMyYTZlZjM3OTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3NjIxMzlkMDIwN2YxNTY4MjAxN2U0NjhlY2Q4ODUzOTE1Nzg1ZmRmMzgzNTBkZTA4ODI3NjFjMWRmMGZmN2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_77f1420d11554d86b10d36ea94679a38",
+      "statement": "`CloudAuthProvider._sweep()` runs on authorize, consent, listing, and revoke calls, evicting expired pendings/codes/tokens, enforcing the pending cap, and reconciling a grant whose token pair is gone to `expired`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L125-L143",
+          "version": "repo-lines-v1:sha256:f7b525b34a7ac0652bcf7ce963d5d506d32f7706705493aabba53b29d554fdf6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMmIwYzI2ZDc2N2JhZTNjYjM2N2U4MjViZjlmZTFkZTY0ODY5NWExZWJlOWQ5ODUxODA3YjU4Nzc2MzhhZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwNzMwNGI4MjAzMzQyNjllNmUwOTIwZmY0NDhjZmQwNjZkNzE2YWZhNjQyMGFlNzdhODJhMmVkMDlkMWI4NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhMzI5MmM4MDdiYjA0YWY5NDFkMDBlZGM5MTk4NDU0ODlhYWM1ZjNmOTMwM2I3OTg5YTBmMWIxZTkwNjkzYTMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py#L250-L264",
+          "version": "repo-lines-v1:sha256:591622521004fc234b27eb2bffcf08ef3cc742ad775d9ecf3947ab7a71c60ec7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYWIxY2VjZWIwOGQyNjgxMjA4NzE0MDk5MzQzOGViMmJhMGU0NjZlYThjMjI4YmQzMjFmODUzN2Q3NzViNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZDc1YzUwYmY1MDE2YzY0M2Y2MjQ3YzIzNTliNmY0MzJmNTMxNTY1NzU5YzA0MzhkYjVjODVmM2YyNThmMTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1N2JhZGZmNTdjMjQwNmFlNDYxNjFhNzZjZDE1YzI0NmJkZjNjZmQ3NmYwMGYzNjIwY2M3ODRkMzRkNTgwNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyYTkwNmE4N2U1MWQzMmFmN2VkODEzMjM4MDliMmU4MzFmYWU1NTQwZmY5ZmNjMTFhNjg2NDQxYTUyYzlhZWYifQ"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L299-L306",
+          "version": "repo-lines-v1:sha256:2b5eb20a9c568e11b38517390facfc224e49783ade5c834ffefd85e6ecea3d8e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWU3ZmJkZTgzNzhjN2ExZDk0OTJmM2E5ZTBjMTAwM2UzYzU2Y2RmYjU0YjM4MGI0N2Y4MWUwMzBiODg0YWU0NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTU1N2NiODU2YjZlMDkxZGNiYTRhNGJkYzQ2ODEzZTRhMWE0MDk5MWFjZmE2OTJhNDY3MDcwMDkxZmUzZWI1YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzg2Mjk2ZjA1MDAzODgyODNjOGI0ZmEwODdhY2I5YmM0ZjVkMjJjNGIzY2Q4MTU4M2ZjMTYyOTAyNmM0ODQwOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjQ4MzY5YTQ4N2IwOTgyNzRjOTQxODU0YjMzNmExMzY4ODMxODdmZDExNjBlZjEwYWQ4YTNiOTA2OTcwZDJiNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7323e8be770b4ee29e9f340adc8b7b8e",
+      "statement": "Operationally, `hypermnesic serve` requires an explicit `--host` (a specific interface address, not a wildcard) and exits 1 on any construction `ValueError`; `hypermnesic serve-cloud` defaults to a `127.0.0.1` bind on port 8850 behind the Funnel and refuses to start without a long-enough approval token in the environment; and `hypermnesic clients list` / `clients revoke [--apply]` operate on the secret-free grant store.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L446-L481",
+          "version": "repo-lines-v1:sha256:9b40d8d3b90d1fee51a6df7e24048b7fab997f08861a7099b4d918b728e9581e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhMmU0ZjExNzk0ZjY5ZDhhMmM5NGY1ZDE2NjcyMWFkMDM0NmE3N2ZmNTI4Y2QxOWJhMjFiOTdiZjA5YzYxNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2NTlkNzI4ODllOTI4NjJhYjkyZmNlZGIyZGI3N2I4NDY1MjgzYTc5MDA5ZGE1YmVmNmViMTZjZmZiNjBjY2MifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L511-L544",
+          "version": "repo-lines-v1:sha256:276c86898db7f4e813ba83bce4cbe31b11bb5f413ce6526e82018d4638d7f255:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjMzNjMGIxYTEwNzczOTJiOTA2ZGE5MzRhMWU1ZDgwOTcxZjk3Y2IxYzgxNTIxZTJjZTVhZjViOTQyMmI3ZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2YzI1MTE5MjhhYzRmNjAwYjYzNDJiZDQ3ZTE3YzEwN2RmNmRjNDkzYWYwMDRhMWI1NTBjNzc1MjE1NDJjODAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L679-L699",
+          "version": "repo-lines-v1:sha256:859ce128b483b195536a3d7c71cf06797733e911e7dd8214a0213a10562ad0e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyNTA4YjU2NzMzZTcyMDFiMjc4Y2VkY2Q3MzkxYmQyODdlMTk1YWM1YTk3Y2NkMTAyMDcyN2UyZTYwZDk3YTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NzIyYjhjNGYyODMxYTA4YTZmZjE2OGQxNjUxMTRiNmZkYmFjZjk4NDIxNTM2NjI3NzY5M2JkY2IzYmQwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1MmNjYTk4MThiNjJkNjEyYjMxMGEyZmJkMjBkYjhkNTUzZDRjZDM1ZDAwYTg2YzY4YTVjNGU0YmMyYjdkZGMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L913-L937",
+          "version": "repo-lines-v1:sha256:91ef61719b8ff65c5d4c32b72209631ccab872a1be85f9068547711b9fe75b6b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlZjQxYTNhZDA3YzY0YjExZGI0NGE1YWE1ZWE1MjhmYzkxMWE1NWEyMWEzNTU1MDhiMjM1NjVlOGQ5Y2NkNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5YWQyNmYxZDQxOThjYjZmNzdkODFjZmU2YjZhMWY5ZTVkYmIyN2UyN2IxZmJkYzU2MWFmNGUzN2E2Nzk2NGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2NDljZGE1MzkwOTc1ZGUyY2Q5MDQ3NjI4ZDhmMjI0NDZmMjhhNDFkOTNhYTljMzMyYjIwOTZhNGI3YjFkNjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1Nzc4NjE0MGYyMmY3YjA3YjMyZjM4ZTM0OWMwZGM3NWY2Mjg0MDNiZjE5MjU0ODIxNTM2MGYyMTlmOTVkMjAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L962-L985",
+          "version": "repo-lines-v1:sha256:ebf87cd1b9347820ad0cfca8bba59bebf4cdc6109aa72e1ca6676ad66bd19565:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1NDQwZTUxMDc2YzlhZWMxZmRmMDA4NTg2ZmM2NDFjNTMwZGMzNjVmODk5ODYxZDljOTU0MjI1MzA1NzdmNzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxNmJkZTljMWVjZmJkMDI3NTU3NDllMWI2ODU5ODI4ZWU5NTdjZGE4ZWViNjcyMjIxYzU4MWIyZmE3MTdiZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4ZDg2NmU0ZDM5ZjczMGZhNGM4N2Y4YTVkODJlODk0NTIxMDE2ODg4OTU2NTMwZTRhMDMxZDMyNTU0OWM5ODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkYjI3ZjM3ZmI5ZTYwNzVmYzk2ZTg4NWM3NjRhNTMwY2M4Y2RmZWE0NTFkODIzM2Y5ZGFlYTM2NzllOWExZDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_91e496e5672342dfae78f0b0f0d08804",
+      "statement": "Auth and serving changes are doc-coupled in the same PR: the repository's drift table requires the `ARCHITECTURE.md` serving section, the serving-topology pin in `docs/README.md`, `docs/unified-oauth-mcp-deploy-runbook.md`, `README.md`, and `SECURITY.md` to move with them, and `SECURITY.md`'s posture section restates the two-lane topology, the `write_enabled ⇒ auth-required` invariant, and the split between owner-only OAuth runtime state and secret-free grant metadata.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L104-L120",
+          "version": "repo-lines-v1:sha256:c8526304e19420d27e86720f5abbe7f1d9457b9421bd4264df11fe6d6b779cc0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjOGM5YWM5MTQ4ZTI1YTg3MDYwZWY5NzFjZjFlNTZhOWVkOGQ2Mzc1NDVmYjdhOWI0OWNjNGU5ZmVkMjkwZTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2N2MwYjdkZjA3YmI2NDJjYjU1ZDQwYmVhMTE5MTVjMjE3NWQxM2QyM2E4ZGVjNmQ3NTNlMGNlYjQzZTgzMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjMjU4NDExNDIwODZjNTkxMjU2YWUxMTg0ZTYzOTQ3OTEwZjc2Y2RlOGQ1ZDI2YTkyMWRlY2NiMGEzNDY3NTUifQ"
+        },
+        {
+          "resource": "repo://SECURITY.md#L49-L67",
+          "version": "repo-lines-v1:sha256:0268a1ba190b486030d9872e23bdd9161efd25dd79b18f60bb2784b44128b1f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZWIwYTU0ODNiMGM3MzkyYWFjYTg3ZDY2ODk1OTViODdiYWNmYmQ1MzQxNmZjMTM1ZjAxNTU1ODJlODQ2MTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5ODBhMzhmNGE4OGU0NWZiYjg2YTEyODZmYzk2MDQ3NGRjMTU2NmJjZDIxZjkxYmRlZjBiYzFlZmU5NWMxZGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhYzdmMTM2ODJjNTYxYzI2MWYxOGEyMWMyNzMyY2Y0ZTE3ZmRjNzRkZGZlNTg3YmZiNDhkZDIwNGEyYTFkMTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://docs/README.md#L7-L18",
+          "version": "repo-lines-v1:sha256:e66bae75022eceedfbdef431b733682df0ee04d972ddabb1afb0807797bdef1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1MTM2Y2VmZDg0ZDM4NmY5OTVkMjg1Y2E0ODEwMTNhNzI1Zjg0NTM2Nzc3MzdmNGFiZDJlNTM0OGVmMDVjYTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmMmExMjE4NjRlY2VhMTY3ZTljZDFjOWMwZjQyODYzMjM0Mjk4NDJhMTY3OGM4ODFhNjViMWNiM2MzNjMyMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5YTNlYmIzOTMyZDU0MDEwNzI1NjNiNjczNzkxMzQ4OWU0ZTYyOGE3NzRiNzNmZjlkNWViNGYzNDRhYjgyNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2NmI2ZjdjZWQ2MWExYTI3ZTYwZTg3OTcxNDIyYjA5MGU2ZTcwYWViYjE2YmMyYzQ3NzkzOGFjZTY3YWI1NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3479958f46f94aeba7355e60447ec852",
+      "statement": "Committed documentation and configuration must use placeholders such as `<your-host>.ts.net` and the `100.64.0.0/10` CGNAT range instead of real operator hosts, IPs, or tokens, and `scripts/preflight_public_scan.py` enforces this on git-tracked files by scanning for the operator's host/IP, credential classes, and home paths while masking any match in its own output.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L75-L80",
+          "version": "repo-lines-v1:sha256:c91af0b7e55f39ed5c861e1802bfe33b065ab861952ea29c40a758d9f6612c15:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjg0ZjhlMjM2MDM2NjgzZTE2MGY3MTY2ZWQxOWQ1YzEwNzhkZmU3MzZjMTRkMjI2MDIxZTM1YjNiYTJhNWQ3NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTkzMDIwZmY3MGNkNDAyZmRkZjczZjg3ZDg2OTM3M2JlYTFjMTQyZmE0ZDViZDEyMTlmMGZmMDI4ODJlZDVkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWUwYzMxMjg2NzUyM2M2MTNhOTk5OWUzYjY1ZWNmODI5OTA1ZjUyZDllYzFmYTU4MTlmNTNkMGI0YWJhMWNmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmY0NGI1MTc5ODIxYjI0ZjZmOTI4NThkNjUzNmZjNWRmMGMyNjRiYTU0ODM4M2ExZTU4MzJlNzBlY2QzZTA1MiJ9"
+        },
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L114-L127",
+          "version": "repo-lines-v1:sha256:611e63a7729de8ece1c2a61abbb12c763c240a42efc5e4f057359c58a56b3ce1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkYzBmODZkN2RiNjdjMzRmOTFkZmYwZGJiOWFlMjNmOGNmYTkzYTEzYjQ3ZmViYWZjOGI4NTU5ZjdhMGVmZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjNTQ1NTUwMzNlMTRlMDRhZmQ2OTYwMzlmMzAxYzdlYTg1Y2UwNWJhZjkwZmY1NTljYTU3N2FhMDRlM2U0YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhMGE4NDJkMTJhMmRlODY3Nzc5N2I1YzZmN2M0MWRjMmYxMTAxMTdmMTAxOGQzY2EyMGIzMDYzOTgzNzliYWQifQ"
+        },
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L51-L71",
+          "version": "repo-lines-v1:sha256:f723630aca226626296065f060d7c50625480ce7e43b773cfaf52ef536b647ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4ODE1MmJjNTE0OGJmZDZjNjBmYmRlNGMxMWJiZWJkMGI3MTE1MjA2NjYyMjhhNDA4ZTNmNGZhYTk4NmE1Y2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3MTBkN2FmNTg5NjUxOTdhM2MyM2U3MjI1NjRjZGVkOTc3YWJhZTQ3YmYzYmZiZWJlMWViOGMzMzJhMDgyOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1NmI0YmQ5MWVhNWM3NDFhYWIyMDgxYWU5NjE0NTBjMjc3MTQzMWVjNzI5MWM4ZmM3NWRmODBiMGEwMGFmMmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9fd6d2cca0af439b8f3867d533ae5417",
+      "statement": "The serving/auth contract is pinned by three focused test modules: `tests/test_auth.py` injects the raw validator and the introspection POST to pin the verifier invariants with no network (including that a token string is never echoed), `tests/test_auth_cloud.py` pins the provider, consent-page, metadata, revocation, and server-wiring behavior, and `tests/test_mcp_server.py` pins the construction invariants (wildcard refusal, auth pairing, write⇒auth, the bounded opt-in, and the empty-allowlist refusal).",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_auth.py#L1-L8",
+          "version": "repo-lines-v1:sha256:354098e5a9f0198bf356bb7c7c441fa5be2a4a45afdca1461a6625a96e17478d:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjgxNGY4MGJkYTU3MDQ4OGE3NDc2ZDk0Y2RkZGM0ZWQ0MThlOWM3ZWYwM2YzYjAzYjQxZmE5MWE1ZWExNGU1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://tests/test_auth.py#L119-L124",
+          "version": "repo-lines-v1:sha256:0447aebeaffb954833727f55a4fa5cbb024bcdf8520d3d4f1b71f556c447d075:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTdmMTU4YjBmMjQ3ZTI3MWZkOTM0NzlmN2VkMWQxZGEwMDAwOGYzZDY0N2JiYWIyNzIyNDZhZDUwMzIyYjdmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTZhZmY5OGYxNWRkNTljNGFkNTI0ZDZiMTdiZDY5ODg4NmVkOTk0ZTUxMGYwNmVkZmUxMzg3NzNiNGI2ZjBlNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWVmMGVhYmE4NzFmNDBiMjVjMTkyZDcxODQ2MGM4NTkyZWIyYTdiMmU0Y2I0MDEyNTBlNjc5NjYzMjllZWVlZSJ9"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py#L1-L10",
+          "version": "repo-lines-v1:sha256:877aaadbfa852f255b3a3855319e5c7954a52ca1e0625bce8c869709ea2f16ea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyYTg2N2RlMmQ3MTZkMjMwY2Y4OTExNWViZjUwNWE3YTc4MzQ1ZGJmZDJjNjBkNTc0MTA3NzlkN2EzZGU4YTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py#L705-L845",
+          "version": "repo-lines-v1:sha256:4c70bd91d3e9daf6e321a8d7f3d171b4920f28dec32dd1e0575d2dda05efd9a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1NjllN2ViMjQyYjcyNzc3ODJiMGUxZmIyMzFkNjg2NGUyMDZjNWEzNDE2YzZhZmFkZjFmMGVmYmRlMTk4YmQ4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI2ZGFlMDM3Y2RlYmQ3NGQ5NGJhYTkwM2ZlZDU1MjQ1MDlkZmYyYzQxMjI3MDhkZDU2ZTc1ODYxZDVjZTA4NjFjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3MWMzZDhmODliNzllNTQ5NjdlY2JlMGRlY2QzYWY1MDcwOWFmYjk2YjQ5YTRkY2ZiN2E3ODkyNTQ2MGRmM2ZjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjMGU5ZTA3NTBlMTYzMzcwMTI0NmYzY2E1MGNjMjZhY2VhMGZkYzFiNjAwM2QxNTE3YWZkYzBhNTdkNjllMGQ3In0"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}

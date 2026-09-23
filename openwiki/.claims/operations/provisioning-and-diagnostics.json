@@ -1,0 +1,620 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:c991eda9d619b1c7b81f1572764aebc43328d2ec887d011ab755b6f3d08bd088",
+  "claims": [
+    {
+      "id": "claim_3ee97f68a35e44a09e30b9e6ca63bb5c",
+      "statement": "`local-proof` is a thin orchestration over primitives that already exist (git validation, index projection, retrieval, and a `commit_note` dry run) and deliberately provisions no endpoints, clients, or services, so local recall is proven before any endpoint concept enters the flow.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/getting-started.md#L29-L36",
+          "version": "repo-lines-v1:sha256:00cd5f69575864fade91c346908ef9ab539f5688abe995dfe76684f068b2786e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTU0OWIxNjUxZDhkZjg2MjJmYjFhYmFiNTlkNzA3M2RhNDBmMGM3YTMwOTdkNWI2M2I3YTc0YWFlZjE0YjEyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdjMDZjNTYxZDVjMzI3MzQzNjg1MjY4YTQ2YjMzOTFmMzk5OGVlZTg5MGQyYmU1MWYwZDIxY2M0YTUzYWU2ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjYzZTg3MjAwOGI5NmM5NjUxYTBkMDMyZDhhMDAxODEzNThkZGJlMmQ0MzdhNjVkNDgxMWRkZWE0ZjRmNmIzMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjU0YzIyNDlkZDFiZWI1YTgzMmYxMzYyZjcwYmI3YjJkNjUwMjAwOTY0ZmRhYzYyMDJiMDY0MWQwZmQ5YzQ0YSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L1-L5",
+          "version": "repo-lines-v1:sha256:e464eff177420e97eebd26fd8d5a0e51ae1c1d816e6612541b56219c7b468874:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmM3YjNjNjE5NWQ1MjI5YTM4MDQ0ZjI3NmEwN2FlYjc1NjU5YTQxZDJmNGUwY2E3MTYyYjg5OGE4NTEzYjVlYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmU3ZGRmZjhmOGNmZjMzNmU1OTlhNzM2NTczZGYzMDQ0NTBiOTg5M2E2NmI2YWJjZWI0NjRiZDhjNWRiMzhkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWFhZjc2MzdjYjZlN2U1ZGI4NWQ2MzQyNzQ2MDE0ZGYwNDFjY2Q1NThhOTIwYjI5ZWI2YWM3MTlkN2JhZjVjMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a2048d8c1cd460ca2f9c3eed617cff9",
+      "statement": "`run_local_proof` requires exactly one target: passing both a repo path and `--demo-dir` raises `ambiguous_target`, and passing neither raises `missing_target`, each with a message and concrete next action instead of a stack trace.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L105-L119",
+          "version": "repo-lines-v1:sha256:645e513b09dc78a0f6c47a77af0c060fc1e53058bdbdad973d23309f2b60f055:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2YjZjMjAyYTZlYTgwMzZmODEzNzY2ZTQwZWJlZTFjYmJlMTIwZGU4ZmJlMzBiNjUwOGMxNzNmZjNlM2VhMTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0YjRlM2ZiOTA4ZTcyYzMzNzliMjVmM2RlZDhiNWJjMmUzZTUwM2U5ZTFkZDg0ZmNhMWRlZDQxZjUyZGI5YjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmMzU5NzI3ZTM5NTI0OWJmMWMwZmQwMWZlYTU3MmRjZDQ3ZDZhNzgwZDZlMGEwODU4OGYwMmE3ZDA4NjgyYTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY5MWY5NWM0NmE0MDUzOWM5MzMyNTQ5ZGY4YTliMDZmOGZhYjIzYzk1NjQ1ZjZlMzFhZmU2YzQ3NzY0ZGIzZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_97b525f05c93461389f37fe4abff453d",
+      "statement": "Existing-vault local proof is read-only by default — it creates no sample content and no commit unless `--seed-sample` is explicit — while demo mode builds a dedicated tiny git-backed vault and refuses a populated directory that is not already a git repo.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L196-L221",
+          "version": "repo-lines-v1:sha256:4add3337516d4c647d45f0b0992597151fb237b88e459aadea1dae8c3d3aecae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZmU5NDYxZDc5YjdlN2IxMzY5OTBiNjhlZDhlMmIyN2NhZDAyYjNmNWUxMDA4Mzc0MWMyYjkxOTBjNjVlM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMDhiNmU1MDBmN2JhZjBmOWMwZGE1M2E5MDJjODdmMDQ0MGNiYTU1OGQ4MmViOTA0NDcwNjE5YzA3MDIyZjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzZGYyYWNmMDZlOGMzZjAzYzcxMzVjNmU4YWM1YTljYTU0MzJhYmUwNmE3NGFjYTBmZGQ5YTUzYTAwOGY5ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjY2U5ZGZmZTVkM2VmZjE3NmQ0YWMxNTdkMjNiODg1OTZkZTk4ZGYyOWYwMjQyZWY2YTNjMjdkMjM1NDk5NWUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L95-L123",
+          "version": "repo-lines-v1:sha256:fe67e9d76f427f7346a497ddaf32820941a5008f3f9802a8a0e5d992090ec315:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1MDQ2ZmU4OGEyMjQ1MzJhOGIwOTFkNjY5N2FhMjEzNDBmODI5ODhiYWIwZGY1ZTJkMWUxY2ZmZWNmNDAzMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmOGNmNmU2MjBjMDg2ZDAzMTIyYzIxNThkMTY2ODZkMmIzYzBkZGE3YjY1ZDdkMjc4YjVkNWFlOGE2MDMxMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4NWMwYWQ0NDc4N2UxZmQ1ZDI3OWU3MzYyODdlMDY3OWJiYWQ0YWRjOTE5MjhlMDU0MGU1N2QzNTgzZjMzMDkifQ"
+        },
+        {
+          "resource": "repo://tests/test_local_proof.py#L48-L66",
+          "version": "repo-lines-v1:sha256:44bc21c047406b4a1d9f94fe39049ac0900689dc768ab3b38feac1f3ed804a42:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkNmZhOTAyMDlkMmY5OTU4MTg2MGNlY2JjZWNjMmNlOWI0NzYzZTkxMDk1YmM1MzE3ZDBmMmQ2YWY3Yjk4N2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkODRhMGU1NjMzYzY3ZWFlNjhmNjZjNzI1MDRmNjM2OGY4MzJjNTE3ZDM0ZTlhMTE1MDk5OGJiOWU5NWQ5MDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhNTE5NjBmMTNmYjQxYzZjOTdkYTJmZTVmOTU4ZTIzNmZkMWYwMzNhNGU0ODY3NGUyNGNmMWI2M2ZkZjM1YWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf2247a5b6914a5aa9cb532f5c5fd201",
+      "statement": "A successful proof returns a stable contract: `status: local_memory_works`, the fixed six-milestone vocabulary (`git_vault_confirmed` through `dry_run_write_previewed`), the repo-relative `source_path`, retrieval hit, dry-run `write_preview`, index info, `files_are_source_of_truth: true`, a `next_action`, and `error: null`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L143-L178",
+          "version": "repo-lines-v1:sha256:14f93bd60df4d3b965074bb2fccbca282ff711fb36a4927d7cc8d657a35f8ca0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3MDA3OWJkNWY1N2RiMmUwZDEyNDIwODkzYTBiNzExODAwNmI0ZWYyNWU5M2MwYThhNGQ1NTc5OGEzNmY5YjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzYzc1NWEwNmYzYzYzZjM1N2EyMjc4ZmNkZjhjOTczMDBkNWEwYmRlZDg2Njg0YmMwYWE4Zjg0NjljYTUzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2MjdkMGZiNmI1ZjA2ZTNlYzJjODI0YTBlMzliOGU3NmE3MTk3MDcwNjRmYTM5YmIwMzE1NmFlNjljMmNkNzEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L79-L92",
+          "version": "repo-lines-v1:sha256:50cb2efd0efe24371328b6967b86ab996a10373ae980196f87899ad748201db6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTIzOTM2MjUwZDNlNTNmY2JjODQ1MDA4ZDk5Mjc4NTdjZjFlYmZjZDU3ODAwODhmZTk2YjdlOWIwMjRjNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhMzdkMGRlMTE5M2MyMzgzNWI4OTUxZmNhMWRjNjYwMGI4ZTQzZmRhMGRhOGU3ODNkZjFkMDliMTdkZTVlMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyYjZiNmYwNmIwZTliMTI4YTAyYzViM2JiNjQ4Zjk1ZDExZjIyNjA1MjQ2OTAzZjk4YmVlNmEyODhkYjUxYzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_59b58eef70d041f19576e45e61e7f3be",
+      "statement": "A failed proof degrades the same contract (`status: needs_action`, empty milestones, `source_path: null`, `error.code` from a fixed set) and the CLI prints the message plus next action to stderr and exits 1 with no traceback.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L231-L238",
+          "version": "repo-lines-v1:sha256:b24cbfc3098a9a0cd77a7d29266f42356401ab088b39fdca1aa06b122923b6e3:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTlhNDQ3MjUxOTA4NTU0MWUxNzYwMjU2ZTQ1NDIwYzQ0NmQxMjRiMjkwYzAwNmU2MGExOGIyODQyMDI4YWQ2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjMwODY2ZTFiY2M1YWI3NmUzZWY1OTAxMmQwYWQzOWE2ODdhYmUwMDIzYjQzOGFjYjExMzBhMTg4MjVlODE5MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjUzMTcxN2E4ZDU3MGFmODJjNjA0ZjNmYmYwYjQ5ZjVkZmMwMGNlMWVhZWVjMmZhNzA3ZDM2YmEyOWMwNDhjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGRjMjc1Nzk4ODdhOTM0MjI2YTU5Y2M5MWMxYjU1MDUyM2FlODU2Yzc5NmVmMDFjNTI5NGZhZDhiZTQzODNhOCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L54-L65",
+          "version": "repo-lines-v1:sha256:efc19019593a55950914fbe894ce1cf62b4f87dcd4f8e226d94426d457419c8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTIzOTM2MjUwZDNlNTNmY2JjODQ1MDA4ZDk5Mjc4NTdjZjFlYmZjZDU3ODAwODhmZTk2YjdlOWIwMjRjNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc1YWYwNGM2YzUwZGFiMzRjYTU0ZjIxZTE3ZjcwNDUwZmFlMjMxMDg4MTkxNjE1YzA0ZTkyMDA2MTFlNjQ5NjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjMWYwMmZkN2VjMWQ0NjJjMGNiODE4Yjk0OGZmZTRmNzE1YjJjMmM0MzI2MzBjMjMyZGZlMzRkNDI3NDNmYTkifQ"
+        },
+        {
+          "resource": "repo://tests/test_cli.py#L199-L209",
+          "version": "repo-lines-v1:sha256:6d31fa8046da57b8a62a30c64b97f533e0e1e00677cc736331dc463b654a9342:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ZmI4NThiMjFhMDZhNjU0ZTQzMDEyZDZjMzJjNDYzYmFhOWNjMDYxMzVmYmQyNWM0MmY3MWRhZGQ1NTUzMTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzMjNhN2RkMTdlN2NkMzQyZWNlNTM2ODNhOGNkYjM1NGQzNTNhMWQ0MDNhYjM0M2UyMzk2ZDBiNzZkYjE0Y2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzNWNkYjMzMjkwNDZjYmRhNjY4NzBhMzEzZjUxM2IwMmRkMDk4Y2E1YTVmOTFiNTg2MDhkZWZjOTA5YWRhZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzNjNmOGIxODQ1MWQ2Mzc1ZTljZDIxYmVhYzIzMzc5MjBiNzI3MjE2OGFkMWRlNDdlZDYyYWEzZGI2MzkxODQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_83c4f251a4aa429ebef8fb5eb2888d0e",
+      "statement": "The proof builds the disposable projection at `<repo>/.hypermnesic/index.db` (state dir `0700`, database `0600`, `.hypermnesic/` added to `.git/info/exclude`), projects committed content only, and retries the catch-up lexically when the embedder raises.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py#L461-L480",
+          "version": "repo-lines-v1:sha256:008af33040bd9f8ee57cd6a421eb8d5b82ba18824e1e3deb88ab002ecbc436ed:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYTQ2MmIzZmI3OGYwODg0OGE4NzY2ZGY2N2ZhZTE4MjMyNGFkMGVmODcxMGQ4Mzg1NWM5YWUxNWRhMWVjZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MzQ3NzE3NWQxZDFiODk2MDQ5ZGZiOWJlMjI0MTExZDEwMzQyMWI4MjJmODI2OTY5MjM4MzMzMjFmNWNhNjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwY2U1MmVkZThmYjg4MWViMjlmNDE2MThkYmE3MzI3ZTg4MmE2ZDUwNzE5ZmQ1ZGRhNjM4MzdhYWVlMzYzZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhNTExOTY3YWEzYTg3YjE4MmM3MmU1Y2NiOTI0ZTM4YTQ1YjBjMmJjNWRlNTMzMjJlZGM0YmVjYjIyZGYwM2EifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py#L60-L74",
+          "version": "repo-lines-v1:sha256:003527beb8fac5b7e20c0d0daca0f9d9248bbcb2f731c6e7610dd9a75979f370:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmNGJjOWZkMzFlMDkzNTM5YjUzYmJiOTRkZTM0ZmNmNmQ1MTYwNzgyNWY3YTFhNjQ4ZjgwZWVkZmFhZTc4NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiM2QxODFlYTI2NDg0NWZhMjI2NTk4OGI3MWJhYWQ0ODZkZTlmZmY5MzZiMWEzODQyYzlhM2FmMTI2MWRlYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlMzY1ZDAzMWE1ZGIwYmJiZmI0NWM3ZTg0ODYyZDc1NWNjMDA5Y2UyNjcyNTAwY2RlNjM0Y2I1Yzk0MjQ0MDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhNzk1MDQwZjc2NDQ2MTdjNTdlMmIxZWQwYmU2ZmE3ZmQwOTY4NTBjNzMxOTk4NDU1NmM1YTgwYjcyZjg1NGYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L263-L275",
+          "version": "repo-lines-v1:sha256:f9eeb42d063e99b7bacc79c3b2ea839456d7c4a35ea9604c77ec88ee91520ad8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmNzJhNjllNDA0YjFmNGJkYmQ3MjI1NDg4NzYwMWZlMDc2M2IyZjc0YzRkZmIwNWFiYWI3MDNkODZhODY4MDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5MGQ3YzkwOTQ2NmYxOWMwYjhjM2IxYzUwY2JlZmQ0YTFiYTc3ODllNmI0ZDkxZTk3ZWMyMzQzZDk2ZjBjMGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU4ZDc0NDI3YzdlOWU3ZjkyMDFmZGM5NWRhNGM0NzAxZDFlNzE4NmI0NzlkZTY1ZDc3NTEwNWMwMWVmZjZkOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0YzgwODAyOTkyMmQxNzI3ZGQyNDk0ZmU5YzA5NTk5NGM0ZDgxNTk3ZDFkNjU4YmUwMjRlNGI0YWM2MjI2NTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f8547b4a6cb24e98ae4002371ce47e51",
+      "statement": "The default proof is lexical-only (no API key required) and dense is opt-in via `--dense`; `degraded_lexical_only` is set from search degradation, a `no-git` catch-up, or an absent embedder, and always carries a product-language message rather than an error.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L217-L221",
+          "version": "repo-lines-v1:sha256:16114c979fd017ad43de2c0b8219b05ed8be9bd9531abdced42abce6490e7eb7:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWM1OTk5YjEyZGQ4ZTA2N2FkZTA5NmFlMWI0NmQ1NGE0MTRjMjVjOGM2M2FiZjE5NzBmNWNiYjZjY2QwNjJiNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjNhMzI4YTE1MGQyNzJkMmUxZWQ0NWNhYjRmNzJiNzI5MGU4YTAyYzhjNGVlNTZlZmMxMjk4MTRiNDYzODY1ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWFiNWQ4MzZjZDJjODNiMGU4NjM1MzNjN2E1ZTRhYzNjNDZkODIwNjVjZTJhMTllNDVkNjZhODU2YzUxMDIwYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjNlNmZmN2UyNTdmNmIyODg1ZmRmODU5YWJlOTgwMzM4NmQxNzFhZDkzMDlkOGJjYzc1MGFmMThhZDNlNTIxZiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L140-L141",
+          "version": "repo-lines-v1:sha256:b2c0e5b38afd92fce99d3b85716d9d214ae1df9e1dfd3c752fa435c0fc7b4e5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTc4YzE0NjljYTFlZDAzYWJkYmMzYjlmNTA1M2MzNDc0MDBkZGE4MjNlNjZhMTBhZTc2YmQ2NzI2ZDM5ZTJhOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmY5MWY4ZjM1ODAwNjViMWEwNGZkYTY0ZjU4MjU0M2UxMmE1ZjNhYmEyMzUyMTE4MjFjYmIyNWEyZDUwMDk2NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjRlOWU0OTU2ZmRlZGZkZTc5OWU4MDUxYmZhODUzMzIyYzMzMjBmOTg5Y2ViNDlhOTRhNDZiZDYzMzNlNjJhNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODc5OTM2NjRkYjg2N2ExY2RkOTQ2ODIzMjRhMzliODkxYzIyYWYzN2M1YzBiMmEzNDlkMjRjZjUwNDZkYzA2OCJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L157-L160",
+          "version": "repo-lines-v1:sha256:9ce1a65f414f843be20545931e4a077302179e2c87e970b591a706f4a20b4f64:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTdiYmQ0MDM3YzA1ZGZkOWZhNjE1OTZhNzJmY2I5NjA1MmEwNTIxZjNiODdiMjY2Yjg1MGQzOGM2OTAxNzgxNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWU2NzNhYmQ0NTdhOTdlZWExN2E2MDA2MmViMGZhZWE2YmRmMDk0ODY4Y2M2YjhmOGMwZWJkYTJmNjFlZDQyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTFiNDMwN2EyYmE2Y2M0MDk4MmUyYjY5OTJkMDliOTBiNDNiNjIyOTMyMDg0ZDcwZDYwMmJkNjc4ZjE1ZGRjMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGJjOThjN2RkMDJhMTIxZTg3NTMxZjJlNDQwYmMwYWNmYWNjNGQ1MDcwN2RmZDNmMmI4ZDA2NDEzYTUzOTIxYSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L304-L313",
+          "version": "repo-lines-v1:sha256:1d928f3e3bf419c533bb0ae657a611b2cc36d70ec8249f6ba2340c04ba220e56:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyMDk3OGE0MzM2YjNjY2RhMTdlZGRmMTgzZjBiMjY0N2RkZjY5NjQ1YzllNjgwZTE2Yzg2MmVhYzllZDVhYjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjMzhjMWI4YmM3Nzc5N2M0YjkyZDdkNmE1NzFkMjFjYjRiMzc1MWZmMTY2ZjlmOTU0MzU2ZjliZTgzNmJhZWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_75d8c952c8864b9ea614caea9848b6fc",
+      "statement": "Every string the proof echoes is sanitized first — bearer tokens, `sk-`-shaped keys, approval-token assignments, and operator home paths are redacted — and paths are reported repo-relative only, so the vault's absolute path never leaves the contract.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L316-L320",
+          "version": "repo-lines-v1:sha256:383bdea8027ebe336698baac5ce255c93b2ddddaf165f8af220eacf74b4b48b5:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg4YjZmMGFlYTAwOTEyODhhZDk3YmYzMWMwZTJlNGUwMmQ2ZTA5YTk5MTBiYzBjNGM5MGIyZmU4ZTE2ZTQ3NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTQ1MjZhZmQ3OGUyYmJkYzQ3ZDA4NmY2OWI5N2FmNjBlNDkyMDNkM2M0OWExMDAwM2Y1NDE3MTI4OWY5NjFlNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGNjNGE3ZDFjYzc5NmFiYTNlNDY3MjMzMjdmNTE3ZTlmODExOTgyZDI1MGYwNzAyOTg2ZTRiNTc2NGFkOTU4OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L35-L42",
+          "version": "repo-lines-v1:sha256:83005f75f84a970b30cc3087472046236258ab42fa7aecf9efa5ce58c3a36d2c:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjhmOTBjMGYzNDBkZjhhMmNkYjg2MTAxYTc1OTkzNzc1NzEzMWYyNzQ1NzVjNTM2N2QzZWJhYzc4YTRlNWUwMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjJiNGQ1YTIyN2I3Yzc4MDYxZDM0MWUwZTc0OWFmZjZhNWZiMTMyYWU0MGM3NjJjNjJkYzA4ZDUzMDM4ZWM5YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmMxZjAyZmQ3ZWMxZDQ2MmMwY2I4MThiOTQ4ZmZlNGY3MTViMmMyYzQzMjYzMGMyMzJkZmUzNGQ0Mjc0M2ZhOSJ9"
+        },
+        {
+          "resource": "repo://tests/test_local_proof.py#L171-L188",
+          "version": "repo-lines-v1:sha256:edfd75bec15519ca55aabac50133defe3a48669c4a10b8594c88a3ce1e2ee443:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0ZDRjNDEzYTYxNDA3ZWU2YzAyMjBlZmUxZGJhYTlmYWMyZTM3YWQ0ZGU2ODU2NTFkMDdmZmE5MTRiOTBiM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3NTgzMGYzNTJiN2I1NWIzZmFlY2ZiMjc4NTVmNGJiNzE3YzMzZTRjNTQwMTVlZWE0MGYwODJmYjAzMzMwYmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhMDVhZjI1ZTkyYmMyYmQyZDYxNjdhZDllMmNiYjVmODcyN2NkZTcxODNjNjE0ZjYzZDdjMmRhYmFkMmRlY2UifQ"
+        },
+        {
+          "resource": "repo://tests/test_local_proof.py#L190-L214",
+          "version": "repo-lines-v1:sha256:807be82272d03c5c4c7c8f362d739f1a643b8326e7a457f706ccc361b0b5bef7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwZWFmYTY2YzY2YjgyYjc2MTYzMDM2M2VhOGU5MmI0Y2JhYjliNDBiYWJkMmVjY2M3NDE3NDI3NjI0M2IwNzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlMjYyZDQxOTlhYmU3NmU4YTRmZTcwN2EwZTRkYjhjZDMyODJhNWE3MjllM2FmNzEyNWRlNzU2NDIwZTYzYjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2MjM0ZDRlMTUxMGMxNmYwY2U2Y2RjNGVkMTBiYjg4Yzg1Y2VmNzQxYWQwMzc3MDgwYjI5ZGJiMDdiNmU3YTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_16935c5fe67a46709747a56bd6d16d1f",
+      "statement": "When `--query` is omitted the proof derives one: demo mode uses a fixed demo question, and an existing vault scans committed markdown for a `Question answered:` line, falls back to the first line of at least three words truncated to 160 characters, and finally to the demo question.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py#L224-L260",
+          "version": "repo-lines-v1:sha256:c5fb0d78ea34dd82e2a287ec100e3cec4d874ebcf7ee5fd0f1ffeff6f54399d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMmExMWE5NjBhYjU4M2IxZWE1MzE2NDc5YjAwNDk1YjU4MmMwMTUyOWI5MzRlZjExZjUxZDMwMDNhN2QyNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMDU1ZWIyYTZhYmY3MTlhOGQ0NTE5YjhiYzg2M2ZiY2RlNzg5YzBiNzFmNTZhYmUwMWE5NWZmNmM1YWYzNjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmNTA1ZWI2M2JhYWMzMzBkNzk0ZGVmNTIyMjc5ZGI1NTlkMDcyNWI3N2M4ZTUzMjNmMWMwNzQzMjZhNjRjYTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhZDVkMWE3N2M5N2U5M2E2NzA0ODdkNmQ4NWUwYjM0YjM4MDk0MGM4NjIxZGY4ZDJlZjg4MzlkYWYwZWQ2NzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d18cceafb8b54b5cb9cc73158afabea5",
+      "statement": "`doctor` and `status` are one command behind two parser names and are strictly non-mutating: they start no service, rewrite no configuration, create no tokens, change no routes, touch no vault content, and create no commit — verified by watching git `HEAD`, the vault file list, the absent `--env-file` file, and mutating `SetupOps` calls.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L1018-L1030",
+          "version": "repo-lines-v1:sha256:09160506e2c79e1ed62c15329df59d2f5f931a6bafbbf305f96e8b96930aa7bc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NWIwMjNkYmFjNjdmYTRkNzg0YjE0ODQ2ODZkNGQ1NTlhZTY0MGQxODg1MWNmZDM5OTQ4ZjEyNmE2ZjA0YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlZWNiMTM1OTRhMWQ0YzI0MTkxNWRjNmJhMzc0YzM5YWQyZTk3NDllZDEyMjY3NzJjY2Q3MDNkYjkyNGU1OWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjNjk4YTZhZThjZmNkODk5MjM0YjM4NjExZDQ4MzUwNDhmNzU3YzA5MTNlNzBmM2FiN2JjNWNhZTg5NDg2ZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMzk1MjUxMjMwYjcxMjU4ODRiOWE1NzlhMjNlZjIwZWMzNjZiMDA5ODFhZjg3MzJjNWIyNDkyMTk3MTFlYzMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L86-L93",
+          "version": "repo-lines-v1:sha256:52f4998f22d93acdcf74913e63b094ef3f8dec59b31fd3b91d845b0c11f16611:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjQ5YjhiZDdmMTI2NWJlMDEzMWI2ZGNmM2VhZjU2ZmE1M2YzN2RmNDllNzE4MTVmMjAxMTVkZWE2MjI4MjViNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ZlMjU2NDIxMzUwNzcxZDE0NmE3N2M3NjJjZWU0YzA0NDY3YzA2Y2Q3ZTA2N2FhZTZjZmMzMmUyM2VlYzIyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGY4Y2Y2ZTYyMGMwODZkMDMxMjJjMjE1OGQxNjY4NmQyYjNjMGRkYTdiNjVkN2QyNzhiNWQ1YWU4YTYwMzEyYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2Q2ZDYyYzczOTRjYzI3ZTdmYzk0ZTJlN2YxZjZhZTZhZGI3ZDI5MDI4Njg1MDRmMTQwZTk1MWM0Yzc5YjQ5NCJ9"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py#L130-L146",
+          "version": "repo-lines-v1:sha256:79f612f2c9645e18b7b47a666966fdd8dec59736ea258e3f9f44453423bd8114:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZTg0ODM3NWZmZjNhZmE3MzNlNTVmOTJmYzY3MjA4OThlMDMxZjdjYzRkYmI1OTk4OTQ5OGZhMjk3ODVlOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1NWFkNzI3NDFjMGI5MTJlODY5ZDgwNDczMDEyMzFiYTQ2ZDMxYzAyYWEwOTc0YTVjOTQxYmFmZWExYjllZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhZDNkYmM0YTY4ZjI2ODg5YmE1NWYxYmRjZjY2YjFlNWE1NjJmZmRmYWQzODRlODExZjdhODQ2ZjU3ZWU0OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_758d154844f24210a2bd041f848e64ee",
+      "statement": "Each diagnostic check carries an id, a category (`local`, `remote`, `oauth`, `auth`, `write`), one of four statuses (`pass`, `warn`, `skipped`, `fail`) with a derived severity, a summary, and a `next_action` with a stable code, optional command, and doc pointer; skipped checks are reported as skipped with their reason rather than passing silently.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L188-L206",
+          "version": "repo-lines-v1:sha256:445e706c8bf575847b855093cecdee55d5ff219cd5ee5d48eefcadb66b1f7f03:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1ZTJmZWExYzBiZmVjMmU0MTU1ZmVmNWQxNDBlMTdhM2RmNTljMGE3NWY5YzZjMWQ4ZWJmZDNjZTMwY2ZjNmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkOTIyOGQ0NTQyZjhhY2RmMWI0NGM4NzY3NGJjN2ZjM2M5NzA1MTA0MGViMTdlMzViN2RiYTI1N2FmM2NiYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyZTc2YzZhNjI0YTdiOWZmMmJlZWFhZjU1YWMyM2Q3ODExZmFjMWE5Mjc4NDI0YjJlN2RiNzU1YWI5M2E5MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1N2Y4Mjc3NThkNjVlOGQ3YTgyYWU5ZmZiYjEyODliNDkxNmFlOGY4YWNmMDI5MzBkNTk2ZTBkN2MwNjlhZmMifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L30-L52",
+          "version": "repo-lines-v1:sha256:d40f7dde33dcbe4647ee198cc65f7b5788be39ff9d593730dc81969ac09eb9d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2OWExMzk3NWMyNTZlYzgzMjBlMjAxNjA4M2M5NmRmNjM3Y2EzZDM1YmViZGUyMzE0YmVlM2E0NzExYjU2Y2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmOGNmNmU2MjBjMDg2ZDAzMTIyYzIxNThkMTY2ODZkMmIzYzBkZGE3YjY1ZDdkMjc4YjVkNWFlOGE2MDMxMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5ZWY2N2YxOGIxMjZlNWExOTljYjZmNTk2MGFiYzEzNTIyMzdiODJmMmU2MDlmODE1MzgzYjlhY2MxNTg2ZjcifQ"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py#L54-L93",
+          "version": "repo-lines-v1:sha256:1c0661d88ad8a577ed770619f88f188b68ec3494564699d9d9367c47d812b5a4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlMzZjYTI5NzdiMmU0MmE3YzRmYzFhOGUzMWVlYzYwMDAyMjJiNzA1OTFmYTE2ZThiZTkxMGEzZGI0MmMzYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlMjkzMmRiYjI0MWY0NWM4ZDc5Yjk1MTQ2MTkyZmVhMzU3N2YzYmNlZGJkMGIyZTgyOGZiMzcwNGRmNDdhNGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmJhZjhmYTU4MTRkYzNkOWMxM2YxOWUxNmE0MGZlMmNhNTlhMjI3NGQ5OGQyNjZlYzUyNmNmZGVkYzhkNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjNzMzNWFiNDhlNmMwNzJiYWMzYmZhZDU0ZDJiYWU1NWQ2NDE4YTk5ODBlOGU4MThkNTY2YmIyNjExY2ZkMTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_55df55437e53497eb2d542ae501a02e6",
+      "statement": "Without `--public-url` every remote, OAuth, auth, and write check is reported `skipped` with the `provide_public_url` action and no HTTP call is made at all (discovery verification is never invoked), so local diagnosis works offline.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L128-L162",
+          "version": "repo-lines-v1:sha256:48665365bf0340c3d4deb1dae24afa9bc000e807b7c68385ea994bb80a1837c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2NDRmZDQzNjZkNzFjNjQ1ZmUzOThiYjRhNDFhNWIzOTMyZWVjOGU4NzYxODIwZDczY2FmNjFiOTRkMzM4NDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhNmZjNjQ1OTc0YzUwYTI4ZmJmZTEyYzE4YzFkOTkxZTdhYWIxODJhMmE0ZjVjNTQ5OGVlNDc1YmU5NTVjODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3ZjA2MTM0YTU3NzQyY2NkYWE0MzVjMmQ4M2I2YzM4NzViMzBmMDA1YTYxYzhmNzlkZDVkNzQ5YmMxZDRlYTIifQ"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py#L96-L114",
+          "version": "repo-lines-v1:sha256:0194f200b9e41a6974be6bbdfdec58b4dcec1fe0b2f7bd85acc41361facdc0cc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0NDFhN2QxZGViZTY3NjJjOTcxZDIxMDNiMzJlZTI0ZDlmYmEwMjBhMDNlYTY5MWViNWYwOWVlMzc4OTVkMzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxYTVhNzRmMTBkZTJjN2I1ZDExMjRiOTliZWQxMjkzODMzMTBmNjlkNDQxOGNjODdhYTA3MGRkNzMzMjc5NWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjOTJiMjFhOWY0MWZlNGZmNTk0ZDZkNmNmZjQwZDE2ZDgxMGE1NTYzNmMwZjY1MDg2YmIwYjU3ODZkOTY0M2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5daa6807ada94cb48228a7f9d859cc6d",
+      "statement": "The overall diagnostic status is `needs_attention` only when some check is `fail`; `warn` and `skipped` never block it, and `what_this_means` either states that local memory is healthy enough with no blocking remote failure or names the first failing check's summary.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L60-L73",
+          "version": "repo-lines-v1:sha256:a0831394ba76343d23e66a63497a640927ca76c5e2065d9c74898ee391dc4226:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzZDAwY2YyNzA5NjRkNDRhMTNkZmFjODc1MmIwOWZjYzQzNWIwZjE5YjMxNmFiY2Y4MWE3YWE2NGJiMTIyZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmYWQ3YWI1NDYxNGJlY2ZiMTRhZjVhNDc0MDNhNGEzZmRjNjZkMmYzY2JmMWQ2MDE2Zjg1Y2Y5ZTc4NDEwMDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0OGJiMzgzOTQ3ODMyY2ZiM2VjZTk1MmM3MzNmNmRhMmRiMWY1MWUxMDdmNGVhNzk2ZDc3NzM1ZGE2OTg3MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlYzFjYTRkMTFiOWNlZTY3NDEzZTk4YzNlNWM2MTVjZWI0ZTVlYzg4MmRmNjkzZmFiOGJjMjg4ZWE4MDExNjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_28b7cdcf25f24cb1b7061bf412ae3cb9",
+      "statement": "Dense state is derived in a fixed order: an unreadable repo `.env` short-circuits to a `fail` with `repair_key_file`; a discovered key is `configured_unverified` unless `--check-dense-live` distinguishes `configured_valid` from `configured_invalid`; and readable vector coverage then replaces the credential state with `vectors_stale_or_absent` or `index_missing_or_unbuilt` while preserving `configured_invalid`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L234-L312",
+          "version": "repo-lines-v1:sha256:eddc6bc52c66f5e8c944e00ea61f18c00bf6bead7999c86b500c05f329ab1fcf:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkNDBjYzQ3MzI2NTkwODRlYWJiODFhMDRiMTkzMGM0OTBlMGFmNWRlNjUxMjkxZDQ4ODlhYWI0MDk0M2YyMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwNGZmMTMxNTg5MWJlYzUzM2M0OTEyZmFhMGNjMTk3ZWI1YmE1Yjk5Y2NlZTQzOWJiODQ1MmQ3NGUwYTY4MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3NmMwN2Y3ZjA3NTJkM2EzMmU4ZWM5ZWI0ZjI1MjQ0NWQ2MGRkOWUxZjY5Y2ViM2ExNmNmMmY5MTE0YjgzZmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_91670a36f428469cba6923f07bb982d7",
+      "statement": "The dense remedies are state-specific: `index_missing_or_unbuilt` points at `hypermnesic local-proof /path/to/vault` to build the projection, while `vectors_stale_or_absent` points at `hypermnesic converge /path/to/vault --now --json` rather than a full reindex.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L289-L300",
+          "version": "repo-lines-v1:sha256:f60e1174940097a0a2b30db427951583b5dca732fed40f6a85854078deb48e2d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmZjZkYzA5ZjE1MGNmNDhmNjM3NGFkZjVjMGQ4YzQxNWY5MTdmY2IwMjUyNjk5NTE4ZTg5ZGQ1YjM5YTRkODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwMTViMGRjYzgzMTQzZjQ4ZTgwNDI5YmRhOGU5ZDI2YmYyMWZmYjFiMDA1Y2M3YjE1MzM5NzJjODkwNjI2YjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNmQ1YWJjMDBlZmEwNWUxOWZlZWU2MjQzYWE3MzMxMzNjN2UzNTc3MmFlODQ1YWJjZjM3ODMzZjI2ZWRmNWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwNzAwYTk4Y2M3OTlmYjJiNWExYjFkOGZlNDJiN2Y2ZThjYWIxMGJlMmIzN2VkNTRlNWQ3ZjMyNTFjYjM3MjYifQ"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py#L233-L280",
+          "version": "repo-lines-v1:sha256:5081440b3c3a6e2953abef4cc2280b668d4baf1a9e9ab31d76d11c1e878a38f3:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhZmRlM2Y5NDc5OTFmMGYzM2M2YjE4MTRhZWFkZWQ4YTRmNTMzMDgxZjJiOTAzYjhmZTJiMmVmOTMxZjQyMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwNzkzODc4OTA3OWM4MDhlNjhkOTc5NmUwZmQyYjA5OTkzMTE4YTQzMTViODhlOTFjNjQyODk4NGE1YjA1YmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZiNzg2MzEzM2I2NjkwYzg2OGVmNDNhMGJkOTZhZDVhOTRhZmUwZmFjZTdiNmZlYTkxY2Y4NWUyNWJlMGFjZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1OGI4NmVlZWE3YzM3MTU0Mzc4ZTE4MjEwODNlNDE3NTc1M2UyNzI5NzUzOWE1MGM2ZDcxZjBlNTE5YjIyMjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ddd7bd7fefca46a8bf51ad69d55e2d4d",
+      "statement": "The local index check is deliberately three-way — missing (`fail`), present but possibly lagging `HEAD` (`warn`), or current enough — and exposes the raw `fresh` boolean in `detail`, treating an uncomparable vault with no `HEAD` as not stale rather than failing.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L106-L122",
+          "version": "repo-lines-v1:sha256:e1df3c70a1ad226068820ae514af63a21a12acd0f024f42db1762f7f1180492c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmODgwYzMzNWQwMjY3ZDZiZDc0MWNhMDk0MjQzZjkxZDRkMDJkYjY0YTY5NGQwMTk1OWI5YzRiMzRjMjRhNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MzEyMzNkMjhkOTUzNWQ3YjM3NjFkMjFhM2U5YWU0M2Q4MTYwZmQ1MTAzNWExNTM3ZDAxODJlODY4OGY4OWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkYzUyMzMwZjkzMWI4ODAxZjA5YmVmODQwYTcxNjliNjFhNmRmOTIwZTY1Mjk2ZmUzMjkxMTQ1MjBmYzMwNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmNWRiMGIzMTY4ZjM4MzViOTliNDliYzcyMWI4Y2QwYjU5YjBiZmY3ZDNhMGY3ZWZiNTQzMTIwMTc2M2MxM2IifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L221-L231",
+          "version": "repo-lines-v1:sha256:5edafe03bdf6e2cb154fe216244cb97d89b8c8700ce6af5a858bcc375f664457:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZjYxNTE3N2EwNzU5NmE0ODlkMGNlM2UzNGNkMWZkZGYxNzA4OGEyNDBlNWM5YzA5MDg2MjRmMWFkMDA0NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNmZiOTQ5MjQyYzQyZTRiMmQxYTFjMzc0NGRjNWNiOTgxNDlhZjYzNWY1YjhmYmQxM2QzMTE1ZmNkZTkxZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhOTk5ZGNhMzFhMGQ1MTVmMjJmMWY2MjA5ZDMxYWJiM2M4MTA5ZTRiNTBhZmE5ODAxMTA5YmRhZTIwOGRiN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkyNTgwZTk1NjFmZGQwYzdkNzgzNjI4ZWI4NTc2ZGFiMzQxZTFkMzhkYjYwMThkY2M0MTQyZjI5NDE4MTNjODUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f0afb4e262404d26a38fa21a7f302c66",
+      "statement": "Given `--env-file PATH`, the consent-secret check reports only whether the file exists and whether its permissions are owner-only (`0600`); it never reads or prints the value, a broader mode is a `warn` with a `chmod 600` remedy, and omitting the path yields a `skipped` check with the `provide_env_file` action.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L356-L385",
+          "version": "repo-lines-v1:sha256:fbfda6adf308d9ba2ddf254df88fd33ac39b74d1d8c8610bc81c7d1aff98fd8b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzMjA4MWEyN2Y3OTY4OTMzMmJiYzU1NmRhNTdjNjBkYzRlYTFlMTkwZmI5NGZlYTJiNjgxMjgzNjk3NjE1NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwZTIwMjhiMThmOWQyOTU5YmZjODdjODBiYmQyMDQwMDcyYjEzODQzZGY5MjBjNGRmNGU3MzI5ZmZjODVhYmQifQ"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py#L148-L172",
+          "version": "repo-lines-v1:sha256:7f646edccb2342cb25d8fac6f875644e0c17e826c4f8429a988612c54905df48:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmNWU1YTZmMGY4OTliYTk1ZjUyY2E3ZWQxYTg4YWJkZDYzNjhlNDAzYjEzOTVlYjU3MDg4MTk5ZjAxYTc2MzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3MzFiOWY3YjMyZmI3ZmFiNzgzYjM0NDg5YjNmNWMyZjk5YjJlNmMzYzA2NzBiYzZkMjMxMTgzODJiMzljN2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ3NzY1OTY2ZTUxMDZhOTc3NzY3NDBhZDNjZjBlZWJmMDVjNjc0NWYwOWY3OGM4NWIwOGI3MWVmZTRkY2Q4OTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3cc74434fc7f4ffcbcb7bf54d9308214",
+      "statement": "One shared secret-free client guidance map serves both commands — doctor returns it as `next_actions` and setup as `client_next_actions` — covering the local CLI and Obsidian companion as always available and the generic remote MCP client and Claude Code / Codex plugin as available only once a public URL is known.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/client_guidance.py#L6-L66",
+          "version": "repo-lines-v1:sha256:5fe88a1a91b0a1386783ade5e896e85062e568e4badd73a3a44f1b780b816825:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwMTFlNGFkYTEzZWI4NjQyMzA1YmY5ODU2NDJmNGNiN2ExMGU1MWFkM2U1NGY0YjFlMzRmZTJkYjdhOWY3YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjZhNzljNmVkZGVkODUzZWY5NGU5OGM0YjE5YmFmOTA1YjI3MWU0NzZlZjU1MDAzNDA4MTMyNGQwMTY1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkYjQzNjM0NTNhNDU4MDA2ZWY4MzY3YWYyZTMxMmVhODU0NzY3OTBjODQxODViN2ZiY2Y1OTY0MDI3ODk0ZWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py#L75-L83",
+          "version": "repo-lines-v1:sha256:2c6268b8305e5f8d62bc07669446c060ec15263dba191245157d0ad371868781:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk5MjM5MzYyNTBkM2U1M2ZjYmM4NDUwMDhkOTkyNzg1N2NmMWViZmNkNTc4MDA4OGZlOTZiN2U5YjAyNGM2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTVjNzk5NzMzNjVhNzA3YmJiN2MwNGRlY2EwYTI4NmJiZGFkZDYwMzJiYjIzMjFmYThhYjJjZjY2NmFkNWM1ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTllYzRhN2NhZTU2MjM3Mjk5NjI3OTFmZjQ1NmIyNzYyNDg2NTNiZjllMDNiYjZjMDA3YThiYTZmZGZlMWFiYiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L574-L593",
+          "version": "repo-lines-v1:sha256:7eba45ca44dae1b17f46e8ad98c14e2563b9d054c88707f73b335c61941cadc9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2NzdmZTFmMWNkMWJhMmNmY2M3MGE2NjFlZWIxYWI4YTljMmY0ZTJkMTJhOWVmMjRkNTE5ODY2NDJjMDE3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1MWQ2YzczZmNjNDFmNjhiYzBhZTcxMzQ2OWNmZTQ3MTM0ZTk0Yjc3MzhmNmU1NjE0YWVjMWJhZTczMjhmYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0Mjg5MzIzMzU3MTc2M2U0MTk4NWJjZGFkODU0NDRmMzg4ODFmMjEzNGI0OTY2ZTc5MDE3MDA1YTkwNDZmN2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96a8e25067c7427db663f458de26848a",
+      "statement": "`setup` is fail-closed and ordered so that all preflight work happens before any side effect: resolving the token TTL, refusing a non-HTTPS or bare-IP public origin or resource, normalizing the default client scopes against the supported set, confirming the target is a git repo, confirming the engine credential is discoverable, and confirming Tailscale is installed and running — any failure raises `InstallError` with nothing created.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L503-L545",
+          "version": "repo-lines-v1:sha256:99a039194889f28d21618edc0bdb47081044eebd90772c7c832c66b2ac518664:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNGI1ZjM5NTY4N2E0MDMwYmI5ZWFjMzRjZGQzYzA0NzFhNTJjMTg4M2RjZjllNzY1OWIyNDdlNmU5NWY2NzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2OGM2YzFmNTE2NzBkMTY5ZGUyMjAyMDc1OTA3OGVmMDFiOGIzMTYwNWRmYzQ3YTk3Nzg3ZDBiYmFmMWMyNDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkMjgxYTkzNTA0ODdiMGM4MjU1NmMxZmY5YThlNjNlMTE2ZjY0M2U4NTRjMzY3Nzk2ZWE1M2RmZWU4NjQzY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjOGNjZTAyODFlOGIyNjZlMDc2NDkyZmQyYjU3NGY0ODFhMDY2MmYyZTY1MzNlMTRlZDg4OTU0NzE4Y2EzNWIifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L194-L218",
+          "version": "repo-lines-v1:sha256:412e5bd6235ad5458d66f2cf38b47e7884764f4b6e4bd23bd723f03626ac585e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4NGFhY2MwYzQ3ODAyYmI4Nzg3ZDBkMTVmMTIwM2ZlN2FkNTY1YTQ0YjcwZmJkOTM5ODQyOTdhYzE5YjdmYmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMTI3MTViZWM1OWE0NDFmMTY4MmZmYjUyZTg5YmZhZDk5NzdmNTBmZmY3YWQzZjhhMWQxOTFkZGMzMDhkNDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjM2U2MGE1MDUwYWY1ZmM2Y2E1NzFhM2Q0NDlkNDE2M2NlZTBlOTNiYzJmNWVhZmI3MDA5YTVhNmE3ZmI0MDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5NWJlMWYyNmVhNjIwYzdlZTFiN2MxZmJlNmIwYTYzMTE4NzQxMTY0NjNjMGU5MzU5NGU2MTlmYTA0NTVkZjkifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L794-L817",
+          "version": "repo-lines-v1:sha256:b173ef0fa5d7c1523e3a71ab392a24dcd2da40381ccfba2f010ac52d88e13594:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiOTJmNGM3ZTg1ODYyMWEzY2EzMTZmM2E4NWQzYjAwMDBkNTkyMzgxM2Q0YTI1NDRmOGJlNWFlZTA2NDE1NzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMzM0Yjk3NTBlZTc5ZGYwNDM3OTY3ZGQwMDg2YWMyODEwYTI1MTg2ZWMyMjZjYWQ0ZTYwNmU5YTg5MjIxMGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg3MzQ0NWYzODNjOTI3YmYxZmVhNzBjZjJkMTE0MTVhMTE2YWMyOGYzN2RjOGExZDJmMGU4ZjVhNzFiMDUyNWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NjJhN2QyNTBiMTMwMjExNGFmNTM0NDUzYjBlNGRkMDQ0NGM0OGVmOTAyMDA4ZWI4NGIwZmIyNDFlN2NlZmUifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L479-L489",
+          "version": "repo-lines-v1:sha256:ce58e284dcd25f0c4fb4fe2cf8b39aafc222696c0a612afd194019b46a18c51f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmMTEzZTkyM2Q5MDI0MDUwZWE1MDk3ZDRlNzU1NzU4MGE4NDcxMzY4YzkzN2FhOTM1ZDI4YmZhMDQ2MjhhYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxOGUyMWJkODliYzRmY2YyM2JmOTM5NTM3ZGQwMzc4YWQwNTFhZThlNjM4MGZiOWJlMThmZmZmZmM1ZjgxZjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwYTFiNGUzNzhlMjIyMWE2ZTgzYjkzZDViZGRiMGJlMzc0ZTVkZThmNTRmZTUxMjhmOTIzMjBiODUxZDQzM2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2c9405b1d9654564b141e70d7757812a",
+      "statement": "After the routes are applied `setup` verifies the live HTTPS discovery chain by real output — RFC 9728 protected-resource metadata, RFC 8414 AS metadata carrying a `token_endpoint`, and an unauthenticated POST that must answer 401 — and fails the command when a well-known does not resolve to this service.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L460-L500",
+          "version": "repo-lines-v1:sha256:8b07154920c475a2595070ef73251045987bce32c90b8465120f100442abc594:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkOGQzNTcyYTY5MmI0NjgwNGIzNTkyYjEzMTJjNzA2MWZiYTJmNjU3NmQzZTg3NjRiYjFiNTlkYWEzNGMyMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyOGYwOTc4YmU4NjlmZWM3YjRkNTUwZmFiNGY3NmI1MzYyODQzZjFhNmM4YTdmYjI3YjQ5OGU5MDkwMTQ5OWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2OTkwMjQ2YjhmZGQ4MzBhMGYxMGI5NzdiZDNjOWMwNWNmMWZmYzA1ZjBhYWU5MTQwYzIzNjg1MmYzNTVhZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwNGNlODhlZTk1NGZkZWJmY2QyZjYzZmJjNWM1YmZmMTJiYmRkYjIyNmQxY2I0NTZiYjEzOGJmY2I4MWE4MTgifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L566-L572",
+          "version": "repo-lines-v1:sha256:a3aea475406f93019380cd5812bea9fca007e2c1d4c0f43743034ea65b0ff0e1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTM0YjQyNDc1ZmFlYjUzYmI3MjQ5ZDU1MGUyMmI0MDhkNWE4Y2VhYWRjM2ZlNGZlZGNmNWE2YTBiODY0NGM5YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWNmZGU4OTMzNzNhMjc2NjBlYjY1NjU1OTBkZmMzZjNkODAyZGEzZTQ1YjUyNTViNmVmYzRkY2IyNWU1YTA3NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzljY2I1MTYwNzIwYzhmNjZkM2U2ODQwYTIyYmFiZWIwOTllN2UzZTZhOTk4ZGM0ZGZmMDExZGFlZmJkY2MzNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDI2ZDQyMWJkZDg4MDMyNmFiMmY0Njc4MDNhNWM5ZTE4NWQyMWJhMWFjMjI5OGM1OTJmM2Y2MTUwOGE4NTMzZCJ9"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L491-L499",
+          "version": "repo-lines-v1:sha256:f42a7a7aa684d4bcd1bd7039a6db252e9fd6fd321ed045014a4f87bd32c24e4e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWE4NWYyMmI4YTNmNzM2YTdlYTRlZjgxMjZjYmNkNDc3ZjBlNGRhYjM1NzlhM2MwNjVhNWY5YmIxMjQ5ZGRhYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTk1NWM4MGY4NzIxN2IxN2FiOWMwYjdlNTIyMTY5MDQ1M2RiMWNkYjExNTI4NjgwOTdjYjZjMzFiMWEzMDE2NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzA0MWM1NzY0YjM1Mjg1YWI5MGMyZWJhOTZmZWM2OTc5NDk1Yzc4YzNhZTUwNzJlMDQ0ZDkyYzRlZGY3YjlhNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGEzN2E4NDRiZTczZTA0Nzc0N2IzODA5ZTc5ODEwOTc1ZDI0MWQwYjEzODg5MDM0YjNiMzU0NmM2NjgzZWVmMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ffe43d211e0d4563b4bea73ba6b8e5c9",
+      "statement": "The setup side effects are a consent secret persisted into an owner-only (`0600`) env file (default `~/.config/hypermnesic-cloud/cloud.env`, minted with `secrets.token_urlsafe(32)` and required to clear the 24-character entropy floor), a rendered cloud unit installed and started under `~/.config/systemd/user`, and the per-mount funnel routes for the MCP mount plus both root discovery well-knowns.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L311-L348",
+          "version": "repo-lines-v1:sha256:30d2c2c0a543318c24cb9a844afc7d1a86d9f2510774bbc70e231161d3ef5def:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmN2QyMGUwYWFhNTU2MDY1ZmUxNGNjN2VmOGEwZTA1MTA1NDY4NTFiNjVmNjIzMDc2NzFiY2VhMmYzMDBmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjOGFjMzgxMTgyMTFjMzVlNjNkMWZhOTFkNGYxYjRhYWQzOTU1YTdjODY2OGVkYzZkZWQxOWU1Njc0OWQ4NTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmNjUyNzJjMTIxMzZiY2I0MDQ0OTc5NjlhODJhYWEyZjgxMzFiNTAzNWU5OTM1MDRjMjk3NjNjZTg2YTE2YTAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L351-L372",
+          "version": "repo-lines-v1:sha256:61b603cda517b334d72a85f54388622241f1409e13eea623fda1a5eac8635c3a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmODAyMDZmYzZjNzY0YTAyYjQ2N2ZmZTFlNDU0NDlkMmNhNTgxNTI4Yzc4MzFlYzE4NTY3OWI3MmQ1ZGQxNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZTNhMjdlNjc3OGVmYzZhZGRmODUzYjczM2NmZGJhNzIwMmM0NTA5MDVkYzUyNmQ4ZDYwZTI1NzI1NzYyZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4YWU2MGEwOWE3ODRiNDdlYTA4NTMxNmJmZjkyYzY4MDExZGQ2NzBkODlmMjhkYWY1ZGE5YmI2YWU0MWJjNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NDcwZGZjOTQxZjc1NGFjYjA2M2ZmMWE2MzRjMzEwMzJlMWI1MDcxNTA0YjdjZGY0YWJkMDdiZjkwZjY1YWIifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L375-L412",
+          "version": "repo-lines-v1:sha256:36f7e2285e887f7b1452548528a886b81ff206f7dd1f69356bb97d51ad24b065:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmNzVjODhhYTFiZWZiZTY4OTRjNTIwMzE2ZjBmNmI1NDk1Njc5MTZlZjI0YmVkZjMwZDdhN2M1YmRmZTZlNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExODY2MDJiYjYzMzZhZjhlZjBhY2U5ZmJhYWU3MDcyYzdlMGFiZWZkNTc3OTkwOWM4OTY2YTJiNzZjNWQ0ZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNGIwZDQ1NDVmNTZlNDYyMDNiNmI0MjJjZWRlMGViODExMDMxZjU4MWZjZTlmOWJlYWUxMzIzY2IzZWQyMTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0YzM3NGFiYjBiOWViOWQyMzA4ZTNhZGRlMmE1MzQxNGQ3ZjdjMWI0OTgxZjc2OWJiMTNjN2EwODY0OGU5ZGQifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L502-L531",
+          "version": "repo-lines-v1:sha256:2a6279fa2106eb783442446e4e3f4c6bc6ea9d6f1820a89a609877031a3f9f88:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhNWFhMTNlNTBlMDNlMGQxNzFmYThkYmIzNzJlZGYyMjJlNDQxOTVmYmExYTliOTZmM2NlMGU5YmYyOGJmMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiODJkNjIyMWIyNWFmNjVlM2JkMjQ3MTlhOGM0NzJkMTdhMTc3ZTYwZjNjN2JmNzNiYzg3OGUwYmNjM2VmNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRiMGM3NmQ3ODlkMjY0M2E3MGZkNDFlMTY3ZWE4ZjU2ZGZmODg5NGEzZDQ5MzAxNTBjYzQ4NWI1ZjAwODE2MTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_24ae09de82ad4345ba4eb8b313e3d49f",
+      "statement": "The rendered cloud unit references `EnvironmentFile` for the repo `.env` and the owner-only cloud env file, so the approval token and `OPENAI_API_KEY` values are never inlined, and the unsuffixed host-root `/.well-known/oauth-authorization-server` is intentionally absent from the routes to avoid a co-tenant collision.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L311-L348",
+          "version": "repo-lines-v1:sha256:30d2c2c0a543318c24cb9a844afc7d1a86d9f2510774bbc70e231161d3ef5def:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmN2QyMGUwYWFhNTU2MDY1ZmUxNGNjN2VmOGEwZTA1MTA1NDY4NTFiNjVmNjIzMDc2NzFiY2VhMmYzMDBmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjOGFjMzgxMTgyMTFjMzVlNjNkMWZhOTFkNGYxYjRhYWQzOTU1YTdjODY2OGVkYzZkZWQxOWU1Njc0OWQ4NTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmNjUyNzJjMTIxMzZiY2I0MDQ0OTc5NjlhODJhYWEyZjgxMzFiNTAzNWU5OTM1MDRjMjk3NjNjZTg2YTE2YTAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L388-L412",
+          "version": "repo-lines-v1:sha256:00791c63cbe1537b60f88094c005157cd2bd7c466cb67264aa0bdb7a35161919:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0Y2IzYjFjZDY2NDhhYmM0MTI3YmMwOGY0NWQ1NzdhNGQ0YjBhNzEwYjY1MWJhYzlmYzZkYWI1ZmY0ZDlmZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExODY2MDJiYjYzMzZhZjhlZjBhY2U5ZmJhYWU3MDcyYzdlMGFiZWZkNTc3OTkwOWM4OTY2YTJiNzZjNWQ0ZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiZmFmMzhhOTMwYjUyN2FiZGMwODEzNGE2YWQ4MmU4MDNmMjUwMDliYjU2ZjVkOWUwNGVmMGVjZjAyYWE2NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0YzM3NGFiYjBiOWViOWQyMzA4ZTNhZGRlMmE1MzQxNGQ3ZjdjMWI0OTgxZjc2OWJiMTNjN2EwODY0OGU5ZGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_575719b1e8f74440a0335e8a21435b9c",
+      "statement": "Route application always shells out to `tailscale funnel --set-path` and never `tailscale serve`, because `serve --set-path` silently clears the funnel allowance and drops public reach.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L415-L419",
+          "version": "repo-lines-v1:sha256:5a79541158ea7c0a25497951208370ed00110c861404f0c1761cf3d925a27566:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjM2YzExY2Q3Y2FkMzRiMzhhNDFiYTA5MjhmYTJlMWQwYjc4MjFhMDY3MTk3MjI5NWUyNjI2OGRmMjc4OWM3OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjEwN2ZiMTg3MzYwYWUzZWU2OTMyZmY4ZTRmNWNkMGZlNTRjNGMwZGI5NTQ2MWViZjkwZDU2OTRlZDgwMTkxYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTFjZDA5Mzk0NmI4YjBhYzQ5ODdiMGJjMGZkOTM0MWM0OWMxNGQzYTdmMWRiNDQ4ZDJiMWMzNjY4MzkzMjRiNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzA5N2ZkMGY0NjhlY2IxNDE3ZTEzZjk0YjcxYTg3NWY0ZDAyMmIyZTFjYzlkMmUyZTQ0MWQ5MzYyZjQxYTVjMCJ9"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L533-L539",
+          "version": "repo-lines-v1:sha256:003afe25a40fa519c22789e841154986c9d4c1cf82cdb6ffaea9e89eeef3640e:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI5NmJlMDdkOTYwNGEyOTI3M2U0YmE1OGE1MjM4MmI3NGM4NDgxODU0N2UwN2EzMDE2YjJiYzU1OTIyMWZjZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzZkMmMwMTgxYzA3MGY1YjE1YWEwY2M0ODZmNDBlZWZhNWRiZDVmMWZlOWNjMTM5OTRkMDFiYTU0OWRhNDc2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2Q1NGM1ZjFmNmE5ZWUyZTU5MGIzMzY2YTU1Mzk4NTY3YTBkMGRmYTI1ZTRhNTEyZWJjYjdhMTI5OGZkNzM3MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a82e33d9e37947b99ebf85e310ac4436",
+      "statement": "`setup` re-running converges: a consent secret at or above the entropy floor is reused untouched (regenerated only when absent or weak), the unit is re-rendered so a changed or newly defaulted `--token-ttl` lands, and the declarative de-duplicated funnel route set is re-applied to the same mounts.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py#L161-L180",
+          "version": "repo-lines-v1:sha256:d7a115633b66a97db2f762ee139cb549ced23c8d4b0502d33fc2134c3058e57b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZjE3OWM4MmY4MzhiMjk2MjA0MjU0Yjc3ZTg3NzliMDIzZTgyOGU2YjZmYjgxZmU1OTFlMzViYjlmYTUyMDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzMWJkZTEwYzUxYjgwYjNmNTgxNDFhMGEzNjkxMDZiMmU5NzhkZjE0OTMyZDEwMTA2Nzg5MmYxMjI4N2VhNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkYTJmMzYwY2M1Yjk5MzFjNGJmNWVjNjFkMTkxZjYxODhmM2UxMDRkZDBiMmVhM2FiZmEzNzhkZmZlODAwYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmOTQyMWYyMzkwOWRhZDg3YmVkNGRmMDExYjMzNTQ2MzBmNzUzMDI3YmUwZjZhOTBiZWVhNzdhN2E2M2I3ODcifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L351-L372",
+          "version": "repo-lines-v1:sha256:61b603cda517b334d72a85f54388622241f1409e13eea623fda1a5eac8635c3a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmODAyMDZmYzZjNzY0YTAyYjQ2N2ZmZTFlNDU0NDlkMmNhNTgxNTI4Yzc4MzFlYzE4NTY3OWI3MmQ1ZGQxNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZTNhMjdlNjc3OGVmYzZhZGRmODUzYjczM2NmZGJhNzIwMmM0NTA5MDVkYzUyNmQ4ZDYwZTI1NzI1NzYyZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4YWU2MGEwOWE3ODRiNDdlYTA4NTMxNmJmZjkyYzY4MDExZGQ2NzBkODlmMjhkYWY1ZGE5YmI2YWU0MWJjNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NDcwZGZjOTQxZjc1NGFjYjA2M2ZmMWE2MzRjMzEwMzJlMWI1MDcxNTA0YjdjZGY0YWJkMDdiZjkwZjY1YWIifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L434-L477",
+          "version": "repo-lines-v1:sha256:0e7a84c7c4b335a8d1e24a78ffd20cfb678f6d48b41af25feec91fc24951a6f8:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5MDA3NTFiNGI5MWU3MTk0MDUyNzJmZjg2NGNiOGZmYTI4ZDZmNGFjYjhmZWVkOTIxYjM4ZDA5NDg2OTVmZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4NGQ0ODBjY2JlOTM0NzU1NjI1ODI3MzVmNDM0MDY5MGQyOTc3YTkxYzQyZDI5Mzk0NTQ4ODFjOWU2YzY4NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4Y2M4MzNhNGI1Zjk0N2E5ZGYyMTdlN2U5ZmFiNDY1Njg1ODBiNGFjNjBjNGUzYzgwNTJlODAwNjVkYTRjOTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d76166e397cb419095601e93a04bbbbd",
+      "statement": "`setup` renders the same serving knobs as the lane it starts: `--token-ttl` (default `172800` / 48 h, overridable by env or flag), `--default-client-scopes` (default `read`, resolved from the flag or `HYPERMNESIC_DEFAULT_CLIENT_SCOPES`), and a repeatable `--allowlist` that narrows the write surface.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py#L24-L33",
+          "version": "repo-lines-v1:sha256:14ec8a7a643f7571eecdd1856a64c6cc66be10fb234ce8c490f8189318c81953:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4NjgyMGUzYTYyNTJmMWVmNDNjOTBlY2MzZjM0Nzk2MmQxNDI3YTU5MjUyN2FkNTQ0Mjk1NGQzMTMwNzM5YjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwN2YyMTBjY2QyZmU1NzMxNjkyY2ZlMDJkOGU2MjgyNTY5YmZhMzBmYjg2ZjM2NTFjNWE5NzczOTQ1ZWRmNDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3MGZkM2NlNTBiZDFiNzc4ZTQ1MThkZTg5MDcxYzhhZTIxODA5ZmMxN2QzZTVkNGFiODg0ZDcyYjc2MDI5NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlNWJkNWMxZmU4Y2Q0YjA5YTY2NzA4NWViMzAxOWVlMDRmNzcyNzg0NTIyNDMzNDFhMWMyOGQ0OGRjNmMzNjAifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L311-L327",
+          "version": "repo-lines-v1:sha256:bd11953749427e81951d16ea690ca8ade20186d85f9907abffbb9280967ef447:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmN2QyMGUwYWFhNTU2MDY1ZmUxNGNjN2VmOGEwZTA1MTA1NDY4NTFiNjVmNjIzMDc2NzFiY2VhMmYzMDBmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZjE3ZWU1MGNlNjkwMjZiNWU3NDYxOGMzMGUxNTZmOGI3OWRjOTMyNmI1YjBkZWZjYzAzOTM2NWYyMWYwMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjOGFjMzgxMTgyMTFjMzVlNjNkMWZhOTFkNGYxYjRhYWQzOTU1YTdjODY2OGVkYzZkZWQxOWU1Njc0OWQ4NTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5OTI0ZDE4YWJiMGU2NDdmZTNlZDc0YTY1MTUxZjExYmY3NjAwMTM5ZGY0OTUxYjI2NjFlNzhjZWI4MThjZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ec8feb40fcba48fca04aeaf9db8f55b2",
+      "statement": "Requesting the write scope by default changes only what new clients ask for: the consent page still requires the operator approval token and remote write still cannot bypass protected paths, frontmatter validation, dirty-tree checks, head-drift checks, audit logging, or git guards.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/getting-started.md#L105-L112",
+          "version": "repo-lines-v1:sha256:50040d93ad6dc4940e8174f44590e7ca4cd3c945d31cc03dc4552a9e2cf5bf23:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjY4NmE3NWRlNDI1YTkwNTNmNmViNDVkMDc4MTZkMTQwZjJhYzhlZDQ4ZmQzMTYwMjMyYTVhNjMzZmFlMDJhYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzkxZGQyZmZmMzE5MTg0ZTcxM2YzOWU2MzEzZjhiY2JhNzMzMGFmMWQ4ZjZiOTJjNjQ1ZjI3MTFhYzFiZjZhNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWYzZTMyZTcwMmE4N2U4Y2VkNmVkNTZlOWM4Mjc3OGJkODExMDNkZTAzODc1NjU3YWVmNGMyNzAxZTA0MTlkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTk4NWI5OWFjMWY5NGJhNTVkYWE0MmU0MWY1ZmY1YjRkYzZhZWE3OWFmYmU4ODk4MWNjZGY3ZGJiMDIxNzVmYyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L305-L327",
+          "version": "repo-lines-v1:sha256:df1be0f96eb5b7e349abbb30daa56c89803724e06afd5a545ac0351f15db85c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZWVmNTg3MTg3ZDE3MjIxYmJiMTUzN2QxMWM1YTE0MDcxOGQ4N2Y0MTYwNDMxNDE3ZDgwNDU5NGExMTE4OWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZjE3ZWU1MGNlNjkwMjZiNWU3NDYxOGMzMGUxNTZmOGI3OWRjOTMyNmI1YjBkZWZjYzAzOTM2NWYyMWYwMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY0ZWJiOTVmNDMyYzg0Mjg0YzFiZDRlYWU0Y2NlZmQyMGE5NTkzMmVjZjljNjI3MjgzYmE2MTBhNjIzNTQyZjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5OTI0ZDE4YWJiMGU2NDdmZTNlZDc0YTY1MTUxZjExYmY3NjAwMTM5ZGY0OTUxYjI2NjFlNzhjZWI4MThjZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fdf9b3a55b224797a697307d1b255949",
+      "statement": "`install` provisions a host into one of three roles (`single`, `master`, `client`), rejects an unknown role against the known set, and is pure, offline, and idempotent — it verifies the environment, renders artifacts, writes the role config, and installs the convergence hook while returning host-specific side effects as manual steps.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L28-L28",
+          "version": "repo-lines-v1:sha256:346b8c2e809e1b5fff67f0d647ae63f4180f7869686fb5c13c377c3cce0a7fc1:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ2YjhjMmU4MDllMWI1ZmZmNjdmMGQ2NDdhZTYzZjQxODBmNzg2OTY4NmZiNWMxM2MzNzdjM2NjZTBhN2ZjMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ2YjhjMmU4MDllMWI1ZmZmNjdmMGQ2NDdhZTYzZjQxODBmNzg2OTY4NmZiNWMxM2MzNzdjM2NjZTBhN2ZjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWFhZWZmNzU0Zjg3MTU4N2MyZWY4NjRiYjJmNmYyNzQ3ZGRjYjE0MzM0Nzg3NjkyMzY0YjdiYjAxODY4YWYxYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzAxYjYwZjI0OWIyYTA2Y2I5MTBmZDhiMjEyZDY5OWYxMDUyZWU5ZTljYTQ5ODgyYmJkYzViNjkwYjZlMWU4NiJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L596-L639",
+          "version": "repo-lines-v1:sha256:777d58659d19e7ad0b6cfb4eae29681fbf74415bae31c92c1cd1234587189879:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3ZTM3ODBlNjY4OTA0YTZhNmU5ZjIyNzk1OGYzNjYzYzcxMDI2YzU3YjEyOTY4NTk1MWQ1NDY4YmNmZjBkYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2NGRhMzFmMTc3MzljMmEyZWI1YmZhMWE2MjY2YTFhNWZiOThiNjE5NjUyMjhlYzNkODRjOTEzZTI1NDg3NWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MmQ4MTdlMTUxOWRjZGE5NmEzZDkwYzVhNmJjNjI2NGM0ZWU2ODY5NmI5Njc4NGNiOGQzMDI1ZTk5NmY0M2IifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L205-L208",
+          "version": "repo-lines-v1:sha256:e22c9f863f643b24013bee7d42c4ceeca8cfbf619d2b3b1b15ccb11aa75334d4:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWEyNzY0ZDdhYjRkYWQzYzBhMzJhMTZjNmM3OWU3OWI4ZDAyODBlMGI3MTg5NTc5YmFiMzQyMmMyNjVhYzU5MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjRhMTU1YzUwNTljNjFmYTJkZTczZDExNDFlYjU4YTc0MGEzZjRiY2FkNzBhMzY4OGJkYjUwOTFkOTJiMjM0ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjEwM2FlN2E1MTg0ODk2ZjI0Mjc5YjM0ZmMwOWI1MzZjNDYyYzIwYjVjOWU1MWFmY2NhMzcwNWZkYmM1MTc5MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_96fbff3154c042d091bda71f3d99a42e",
+      "statement": "For the engine roles the diagnostic-relevant artifact set is one service artifact per flavor (a systemd unit, or a Dockerfile plus `compose.yaml`), a role config at `<repo>/.hypermnesic/config.json` recording role, bind, port, path, `write_enabled`, and service, and the post-merge hook, with `hypermnesic init` plus the service-enable or compose commands returned as manual steps.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L640-L675",
+          "version": "repo-lines-v1:sha256:b167f3a8a96ab8110d9d6ef0780889d83aae5e1013512a6486d54bc607b16704:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZTExNjk2NzI3MTNhZjM1MTNmMjEzMjE4OThkYTEyOGY1N2EzZmQ0OTFmZjYxMjEzMjQwOGJmYTU3YzkyMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyMGQxYTVjYTJkMmM5OWRiNWU1NTlhMDUyYmYyY2NkY2QwNjAzMDU0ODEzZWJkZjQxOTZkZmZjYjI5NDkyMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2NzExZWE1NGMyNWNhYTFiYmI5NTVhYmEzNGVhMThjMzg2YzhlMDQ1NDVjOTNlNGIzZDM0ZDZhOTFiNmI0NGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_59e48ca85005406f89d7fdcd9324ac7d",
+      "statement": "Bind rules are enforced at provision time: a wildcard bind (`0.0.0.0`, `::`, empty) is refused, `single` forces `127.0.0.1`, and `master` requires an explicit `--bind`.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L628-L634",
+          "version": "repo-lines-v1:sha256:9956bcb4c2efe58df4081da33d5bcfe0e95fca9bc616fb3c9071074516b33623:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTk0NWFiMWE3ZmEwMjJjODRiOTFkNTVhNzJiNjFlNmUwMWUxNWZmNDhmODM2N2Y5ZjJlZTNlMDhhNjYwOGQ5NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ZmMTMyZDcyMjM3NDI5OWZmNDIwOTllMDJiNDY1NWIwYjRjNDgxZGU0YzQzYmUwZWJkYzgyZGZiZDQ0YzAyYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDQzNTViNTM3NTk4NmU4MDYzZGIzZWJlNzg0ZDg0Mzk1ZGJmYjhlOWY3NDA4NTNjZmVhM2RhZDYyODkzMzFmOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzQ4MDBhODg5ZGQ3NzNmNzU0MDMxMmIwNDU0Yjg3ZjJhNDFlOWRjYjIwMTliYTI3OTBlZWMzYThkMjI5NWJkYyJ9"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L162-L171",
+          "version": "repo-lines-v1:sha256:67f936881bce99e4313ff9a38ee0bf99b49ae1a175a013a1854b89e15f837439:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjMWNiMmZlYmFjM2ZiNjc5MTA3NDIyN2EwNjhiOGYwNzM2ZTY3Yzk1ZjEwZTExYjViMmM1OTk0NDg4N2Y4OTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwYWNhODVlMzI1YWFiMDk5MzZhYjA4MmY1MzdmMjI2MTY2M2IxZGVlYTc1Y2Q4NmVkMWQ5YTM3N2RhZTQ3MzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3NWE0YjQwN2I0Mjg2ZDFmYTc0MGIxN2FiMGQyNDJjZWM2YWJhMmRkODFmOTljNmEzYzgyZWIwZGUzZDc3MzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhYWVmZTcxMmM3NGQ1OTM4ZDUzYmQ2MTFhOTM0NDlkZTFjZDA5M2U5NTBkYjkxYThmMzcyZDNkMGUxZjgzNzMifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L186-L190",
+          "version": "repo-lines-v1:sha256:dcc97095fa0b7d4020e5ec3c9b1c8d6e0ef1885b693794465f67a3be92cef535:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTJhMGViODk1ZjU4OWM4YTQ5MDgyNzA4YjczYjc1MGNiYjAyMDExNDY2ZjAwYWEwZGEwYmNkYzYyZjFlNTViNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWM5MDk4NGViOGZhMTFiM2ZjN2FlMzEyOWJhOWFiN2ZkZGQ5MTRjODE4NTM0N2RhZDIxZDYzOTEzNmFkODM1NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDAxY2I4ZDM4N2YxZGM4NjkwOTc3YjA1MTk5NGNjY2NmMjc1MzNiODg4ZjJkYmUzYmIzNzkyYzkzM2UyYjQ1MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDY2ODViMTNiZmJiZDk3YjAzN2FkYTUwYmQ2ZGYxYmM0MjJhNjA5YjI1YTE5OTAzZWM3ZjgwNzRjNDkwMTU4OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a1ef0377e3644a0baab0b22385c37996",
+      "statement": "Both the rendered unit and the installed hook use an absolute executable path resolved as `shutil.which` first, then the console script next to the running interpreter, then the bare name, because `systemctl --user` runs the unit without the project venv on `PATH`; a test asserts the rendered `ExecStart` path is absolute and exists.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L45-L60",
+          "version": "repo-lines-v1:sha256:62ab42d0a3736493d892d4d519c79f5c8a56a993475f9839238f4f9e9791bf10:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjZTkyNmZmYjU3ZDk1MzY1YWE5ZDZiNWQ3Y2Q3ZWI5NDEyNWRiZWY3MTk2MzkzOTNhY2QxZWY0Mzc4YTFkY2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1M2RjNjg1MWUwMmQ0YTFjMjg4YmUwNTIxNzM0NGNhOTljYjI1MzY3N2E1NTBmNWU2NjQ3NjMzMjllZmFiZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU4NzdiMGIzYzA4NzNhY2Q5NDExZWM0YWZlZWVlOTlmM2I5M2Y1NzA2YzIwZGYwNGY1MWU4ZjIzZjA5YTAyNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwM2I0YzA3YzhjYzMzNTg0YzRlYjA0MmJhYTlmMDJkMzRlMTI5NzMxN2IxOTA2ZWY4ODYyNmI3NjRkOGY2N2YifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L311-L321",
+          "version": "repo-lines-v1:sha256:14291fcfa1154f90b8ae2a1225bf800dc9e7bcc0cd844e275d2b715f2556f6c6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjZjNhOGI4YjQ4MzdkOGFhZjlmYjQwZTMyOWY1MTcyZTYxNzBiNjA3YjU0YWFjODY3NTk5NWI5NmMwNjNmYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NDhhMDYwYzViODVmY2U3N2VkYWIzZDhiZjFlNTNjOWI3MDdkZTE1YjYxMjIyMDdmY2RlNWVhMTQ1MDZjZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZWM2OWMzZmFkNWZkYWRhNjQ5YzY0MTQwNjUwNmUxYWRkMzM1ZGRkYmRhZThkMzgyNjUzYmVlZmVjZmQ2Y2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0OTFhZWQwMTAzNzhiNDQwMDMxODMyNDA3YTdmMmY2ZTRkYzIyMjk2Mjk2ZmVlMTE1OGU5MGUxNzU5NDVjMzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_486e69e342bc453bb44be89e926cf69d",
+      "statement": "Role provisioning renders a write-enabled serve, and the engine enforces `write_enabled ⇒ auth-required` at startup for any non-loopback bind unless the operator passes the explicit CGNAT-bounded `--allow-tailnet-write` opt-in; a loopback bind is exempt as the local drop-in.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L168-L196",
+          "version": "repo-lines-v1:sha256:81618df829f2e8957146df03d5d5a1f05399f9e5a596f8932c01c412409ee0fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5M2ZhYTA4ZDZhMWRkYjljODQ5OGUwZjQ1OTI0M2FlNDE5MWRlMDMyYjg1ZjEyZTNhMjY0NmQ4N2ZiOTgxOWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwYTYzYjQyOTA5ZDhmMzdiMWJhMmI3MGM3NGRmODQyY2EzOGU2YTk2MWJkM2Y4Y2UwOWE1ZmUzYTBmMmEwMzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2YzRmMTVjMzAyZjZhYjRjNzA0ZjE5ZTQ4ZWU0YjRkOGZhNWEzMjc3NmFjYTU3MDE2OGUyOGYxZWM2ZGRjZTYifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L659-L662",
+          "version": "repo-lines-v1:sha256:63d1c13d4120b6c459a2fa87a33650e2a8620a4362bdd82cd4df4a79a5018e00:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTYxZGZjMDkyZjFiZjJjNjA2OTRmNWM4ZDFkMmQ1YjMwY2MwYTg4NDg1MjFkYzQwNmViNjRkNGY1NjhmYWYzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjQyYWYxN2IyMzE0Y2Y4YzExNTU5Y2NkMDdhZGY5MWE1OTEzY2IxNjRmMmM4MjlhOWJlYTExZmRmODg2ZDc2NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc0NzM4NmZkNWEwYmFiZWJiODVjNDQ0MWUyNGI1NGIxYTI3YzIzYzhjNTNlZGJhODBlOTlkM2ViODczMjZlYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTExYjAyMzI2NWQxYTY1OTRhN2MwYTMyYTcyMGQ1ZDVkZDY2ODQwMThiNjI4NDIyNzlhNTdjMDMyYTI5MWE4YyJ9"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py#L376-L404",
+          "version": "repo-lines-v1:sha256:33bb20071194d53448420da0422e916fc6088f1a15b852bca48e3913a4bd8bcb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxNTVhYjQ2YTFkMjI5MzU4ZGFmOTExOWJjOTQzOGY2MzI0M2E0NThkM2ExYTYyNjlhNDhiMDBiMGQyODdmZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1NjJhMTVjNTNiZTY0ZjUwMjQ5ZjMyYmRiNmRmZWMyY2U4NTcxMTBlMWE3M2U2YzFmZWUzNDFiMWZjNjM3ZWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2M2I5ZWMxMjQzZTJhZmYwODdiNTUyZWNlMThiZGVmMGVmZDVkMjQ2YjE3OGE5MGM3NzA3YTM1NTBhOTNjYmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_883cf96032fa41b1a18c8bf5c4a92a12",
+      "statement": "When auth parameters are supplied to the master render they are shlex-quoted onto `ExecStart` with repeatable `--required-scope`, while the resource-server introspection credentials stay in the environment rather than the unit.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L152-L196",
+          "version": "repo-lines-v1:sha256:b5ccf1b63ca69edf4182e1f37ec7c4e559fcd2632f479319fb264fe3fab26da4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkZDE3YWY2ZDk3ZmViYjZmMzU0M2MyMGJiOTYwMDM4MTc1ZGU3OTBmZWI2N2IyYzc1YjdhMTA1MzcyM2Q3YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4Y2NjYWM5ODhlZDNkMWZkZWQ5YzFlMmRhZWEzZWY5Y2Y2YmQwYTJhNjIyZjg4OGU3NzE3NDc2NDI1NGM3ZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2YzRmMTVjMzAyZjZhYjRjNzA0ZjE5ZTQ4ZWU0YjRkOGZhNWEzMjc3NmFjYTU3MDE2OGUyOGYxZWM2ZGRjZTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dcd48f11dc5541f699bf724dfa785dde",
+      "statement": "The client role requires `--master-url` and `--mcp-config` and only upserts one MCP client entry: other servers are preserved, a malformed `mcpServers` map is reset to a dict rather than raising, and with auth parameters the entry becomes OAuth2-aware carrying a `token_env` pointer to `HYPERMNESIC_MCP_TOKEN` instead of any token value.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L239-L297",
+          "version": "repo-lines-v1:sha256:b71096d41e11938135a3abb0293e635d7b0ecb7821537216b87b93423259b256:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyMDkxZTM4OTNlNzNjNGEzMDNhYzk4ODU5MzViMTRlNzhjZjMwNDM1NzNhZTAwMmUyYTY0NjlmOTk0ZWE1YzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwMGZmYjhjYjFiZThjMTExMGFhMzFiZmE4ZTk5ZGE5ZjljYTc4NzNhMWEwNDNmMWU3M2EwOWUxMDI0MGJhODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhYzM5ZDU1YjFjNDA5YWVlN2MzMThhZThmZWU0ZjEyOWVlODM1OWViMjczNjU3NWJlYmI4MDcxN2E1Mzk2OWQifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L119-L157",
+          "version": "repo-lines-v1:sha256:72bd2ae1c5ce8265d1e61620b1b3ca2e6a2a8383c744b970df16cc84efa5373b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MjYzOGJiOTg3ZTEyOTI3YzI2OGJiZjdmZjA2ZmQyYWVmNGM0YzE0NWViZTJjMjliNWY0OTE1ODk0N2M3ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2NjRlNTU2N2Q2NmZhOGMwNTRlMmIzNzg0YzlkYzliNjA1YTRmZmJhMDk2ODhkMDc1NWE3YzhiNTIxNTJjNjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmMGQ3NTBiZjQ2MDQ5ZDZhMWIwMmY2MDBiOGY3ZjBhMmFlNDFlNTFkNmNjOGZkZWViMGEyMDJmYTFkMzZlNDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1NDlmYTViNWFiNDM0M2ZlOGQzMmJhY2RjZTcwY2I3MzM5N2YwYTk2MzcyMTk5NjgwMGJjYTk3NTVkZGQ4NTYifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L252-L259",
+          "version": "repo-lines-v1:sha256:b555ab9e249c7c2460880e02993e1ca03bdbcdadb80861bb7a249575ad51ade5:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjdhMTM0ZjIxZTYyNTAwMmQwZWM1MzY1MDBjNTk0ZjRhMDhkYWI0ZTk5OTlhMjhkNzE4ODFhZWYzMDEwODZhYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDMwMWY0ZTI5ZDNhMjhmOTFmNmFkNTBlZTYxYjM1YzlmYWRlYmMxNGZiNmU3MzVjOWMzZWEwMjg0OTNlMTc5YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWI4ZTc2MmVkY2ExNTVmOTk2YmFkYzFiZWY5NjEwZTJkZDFlZGI2YmZlNjdmZDViM2EzYjlmY2U4ZTI3NjMwZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTY3OTA0MDhkZjI1ZTI4NDM4YzYxYTJlNTczYjdmMzE5ZDVlMDBjY2Y5NDVkNWEyMjUyNmYxNjkyNmRiZTkwYiJ9"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L94-L105",
+          "version": "repo-lines-v1:sha256:980cc2b39dd4d320fab8934aaed8adb8d3b32476c32816292b6602bb88eabfab:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlYzY4NjM0NmM1OTIxNDcxOWViNGFjMWRiY2I0NGQ0YjQ0NDEyYzBiMzU5ZmNjNGJmMDRlMWZhZDkyMTkyZDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwMjc5ZjdlMDY1Y2E2YWI3NzdmMjk4YWZhMzZjZTM1YzllNjQ0NGU2MzUwNjNiZWQxZTRjZDBiYzcxNTg5NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4ZDg2MTU4MjQyNThiY2RjYWYwYzgzYjg4OWM4ZDQzYzFhNTVkZTcwMmI5OTMwYzVkNGNhMzhmNWE5NTM3Y2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e65a5752a19945f8ac104fa5d2ec4611",
+      "statement": "The convergence hook is written as one delimited managed block whose command is the shlex-quoted executable running `converge` against the shlex-quoted repo, redirected and terminated with `|| true` so a convergence hiccup can never fail a `git pull`; the hook-name tuple is extensible without changing the contract.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L38-L75",
+          "version": "repo-lines-v1:sha256:e21b64fc72e01f583e9e9e9041f267f0651dba4153da72f9d868576a2ef72347:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNGE5N2QzMThlYTIyYjRlMGJlNDYxMWY3NDU4ODc2ZjZiZGVmMjkzODhiMDFiOGNkNWNmMTZkZmYyNTg5ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkNGNhNGY4YmVmYjQzZmIxNzUyOTdkZDA1Y2I3MjA0NTBlYjliN2JiNmM0ZDlmYmFmMTg1ZmIxZWMzNWY3OWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlMzhhMzY3ODMxZTkzYTA1MTFhMjlkZDgxYzMxNDI3ODNhOWNkMTQ4OTlkMWVkNDhiNDQwNzBlZTAzNDk0N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1NTA4MTE3ZTkwYWFmYzM4MGExNjM0NDFhYWI3MGIxNjAzMjZjMDdjOGM0MzYyMjg0YjcxODdlYzk2ZGVmOTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L262-L274",
+          "version": "repo-lines-v1:sha256:785b1c69daab649f3740eb3ca691693836e0d57762c3e57422a37664d75abf06:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkMTg1MWFmYmY2NGExMDcxMjkwYmQ2NzBhOTRiZmQwMDMwNDE2M2RjMzBmNjI3YjgxOTA3ZjQ2NmJiN2QzMTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhOThjYjM3OGY0YTJjMGU1NTAzZTM1YzM5MTI1OTk4ZGY3ODgzNDFlNzFhNWJmZTAyM2ZiMjI3ZDk5NzZiNTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjYTYyMjdlNzFiNWNlY2UxYmM0M2I3Njc2ZDUzYjI2YTQ0NjkzNTUyZjAxN2NlOTBjZmFmNDM4ZGViMjY2MmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_35551810ca2c4a338d1e0d78c59343f0",
+      "statement": "Hook installation is idempotent (re-running leaves exactly one managed block), non-destructive (operator content before and after the block is preserved and a missing hook is created with a shebang), makes the hook executable, and uninstall removes only the managed block — deleting the file when nothing but a bare shebang remains and keeping content when a block has no closing marker.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/install.py#L78-L145",
+          "version": "repo-lines-v1:sha256:e65a19d0f73be10cae7a6b37908ae73aee3283d41e7ae88dbb6f5c67794fd293:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3NWI3YTdmY2RlY2ViOTEzMWIxNDIwZGE4MzA3MzU1ZmNhMTNiM2EwY2Y4NjFlNTkzYjBlOTk5NDMwMTk0YzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0OGU4OWE5ZGRhM2ZlYmQ1MmZiZjRjMzg1YTcxMTc5MjdkYjhlMDUwNTc2YzQ2Nzc2ZjZiYzBlOGY1OWUwOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzYjFjMmEyZGZiOTNmZmE3NmE2MjJkYTI1Mzc0ZjU2OTc5MDYxMTlmNjAwMGY2MzMwM2I5ODcxODgyNjBlNTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhYzM5ZDU1YjFjNDA5YWVlN2MzMThhZThmZWU0ZjEyOWVlODM1OWViMjczNjU3NWJlYmI4MDcxN2E1Mzk2OWQifQ"
+        },
+        {
+          "resource": "repo://tests/test_cli.py#L227-L265",
+          "version": "repo-lines-v1:sha256:a97f258749375fe7f6dd8662c4b49e9626e47c05f0903ad56ec7f7945c99a829:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NzFkYTQyMDY3YjA2OWZiMjg5ZWYyMGUyYmExNTdlMjgwOGM0ODU4NDY2ZTczNjdiYjZjYWQyODMxODAwMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5ZmU4NWYxZjU5MDJkOTFhNjJkNWFiNzc3NGM1OTA5ZmJiZjMyZGMwN2IxOGVkYzJkYzgwMmJjYTM5YTdiYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkZTc1OTQyZjQ5NDgyNzE2YmQ3OGMzYzUyMzU2NWUzM2QxNTFhYjNjYTY0YzdjM2E5NzAxZGUxZmM2ZDc5MWUifQ"
+        },
+        {
+          "resource": "repo://tests/test_install.py#L270-L274",
+          "version": "repo-lines-v1:sha256:a415f692e3f664fe7fda467834df18100c69878fc11d101e0f90286fa9290e58:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmMyM2QzODVkOTA4NTJjMTIyMzNjMmY4NWQzYzM3MzQ0YWU2ZWJmYWQ4OTM1MjZjMWQ1YTFkMTQ2ZTc1YzZhYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzA4OTdhYTA0MmJkNDAyYmRmMTU1YmYwNTcyM2RhOTE3N2UwYjIwY2FhNjIyYWEzMGNjMjRlN2I3NDI5MGU0NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGNhNjIyN2U3MWI1Y2VjZTFiYzQzYjc2NzZkNTNiMjZhNDQ2OTM1NTJmMDE3Y2U5MGNmYWY0MzhkZWIyNjYyYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b480c665d64743c599637db3d42f9756",
+      "statement": "Engine-role provisioning installs the managed post-merge hook internally, and `hypermnesic install-hooks` is the explicit opt-in path, while `setup` does not install hooks — it renders the cloud unit and routes only; the hook remains acceleration, since lazy read-time convergence is the correctness guarantee.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py#L1-L24",
+          "version": "repo-lines-v1:sha256:b73fd0425cbb22fb7a0f3620dd0aab3d29eb9df7f9171bddf3e049614e132628:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiNjk5MDQxMDE3ZjFjMWE5NTJjMTIwNmExMmM0NTQ1Nzc3ODI3MjU4YThjYjNmZDhiY2YxZjY3MDhiMzEyYmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L503-L593",
+          "version": "repo-lines-v1:sha256:c3148dcb0ea71ccecfb1e2f93b40ed3008924abbc21f8027842246f8d028cac7:eyJzZWxlY3RlZExpbmVDb3VudCI6OTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNGI1ZjM5NTY4N2E0MDMwYmI5ZWFjMzRjZGQzYzA0NzFhNTJjMTg4M2RjZjllNzY1OWIyNDdlNmU5NWY2NzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkMjgxYTkzNTA0ODdiMGM4MjU1NmMxZmY5YThlNjNlMTE2ZjY0M2U4NTRjMzY3Nzk2ZWE1M2RmZWU4NjQzY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0Mjg5MzIzMzU3MTc2M2U0MTk4NWJjZGFkODU0NDRmMzg4ODFmMjEzNGI0OTY2ZTc5MDE3MDA1YTkwNDZmN2QifQ"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py#L659-L663",
+          "version": "repo-lines-v1:sha256:d2ce671d9ca7a4e82895aa1bfe73c1723e24bd0e9077fe1aa5a14131fd6647f4:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTYxZGZjMDkyZjFiZjJjNjA2OTRmNWM4ZDFkMmQ1YjMwY2MwYTg4NDg1MjFkYzQwNmViNjRkNGY1NjhmYWYzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc0NzM4NmZkNWEwYmFiZWJiODVjNDQ0MWUyNGI1NGIxYTI3YzIzYzhjNTNlZGJhODBlOTlkM2ViODczMjZlYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjZiMTFhN2YxNTY3MTI0YjBhMzQ1ZTVjMDE1Y2M5ZjRmODIyMzNlNDIxMTc5OGE2NDJmMWE3YzYyZmRlODk0NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c81119a019744e7aa6aacfc2834f345e",
+      "statement": "A version or provisioning change must keep `scripts/check_version_consistency.py` green; `pyproject.toml` `[project].version` is the authority and the gate names every mirror that must agree, so the mirrors are never hand-enumerated.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L114-L114",
+          "version": "repo-lines-v1:sha256:7afe2bc709cee5636eb32d11a9bd56d16796c9893f9ab3fd1027f5ab251ee648:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2FmZTJiYzcwOWNlZTU2MzZlYjMyZDExYTliZDU2ZDE2Nzk2Yzk4OTNmOWFiM2ZkMTAyN2Y1YWIyNTFlZTY0OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2FmZTJiYzcwOWNlZTU2MzZlYjMyZDExYTliZDU2ZDE2Nzk2Yzk4OTNmOWFiM2ZkMTAyN2Y1YWIyNTFlZTY0OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTY3YzUyMDg2YWNhZTFmOGY1YWYxNzg0NGE4OTI2NmE4ZDAxN2I5OTI0YWRjYzYzMzA5MTFlOTBlZTFlNjMxYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWUxNmE3NzQ5ZDUwZmI3OWVjN2M5OTY4MjU3NmZiYThkYTBmOTNjMjc2YmFkN2M0Y2VjODk3MjBmNmI3YjlkYSJ9"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py#L1-L23",
+          "version": "repo-lines-v1:sha256:80da8184dab997a49debefc4bff11dfcf022b05d9e387e31c2accc2874dd754a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a63b65cb2276480a81b05fcd9fc89ba8",
+      "statement": "Anything committed about provisioning must use placeholders rather than operator values — `scripts/preflight_public_scan.py` fails on operator tailnet names, homelab IPs, inline token values, credential material, and operator home paths, so docs and fixtures use forms like `<your-host>.ts.net` and the `100.64.0.0/10` CGNAT range.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L75-L80",
+          "version": "repo-lines-v1:sha256:c91af0b7e55f39ed5c861e1802bfe33b065ab861952ea29c40a758d9f6612c15:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjg0ZjhlMjM2MDM2NjgzZTE2MGY3MTY2ZWQxOWQ1YzEwNzhkZmU3MzZjMTRkMjI2MDIxZTM1YjNiYTJhNWQ3NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTkzMDIwZmY3MGNkNDAyZmRkZjczZjg3ZDg2OTM3M2JlYTFjMTQyZmE0ZDViZDEyMTlmMGZmMDI4ODJlZDVkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWUwYzMxMjg2NzUyM2M2MTNhOTk5OWUzYjY1ZWNmODI5OTA1ZjUyZDllYzFmYTU4MTlmNTNkMGI0YWJhMWNmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmY0NGI1MTc5ODIxYjI0ZjZmOTI4NThkNjUzNmZjNWRmMGMyNjRiYTU0ODM4M2ExZTU4MzJlNzBlY2QzZTA1MiJ9"
+        },
+        {
+          "resource": "repo://scripts/preflight_public_scan.py#L51-L71",
+          "version": "repo-lines-v1:sha256:f723630aca226626296065f060d7c50625480ce7e43b773cfaf52ef536b647ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4ODE1MmJjNTE0OGJmZDZjNjBmYmRlNGMxMWJiZWJkMGI3MTE1MjA2NjYyMjhhNDA4ZTNmNGZhYTk4NmE1Y2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3MTBkN2FmNTg5NjUxOTdhM2MyM2U3MjI1NjRjZGVkOTc3YWJhZTQ3YmYzYmZiZWJlMWViOGMzMzJhMDgyOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1NmI0YmQ5MWVhNWM3NDFhYWIyMDgxYWU5NjE0NTBjMjc3MTQzMWVjNzI5MWM4ZmM3NWRmODBiMGEwMGFmMmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b32efb24c9f0401cbda97c5fc792f31f",
+      "statement": "The deterministic local product smoke loop ends with a `doctor_status` stage that runs the diagnostics against the fixture vault, so the diagnostic contract is exercised by the readiness smoke as well as by unit tests.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/product_smoke.py#L67-L135",
+          "version": "repo-lines-v1:sha256:2790188a2ad30120c3a51a97d658df12822a3ccdbe4de31998ac5143417f416b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NmE3MmQ2OTczZDA5Zjk3YzAwYzU4MDYwNGQ5NDZmNGZkODUyMTVhNGM3OGY0NTUwY2MxNjM2OGRmNDhkOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjMjA5MGY5NmJmZDFlYzUzM2RjYmQzNDExOGM2ZjhjMmIyYjI0MjQ2MjYxZTI3MjZmMGU4M2E2NjAwY2FkNTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4ZmIxOGM2NDhlNTllZjQwYjBjNDYzMTc1N2UxYjE2MzAxN2ZiMDAxZGRhNDg5YzY4MWQ3MDRmZWZjNzdlYTIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.0",
+    "at": "2026-09-23T16:18:12.137Z"
+  }
+}
