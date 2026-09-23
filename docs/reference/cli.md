@@ -91,9 +91,11 @@ layer by default.
 ## Writing
 
 ### `commit-note <repo> <path>`
-Preview what a `commit_note` write would do — **dry-run, read-only** (guard + gate run,
-zero side effects; prints the diff).
-Flags: `--body TEXT`, `--body-file PATH`, `--summary TEXT`, `--json`.
+Guarded note write (guard + diff-or-die gate + single-path git commit). By default it is a
+**dry-run, read-only** preview (zero side effects; prints the diff); add `--commit` to land
+the write for real (git commit + push, index follows as a projection).
+Flags: `--body TEXT`, `--body-file PATH`, `--summary TEXT`, `--commit`, `--json` (`--json`
+reports `new_sha` on a real write).
 
 Use this only for durable project memory. Do not write temporary session state, behavioural
 preferences such as "user likes terse replies", secrets, credentials, or unreviewed sensitive

@@ -782,3 +782,27 @@ def test_clients_cli_lists_and_revokes_grants(tmp_path, capsys):
     revoked = json.loads(capsys.readouterr().out)
     assert revoked["status"] == "revoked"
     assert "token" not in json.dumps(revoked).lower()
+
+
+def test_commit_note_cli_commits_only_with_commit_flag(make_corpus, monkeypatch, tmp_path,
+                                                       capsys):
+    _neutralize_key(monkeypatch, tmp_path)
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    _commit(repo, "b.md", "# B\n\nbeta.\n", "seed")
+
+    def head():
+        return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                              capture_output=True, text=True).stdout.strip()
+
+    head0 = head()
+    assert cli.main(["commit-note", str(repo), "notes/new.md", "--body", "# N\n\nbody.\n",
+                     "--json"]) == 0
+    dry = json.loads(capsys.readouterr().out)
+    assert dry["created"] is True and dry["new_sha"] is None   # preview: zero side effects
+    assert head() == head0 and not (repo / "notes/new.md").exists()
+
+    assert cli.main(["commit-note", str(repo), "notes/new.md", "--body", "# N\n\nbody.\n",
+                     "--summary", "add note", "--commit", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["new_sha"] and head() == out["new_sha"]         # the write landed in git
+    assert (repo / "notes/new.md").exists()

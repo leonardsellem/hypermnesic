@@ -16,8 +16,8 @@ authors:
     given-names: Leonard
     email: leonard@sellem.me
 license: AGPL-3.0-only
-version: 0.2.2
-date-released: 2026-08-17
+version: 0.3.0
+date-released: 2026-09-23
 repository-code: "https://github.com/leonardsellem/hypermnesic"
 url: "https://github.com/leonardsellem/hypermnesic"
 keywords:

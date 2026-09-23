@@ -636,7 +636,10 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
                     idx=backend.idx, log=audit, allowlist=allowlist)
             except (serialize_mod.WriteGuardError, fg_mod.FrontmatterDriftError,
                     serialize_mod.HeadDriftError, serialize_mod.DirtyTreeError,
-                    commit_note_mod.GitCoordinationError) as exc:
+                    commit_note_mod.GitCoordinationError,
+                    # input-shape refusals from the gate (e.g. "no frontmatter to
+                    # edit") — refused like the guards, never a raw tool traceback
+                    ValueError) as exc:
                 # diff-or-die / protected-path / allowlist refusal, OR a coordination
                 # refusal (remote drift / push could not reach origin/main) — no commit
                 # reached the shared remote, no audit entry (U11). Never a silent success.

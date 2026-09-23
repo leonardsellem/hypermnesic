@@ -94,8 +94,8 @@ protected-path refusals, or write guards.
 
 1. Capture or cite the raw source path.
 2. Use `hypermnesic list-folders /path/to/vault` if the destination is unclear.
-3. Preview with `hypermnesic commit-note /path/to/vault projects/example/decision.md --body "..."`
-   or use the MCP `commit_note` write path from an approved write client.
+3. Preview with `hypermnesic commit-note /path/to/vault projects/example/decision.md --body "..."`,
+   land it with `--commit`, or use the MCP `commit_note` write path from an approved write client.
 
 ### Recipe: connect a client
 
