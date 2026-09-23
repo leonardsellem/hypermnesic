@@ -14,18 +14,16 @@ its own changelog and version.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-23
+
+> A 0.2.2 release was prepared on 2026-08-17 but never tagged or published;
+> its entries ship here.
+
 ### Added
 - **CLI `commit-note --commit` lands real guarded writes.** The command stays a dry-run
   preview by default; `--commit` runs the full `commit_note` path (guard → diff-or-die
   gate → single-path git commit + push; the index follows as a projection), so agent
   writers no longer hand-roll raw multi-file commits. `--json` now reports `new_sha`.
-
-### Fixed
-- **The MCP `commit_note` tool returns a clean refusal for gate input-shape errors**
-  (e.g. `set_fields` on a note with no frontmatter) instead of a raw
-  "Error executing tool" traceback.
-
-## [0.2.2] - 2026-08-17
 
 ### Changed
 - **Cloud access tokens now last 48 hours by default (LS-2728).** The previous 1h
@@ -41,6 +39,11 @@ its own changelog and version.
   `executeTokenRequest` dies without `token_endpoint`. The engine already serves
   that document on loopback; exposing it is a Funnel follow-up (honcho
   co-tenant), not an app-route gap.
+
+### Fixed
+- **The MCP `commit_note` tool returns a clean refusal for gate input-shape errors**
+  (e.g. `set_fields` on a note with no frontmatter) instead of a raw
+  "Error executing tool" traceback.
 
 ## [0.2.1] - 2026-08-07
 
@@ -356,8 +359,8 @@ Phase 0 → Phase 2.5 foundation (pre-public, internal milestones).
 - **LongMemEval benchmark harness** (`harness/`) and a French/English retrieval-parity
   harness.
 
-[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.2...HEAD
-[0.2.2]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.1...v0.2.2
+[Unreleased]: https://github.com/leonardsellem/hypermnesic/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/leonardsellem/hypermnesic/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/leonardsellem/hypermnesic/compare/v0.0.6...v0.1.0
