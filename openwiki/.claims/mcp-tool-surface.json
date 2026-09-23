@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4f22773d0e36d85ff90329fedc36ab515c19e5c0ac39ff80d8dff9e8b5c7583f",
+  "claims": [
+    {
+      "id": "claim_766487275fc84fcf93980d5f451fec92",
+      "statement": "The MCP surface consists of exactly seven read tools — search, hypermnesic_search, build_context, think, resolve, list_folders, and read_note — plus one write tool, commit_note, with the read tools annotated readOnlyHint true and the write tool annotated readOnlyHint false.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_0ba833c5ff1843e0ad0eee0d8a0ff953",
+      "statement": "The write tool is registered only when the server is started write-enabled, so on a read-only server it does not exist rather than merely refusing, and no client can talk a read lane into a write.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c907eee277e4e4f88741cf6697ba8d5",
+      "statement": "Every read tool converges the index to HEAD before answering and returns a manual_reindex_recommended signal that is true only when HEAD has jumped far past the index checkpoint, making it advisory rather than an error the tool acts on.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ea33ccce6db45aa97fcf46a65566cd5",
+      "statement": "Every tool advertises an outputSchema derived from a typed result model so connectors understand result structure instead of receiving an opaque object, while the tool functions still return plain dictionaries validated against those shapes.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_91e543d755e845a5a461d81d04b5b526",
+      "statement": "A search hit carries the source path, heading, fused score, the matched retrieval channels, a bounded snippet, and a recency value that is the epoch seconds of the most recent commit touching that path or null when the path is untracked.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/retrieve.py",
+          "version": "repo-file-v1:sha256:65641e43b87c81e3b51984ad31c941ea43ffb8a07c348cd7d732ce37f46aab4e"
+        }
+      ]
+    },
+    {
+      "id": "claim_945daa6008e648148f855873acd2cfdf",
+      "statement": "Degradation is named rather than merely flagged: degraded_reason is null when the dense channel contributed and otherwise identifies the specific provider or configuration state, which lets an operator distinguish provider throttling from a broken index.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_ff6e9c84f07140d7ba9692970a90fa72",
+      "statement": "hypermnesic_search is a name alias rather than a second implementation — both registrations call one shared internal function so their inputs and outputs cannot diverge — and it exists for clients that auto-prefix tool names with the server id and therefore cannot reach the bare name.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_6f0ede0dc40443aeab2f61420e09543d",
+      "statement": "build_context returns the pages reachable from a given note through body wikilinks following both incoming and outgoing edges to a requested hop depth, and is the intended expansion move after a search hit.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/graph.py",
+          "version": "repo-file-v1:sha256:545c60d026e0280747d9c5e1d6b5dc9f68f66022c9d1d2d8c6f730162fc5b4e8"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_60f14f241ca147228fd1c092b3ec2d13",
+      "statement": "resolve returns null when a name is ambiguous or missing rather than guessing, and returns the .md-stripped slug for wikilinking when it resolves — because a wrong link silently connects unrelated notes and is materially worse than no link.",
+      "evidence": [
+        {
+          "resource": "repo://harness/PARITY_VERDICT.md",
+          "version": "repo-file-v1:sha256:49f8e42e313f1fa0fb20be928e2470fb170c0a0098d6db438695d60d58414afb"
+        },
+        {
+          "resource": "repo://src/hypermnesic/graph.py",
+          "version": "repo-file-v1:sha256:545c60d026e0280747d9c5e1d6b5dc9f68f66022c9d1d2d8c6f730162fc5b4e8"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_8395d410fcaa49ecbe9261988a5ffb90",
+      "statement": "The think tool is read-only by construction with wrote always false, and accepts the active note's path so the note is excluded from its own results, falling back to graph neighbours when self-exclusion removes the only hit.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/think.py",
+          "version": "repo-file-v1:sha256:7de9dcb469c894bd5aa6d946d20180c6c2fad4afbb147a3d7d390b197a7d970a"
+        }
+      ]
+    },
+    {
+      "id": "claim_929090c157994121b26ebb7eaa7b0992",
+      "statement": "The writable flag returned by list_folders matches exactly what commit_note accepts because both derive it from a single shared write-surface coercion, so folder discovery cannot promise a write the write path would refuse.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_6ac6d47a136945fd9e885e6319bc7f4e",
+      "statement": "An absolute or traversal root passed to list_folders does not raise: it returns an empty leak-free listing with no folders and no agent instruction, so a malformed request cannot be used to probe for out-of-vault paths through error messages.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_e0397dcb70874666a0f2273b4e89fd95",
+      "statement": "For read_note, index membership is the security boundary: only committed in-vault markdown notes appear in the index path set, so a traversal path, an absolute path, or a non-note file is absent and returns found false with null content rather than an error or an out-of-vault read, with a resolved-within-repo check as defence in depth.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_1247043d1b204119bd33e7d44c8bae93",
+      "statement": "The write tool self-enforces the write scope per tool independently of the transport's global required-scope list, because the SDK middleware applies one scope list to every tool and therefore cannot separate read clients from write clients on a single endpoint.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_1173b1128ad941aa87305be9e97b7c2d",
+      "statement": "The commit_note result is a union whose branches must not be conflated: committed false with a refused reason means nothing was written, while committed true with index_degraded means the commit landed and only its projection failed, so the caller should keep the returned SHA rather than rewriting the note.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_6f9c4a0f983e45fdb75dbc9c0e3efe0c",
+      "statement": "The server returns an explicit structured tool result for commit_note rather than letting the framework materialize absent union fields as nulls, so a client receives only the branch that actually applies and the payload still validates against the generated output schema.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_61be1293bb4c48259223331f42f74df7",
+      "statement": "Tool descriptions are treated as part of the client contract because for an agent they are the documentation, stating that reads converge first, that resolve never guesses, that think never writes, that folder discovery precedes an unclear write destination, and that a degraded index must not cause the note to be rewritten elsewhere.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/mcp-tools.md",
+          "version": "repo-file-v1:sha256:ee0aa3f242c5e49123dc581a336570ec2aed592acdc7eae778349870b85592d5"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

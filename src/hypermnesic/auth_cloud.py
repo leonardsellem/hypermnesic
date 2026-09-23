@@ -39,6 +39,8 @@ from mcp.server.auth.provider import (
 )
 from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 
+from hypermnesic import config
+
 ACCESS_PREFIX = "hmcloud_at_"
 REFRESH_PREFIX = "hmcloud_rt_"
 CODE_PREFIX = "hmcloud_code_"
@@ -79,7 +81,7 @@ class CloudAuthProvider:
 
     def __init__(self, *, resource: str, public_url: str, approval_token: str,
                  scopes_supported: list[str], default_scopes: list[str] | None = None,
-                 token_ttl_seconds: int = 3600,
+                 token_ttl_seconds: int | None = None,
                  code_ttl_seconds: int = 300, refresh_ttl_seconds: int = 30 * 24 * 3600,
                  now=None, grant_store_path: Path | None = None,
                  oauth_state_path: Path | None = None) -> None:
@@ -97,7 +99,7 @@ class CloudAuthProvider:
             raise ValueError(
                 "default_scopes must be a subset of scopes_supported; "
                 f"invalid: {', '.join(invalid)}")
-        self._token_ttl = int(token_ttl_seconds)
+        self._token_ttl = config.cloud_token_ttl_seconds(token_ttl_seconds)
         self._code_ttl = int(code_ttl_seconds)
         self._refresh_ttl = int(refresh_ttl_seconds)
         self._now = now or (lambda: int(time.time()))

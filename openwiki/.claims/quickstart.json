@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:aedc3944b870f42464467f4038cb5ef298f9d6b7649c2034e762498bf73f6dc9",
+  "claims": [
+    {
+      "id": "claim_d2d1bb56d9674daab5ffbe311c525f02",
+      "statement": "hypermnesic is a git-native memory layer in which a vault of plain markdown files in a self-hosted git repository is served to chat clients, coding agents, and an editor companion through one endpoint, with every memory landing as a real reviewable and revertible git commit.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://README.md",
+          "version": "repo-file-v1:sha256:917e04c01745a143b670819f9e61fd73c71c04fbb686988fcd781efa060ac576"
+        },
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        }
+      ]
+    },
+    {
+      "id": "claim_f623fdf4ab0c491e9f8723f2846b8a99",
+      "statement": "The two orienting invariants for any change are that files are the source of truth with the index a disposable rebuildable projection, and that commit_note is the single sanctioned write — git-first, guarded, gated, and audited — with everything else routed through an owner-approved proposal.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/commit_note.py",
+          "version": "repo-file-v1:sha256:796404695ffdb30ddb687e888ba33d20370f49791299ae59f7e086a81b63d109"
+        },
+        {
+          "resource": "repo://src/hypermnesic/propose.py",
+          "version": "repo-file-v1:sha256:87bcdcaeb667cb385716eabcb38ca691f08a572924d18b7f184fe91be9c81819"
+        }
+      ]
+    },
+    {
+      "id": "claim_b4371ddd9d984b048a919111d07d4ed1",
+      "statement": "Development requires Python 3.11 or newer and the uv tool, with the development environment created by syncing the dev extra.",
+      "evidence": [
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        },
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        }
+      ]
+    },
+    {
+      "id": "claim_f1b2a158308b4ecc84511486e37e21fc",
+      "statement": "Most of the engine runs offline and dense retrieval is the only part needing an embedding key, read from the environment or a gitignored repo-root file; without it retrieval degrades to lexical-only, which is also the mode the test suite runs in.",
+      "evidence": [
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://tests/conftest.py",
+          "version": "repo-file-v1:sha256:750f73d637e264414bf32ed4db36f1972452e60e0f0556c0c74bebb3d51e6418"
+        }
+      ]
+    },
+    {
+      "id": "claim_ca432fecb3f6465d9354ad8d05a913a9",
+      "statement": "The contributor gate loop is five commands — lint, version consistency, the test suite, the license scan, and the public-surface scan — matching CI's single job step for step, and the whole loop is expected to complete in a few minutes with only the test suite measured in minutes.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml",
+          "version": "repo-file-v1:sha256:782e1ee9960f676432bcd9995b4fe112f691622b57776d06d668a1bfa6d45d5e"
+        },
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        }
+      ]
+    },
+    {
+      "id": "claim_8b7d5766300645559c24ef22c16e3b6e",
+      "statement": "The local-proof command is the shortest path to proving recall: against an existing markdown git repository it validates the vault, builds the projection, answers a natural question with its repo-relative source path, and previews a write as a dry-run diff with no commit, while remaining read-only, provisioning nothing, and working without an API key.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/cli.md",
+          "version": "repo-file-v1:sha256:79e81ab97facbe01f7c03d8a1b04ee9c5879300331e15e2b3b9e602d4b823904"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/local_proof.py",
+          "version": "repo-file-v1:sha256:094233fa29f9037ed4725d23a90c46b81006b79db15bf9ee234b27aeedc675c4"
+        }
+      ]
+    },
+    {
+      "id": "claim_20c99fc130b64bd898f4b211fd052370",
+      "statement": "Contributions branch off dev and target dev, with main reserved as the release branch that takes only dev and neither branch committed to directly; a version tag on main is what publishes, and merging publishes nothing.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml",
+          "version": "repo-file-v1:sha256:5a40146f8a06ae74040703088533077589e560655214d3855047e863f4ac3969"
+        },
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        }
+      ]
+    },
+    {
+      "id": "claim_1332851d9fec487ba4768b0683a6dfa4",
+      "statement": "Documentation is part of the change: every document a change affects must be corrected in the same pull request, because deferring it means a stale document actively misleads the next reader.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        }
+      ]
+    },
+    {
+      "id": "claim_bbc24329db374e8092443ce55b045003",
+      "statement": "Repository rules require test-first development, forbid dismissing a red test as pre-existing, admit only permissively licensed dependencies each carrying an upper version bound, forbid echoing secrets or committing real operator hosts, and route write-guard, gate, auth, and server changes to the owner as security-sensitive.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        },
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        }
+      ]
+    },
+    {
+      "id": "claim_5595c3cb326f4a8b80ff7a456af15ad5",
+      "statement": "The repository's docs tree separates durable reference from process history such as plans, brainstorms, handoffs, and gate artifacts, and when a process-history document conflicts with the documentation index's current-truth pins the pins win.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://docs/README.md",
+          "version": "repo-file-v1:sha256:023a1ddc68bdaf6212f8188bc5bf1b1476a18df6ceccee3d5808cb64127e3643"
+        }
+      ]
+    },
+    {
+      "id": "claim_4521fa8461cb4952a92f3ca35caf39ab",
+      "statement": "Two self-descriptions were corrected once already and may persist in older material: the write model is a blocklist rather than an allowlist, and the serving topology is two lanes rather than tailnet-only.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://docs/README.md",
+          "version": "repo-file-v1:sha256:023a1ddc68bdaf6212f8188bc5bf1b1476a18df6ceccee3d5808cb64127e3643"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f38b46cd9a918b88ae3fbe9ef770b76df42eaea16be643d50a8652c6323c5ff4",
+  "claims": [
+    {
+      "id": "claim_33419d7eff0a401faeaaa525f146c73f",
+      "statement": "hypermnesic ships three independent agent-integration surfaces — the Claude Code/Codex MCP pack under plugin/plugins/hypermnesic/, the Hermes CLI pack under plugin/hermes/, and an Obsidian companion maintained in a separate repository — and the Hermes pack deliberately consumes neither the Claude/Codex manifests nor their MCP wiring.",
+      "evidence": [
+        {
+          "resource": "repo://obsidian-plugin/README.md",
+          "version": "repo-file-v1:sha256:dab2b800617ff99e2bb6a680c619da8771061ec65b3652d6354314ea02e7d62c"
+        },
+        {
+          "resource": "repo://plugin/README.md",
+          "version": "repo-file-v1:sha256:2bb0a27d7c393ddad9a211959a73c22439af29feb4e215e88916b6bb91d28441"
+        },
+        {
+          "resource": "repo://plugin/hermes/plugin.yaml",
+          "version": "repo-file-v1:sha256:bd27f2b1decb7a4b2dfcae28995f7a76547476cba7b091edba13d4d180b037d1"
+        }
+      ]
+    },
+    {
+      "id": "claim_f18e93bda75b4c869ffe0d688d4cf711",
+      "statement": "The bundled MCP wiring is OAuth-discovery-only: it declares a streamable-http server whose URL is templated from HYPERMNESIC_MCP_URL with a placeholder default, and carries no auth block and no static Authorization header, because a static header would suppress the host's OAuth Authorization Server discovery.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/README.md",
+          "version": "repo-file-v1:sha256:2bb0a27d7c393ddad9a211959a73c22439af29feb4e215e88916b6bb91d28441"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/.mcp.json",
+          "version": "repo-file-v1:sha256:d0b349517dfd92229313b16afa9625b6b5452d402d985a638d5002d482e240f1"
+        },
+        {
+          "resource": "repo://tests/test_plugin.py",
+          "version": "repo-file-v1:sha256:22d5ef2d746a52534376e72928285161175deeaf3150aac90bfdc3d0fdba3add"
+        }
+      ]
+    },
+    {
+      "id": "claim_2a4ab1297b05498283fd5bddb8e7835a",
+      "statement": "The Claude Code/Codex plugin registers exactly one hook event, UserPromptSubmit, invoking hypermnesic_agent_hook.py with a per-host flag and a 6-second timeout; there is no SessionStart preamble and no Bash interception.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/hooks.json",
+          "version": "repo-file-v1:sha256:17556bfb7bd8940d9b3d5c4dad7ef900e7b3110df20d0baf1107166ad47e1760"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py",
+          "version": "repo-file-v1:sha256:8db635e82f33c88a6a7c42ec02f78d1c3485b574a17f4b2a20bdf6ea63230190"
+        }
+      ]
+    },
+    {
+      "id": "claim_c1e51f9cc6e846efa24a5368424d25f3",
+      "statement": "The auto-recall hook can never block or fail a turn: every code path returns {\"continue\": true}, context is added only through hookSpecificOutput.additionalContext, a malformed JSON payload still emits a continue response, and any non-prompt-submit event is inert.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py",
+          "version": "repo-file-v1:sha256:d0d6aecb38e9daf8d26f86a1a338f9661c03d7745be1e12bcd3dfeaf3aced794"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py",
+          "version": "repo-file-v1:sha256:8db635e82f33c88a6a7c42ec02f78d1c3485b574a17f4b2a20bdf6ea63230190"
+        }
+      ]
+    },
+    {
+      "id": "claim_d3a4f9d0077e4dc380182248a78535cb",
+      "statement": "The hook applies an ordered set of cheap gates before any network call — disabled state, prompt relevance (memory-ish phrasing or a multi-word proper noun), a configured endpoint URL, an available credential, and a non-empty query — so an off-topic or unconfigured prompt costs no request.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py",
+          "version": "repo-file-v1:sha256:d0d6aecb38e9daf8d26f86a1a338f9661c03d7745be1e12bcd3dfeaf3aced794"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e5123467b414e9dbeb3ce505e067d4a",
+      "statement": "Because the agent host exposes no stored MCP OAuth token to hook subprocesses, the hook cannot reuse the app's OAuth login; HYPERMNESIC_MCP_TOKEN is optional, used only in the Authorization header and never printed or injected, and the hook's credential-free remote path is the tailnet read companion, which needs only a URL.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py",
+          "version": "repo-file-v1:sha256:d0d6aecb38e9daf8d26f86a1a338f9661c03d7745be1e12bcd3dfeaf3aced794"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py",
+          "version": "repo-file-v1:sha256:8db635e82f33c88a6a7c42ec02f78d1c3485b574a17f4b2a20bdf6ea63230190"
+        }
+      ]
+    },
+    {
+      "id": "claim_78a694e7fa3648d1b289a091165c2fa9",
+      "statement": "The hook's recall is bounded on every axis: a single JSON-RPC tools/call to the search tool with k=5 under a 2.5-second timeout, at most five hits rendered, each snippet trimmed to 200 characters with newlines flattened so note content cannot forge structure inside the injected block.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py",
+          "version": "repo-file-v1:sha256:d0d6aecb38e9daf8d26f86a1a338f9661c03d7745be1e12bcd3dfeaf3aced794"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e8e000952274b8a9163978543dfea06",
+      "statement": "Every hook run resolves to one of a fixed set of stable outcome codes — never_run, off_topic, disabled_global, disabled_host, unconfigured_endpoint, missing_credential, auth_expired, timeout, lookup_failed, no_hits, degraded_lexical_only, success — each paired with a plain-language explanation, which is what makes the hook's designed silence diagnosable.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py",
+          "version": "repo-file-v1:sha256:8db635e82f33c88a6a7c42ec02f78d1c3485b574a17f4b2a20bdf6ea63230190"
+        }
+      ]
+    },
+    {
+      "id": "claim_881ea3b645cd4f469e8c04ec6da6858d",
+      "statement": "The hook status record stores derived categories rather than values — the endpoint reduced to local, tailnet_read, public_https, other, or unset and the credential to token_present, not_required_tailnet, or missing — and never stores the full prompt, the endpoint URL, the token, the Authorization header, or raw large snippets.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/README.md",
+          "version": "repo-file-v1:sha256:2bb0a27d7c393ddad9a211959a73c22439af29feb4e215e88916b6bb91d28441"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        }
+      ]
+    },
+    {
+      "id": "claim_0eb32e1e22d94e329bd540b262846029",
+      "statement": "Status persistence is best-effort and non-blocking: the write is wrapped so an unwritable path is swallowed rather than failing the hook, and an absent status file reads back as the never_run outcome instead of an error.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py",
+          "version": "repo-file-v1:sha256:8db635e82f33c88a6a7c42ec02f78d1c3485b574a17f4b2a20bdf6ea63230190"
+        }
+      ]
+    },
+    {
+      "id": "claim_fe1b7e18b011468a98087ad0eab422c6",
+      "statement": "Proactive recall can be disabled without uninstalling the plugin or removing MCP tools, globally with HYPERMNESIC_HOOK_DISABLE_LOOKUP=1 or per host with a comma-separated HYPERMNESIC_HOOK_DISABLED_HOSTS, and both checks run before relevance evaluation.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_agent_hook.py",
+          "version": "repo-file-v1:sha256:d0d6aecb38e9daf8d26f86a1a338f9661c03d7745be1e12bcd3dfeaf3aced794"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        }
+      ]
+    },
+    {
+      "id": "claim_16c7dfe67b8142d0988ccef7ffd700fd",
+      "statement": "The status helper's test-recall mode runs the same bounded lookup for an explicit query, prints sanitized path/heading/snippet previews, and marks the persisted record test_initiated so a diagnostic run stays distinguishable from real hook traffic.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        },
+        {
+          "resource": "repo://tests/test_plugin_hook.py",
+          "version": "repo-file-v1:sha256:8db635e82f33c88a6a7c42ec02f78d1c3485b574a17f4b2a20bdf6ea63230190"
+        }
+      ]
+    },
+    {
+      "id": "claim_abeb0bd1a533470cb9962e0fc6156c80",
+      "statement": "The Hermes pack is CLI-first rather than MCP-based: it requires only HYPERMNESIC_REPO, shells out to the local hypermnesic retrieve command with --json, and a test asserts the package carries no MCP transport or Claude/Codex loader assumptions.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/__init__.py",
+          "version": "repo-file-v1:sha256:64249d6584cdd988d14eacf262be823b85b9d3afcfe8584bf9d36c84c6a7b0a4"
+        },
+        {
+          "resource": "repo://plugin/hermes/plugin.yaml",
+          "version": "repo-file-v1:sha256:bd27f2b1decb7a4b2dfcae28995f7a76547476cba7b091edba13d4d180b037d1"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin.py",
+          "version": "repo-file-v1:sha256:3b8530675cde056cc2d2f00a7f6f9fd24dc661c1fde287ed72ed4967b8a44fc5"
+        }
+      ]
+    },
+    {
+      "id": "claim_1fb43ce47f744aadb7313b4626f12d36",
+      "statement": "In the Hermes pack the memory skill is always registered but the pre_llm_call recall hook is opt-in, registered only when HYPERMNESIC_HERMES_RECALL is set to a truthy value.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/__init__.py",
+          "version": "repo-file-v1:sha256:64249d6584cdd988d14eacf262be823b85b9d3afcfe8584bf9d36c84c6a7b0a4"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin.py",
+          "version": "repo-file-v1:sha256:3b8530675cde056cc2d2f00a7f6f9fd24dc661c1fde287ed72ed4967b8a44fc5"
+        }
+      ]
+    },
+    {
+      "id": "claim_228f41af4c914db184d3d5483079e656",
+      "statement": "The Hermes recall hook is bounded to at most three hits under a 3-second subprocess timeout with injected context capped at 1400 characters, and returns silence on every failure mode including an irrelevant message, an unset repository, a subprocess error, a non-zero exit, unparseable JSON, or no hits.",
+      "evidence": [
+        {
+          "resource": "repo://plugin/hermes/__init__.py",
+          "version": "repo-file-v1:sha256:64249d6584cdd988d14eacf262be823b85b9d3afcfe8584bf9d36c84c6a7b0a4"
+        },
+        {
+          "resource": "repo://tests/test_hermes_plugin_hook.py",
+          "version": "repo-file-v1:sha256:bcb157096ddf0e972f42420034d629a3114733f66fc45d8e19457125e41fc670"
+        }
+      ]
+    },
+    {
+      "id": "claim_1f33c9fc4d534d278b6b8095e58c6e84",
+      "statement": "The repository carries two marketplace manifests on purpose because Claude Code discovers marketplace.json only at a checkout root; the root manifest lists only the plugin name and source while version and description live solely in the plugin manifest, so a version bump touches one file and the manifests cannot drift.",
+      "evidence": [
+        {
+          "resource": "repo://.claude-plugin/marketplace.json",
+          "version": "repo-file-v1:sha256:1d033a771eab3581b5806baba288b00e50bec529717aa50af0a0db1708ffe6d6"
+        },
+        {
+          "resource": "repo://plugin/README.md",
+          "version": "repo-file-v1:sha256:2bb0a27d7c393ddad9a211959a73c22439af29feb4e215e88916b6bb91d28441"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/.claude-plugin/plugin.json",
+          "version": "repo-file-v1:sha256:bf1183fc422c32ca0f7ee1a21b156c94777f085d401d125671f217fc1ae4abf7"
+        }
+      ]
+    },
+    {
+      "id": "claim_78d251172b8641acb77326a5d4bb3f5d",
+      "statement": "The Obsidian companion ships from a separate public repository under GPL-3.0-or-later while the engine here is AGPL-3.0-only, and the arm's-length boundary rests on them being separate processes communicating solely over the read-only MCP wire (search, build_context, think) — a conditional that holds only while the companion does not vendor, import, or statically link engine source.",
+      "evidence": [
+        {
+          "resource": "repo://README.md",
+          "version": "repo-file-v1:sha256:917e04c01745a143b670819f9e61fd73c71c04fbb686988fcd781efa060ac576"
+        },
+        {
+          "resource": "repo://obsidian-plugin/README.md",
+          "version": "repo-file-v1:sha256:dab2b800617ff99e2bb6a680c619da8771061ec65b3652d6354314ea02e7d62c"
+        }
+      ]
+    },
+    {
+      "id": "claim_a501f35bcc054adaba0a14177b126d30",
+      "statement": "The Obsidian companion is a read-only review and navigation surface: write, cleanup, revoke, forget, and revert stay in the git-first CLI/MCP surfaces, and a read-only client cannot bypass consent, write scope, protected-path refusals, or server-side write guards.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/daily-workflows.md",
+          "version": "repo-file-v1:sha256:0078520004723acc7a9f3c5683468ea177e9c75236498d439d9f2aaf6ac56d15"
+        },
+        {
+          "resource": "repo://obsidian-plugin/README.md",
+          "version": "repo-file-v1:sha256:dab2b800617ff99e2bb6a680c619da8771061ec65b3652d6354314ea02e7d62c"
+        }
+      ]
+    },
+    {
+      "id": "claim_9d8cf9908a734e968772fec5555011fc",
+      "statement": "Both plugin skill files carry the same memory-taxonomy routing rule — durable project memory belongs in hypermnesic while behavioural preferences and temporary session state belong in an adjacent behavioural layer — and instruct agents to preserve raw evidence, call list_folders when the destination is unclear, and treat write refusals as control signals rather than bypass targets.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-taxonomy.md",
+          "version": "repo-file-v1:sha256:970bfaa5b481b2833102b004a1266ac567427f6c106f0696c1c50567742a585b"
+        },
+        {
+          "resource": "repo://plugin/hermes/skills/hypermnesic-memory/SKILL.md",
+          "version": "repo-file-v1:sha256:b2aaf306986c4b1f51f6ec0fc474ea6a398db141524e7b2802080d813b0a1210"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/skills/hypermnesic-memory/SKILL.md",
+          "version": "repo-file-v1:sha256:517553f7033a64b705fbb9c570f4551c7b4b7f638cca7286b07d5b83e6253d44"
+        }
+      ]
+    },
+    {
+      "id": "claim_2cf8ce7e155847af999f970737ad584a",
+      "statement": "The plugin distribution is kept operator-neutral by test: the plugin tree is asserted to contain no committed secrets and no operator-specific hostnames or values, which is what makes the same artifacts installable by any operator.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_hermes_plugin.py",
+          "version": "repo-file-v1:sha256:3b8530675cde056cc2d2f00a7f6f9fd24dc661c1fde287ed72ed4967b8a44fc5"
+        },
+        {
+          "resource": "repo://tests/test_plugin.py",
+          "version": "repo-file-v1:sha256:22d5ef2d746a52534376e72928285161175deeaf3150aac90bfdc3d0fdba3add"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

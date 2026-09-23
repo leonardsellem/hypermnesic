@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:99bb5565d5dccab5c6306c798a8d57a50a27d7ae08fc6b8403d78ad582a2acb7",
+  "claims": [
+    {
+      "id": "claim_0e01c8ebd59c408a88297105cca51b95",
+      "statement": "There are exactly two network lanes — a public OAuth endpoint used identically by every remote client, and a read-only tailnet companion where tailnet membership is the boundary — and descriptions of a tailnet-only system or of four lanes are superseded.",
+      "evidence": [
+        {
+          "resource": "repo://ARCHITECTURE.md",
+          "version": "repo-file-v1:sha256:f05fb1c55d7daf2e94e756b6188d9fdcfec5f3fd3adce39000d31d1baa83806c"
+        },
+        {
+          "resource": "repo://docs/README.md",
+          "version": "repo-file-v1:sha256:023a1ddc68bdaf6212f8188bc5bf1b1476a18df6ceccee3d5808cb64127e3643"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_a179fc9163234dcaafce5637a2bcaba1",
+      "statement": "The server refuses a wildcard bind at construction and requires a specific interface address, so a misconfigured bind fails to start rather than serving broadly.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_a5d787075be94050b0bc8fdca30a03da",
+      "statement": "Auth must be configured as a matched pair — settings plus either a token verifier or an authorization-server provider — and settings without a validator, a validator without settings, or both validators together are all refused before the server is constructed, so a half-configured auth surface never starts.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_08cc0387187147a7842a50c0f11083c8",
+      "statement": "A write-enabled server on a non-loopback bind refuses to start without auth configured, an engine invariant that prevents a unit re-render or a rollback from silently serving the write tool unauthenticated.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_e293ffa6572c4bf1a615ba660475d313",
+      "statement": "A loopback bind is exempt from the write-implies-auth invariant because it is reachable only by the local user, which is the same trust boundary the local CLI write path already has.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_0904b04048a34f4884e6b25d5db2b85b",
+      "statement": "The tailnet-write opt-out is bounded to the Tailscale CGNAT range: passing it with a non-tailnet host is refused explicitly because that would be a public write hole rather than a tailnet one, the wildcard-bind refusal still fires regardless, and every commit_note guard still applies.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_d8cfe0c3304e441a8959d34fde6e88e8",
+      "statement": "The public lane's issuer and resource must be HTTPS public origins with DNS hostnames; a plain-HTTP URL or a bare IP is refused at construction because such an endpoint is undiscoverable over the standard OAuth metadata chain.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_640c3df043f3492ba52d1b264547e51b",
+      "statement": "On the tailnet lane the engine acts purely as a resource server and enforces two invariants on top of any injected raw validation strategy: strict audience binding that rejects a structurally valid token minted for a different resource server, and expiry.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py",
+          "version": "repo-file-v1:sha256:fa224f86428b60f98922db84bd5e26a29a4df9a9835f7893f51c9f53fe4897b9"
+        },
+        {
+          "resource": "repo://tests/test_auth.py",
+          "version": "repo-file-v1:sha256:35907fa251d6dc502c4cf53a28a2144f5dae4c97e16b3118603de1d1eff3060f"
+        }
+      ]
+    },
+    {
+      "id": "claim_223896cf821942499f84d607a385625b",
+      "statement": "Token verification fails closed: any raw-validation error rejects the request rather than surfacing a server error, and the token value is never echoed.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py",
+          "version": "repo-file-v1:sha256:fa224f86428b60f98922db84bd5e26a29a4df9a9835f7893f51c9f53fe4897b9"
+        },
+        {
+          "resource": "repo://tests/test_auth.py",
+          "version": "repo-file-v1:sha256:35907fa251d6dc502c4cf53a28a2144f5dae4c97e16b3118603de1d1eff3060f"
+        }
+      ]
+    },
+    {
+      "id": "claim_1826ffca2486414aa6c186d983fff535",
+      "statement": "Because the upstream authorization server issues opaque tokens with no verifiable key set, the production strategy validates by token introspection with the endpoint discovered from the issuer rather than hardcoded, and the resource server's own client credentials are read from the environment rather than committed configuration.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py",
+          "version": "repo-file-v1:sha256:fa224f86428b60f98922db84bd5e26a29a4df9a9835f7893f51c9f53fe4897b9"
+        }
+      ]
+    },
+    {
+      "id": "claim_87ef9927fe154c44a9d8aaf411879760",
+      "statement": "If the authorization server exposes no introspection endpoint the raw strategy fails loudly rather than degrading to trusting the token, making the gap an explicit signal instead of a silent weakening.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth.py",
+          "version": "repo-file-v1:sha256:fa224f86428b60f98922db84bd5e26a29a4df9a9835f7893f51c9f53fe4897b9"
+        },
+        {
+          "resource": "repo://tests/test_auth.py",
+          "version": "repo-file-v1:sha256:35907fa251d6dc502c4cf53a28a2144f5dae4c97e16b3118603de1d1eff3060f"
+        }
+      ]
+    },
+    {
+      "id": "claim_384d07ce62b34ac783df5fd213e27e06",
+      "statement": "The public lane implements the full interactive OAuth flow — dynamic client registration, authorize, an operator-authenticated consent page, an audience-bound PKCE-protected authorization code, and token exchange producing access and refresh tokens.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py",
+          "version": "repo-file-v1:sha256:bedf1e5af096a77fe64a98066c2e5832734c6960156f6959efb8548b51b7ea5f"
+        }
+      ]
+    },
+    {
+      "id": "claim_900495920b5b4ccbaf6ffa598e244ad2",
+      "statement": "Consent must authenticate the operator because dynamic client registration lets any internet client register and the lane fronts a publicly reachable write endpoint, so authorize returns a redirect to the consent route rather than minting a code and only finalizing consent with the operator's approval token issues one.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py",
+          "version": "repo-file-v1:sha256:bedf1e5af096a77fe64a98066c2e5832734c6960156f6959efb8548b51b7ea5f"
+        }
+      ]
+    },
+    {
+      "id": "claim_9575f1a5b2654e80a7a1b964aea71245",
+      "statement": "The operator approval token is stored hashed, compared in constant time, and subject to an enforced minimum entropy length, so the single public-write gate secret is neither stored in the clear nor trivially guessable.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        }
+      ]
+    },
+    {
+      "id": "claim_3258508c43974417abfc46796f21a747",
+      "statement": "The pending authorization pool is bounded on three axes — a short expiry for unconsented requests, a limit on wrong approval-token attempts before a pending request is dropped, and a cap on total pending requests — so an anonymous endpoint cannot be turned into a resource sink.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py",
+          "version": "repo-file-v1:sha256:bedf1e5af096a77fe64a98066c2e5832734c6960156f6959efb8548b51b7ea5f"
+        }
+      ]
+    },
+    {
+      "id": "claim_7920dcefa1b04230a65155b747f8c965",
+      "statement": "The consent page ships anti-clickjacking, no-store, no-referrer, and a script-free content-security policy, and its form-action list deliberately allows self plus the single registered client origin because that policy is enforced against redirect targets — a bare self would make the browser silently drop the post-approval redirect, consuming the grant while the app never receives the code.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_df218421407f40b9879c294a925e9b86",
+      "statement": "The consent page avoids being an injection sink: an unknown pending id renders a generic error without reflecting the attacker-supplied identifier, and client-supplied fields such as the registered client name and redirect URI are HTML-escaped.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_70b8bd7cc1dc4152bb06408d40c65117",
+      "statement": "The authorization server metadata advertises the public-client none method alongside client-secret methods for both the token and revocation endpoints, because app connectors and coding-agent hosts commonly register through dynamic client registration without a client secret, with PKCE using S256 protecting those public clients' code exchange.",
+      "evidence": [
+        {
+          "resource": "repo://docs/README.md",
+          "version": "repo-file-v1:sha256:023a1ddc68bdaf6212f8188bc5bf1b1476a18df6ceccee3d5808cb64127e3643"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        }
+      ]
+    },
+    {
+      "id": "claim_c8577e994ccd4416a6c4d0a0b38c87f8",
+      "statement": "Refresh tokens rotate on exchange, invalidating the consumed token, and access and refresh tokens are linked as siblings under one grant so revoking a grant kills the whole path and a revoked client cannot recover access by refreshing.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        },
+        {
+          "resource": "repo://tests/test_auth_cloud.py",
+          "version": "repo-file-v1:sha256:bedf1e5af096a77fe64a98066c2e5832734c6960156f6959efb8548b51b7ea5f"
+        }
+      ]
+    },
+    {
+      "id": "claim_d34472e404df4a0d9e5166b9c10ef64b",
+      "statement": "The provider re-checks the owner-visible grant store during token load and refresh, so a grant marked revoked out of band is honoured on the next validation rather than only after a service restart.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        },
+        {
+          "resource": "repo://src/hypermnesic/client_control.py",
+          "version": "repo-file-v1:sha256:bb6431d70783614076ecaf78871e070bf94836deca0d211025a2a1b15b8d6efb"
+        }
+      ]
+    },
+    {
+      "id": "claim_540d429c23a544799f488bb0e7cf49d2",
+      "statement": "Live OAuth runtime state — client registrations and opaque bearer and refresh material — is persisted in an owner-only file separate from the secret-free grant metadata store, exists solely so refresh survives a service restart, is never a listing surface, and refuses to load an unrecognized state version rather than guessing at the format.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/consent-and-clients.md",
+          "version": "repo-file-v1:sha256:ce7e7b7e7a7a1cef1df2fbda9928b8898a303d1d68a5ccbdbe57fb912ad048dc"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        }
+      ]
+    },
+    {
+      "id": "claim_ad75a207e2dd45a3b107ddbefbc1bcdb",
+      "statement": "Unsupported OAuth scope values are rejected loudly at startup rather than being silently dropped into the advertised metadata.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    },
+    {
+      "id": "claim_0d671a77887f4bbea53d5bcb0690d06e",
+      "statement": "The server defaults to buffered single-JSON responses and stateless request handling, both flipped from the SDK defaults, because a buffering handshake-less client hangs on a streamed response and a stateful server rejects a bare single-shot call for a missing session id — and nothing is lost since every tool is stateless request/response with no server-initiated streaming, so full-handshake clients still connect.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        },
+        {
+          "resource": "repo://tests/test_mcp_server.py",
+          "version": "repo-file-v1:sha256:3f83fd9f2de6aced8d73c8f1eee693ad0e6d4bdc236652430ac7b435cbba6250"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

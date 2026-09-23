@@ -60,7 +60,7 @@ Disable recall by unsetting `HYPERMNESIC_HERMES_RECALL` or setting it to `0`.
 - `hypermnesic list-folders <repo> --json` shows folder taxonomy and writable areas.
 - `hypermnesic capture <repo> <text> --json` writes raw text and commits it.
 - `hypermnesic commit-note <repo> <path> --body <text> --json` is a dry-run preview
-  of a guarded note write in the current CLI.
+  of a guarded note write by default; `--commit` lands the write for real.
 
 Hermes support does not configure a network memory server and does not use tokens.
 Claude Code and Codex users should use the existing Claude/Codex plugin pack.

@@ -17,6 +17,7 @@ Engine tunables live in [`src/hypermnesic/config.py`](../../src/hypermnesic/conf
 | `HYPERMNESIC_HOOK_DISABLED_HOSTS` | auto-recall hook | optional | Comma-separated host names (`claude`, `codex`) to disable proactive recall on specific hosts. |
 | `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` | `serve-cloud` / `setup` | for the public lane | The operator approval token that gates every public connection. Read from the environment **only** (never a CLI flag, so it can't leak via the process table / logs). Enforced minimum length. |
 | `HYPERMNESIC_DEFAULT_CLIENT_SCOPES` | `serve-cloud` / `setup` | optional | Comma- or space-separated OAuth scopes requested by default when a dynamically registered client omits `scope`. Default is `read`; set `read,write` when new connector approvals should request both read access and `commit_note` write access. The consent page still requires the operator approval token and write guards still apply. |
+| `HYPERMNESIC_TOKEN_TTL_SECONDS` | `serve-cloud` / `setup` | optional | Cloud-lane access-token lifetime in seconds. Default is `172800` (48h) so overnight idle does not 401. Refresh stays 30 days. An explicit `--token-ttl` wins over this env var. Code TTL (300s) and pending TTL are unchanged. |
 
 Repo-addressed commands and servers resolve the OpenAI key in this order:
 
@@ -50,6 +51,13 @@ so operators can distinguish provider pressure from index corruption.
 `hypermnesic serve-cloud ... --default-client-scopes read write` or
 `hypermnesic setup ... --default-client-scopes read write`. Unsupported scopes fail
 loudly before the service starts.
+
+`HYPERMNESIC_TOKEN_TTL_SECONDS` is the same knob as `--token-ttl` on `serve-cloud` /
+`setup` (`config.CLOUD_TOKEN_TTL_SECONDS`, default `172800`). After deploying a
+build that includes this default, an existing unit that still bakes `--token-ttl
+3600` must be updated (change that flag to `172800`, or remove it and set the env
+var in `~/.config/hypermnesic-cloud/cloud.env`) before the longer lifetime applies.
+New `setup` renders `--token-ttl 172800`.
 
 ## Embedding model (pinned)
 

@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0b4874e48198e70dba9e5a06e9945495f53d804bf7d96fb29e2d4815f3997501",
+  "claims": [
+    {
+      "id": "claim_d59f2cd054e0422ab0e751aa3994127b",
+      "statement": "Convergence is one shared step that every read path calls before answering — every MCP read tool and every read CLI subcommand — rather than a per-caller reimplementation, and it is what lets a note committed a moment ago be recall-able on the next read with no manual reindex.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_98cb2aca740c4ca0bdd395019818aa2a",
+      "statement": "A convergence pass is ordered as debounce check, non-blocking lock acquisition, optional authoring-host overlay, delta sizing, lexical delta replay that advances the checkpoint, a bounded dense fill, and a debounce stamp write.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_00b2daf5abe14f6f87ecde5246aa01d3",
+      "statement": "The debounce check short-circuits before any lock is taken, using a timestamp stored in the index state directory, so a burst of reads pays the catch-up cost once.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd5ed7f677434cf7924b07847fe62b06",
+      "statement": "Convergence takes the single-indexer lock non-blocking and, when another writer or converger holds it, returns immediately serving the current state — so a read never stalls behind an in-progress index advance.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_c6a518f192674ceea57d72960e1b7536",
+      "statement": "Convergence writes only the index state directory and never the repository, so a read path can never mutate the source of truth.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_d5f482f18cf545d6bdfe2eac65bf59e6",
+      "statement": "The convergence result's status discriminates four operationally distinct outcomes — converged, debounced, lock_busy, and oversized_delta — alongside counts of replayed paths and embedded chunks and doc surfaces, the degraded flag and reason, overlay paths, the observed HEAD, and whether the checkpoint advanced.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://tests/test_converge.py",
+          "version": "repo-file-v1:sha256:4722cdfa20d1351ee5bd1aa24f09b970c219e162fa14041edd1dbbf347096d83"
+        }
+      ]
+    },
+    {
+      "id": "claim_fecc17abac0e4e069ebd4267f589801f",
+      "statement": "Convergence is delta-replay plus a bounded embed and never invokes the isolated full-rebuild path, keeping full reindex a manual explicit operation so a read can never trigger an unbounded rebuild that exhausts memory on a large vault.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_995c16ccf9814f98b1abf50a20c37b17",
+      "statement": "A delta larger than the configured file cap is not replayed inline because a partial replay could not advance the checkpoint to HEAD and every subsequent read would recompute the same delta with no progress; convergence instead serves the current consistent projection and recommends a manual reindex.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://tests/test_converge.py",
+          "version": "repo-file-v1:sha256:4722cdfa20d1351ee5bd1aa24f09b970c219e162fa14041edd1dbbf347096d83"
+        }
+      ]
+    },
+    {
+      "id": "claim_54326a1bb628449899b75701a766ae37",
+      "statement": "The manual-reindex recommendation is a signal surfaced in every read result rather than an action: nothing rebuilds itself and the caller decides.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_08f32597c07842a1897725fb2502cefa",
+      "statement": "Convergence never raises on the read path: with no embedder or a failing one the lexical and graph catch-up still completes and the checkpoint still advances, with only the dense fill skipped and the result flagged degraded with a named reason such as a missing embedder or the embedding error's own reason.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        },
+        {
+          "resource": "repo://tests/test_converge.py",
+          "version": "repo-file-v1:sha256:4722cdfa20d1351ee5bd1aa24f09b970c219e162fa14041edd1dbbf347096d83"
+        }
+      ]
+    },
+    {
+      "id": "claim_73fa3f32be93412da33e3fce045f4861",
+      "statement": "The checkpoint advances on the lexical replay, which is precisely why a later dense failure is a degradation rather than a rollback of the pass.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_7db57e0ca72b4aaea533d2817bd2820c",
+      "statement": "A partially completed embedding batch leaves real vectors rather than zero placeholders, because a zero-filled vector silently participates in ranking and is worse than a missing one.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        },
+        {
+          "resource": "repo://tests/test_embed_stale.py",
+          "version": "repo-file-v1:sha256:54a05567ca2cb159af493063250ce5dc4554c953c19da269745b0de75ecb9a71"
+        }
+      ]
+    },
+    {
+      "id": "claim_21a9a1242d0e4e76b5748a464b53d9c0",
+      "statement": "The authoring-host overlay indexes uncommitted and untracked markdown so in-progress notes are findable before commit, but it is lexical only with its paths excluded from the dense fill and it never advances the checkpoint, so a replica projecting the same committed SHA sees none of it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_20c0a46e854f4bf6a475dceb1b91df36",
+      "statement": "The overlay is best-effort: if git is unavailable or the status call fails, convergence continues without the overlay rather than failing the read.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_e11366a059f34fbe8ee973e8034092ad",
+      "statement": "Delta replay reads each changed file's content from the commit object rather than from the working tree, which is what makes the index a projection of HEAD rather than of a possibly dirty checkout.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb8b2aa43a3a4261b375c7739cba80de",
+      "statement": "When reading a changed file from git fails — a missing, pruned, or corrupt object — the path's existing index rows are left intact rather than being overwritten with empty content, so a transient git failure degrades to staleness rather than blanking a note.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_6300466cfe4042e2965d73bef04dc74a",
+      "statement": "Every convergence tunable is injectable per call rather than read only from module configuration, which is how tests make each path deterministic — for example by disabling the debounce.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://tests/test_converge.py",
+          "version": "repo-file-v1:sha256:4722cdfa20d1351ee5bd1aa24f09b970c219e162fa14041edd1dbbf347096d83"
+        }
+      ]
+    },
+    {
+      "id": "claim_0d87bfac673946bea4fb85772e817d00",
+      "statement": "Convergence is additionally triggered outside reads by an explicit converge subcommand used as a manual pre-warm and by the opt-in post-merge git hook, so a pull warms the index instead of leaving the cost to the next reader.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/install.py",
+          "version": "repo-file-v1:sha256:76e1387744f0fd7414fbbec084e6ca3b320ac0d9611cc2d561677ac9ad6d7391"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

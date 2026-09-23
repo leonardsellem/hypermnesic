@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:fc67b6b21f5e3022374aa5e0af9352f693fc2654a1e8fca256cd6c9e9b793dc6",
+  "claims": [
+    {
+      "id": "claim_d90adfe91cd24e7d96cc3273b41fa055",
+      "statement": "Configuration is split into per-deployment environment variables read from the process environment or a gitignored repo-root .env, and pinned engine tunables held as module constants in a single config module so a behaviour change is one visible edit rather than scattered defaults.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example",
+          "version": "repo-file-v1:sha256:6c4c591db8c7bf27ea63452319c61054a28fe04b85feb2bd823b159f85508753"
+        },
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        }
+      ]
+    },
+    {
+      "id": "claim_6c3a1a831b4944e8b93c54d40200ec1b",
+      "statement": "For a repo-addressed command or server the OpenAI key is resolved in exactly two steps — the process environment, then the target repository's gitignored .env — with no working-directory fallback once a repository is known, so a command run from an unrelated directory cannot pick up a stray key.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://tests/test_config.py",
+          "version": "repo-file-v1:sha256:604d35a70d30676e8d2ba0417259ccb24d2193a1af5dc8cd99878b88e4db83fa"
+        }
+      ]
+    },
+    {
+      "id": "claim_ca4b82257c7946b98d51c1d769268953",
+      "statement": "Credential discovery is reported secret-free: the status object carries only whether a key is configured, the source category that supplied it, the ordered source categories checked, and an error category, containing no filesystem paths and no key material; a missing-key error names the categories checked rather than any value.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://tests/test_config.py",
+          "version": "repo-file-v1:sha256:604d35a70d30676e8d2ba0417259ccb24d2193a1af5dc8cd99878b88e4db83fa"
+        }
+      ]
+    },
+    {
+      "id": "claim_56e40bc5e345405bb5541dce47b8aa4e",
+      "statement": "Without an OpenAI key dense retrieval is unavailable and reads degrade to lexical plus graph with an explicit degraded flag, which is also the mode the entire test suite runs in.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example",
+          "version": "repo-file-v1:sha256:6c4c591db8c7bf27ea63452319c61054a28fe04b85feb2bd823b159f85508753"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://tests/conftest.py",
+          "version": "repo-file-v1:sha256:750f73d637e264414bf32ed4db36f1972452e60e0f0556c0c74bebb3d51e6418"
+        }
+      ]
+    },
+    {
+      "id": "claim_2d3093fc0f9545a599bbc9067e80ac27",
+      "statement": "The operator approval token for the public cloud lane is read from the environment only and is never accepted as a command-line flag, so it cannot leak through the process table or shell history, and a minimum length is enforced before the service starts.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example",
+          "version": "repo-file-v1:sha256:6c4c591db8c7bf27ea63452319c61054a28fe04b85feb2bd823b159f85508753"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        }
+      ]
+    },
+    {
+      "id": "claim_ae4e21875c5c4fe6839bb0b7d52ea77f",
+      "statement": "The default client scopes variable changes only which OAuth scopes a dynamically registered client requests when it omits scope; operator consent is still required and every write guard still applies, so setting read,write does not by itself grant write access.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        }
+      ]
+    },
+    {
+      "id": "claim_bde6c17a8d994e17893a8aea5b4e4d0d",
+      "statement": "The auto-recall hook token is optional and used only by the hook, never by the MCP tool wiring: with no token the hook uses the tailnet read route, and on a non-tailnet endpoint it stops at a missing-credential outcome rather than sending an unauthenticated request.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example",
+          "version": "repo-file-v1:sha256:6c4c591db8c7bf27ea63452319c61054a28fe04b85feb2bd823b159f85508753"
+        },
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://plugin/plugins/hypermnesic/hooks/scripts/hypermnesic_hook_status.py",
+          "version": "repo-file-v1:sha256:6f9e4099bc03df36f636364f9d80455cbfbbe244d474899724165c7197eb8b98"
+        }
+      ]
+    },
+    {
+      "id": "claim_0ab684d22bf9400ba1b9c482f314ea76",
+      "statement": "The OAuth consent secret is persisted by setup to an owner-only env file with restrictive permissions and is never committed; diagnostics verify only that the file exists and is owner-only and never read or print its value.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/doctor.py",
+          "version": "repo-file-v1:sha256:6ac85f698550ca71677f978d2a8c8042c64458b472392ea029c993f215b9e540"
+        }
+      ]
+    },
+    {
+      "id": "claim_8c04f7360a444b03a9e1dd80e3ff499f",
+      "statement": "The embedding model and its 1536 dimension are pinned in one module so that a parity or benchmark result isolates the architecture variable rather than silently measuring a model change.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        }
+      ]
+    },
+    {
+      "id": "claim_a9f28bc905354d24a9eaf0d552f7ab77",
+      "statement": "An embedder whose output dimension disagrees with the pinned dimension raises a configuration error at startup rather than being tolerated, so a mismatch fails fast instead of producing a half-populated vector table that fails confusingly mid-run.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://tests/test_config.py",
+          "version": "repo-file-v1:sha256:604d35a70d30676e8d2ba0417259ccb24d2193a1af5dc8cd99878b88e4db83fa"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f2b57fa965a41889ac58094fa4c84cd",
+      "statement": "After an embedding rate-limit response the process opens an in-process cooldown for a configured duration during which it refuses further embedding attempts, so provider pressure degrades reads to lexical and graph results instead of causing every read to hammer the provider.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef3f8d21ba0642bc9688eb6aebba4dd5",
+      "statement": "The degraded reason distinguishes the call that triggered a rate limit from the cooldown window that follows it, so an operator can tell provider pressure apart from index corruption.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f08edb0b6694ed7bc3e69f6923fe1b7",
+      "statement": "The convergence embed budget defaults to the indexer's embedding batch size, which is what keeps a converging read to roughly one API round-trip; raising it speeds catch-up at the cost of latency on the read that pays, and lowering it keeps reads snappy while dense coverage lags lexical for longer.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/index.py",
+          "version": "repo-file-v1:sha256:117fb19b2b3244246c78796533ebe49aeaa1bd88b224f016a3c6994d1df1be03"
+        }
+      ]
+    },
+    {
+      "id": "claim_13be8deb830542a19b10fb5dfdee8f10",
+      "statement": "The convergence debounce skips re-convergence inside a short window so a burst of reads pays the catch-up cost once, and it can be generous precisely because an explicit now flag overrides it for a caller that just committed.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_501755ef9ad448a1b86573474e924deb",
+      "statement": "Above a configured number of changed markdown files a read signals a manual reindex instead of attempting an unbounded inline replay, which bounds read latency after a large merge rather than letting one read absorb an arbitrary backlog.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/converge.py",
+          "version": "repo-file-v1:sha256:d7797f4a61b105575a7fabf5ef522cdc3bac8701181ee0242899cf63685b405e"
+        }
+      ]
+    },
+    {
+      "id": "claim_5a167f997dd24b27b7da8c783cc952a7",
+      "statement": "Folder discovery follows the same cap-and-signal precedent as convergence: a node cap bounds the payload with entries sorted before truncation so the dropped tail is deterministic and the response reports a truncated flag and omitted count, while a depth ceiling clamps rather than rejects an oversized request.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        },
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        }
+      ]
+    },
+    {
+      "id": "claim_2840c986898443e2b81dc5f5cb33d652",
+      "statement": "Free-append zones are an explicit path-prefix list rather than a heuristic: a path in such a zone accepts a new file directly with no proposal friction — which frictionless capture depends on — but never accepts an overwrite, while every other writable path is curated through propose-and-approve.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/capture.py",
+          "version": "repo-file-v1:sha256:ccb2a02f64c60d50a7eb03fa2da48832e5f1dd63a2319fa54cc60cb5c9d4ae66"
+        },
+        {
+          "resource": "repo://src/hypermnesic/config.py",
+          "version": "repo-file-v1:sha256:cc127ae347985dc09ee8543de2e6396c2974b8c0ffa7efaed441e1e3084d566e"
+        }
+      ]
+    },
+    {
+      "id": "claim_4d513c9835144c72b18a6afb74b4c227",
+      "statement": "The free-append zone constant does not define which paths are writable: the write surface itself is the blocklist guard in the write path rather than a configuration value, and the runtime allowlist flag narrows that surface rather than expanding it.",
+      "evidence": [
+        {
+          "resource": "repo://docs/reference/configuration.md",
+          "version": "repo-file-v1:sha256:6bd272647fd4096e5a9f77579ab1ddd09d01c6333cf349c9e1eea354fbd2dd51"
+        },
+        {
+          "resource": "repo://src/hypermnesic/cli.py",
+          "version": "repo-file-v1:sha256:3329b4da7f3cc172ff49a7a676d49a4537d9d72cbf2b0a4d3988c117697f6c99"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_465cbf9b987b467abc26a599f3ad47d8",
+      "statement": "Public-surface configuration examples must use placeholder hosts rather than real operator values, and a repository scan gate enforces that no operator host, IP, or token ships in the public surface.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example",
+          "version": "repo-file-v1:sha256:6c4c591db8c7bf27ea63452319c61054a28fe04b85feb2bd823b159f85508753"
+        },
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://scripts/preflight_public_scan.py",
+          "version": "repo-file-v1:sha256:ce79101641ea0660bee8998c15dfe06dc2bd5d4b7c000001819819514c60266f"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0f663d0ef59ff6ad6b4f3bd3c80c97d781be1fc07d4035b35e49f0bc0bcae391",
+  "claims": [
+    {
+      "id": "claim_8132cf79a0bd4bc4bdab6917fd0ec1d5",
+      "statement": "CI runs a single lint-test-license job whose steps are exactly the commands a contributor runs locally — lint, version consistency, the test suite, the license scan, and the public-surface scan — so passing locally and passing CI are the same event.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml",
+          "version": "repo-file-v1:sha256:782e1ee9960f676432bcd9995b4fe112f691622b57776d06d668a1bfa6d45d5e"
+        },
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        }
+      ]
+    },
+    {
+      "id": "claim_b27431289b04479e80b7ec3fd79d8052",
+      "statement": "The repository's documented convention is to point at the enforcing gate rather than restating what it checks, because a copied list of version slots or forbidden licenses is the next thing to drift while the script remains the authority and names what diverged.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py",
+          "version": "repo-file-v1:sha256:ddc438db874ec48342d7c35db56260d81def2b7ec962d243a11cb4d44860632b"
+        }
+      ]
+    },
+    {
+      "id": "claim_ddedd9843dff4cbc98244c3e2fdb0bd2",
+      "statement": "The test suite runs offline by injecting a deterministic fake embedder whose identical text always yields an identical unit vector and which emits exactly the pinned dimension count, so a chunk is reliably its own nearest neighbour, rebuilds are bit-reproducible, and dimension invariants under test are real rather than a smaller stand-in.",
+      "evidence": [
+        {
+          "resource": "repo://tests/conftest.py",
+          "version": "repo-file-v1:sha256:750f73d637e264414bf32ed4db36f1972452e60e0f0556c0c74bebb3d51e6418"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f3988a4719441e4a6b94877bba2c5b2",
+      "statement": "Credential-dependent behaviour is tested by explicitly controlling the environment — setting a placeholder key where a configured credential is the subject and deleting it where absence is — rather than reaching a live provider, with the real provider path covered separately by a live smoke embed outside the suite.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/embed.py",
+          "version": "repo-file-v1:sha256:c9afd47d67499ba2b31fe6f61669aff376351121941390d48b32080443b7fa54"
+        },
+        {
+          "resource": "repo://tests/test_doctor.py",
+          "version": "repo-file-v1:sha256:a85f7e3c46ccb0fabae49f712f32cb875286eaef7089c8ba6ca975944cfd3440"
+        },
+        {
+          "resource": "repo://tests/test_index.py",
+          "version": "repo-file-v1:sha256:e0895c890c865e6d61ff8efa880d7eca80b19ac84f3330df6af6fcadb89c255c"
+        }
+      ]
+    },
+    {
+      "id": "claim_e59d5e892d714e2b820cf8a92508d9ed",
+      "statement": "A shared fixture builds a small markdown repository optionally git-initialized with a deterministic commit, so tests needing real git history get it without a network or an external checkout.",
+      "evidence": [
+        {
+          "resource": "repo://tests/conftest.py",
+          "version": "repo-file-v1:sha256:750f73d637e264414bf32ed4db36f1972452e60e0f0556c0c74bebb3d51e6418"
+        }
+      ]
+    },
+    {
+      "id": "claim_a8b0c984afba4b378326dca9a3bb3641",
+      "statement": "Tests live under tests/ and run with importlib import mode configured in the packaging metadata.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        }
+      ]
+    },
+    {
+      "id": "claim_86c3acc3bd894d2095a7ef9954ab316e",
+      "statement": "Two contribution rules govern the suite: new production behaviour requires a failing test first, and a red test must be fixed in the change or filed as a tracked issue rather than dismissed or deleted as pre-existing.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        }
+      ]
+    },
+    {
+      "id": "claim_3ed8134242114ec98f0570f573712c91",
+      "statement": "The version-consistency gate treats the project version in the packaging metadata as the single authority that the in-package mirror, each plugin manifest, and the citation metadata must match, asserting in CI rather than generating manifests at build time and naming the diverging file and both versions on failure.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/check_version_consistency.py",
+          "version": "repo-file-v1:sha256:ddc438db874ec48342d7c35db56260d81def2b7ec962d243a11cb4d44860632b"
+        },
+        {
+          "resource": "repo://tests/test_version_consistency.py",
+          "version": "repo-file-v1:sha256:7eebef5d778bef0306b4474edfb7954d1ba1a49d0ac68e69196c7dffc1506001"
+        }
+      ]
+    },
+    {
+      "id": "claim_f20c97bf44e3435ab6937c46dfeeeaee",
+      "statement": "The version gate exists because a past release bumped only the Python package and left the plugin manifests drifting, producing two versions that disagreed.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://scripts/check_version_consistency.py",
+          "version": "repo-file-v1:sha256:ddc438db874ec48342d7c35db56260d81def2b7ec962d243a11cb4d44860632b"
+        }
+      ]
+    },
+    {
+      "id": "claim_168bca1114184bbaa157c1c27da7cbc3",
+      "statement": "The license gate scans the resolved dependency tree of the active environment and fails on strong-copyleft licenses while reporting weak copyleft informationally, verifying the permissive-dependency claim rather than asserting it.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/license_scan.py",
+          "version": "repo-file-v1:sha256:63d64b631e141e30cbb56c54e7266772ec6a1d95ed4da1e57a9f66e548b0df60"
+        },
+        {
+          "resource": "repo://tests/test_license_scan.py",
+          "version": "repo-file-v1:sha256:f3e829c34b93553f258c3156b1e482a52989ab74c8de23daaafad058dac3ef38"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b198d8c25904650800bb1a900be685c",
+      "statement": "The license gate is dependency-scoped and excludes the project's own distribution before classification keyed on the project name, because otherwise the engine's own copyleft license would make the gate reject the project itself — and keying on the name alone means the exclusion never weakens the check on dependencies.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        },
+        {
+          "resource": "repo://scripts/license_scan.py",
+          "version": "repo-file-v1:sha256:63d64b631e141e30cbb56c54e7266772ec6a1d95ed4da1e57a9f66e548b0df60"
+        }
+      ]
+    },
+    {
+      "id": "claim_2e5fcf26f8bf459fa36f30039bc77471",
+      "statement": "The public-surface scan checks git-tracked files for operator tailnet names, node addresses, credential material, and operator home paths, failing with file, line, and pattern while masking the matched value so the gate never re-prints a secret into a console or CI log.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/preflight_public_scan.py",
+          "version": "repo-file-v1:sha256:ce79101641ea0660bee8998c15dfe06dc2bd5d4b7c000001819819514c60266f"
+        },
+        {
+          "resource": "repo://tests/test_preflight_public_scan.py",
+          "version": "repo-file-v1:sha256:496d352f0ec849c6e69692b372332afebaf4da01748d00f269ad0f4643ab4d98"
+        }
+      ]
+    },
+    {
+      "id": "claim_a82841a02aaa4534a25b67e7784cd095",
+      "statement": "The public-surface scan has three modes — a default gate that defers a named set of inherited process-history documents while reporting how many it deferred rather than dropping them silently, a strict mode that scans everything as the flip-time gate, and an informational history scan that never fails — and archived documents are deferred by default but scanned under strict so archiving cannot hide a leak.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/preflight_public_scan.py",
+          "version": "repo-file-v1:sha256:ce79101641ea0660bee8998c15dfe06dc2bd5d4b7c000001819819514c60266f"
+        }
+      ]
+    },
+    {
+      "id": "claim_61968f1504c74bdfb01d52f8eb2da581",
+      "statement": "A separate deterministic product smoke script runs against a disposable fixture vault with path-relative secret-free output, gating product operability separately from retrieval quality.",
+      "evidence": [
+        {
+          "resource": "repo://harness/BENCHMARKS.md",
+          "version": "repo-file-v1:sha256:83e4aaf503e32e4d08d13c10ac402a6c273e9d9f50fc6e723436183bd79e7c63"
+        },
+        {
+          "resource": "repo://scripts/product_smoke.py",
+          "version": "repo-file-v1:sha256:8ab751ef64af20203acfdf498140f56dd2ebd4affd25016bcc84259d7a821cdf"
+        }
+      ]
+    },
+    {
+      "id": "claim_50130fde01b5487eb36beedfc6d1859e",
+      "statement": "A second CI job installs the built wheel into a clean environment resolved from the index with no lockfile, because every other job runs inside a lockfile that is not shipped in the wheel or sdist and therefore cannot see a dependency resolving to a breaking major — the exact failure mode by which an unbounded range let a new major crash-loop every clean install.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml",
+          "version": "repo-file-v1:sha256:782e1ee9960f676432bcd9995b4fe112f691622b57776d06d668a1bfa6d45d5e"
+        },
+        {
+          "resource": "repo://tests/test_dependency_bounds.py",
+          "version": "repo-file-v1:sha256:064259dae92b83981142e7044f636ecc598e04122f5071870ec638aff9d7d080"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e76c7ac08c24a4ab9595f24c5d5df0b",
+      "statement": "The fresh-install job proves the package actually starts by importing the server module that previously failed, printing the version, and rendering the serve help, rather than only checking that installation succeeded.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml",
+          "version": "repo-file-v1:sha256:782e1ee9960f676432bcd9995b4fe112f691622b57776d06d668a1bfa6d45d5e"
+        }
+      ]
+    },
+    {
+      "id": "claim_204e620a72be46f2831dcce81eed0235",
+      "statement": "A unit test is the cheap local half of the same protection, failing the moment a runtime dependency loses its upper bound rather than waiting for that dependency to publish a breaking major.",
+      "evidence": [
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:2062049bd007a6144a2b6ebd15e9b6ee64111f11797b45161e59b8fc1bbb1743"
+        },
+        {
+          "resource": "repo://tests/test_dependency_bounds.py",
+          "version": "repo-file-v1:sha256:064259dae92b83981142e7044f636ecc598e04122f5071870ec638aff9d7d080"
+        }
+      ]
+    },
+    {
+      "id": "claim_818b96c5ab8549a79ce0daf21c929c21",
+      "statement": "The branch topology routes feature branches into dev, dev into main at release time, and a version tag on main into publication; dev is the default branch and baseline while main is the release branch that never receives a feature branch, and neither is committed to directly.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        }
+      ]
+    },
+    {
+      "id": "claim_af59a5ac1dd7479f8cd1fabf9f0b7cee",
+      "statement": "Divergence between main and dev is reconciled by merging main back into dev rather than cherry-picking, which would leave the same content under two SHAs to untangle at the next release.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        }
+      ]
+    },
+    {
+      "id": "claim_10222383216e4a1b858ba94cc3634941",
+      "statement": "Commits use conventional subjects and require a DCO sign-off line as a lightweight provenance attestation, with a contributor licence agreement deliberately not required.",
+      "evidence": [
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        }
+      ]
+    },
+    {
+      "id": "claim_9c8445e9b46145ec8ba74cdc5945d22c",
+      "statement": "Changes to auth, the MCP server, the write path, or the protected-path guard are treated as security-sensitive, routed to the owner through code-ownership rules, and expected to cite the security policy and threat model.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://CONTRIBUTING.md",
+          "version": "repo-file-v1:sha256:a1f0242dfa3df772f8b790a500838e71eb72ee339f225207c4a8efa0eff859df"
+        },
+        {
+          "resource": "repo://SECURITY.md",
+          "version": "repo-file-v1:sha256:e174bcfb20574084b9510995f0df2d002b4563f6b06639559aed9a5f8bd2f30a"
+        }
+      ]
+    },
+    {
+      "id": "claim_07851bc5c360495b9525223ad49b3613",
+      "statement": "Merging to main publishes nothing: the release workflow triggers only on a version tag push or a manual dispatch, so a branch merge runs CI and stops and publishing is a deliberate act rather than a side effect of merging.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml",
+          "version": "repo-file-v1:sha256:5a40146f8a06ae74040703088533077589e560655214d3855047e863f4ac3969"
+        },
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        }
+      ]
+    },
+    {
+      "id": "claim_cfc119cf760f489e9213367c0c3df4ab",
+      "statement": "The release runs as three dependent stages — a build that re-runs the version-consistency gate before producing the sdist and wheel, a publish step, and a GitHub release — each gated on the previous one succeeding.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml",
+          "version": "repo-file-v1:sha256:5a40146f8a06ae74040703088533077589e560655214d3855047e863f4ac3969"
+        }
+      ]
+    },
+    {
+      "id": "claim_6a344cd42da240f19c487b405e16e5df",
+      "statement": "Publication uses OIDC trusted publishing with no stored API token, exchanging a short-lived identity token for an upload token at run time, which also means a tag pushed from the wrong place cannot be quietly undone by rotating a key.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml",
+          "version": "repo-file-v1:sha256:5a40146f8a06ae74040703088533077589e560655214d3855047e863f4ac3969"
+        },
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        }
+      ]
+    },
+    {
+      "id": "claim_d48b4aca06f9446fb4df768912cd468a",
+      "statement": "The GitHub release job runs only after publishing succeeded and only for a tag rather than a manual dispatch, so nothing is announced that did not actually ship, and it is the only job granted write permission while the others stay read-only.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml",
+          "version": "repo-file-v1:sha256:5a40146f8a06ae74040703088533077589e560655214d3855047e863f4ac3969"
+        }
+      ]
+    },
+    {
+      "id": "claim_512f21cf93644831a833aec9852a3a4c",
+      "statement": "Release notes are generated from the changelog rather than hand-written so they cannot drift from the record, and a missing changelog section exits non-zero and therefore produces no release; the notes carry an install line, a link to the published version, and a compare link to the previous tag when one exists, with the built artifacts attached and the tag verified.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml",
+          "version": "repo-file-v1:sha256:5a40146f8a06ae74040703088533077589e560655214d3855047e863f4ac3969"
+        },
+        {
+          "resource": "repo://scripts/changelog_section.py",
+          "version": "repo-file-v1:sha256:67cbfed94a6ea20ba72c91f36b758871383a6a88d13614086646271c0e9f8086"
+        },
+        {
+          "resource": "repo://tests/test_changelog_section.py",
+          "version": "repo-file-v1:sha256:79c1e81c0c6f1965e34a292dc3eef3cd3d48c4c7d81739d4d9ca8d278cd91aee"
+        }
+      ]
+    },
+    {
+      "id": "claim_875f9a41670d49ea9e28f9cb12da5ebe",
+      "statement": "A change is not done until every document it affects is corrected in the same pull request, a rule derived from a version split that produced the consistency gate and from a later effort spent correcting architectural self-descriptions the code had moved past.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        }
+      ]
+    },
+    {
+      "id": "claim_b6152fe036b6403eab4a460439fff1f3",
+      "statement": "When a process-history document conflicts with the documentation index's current-truth pins the pins win, and drift found but not caused is treated as a defect to fix or file rather than background noise.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:471788a330c6f652067d69f8ea7212a59c2e531fa7792199671f40a6f921352f"
+        },
+        {
+          "resource": "repo://docs/README.md",
+          "version": "repo-file-v1:sha256:023a1ddc68bdaf6212f8188bc5bf1b1476a18df6ceccee3d5808cb64127e3643"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

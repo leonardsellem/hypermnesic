@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:bf2ad9f1ecd02b73839ae463eadf3d229346ce02991c324e041fe62e60ae7344",
+  "claims": [
+    {
+      "id": "claim_a6ffc935148640b8ad569e9e089c3c2c",
+      "statement": "The memory control surface provides product verbs over the markdown, git, index, and audit-log objects that already exist and deliberately does not introduce a second memory store of record.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-control.md",
+          "version": "repo-file-v1:sha256:05192a34874a1e3bdc6e19d661ea0f4e970344f0b2e69c81d99c5cf40a5fdd9c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_03936cf21ff24e23841887069c9520d6",
+      "statement": "Memory listing reports whether each path is currently writable using the same protected-path guard that commit_note applies, so the inspection surface cannot disagree with the write surface.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_46bb4db3e9c9408a8b06ff819f645dae",
+      "statement": "Source type is determined from evidence rather than guessed: a note carrying the shared generated-artifact demarcation is generated, a note under the free-append capture prefix is captured, and everything else is authored, with missing evidence reported as unknown rather than invented provenance.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-control.md",
+          "version": "repo-file-v1:sha256:05192a34874a1e3bdc6e19d661ea0f4e970344f0b2e69c81d99c5cf40a5fdd9c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/generated.py",
+          "version": "repo-file-v1:sha256:71200197c574d48dcc80f617910c1559aa01d14c618920c719f0d6acf8010584"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_e13df18b870945649dd5fcd96511e534",
+      "statement": "Inspecting one memory returns provenance in file and commit terms and deliberately omits a raw full-body field, so explaining where a memory came from is separate from reading its contents.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-control.md",
+          "version": "repo-file-v1:sha256:05192a34874a1e3bdc6e19d661ea0f4e970344f0b2e69c81d99c5cf40a5fdd9c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_7ffafa584e8d48a6ba2e5ec43867e9b4",
+      "statement": "The write-scope question is answered with the same folder derivation and protected-path guard used by folder discovery and the write path, so all three surfaces agree by construction rather than by convention.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/folders.py",
+          "version": "repo-file-v1:sha256:395baafd1bf0f9df25b3a5f804a64bac0805f34f8a8fa5f3966f2a42a25344cf"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_081767723a0c4bdca815d595108f47e0",
+      "statement": "Export copies selected markdown files preserving their relative structure and writes a manifest recording a version, export timestamp, the filter used, and per-item path, last commit, actor, and source type — a markdown-and-provenance export rather than an index export, because the index is disposable and rebuildable from the files.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://tests/test_memory_control.py",
+          "version": "repo-file-v1:sha256:754fc111c0ccbfc02f549e50176f0a820bb35b9f0f1cec8eb6fd0fbe48b08c3a"
+        }
+      ]
+    },
+    {
+      "id": "claim_245497cf26f24b5fa80b469dbd1e125d",
+      "statement": "Forget previews by default, and the preview states the target, that applying creates a commit, the deletion intent, the guard verdict, a verification plan, and its own limits, so the operator sees the consequences before acting.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://tests/test_memory_control.py",
+          "version": "repo-file-v1:sha256:754fc111c0ccbfc02f549e50176f0a820bb35b9f0f1cec8eb6fd0fbe48b08c3a"
+        }
+      ]
+    },
+    {
+      "id": "claim_f423fa512e9e4311bd8016f949389d13",
+      "statement": "Applying forget requires a clean working tree, takes the single-writer lock, removes the file with a path-scoped git rm and commit, updates the index projection and checkpoint, and appends a forget audit entry.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://src/hypermnesic/serialize.py",
+          "version": "repo-file-v1:sha256:4842c300bcebce79a484c9435e67a84dc64672efbd378a6239ac3a27e3d65cf3"
+        }
+      ]
+    },
+    {
+      "id": "claim_8c199a536d3c404780b86d76631e5083",
+      "statement": "Forget removes current source content as a new commit and explicitly does not rewrite git history, does not erase chat contexts or copies outside the vault, and does not conflate source deletion with the disposable index state — limits that are returned in the result rather than left for the operator to infer.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/memory-control.md",
+          "version": "repo-file-v1:sha256:05192a34874a1e3bdc6e19d661ea0f4e970344f0b2e69c81d99c5cf40a5fdd9c"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_47bb62ea21c64d73bacc9400f94159e9",
+      "statement": "Revert support is deliberately narrow: an unfindable commit reports commit_not_found and a commit touching more than one markdown file is reported unsupported with the reason stated, and applying an unsupported commit raises rather than attempting a best-effort partial revert.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        },
+        {
+          "resource": "repo://tests/test_memory_control.py",
+          "version": "repo-file-v1:sha256:754fc111c0ccbfc02f549e50176f0a820bb35b9f0f1cec8eb6fd0fbe48b08c3a"
+        }
+      ]
+    },
+    {
+      "id": "claim_dc49210ac8de4eccb1a773954f26c3a4",
+      "statement": "A supported revert requires a clean tree, aborts the git revert on conflict rather than leaving a half-finished state, then re-projects the affected path — re-indexing it when the file exists and removing it when it does not — advances the checkpoint, and appends a revert audit entry.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_4e12d53724e241d2a23ef56ebef03362",
+      "statement": "The audit view projects every log entry to a fixed safe shape — timestamp, actor, verb, attempted verb, path, old and new SHA, category, and a redacted summary — and includes refusal entries alongside successful writes so the history answers what was blocked as well as what changed.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/audit_log.py",
+          "version": "repo-file-v1:sha256:936d8849fd1b0754199461bb4c08f823c4724046ab9c5e16416aca668ec84d85"
+        },
+        {
+          "resource": "repo://src/hypermnesic/memory_control.py",
+          "version": "repo-file-v1:sha256:2691b4c70d8716976dd6319e302b0556c32fd7bdb28a1361d67a9daa5b3da009"
+        }
+      ]
+    },
+    {
+      "id": "claim_413b15b90c7d473886989cf7281bdb22",
+      "statement": "The client grant store holds only reviewable metadata because the live OAuth provider owns bearer tokens, refresh tokens, and revocation semantics, letting an owner list and revoke grants without ever handling a credential.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/consent-and-clients.md",
+          "version": "repo-file-v1:sha256:ce7e7b7e7a7a1cef1df2fbda9928b8898a303d1d68a5ccbdbe57fb912ad048dc"
+        },
+        {
+          "resource": "repo://src/hypermnesic/client_control.py",
+          "version": "repo-file-v1:sha256:bb6431d70783614076ecaf78871e070bf94836deca0d211025a2a1b15b8d6efb"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a75bdd54a0b4976afd46cad5635125f",
+      "statement": "Every grant read and write passes through a fixed field allowlist — grant id, client id and name, redirect URI and origin, scopes, write-enabled flag, issue and update times, access and refresh expiry, status, active flag, and revocation time — so a field outside that set cannot be persisted even if a caller supplies it, and the store contains no bearer tokens, refresh tokens, approval credentials, client secrets, or token hashes.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/client_control.py",
+          "version": "repo-file-v1:sha256:bb6431d70783614076ecaf78871e070bf94836deca0d211025a2a1b15b8d6efb"
+        },
+        {
+          "resource": "repo://tests/test_client_control.py",
+          "version": "repo-file-v1:sha256:0c9ed0dd086695bb11497fc0cea8b77fd02ec30176b8c761d7ba0a4e6f304fbd"
+        }
+      ]
+    },
+    {
+      "id": "claim_dc594cde0e9a413485168210eaf38537",
+      "statement": "The grant store is written atomically through a temporary file replaced into place and keeps grants in a stable sort order, so the file stays diffable and a crash mid-write cannot truncate it.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/client_control.py",
+          "version": "repo-file-v1:sha256:bb6431d70783614076ecaf78871e070bf94836deca0d211025a2a1b15b8d6efb"
+        }
+      ]
+    },
+    {
+      "id": "claim_6038dd9e1d1a4bcf87b97ba8db495a37",
+      "statement": "Live OAuth runtime state including dynamic client registrations and token material is kept in a separate owner-only file so browser-login-once clients keep refreshing across a service restart; that file is not the owner listing surface and is never committed, logged, or shared.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/consent-and-clients.md",
+          "version": "repo-file-v1:sha256:ce7e7b7e7a7a1cef1df2fbda9928b8898a303d1d68a5ccbdbe57fb912ad048dc"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        }
+      ]
+    },
+    {
+      "id": "claim_52ab448f6024405dba86c692e53256cf",
+      "statement": "Grant revocation previews by default, reporting the client, scopes, and write-enabled state with a would-revoke marker, and only marks the grant revoked and inactive with a timestamp when explicitly applied, returning the concrete next effect that a running server sharing the store refuses the grant on its next access or refresh validation.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/client_control.py",
+          "version": "repo-file-v1:sha256:bb6431d70783614076ecaf78871e070bf94836deca0d211025a2a1b15b8d6efb"
+        },
+        {
+          "resource": "repo://tests/test_client_control.py",
+          "version": "repo-file-v1:sha256:0c9ed0dd086695bb11497fc0cea8b77fd02ec30176b8c761d7ba0a4e6f304fbd"
+        }
+      ]
+    },
+    {
+      "id": "claim_006d01f1fd42446eb54404a0a8f53f66",
+      "statement": "Revocation is idempotent by design: an unknown grant returns not_found and an already-revoked grant returns already_revoked rather than raising, so a repeated revoke is not mistaken for a failure.",
+      "evidence": [
+        {
+          "resource": "repo://src/hypermnesic/client_control.py",
+          "version": "repo-file-v1:sha256:bb6431d70783614076ecaf78871e070bf94836deca0d211025a2a1b15b8d6efb"
+        },
+        {
+          "resource": "repo://tests/test_client_control.py",
+          "version": "repo-file-v1:sha256:0c9ed0dd086695bb11497fc0cea8b77fd02ec30176b8c761d7ba0a4e6f304fbd"
+        }
+      ]
+    },
+    {
+      "id": "claim_86ee7743bdf14b5c823ad7c95353dc79",
+      "statement": "Provider-level revocation invalidates the entire live grant path including its refresh sibling, so a revoked client cannot recover access by refreshing rather than only losing its current access token.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/consent-and-clients.md",
+          "version": "repo-file-v1:sha256:ce7e7b7e7a7a1cef1df2fbda9928b8898a303d1d68a5ccbdbe57fb912ad048dc"
+        },
+        {
+          "resource": "repo://src/hypermnesic/auth_cloud.py",
+          "version": "repo-file-v1:sha256:73175b0d0f6fb701988fdbce9aca45d0809df19ade849a77edec749229e300bb"
+        }
+      ]
+    },
+    {
+      "id": "claim_408a7ddae0e24248aae09b9fe19bbe6c",
+      "statement": "The consent page is plain, script-free, and no-store, showing the requesting client identity, the redirect origin and full redirect URI, the requested scopes, plain-language consequences, and reject and cancel actions — both of which consume the authorization request without issuing a code or grant.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/consent-and-clients.md",
+          "version": "repo-file-v1:sha256:ce7e7b7e7a7a1cef1df2fbda9928b8898a303d1d68a5ccbdbe57fb912ad048dc"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f00adc029e840b08d3de202a17f9f92",
+      "statement": "Approving write scope only allows a client to request the write tool and bypasses nothing: the protected-path guard, frontmatter gate, dirty-tree and head-drift checks, audit logging, git coordination, and any allowlist narrowing all still apply, and a client lacking the scope receives an explicit insufficient-scope refusal stating exactly that.",
+      "evidence": [
+        {
+          "resource": "repo://docs/guides/consent-and-clients.md",
+          "version": "repo-file-v1:sha256:ce7e7b7e7a7a1cef1df2fbda9928b8898a303d1d68a5ccbdbe57fb912ad048dc"
+        },
+        {
+          "resource": "repo://src/hypermnesic/mcp_server.py",
+          "version": "repo-file-v1:sha256:4edfd7cbe4a5c09423af4c0c5f0f9d0cfbc01400093ec3f268965e416f624c8e"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T12:15:12.148Z"
+  }
+}

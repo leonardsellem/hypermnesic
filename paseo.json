@@ -1,0 +1,33 @@
+{
+  "worktree": {
+    "setup": [
+      "set -euo pipefail",
+      "if [ -n \"${PASEO_SOURCE_CHECKOUT_PATH:-}\" ] && [ -f \"$PASEO_SOURCE_CHECKOUT_PATH/.env\" ] && [ ! -f .env ]; then cp \"$PASEO_SOURCE_CHECKOUT_PATH/.env\" .env; fi",
+      "uv sync --extra dev"
+    ],
+    "teardown": [
+      "rm -rf .pytest_cache .ruff_cache .mypy_cache"
+    ]
+  },
+  "scripts": {
+    "test": { "command": "uv run pytest -x -q --tb=short" },
+    "lint": { "command": "uv run ruff check ." },
+    "version": { "command": "uv run python scripts/check_version_consistency.py" },
+    "license": { "command": "uv run python scripts/license_scan.py" },
+    "public-scan": { "command": "uv run python scripts/preflight_public_scan.py" }
+  },
+  "metadataGeneration": {
+    "title": {
+      "instructions": "hypermnesic engine. Short title. LS Linear keys (LS-…) only if already known. Never invent issue IDs. No secrets, no operator hostnames."
+    },
+    "branchName": {
+      "instructions": "Branch off origin/dev, never main. main is release-only. ASCII slug feat/ls-123-short-desc or fix/ls-123-short-desc. Use a worktree; do not switch the canonical clone."
+    },
+    "commitMessage": {
+      "instructions": "Conventional commit with a Signed-off-by DCO line. No OpenAI keys, OAuth secrets, operator hosts, or real Tailscale names. Use placeholders in docs/fixtures."
+    },
+    "pullRequest": {
+      "instructions": "Target dev, never main. Do not pass --base main. Link LS- only if known. Docs that the change touches must land in the same PR. Do not start the live MCP/OAuth stack from a worktree."
+    }
+  }
+}

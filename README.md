@@ -176,7 +176,8 @@ projection state: missing indexes point to initialization, and stale/absent vect
 `hypermnesic converge /path/to/vault --now --json` before a full reindex.
 By default, new OAuth clients request `read`; admins can make new approvals request both
 read and write with `--default-client-scopes read write` or
-`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`.
+`HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`. Cloud access tokens last 48 hours
+(`HYPERMNESIC_TOKEN_TTL_SECONDS` / `--token-ttl`); refresh stays 30 days.
 
 ### C. Connect a client (any remote app)
 
@@ -215,7 +216,7 @@ hypermnesic local-proof /path/to/vault                           # first local v
 hypermnesic retrieve /path/to/vault "what do we know about X"   # hybrid search
 hypermnesic think    /path/to/vault "topic"                     # thinking-mode
 hypermnesic resolve  /path/to/vault "Some Entity"               # name → page path
-hypermnesic commit-note /path/to/vault notes/x.md --body "…"    # git-first write (dry-run preview)
+hypermnesic commit-note /path/to/vault notes/x.md --body "…"    # git-first write (preview; --commit to land)
 hypermnesic memory list /path/to/vault                          # inspect/control memory
 hypermnesic memory forget /path/to/vault notes/bad.md            # preview source removal
 hypermnesic clients list /path/to/vault                         # inspect OAuth client grants

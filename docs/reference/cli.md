@@ -91,9 +91,11 @@ layer by default.
 ## Writing
 
 ### `commit-note <repo> <path>`
-Preview what a `commit_note` write would do — **dry-run, read-only** (guard + gate run,
-zero side effects; prints the diff).
-Flags: `--body TEXT`, `--body-file PATH`, `--summary TEXT`, `--json`.
+Guarded note write (guard + diff-or-die gate + single-path git commit). By default it is a
+**dry-run, read-only** preview (zero side effects; prints the diff); add `--commit` to land
+the write for real (git commit + push, index follows as a projection).
+Flags: `--body TEXT`, `--body-file PATH`, `--summary TEXT`, `--commit`, `--json` (`--json`
+reports `new_sha` on a real write).
 
 Use this only for durable project memory. Do not write temporary session state, behavioural
 preferences such as "user likes terse replies", secrets, credentials, or unreviewed sensitive
@@ -246,7 +248,8 @@ operator-consent gate + a write-enabled serve), exposed via Funnel. The operator
 token is read from `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` (env, never a flag).
 Flags: `--index-db PATH` (required), `--host` (default 127.0.0.1), `--port N` (default
 8850), `--path /mcp`, `--public-url URL` (required), `--resource URL` (required),
-`--repo PATH`, `--token-ttl N` (default 3600), `--default-client-scopes SCOPE ...`
+`--repo PATH`, `--token-ttl N` (default `172800` / 48h; env:
+`HYPERMNESIC_TOKEN_TTL_SECONDS`), `--default-client-scopes SCOPE ...`
 (default: `read`; env: `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`), `--allowlist
 PREFIX` (repeatable). When `--repo` is omitted, `--index-db` must be
 `<repo>/.hypermnesic/index.db`; pass `--repo` for custom index locations.
@@ -257,7 +260,8 @@ the service, persist the consent secret, configure the funnel, verify the live H
 discovery chain. Fail-closed (no partial state).
 Flags: `--public-url URL` (required), `--resource URL` (defaults to `--public-url`),
 `--host` (default 127.0.0.1), `--port N` (default 8850), `--path` (default `/`),
-`--env-file PATH`, `--allowlist PREFIX` (repeatable), `--token-ttl N`,
+`--env-file PATH`, `--allowlist PREFIX` (repeatable), `--token-ttl N` (default
+`172800` / 48h; env: `HYPERMNESIC_TOKEN_TTL_SECONDS`),
 `--default-client-scopes SCOPE ...` (default: `read`; env:
 `HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write`), `--json`.
 JSON output includes `milestones`, `what_this_means`, and `client_next_actions` in

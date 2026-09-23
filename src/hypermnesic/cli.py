@@ -12,7 +12,7 @@ import json
 import sys
 from pathlib import Path
 
-from hypermnesic import __version__
+from hypermnesic import __version__, config
 
 DEFAULT_CLIENT_SCOPES_ENV = "HYPERMNESIC_DEFAULT_CLIENT_SCOPES"
 
@@ -71,15 +71,30 @@ def _cmd_embed(args) -> int:
 
 
 def _cmd_commit_note(args) -> int:
-    """Preview what a commit_note write would do (dry-run; read-only)."""
+    """Preview (default, read-only) or, with ``--commit``, land the guarded write for real."""
     from hypermnesic import commit_note as cn
+    from hypermnesic import index
 
     body = Path(args.body_file).read_text(encoding="utf-8") if args.body_file else args.body
-    r = cn.commit_note(Path(args.repo), args.path, body=body, summary=args.summary,
-                       dry_run=True)
-    if args.json:
-        _print_json({"path": r.path, "created": r.created, "noop": r.noop, "diff": r.diff})
+    if args.commit:
+        # Same projection wiring as `capture`: git is the commitment, the index follows.
+        db = index.state_dir_for(Path(args.repo)) / "index.db"
+        idx = index.Index(db) if db.exists() else None
+        try:
+            r = cn.commit_note(Path(args.repo), args.path, body=body, summary=args.summary,
+                               idx=idx)
+        finally:
+            if idx is not None:
+                idx.close()
     else:
+        r = cn.commit_note(Path(args.repo), args.path, body=body, summary=args.summary,
+                           dry_run=True)
+    if args.json:
+        _print_json({"path": r.path, "created": r.created, "noop": r.noop,
+                     "new_sha": r.new_sha, "diff": r.diff})
+    else:
+        if args.commit:
+            print(f"committed {r.path} @ {(r.new_sha or '')[:9]}")
         print(r.diff or "(no change)")
     return 0
 
@@ -519,10 +534,10 @@ def _cmd_serve_cloud(args) -> int:
             Path(args.index_db), host=args.host, port=args.port, path=args.path,
             repo=(Path(args.repo) if args.repo else None),
             resource=args.resource, public_url=args.public_url, approval_token=approval,
-            token_ttl_seconds=args.token_ttl,
+            token_ttl_seconds=config.cloud_token_ttl_seconds(args.token_ttl),
             default_client_scopes=_default_client_scopes(args.default_client_scopes),
             write_allowlist=args.allowlist)
-    except ValueError as exc:
+    except (ValueError, config.ConfigError) as exc:
         print(f"serve-cloud failed: {exc}", file=sys.stderr)   # fail loud; no half-open server
         return 1
     srv.run(transport="streamable-http")
@@ -542,9 +557,9 @@ def _cmd_setup(args) -> int:
             resource=(args.resource or args.public_url),
             host=args.host, port=args.port, path=args.path,
             env_file=(Path(args.env_file) if args.env_file else None),
-            allowlist=args.allowlist, token_ttl=args.token_ttl,
+            allowlist=args.allowlist, token_ttl=config.cloud_token_ttl_seconds(args.token_ttl),
             default_client_scopes=_default_client_scopes(args.default_client_scopes))
-    except (install.InstallError, FileNotFoundError) as exc:
+    except (install.InstallError, FileNotFoundError, config.ConfigError) as exc:
         print(f"setup failed: {exc}", file=sys.stderr)   # fail loud; nothing half-provisioned
         return 1
     if args.json:
@@ -754,12 +769,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_embed.add_argument("--json", action="store_true")
     p_embed.set_defaults(func=_cmd_embed)
 
-    p_cn = sub.add_parser("commit-note", help="preview a commit_note write (dry-run, read-only)")
+    p_cn = sub.add_parser("commit-note",
+                          help="guarded note write: dry-run preview by default, "
+                               "a real commit with --commit")
     p_cn.add_argument("repo")
     p_cn.add_argument("path", help="repo-relative note path")
     p_cn.add_argument("--body", default=None)
     p_cn.add_argument("--body-file", default=None)
     p_cn.add_argument("--summary", default=None)
+    p_cn.add_argument("--commit", action="store_true",
+                      help="land the write for real (guarded single-path git commit + push); "
+                           "without it this is a read-only preview")
     p_cn.add_argument("--json", action="store_true")
     p_cn.set_defaults(func=_cmd_commit_note)
 
@@ -951,8 +971,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_cloud.add_argument("--resource", required=True,
                          help="the public MCP resource identifier (RFC 8707 audience)")
     p_cloud.add_argument("--repo", default=None, help="git repo the index projects")
-    p_cloud.add_argument("--token-ttl", type=int, default=3600,
-                         help="access-token lifetime ceiling (seconds)")
+    p_cloud.add_argument("--token-ttl", type=int, default=None,
+                         help="access-token lifetime in seconds "
+                              f"(default: {config.CLOUD_TOKEN_TTL_SECONDS} / 48h; "
+                              f"env: {config.TOKEN_TTL_ENV})")
     p_cloud.add_argument("--allowlist", action="append", default=None, metavar="PREFIX",
                          help="writable path prefix to narrow the write surface "
                               "(default: blocklist — protected-path + governance fence only)")
@@ -986,7 +1008,10 @@ def build_parser() -> argparse.ArgumentParser:
                          help="OAuth scopes requested by default when a dynamically registered "
                               "client omits scope (default: read; env: "
                               "HYPERMNESIC_DEFAULT_CLIENT_SCOPES=read,write)")
-    p_setup.add_argument("--token-ttl", type=int, default=3600)
+    p_setup.add_argument("--token-ttl", type=int, default=None,
+                         help="access-token lifetime in seconds "
+                              f"(default: {config.CLOUD_TOKEN_TTL_SECONDS} / 48h; "
+                              f"env: {config.TOKEN_TTL_ENV})")
     p_setup.add_argument("--json", action="store_true")
     p_setup.set_defaults(func=_cmd_setup)
 

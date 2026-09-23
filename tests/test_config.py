@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from hypermnesic import config
 
 _KEY_NAME = "OPENAI_" + "API_KEY"
@@ -225,3 +227,28 @@ def test_smoke_embed_or_die_uses_repo_context(monkeypatch, tmp_path):
     embed.smoke_embed_or_die(embedder=FakeEmbedder(), repo=repo)
 
     assert seen["repo"] == repo
+
+
+def test_cloud_token_ttl_default_is_48_hours(monkeypatch):
+    monkeypatch.delenv(config.TOKEN_TTL_ENV, raising=False)
+    assert config.CLOUD_TOKEN_TTL_SECONDS == 48 * 60 * 60 == 172800
+    assert config.cloud_token_ttl_seconds() == 172800
+
+
+def test_cloud_token_ttl_env_override(monkeypatch):
+    monkeypatch.setenv(config.TOKEN_TTL_ENV, "7200")
+    assert config.cloud_token_ttl_seconds() == 7200
+
+
+def test_cloud_token_ttl_explicit_override_wins_over_env(monkeypatch):
+    monkeypatch.setenv(config.TOKEN_TTL_ENV, "7200")
+    assert config.cloud_token_ttl_seconds(1800) == 1800
+
+
+def test_cloud_token_ttl_rejects_non_positive_and_invalid_env(monkeypatch):
+    monkeypatch.delenv(config.TOKEN_TTL_ENV, raising=False)
+    with pytest.raises(config.ConfigError):
+        config.cloud_token_ttl_seconds(0)
+    monkeypatch.setenv(config.TOKEN_TTL_ENV, "nope")
+    with pytest.raises(config.ConfigError):
+        config.cloud_token_ttl_seconds()
