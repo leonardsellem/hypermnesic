@@ -1,0 +1,24 @@
+name: AGENTS.md guard
+
+# AGENTS.md is the only per-directory instruction file in this repository.
+# A tracked CLAUDE.md at any level — including .claude/CLAUDE.md — is a defect.
+# The loader's read fallback for CLAUDE.md in other repos is code behavior and
+# is unaffected by this guard.
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+jobs:
+  no-claude-md:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Reject tracked CLAUDE.md
+        shell: bash
+        run: |
+          ! git ls-files -z | grep -zEv '(^|/)\.agents/skills/' | grep -zE '(^|/)(\.claude/)?CLAUDE(\.local)?\.md$'

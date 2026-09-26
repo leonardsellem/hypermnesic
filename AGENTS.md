@@ -11,8 +11,10 @@ Contract for AI coding agents (Claude Code, Codex, and similar) working in this
 repository. Humans: see [`CONTRIBUTING.md`](CONTRIBUTING.md) — the two are consistent;
 this file states the parts an autonomous agent most needs up front.
 
-> [`CLAUDE.md`](CLAUDE.md) is a **symlink to this file** — the two are one document, not
-> two. Edit `AGENTS.md`; the mirror follows. (These governance files are themselves
+> `AGENTS.md` is the only instruction file here; a tracked `CLAUDE.md` is a
+> defect (CI guard rejects it). The loader keeps a read fallback for `CLAUDE.md`
+> in other repositories — that is code behavior, not a file this repo tracks.
+> (These governance files are themselves
 > protected by the write guard — they are **refused** by the `commit_note` memory write
 > path and can only be changed in an ordinary, reviewed PR.)
 
