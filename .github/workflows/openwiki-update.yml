@@ -49,6 +49,7 @@ jobs:
         run: openwiki code --update --print
         env:
           OPENWIKI_PROVIDER: openrouter
+          OPENWIKI_OPENROUTER_PROVIDER_ONLY: "DeepInfra"
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENWIKI_MODEL_ID: "deepseek/deepseek-v4-flash-0731"
           OPENWIKI_PAGE_CONCURRENCY: "3"
