@@ -43,14 +43,15 @@ jobs:
 
       - name: Install OpenWiki
         # mermaid + jsdom are optional; they add high-fidelity validation of Mermaid diagrams. Remove if your wiki has none.
-        run: npm install --global openwiki@0.4.0 mermaid@11.16.0 jsdom@29.1.1
+        run: npm install --global openwiki@0.6.0 mermaid@11.16.0 jsdom@29.1.1
 
       - name: Run OpenWiki
         run: openwiki code --update --print
         env:
-          OPENWIKI_PROVIDER: openai
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENWIKI_MODEL_ID: "gpt-5.6-terra"
+          OPENWIKI_PROVIDER: openrouter
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENWIKI_MODEL_ID: "deepseek/deepseek-v4-flash-0731"
+          OPENWIKI_PAGE_CONCURRENCY: "3"
 
       - name: Drop CLAUDE.md recreated by OpenWiki
         run: |
