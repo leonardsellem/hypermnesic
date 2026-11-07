@@ -17,14 +17,17 @@ import shutil
 import sqlite3
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 import sqlite_vec
 
 from hypermnesic import config, ingest, serialize
+from hypermnesic import embed as embed_mod
 
 STATE_DIRNAME = ".hypermnesic"
 _BATCH = 128
+_RATE_LIMIT_BACKOFF_SECONDS = (0.25, 0.5, 1.0)
 _FTS_TEXT_VERSION = "2"
 _LEXICAL_FALLBACK_STOPWORDS = {
     "a", "an", "and", "are", "about", "do", "for", "in", "is", "it", "of", "on",
@@ -558,6 +561,43 @@ def _doc_surface_for_projection(repo: Path, path: str) -> str | None:
     return ingest.doc_surface(raw, path) or None
 
 
+def _embed_resilient(embedder, texts: list[str], stats: dict) -> list[list[float]]:
+    """Embed ``texts`` in adaptive batches, halving the batch on a 429 (LS-4058).
+
+    ``stats["batch"]`` is the working batch for the pass: it starts at the
+    configured/CLI batch, halves on each ``rate_limited`` failure, and the size
+    that last worked stays in force for the rest of the run.
+    ``stats["rate_limit_retries"]`` counts one per 429-triggered
+    halving-and-retry. The pending texts are re-chunked at the smaller size
+    after each halving; a one-input request that still answers 429 re-raises,
+    leaving the cooldown armed for later read-path callers. The cooldown armed
+    by *this* 429 is cleared for the retry (via ``clear_cooldown`` when the
+    embedder exposes it), never a pre-existing one: a drain that starts inside
+    a cooldown sees ``reason="cooldown"`` and fails without clearing it.
+    Returns the vectors in input order.
+    """
+    vectors: list[list[float]] = []
+    pending = list(texts)
+    while pending:
+        size = min(stats["batch"], len(pending))
+        try:
+            vectors.extend(embedder.embed(pending[:size]))
+        except embed_mod.EmbeddingError as exc:
+            if getattr(exc, "reason", None) != "rate_limited" or size <= 1:
+                raise
+            stats["batch"] = max(1, stats["batch"] // 2)
+            stats["rate_limit_retries"] += 1
+            clear = getattr(embedder, "clear_cooldown", None)
+            if clear is not None:
+                clear()
+            step = stats["rate_limit_retries"] - 1
+            time.sleep(_RATE_LIMIT_BACKOFF_SECONDS[
+                min(step, len(_RATE_LIMIT_BACKOFF_SECONDS) - 1)])
+            continue
+        pending = pending[size:]
+    return vectors
+
+
 def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
                 budget: int | None = None) -> dict:
     """Async embed pass (U13): fill the dense vectors that lag lexical (AE5).
@@ -573,7 +613,12 @@ def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
     a converging read (KTD3). Because each lane only ever processes *missing*
     items, capping a slice stays idempotent and resumable: re-running drains the
     remainder, never re-embeds. ``None`` preserves the embed-all behavior (the
-    full analytical pass for salience/connections, and ``hypermnesic embed``)."""
+    full analytical pass for salience/connections, and ``hypermnesic embed``).
+
+    A ``rate_limited`` failure is retried at a halved batch instead of aborting
+    (LS-4058); the result also carries ``effective_batch`` (the working batch in
+    force at the end of the pass), ``rate_limit_retries`` (one per 429-triggered
+    halving-and-retry) and ``stale_left`` (stale chunks remaining afterwards)."""
     lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()
     try:
         return embed_stale_locked(idx, repo, embedder, batch=batch, budget=budget)
@@ -596,6 +641,7 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
     stale = idx.stale_chunk_ids()
     if budget is not None:
         stale = stale[:budget]
+    stats: dict = {"batch": batch, "rate_limit_retries": 0}
     n_chunks = 0
     for i in range(0, len(stale), batch):
         ids = stale[i:i + batch]
@@ -606,7 +652,7 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
             rows = [r for r in rows if r[2] not in excluded]
         if not rows:
             continue
-        vecs = embedder.embed([r[1] for r in rows])
+        vecs = _embed_resilient(embedder, [r[1] for r in rows], stats)
         for (cid, _text, _path), vec in zip(rows, vecs, strict=True):
             idx.conn.execute(
                 "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
@@ -621,7 +667,8 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
         nonlocal n_docs
         if not doc_batch:
             return
-        idx.add_docs(doc_batch, embedder.embed([s for _, s in doc_batch]))
+        idx.add_docs(doc_batch, _embed_resilient(
+            embedder, [s for _, s in doc_batch], stats))
         n_docs += len(doc_batch)
         doc_batch.clear()
 
@@ -634,10 +681,13 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
         surface = _doc_surface_for_projection(repo, path)
         if surface:
             doc_batch.append((path, surface))
-            if len(doc_batch) >= batch:
+            if len(doc_batch) >= stats["batch"]:
                 _flush_docs()
     _flush_docs()
-    return {"chunks_embedded": n_chunks, "docs_embedded": n_docs}
+    return {"chunks_embedded": n_chunks, "docs_embedded": n_docs,
+            "effective_batch": stats["batch"],
+            "rate_limit_retries": stats["rate_limit_retries"],
+            "stale_left": len(idx.stale_chunk_ids())}
 
 
 def ensure_full_coverage(idx: Index, repo: Path, embedder) -> bool:

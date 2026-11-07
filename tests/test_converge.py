@@ -180,7 +180,8 @@ def test_embedder_failure_completes_lexical_and_advances_checkpoint(make_corpus,
     idx.close()
 
 
-def test_converge_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder):
+def test_converge_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))   # no real sleeps
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     idx = ix.build_index(repo, fake_embedder)
     _commit_file(repo, "c.md", "# C\n\nRATELIMITMARKER gamma.\n", "add c")
@@ -324,3 +325,40 @@ def test_force_converge_ignores_fresh_debounce_stamp(make_corpus, fake_embedder)
     assert forced.status == "converged" and forced.replayed == 1
     assert "self.md" in idx.all_paths()                          # forced pass caught the self-write
     idx.close()
+
+
+# --- LS-4058 U4: converge --batch + the adaptive outcome in --json -----------
+
+def test_converge_reports_effective_batch_and_retries(make_corpus, fake_embedder,
+                                                      monkeypatch, capsys):
+    import json
+
+    from hypermnesic import cli
+
+    repo = make_corpus({f"n{i}.md": f"# N{i}\n\nmarker{i} body text.\n" for i in range(6)})
+    idx = ix.build_index(repo, fake_embedder)
+    ids = [r[0] for r in idx.conn.execute(
+        "SELECT chunk_id FROM chunks ORDER BY chunk_id LIMIT 5")]
+    idx.conn.executemany("DELETE FROM vec_chunks WHERE chunk_id=?", [(i,) for i in ids])
+    idx.conn.commit()
+    idx.close()
+
+    class ThrottledEmbedder:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            if len(texts) > 2:
+                raise embed_mod.EmbeddingError("429 insufficient_quota", reason="rate_limited")
+            return fake_embedder.embed(texts)
+
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: ThrottledEmbedder())
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+
+    assert cli.main(["converge", str(repo), "--batch", "4", "--now", "--json"]) == 0
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["chunks_embedded"] == 5
+    assert out["effective_batch"] == 2             # --batch 4 rejected, 2 won
+    assert out["rate_limit_retries"] == 1
+    assert out["degraded_lexical_only"] is False   # the drain recovered, not degraded

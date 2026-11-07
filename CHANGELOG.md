@@ -14,6 +14,21 @@ its own changelog and version.
 
 ## [Unreleased]
 
+### Added
+- **Adaptive embedding drain, `--batch`, and a retryable rate-limit surface (LS-4058, 2026-11-07).**
+  A dense drain that answers a provider 429 — including `insufficient_quota` /
+  `credit_balance_exhausted`, which the provider reuses for rate pressure — now halves the
+  request batch (128 → 64 → … → 1), re-chunks the pending texts, backs off 0.25 / 0.5 / 1 s,
+  clears the embedder cooldown for that one retry, and keeps the winning size for the rest
+  of the run; only a one-input request that still 429s fails, leaving the cooldown armed for
+  later read-path callers. `hypermnesic embed` and `hypermnesic converge` take `--batch N`
+  (default 128, `N >= 1`) and report `effective_batch` and `rate_limit_retries` in `--json`
+  (`embed --json` also reports `stale_left`), so one `hypermnesic embed <vault> --json` run
+  drains a backlog and ends `stale_left: 0`. A rate-limited or cooled-down `embed` failure
+  now prints one plain retryable stderr line and exits 1 instead of a traceback echoing the
+  provider's "no credits" text as fact. `converge` still degrades to lexical
+  (`degraded_reason: "rate_limited"`) and never raises on the read path.
+
 ## [0.3.0] - 2026-09-23
 
 > A 0.2.2 release was prepared on 2026-08-17 but never tagged or published;

@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import subprocess
 
+import pytest
+
 from hypermnesic import audit_log as al
 from hypermnesic import commit_note as cn
+from hypermnesic import embed as embed_mod
 from hypermnesic import index as ix
 from hypermnesic import ingest
 
@@ -16,9 +19,32 @@ class CountingEmbedder:
         self.model = wrapped.model
         self.dim = wrapped.dim
         self.texts: list[str] = []
+        self.calls = 0
 
     def embed(self, texts: list[str]) -> list[list[float]]:
+        self.calls += 1
         self.texts.extend(texts)
+        return self.wrapped.embed(texts)
+
+
+class ThrottledEmbedder:
+    """Dim-correct double that answers 429 above ``limit`` inputs.
+
+    Reproduces the reported org behaviour: a 128-chunk request is rejected as
+    ``rate_limited`` while a smaller request succeeds.
+    """
+
+    def __init__(self, wrapped, limit: int):
+        self.wrapped = wrapped
+        self.model = wrapped.model
+        self.dim = wrapped.dim
+        self.limit = limit
+        self.calls = 0
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        self.calls += 1
+        if len(texts) > self.limit:
+            raise embed_mod.EmbeddingError("429 insufficient_quota", reason="rate_limited")
         return self.wrapped.embed(texts)
 
 
@@ -146,4 +172,68 @@ def test_embed_stale_budget_resumes_multiple_invalidated_doc_surfaces(
     assert idx.paths_missing_doc_vector() == []
     third = ix.embed_stale(idx, repo, fake_embedder, budget=1)
     assert third["docs_embedded"] == 0
+    idx.close()
+
+
+# --- R1/R2/R5: adaptive batch on a rate-limited drain ------------------------
+
+def _stale_index(make_corpus, fake_embedder, *, n_docs: int = 70, n_stale: int = 65):
+    """A built index with exactly ``n_stale`` chunk vectors removed."""
+    files = {f"doc{i:02d}.md": f"# Doc {i}\n\nmarker{i} body text.\n" for i in range(n_docs)}
+    repo = make_corpus(files)
+    idx = ix.build_index(repo, fake_embedder)
+    ids = [r[0] for r in idx.conn.execute(
+        "SELECT chunk_id FROM chunks ORDER BY chunk_id LIMIT ?", (n_stale,))]
+    idx.conn.executemany("DELETE FROM vec_chunks WHERE chunk_id=?", [(i,) for i in ids])
+    idx.conn.commit()
+    return repo, idx
+
+
+def test_embed_stale_halves_batch_on_rate_limit(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+    repo, idx = _stale_index(make_corpus, fake_embedder)
+    total_chunks = idx.conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+    assert len(idx.stale_chunk_ids()) == 65
+    limiter = ThrottledEmbedder(fake_embedder, limit=32)   # 128/64 fail, 32 wins
+
+    res = ix.embed_stale(idx, repo, limiter)
+
+    assert res["chunks_embedded"] == 65
+    assert res["effective_batch"] == 32
+    assert res["rate_limit_retries"] == 2                  # 128 → 64 → 32
+    assert res["stale_left"] == 0
+    assert _vec_count(idx) == total_chunks                 # every chunk has a vector
+    assert limiter.calls == 5                              # 65, 64, then 32/32/1
+    second = ix.embed_stale(idx, repo, limiter)            # idempotent: nothing stale
+    assert second["chunks_embedded"] == 0
+    idx.close()
+
+
+def test_embed_stale_short_backlog_single_request(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+    repo, idx = _stale_index(make_corpus, fake_embedder, n_docs=6, n_stale=5)
+    counting = CountingEmbedder(fake_embedder)
+
+    res = ix.embed_stale(idx, repo, counting)
+
+    assert counting.calls == 1                             # one request for the whole backlog
+    assert len(counting.texts) == 5
+    assert res["chunks_embedded"] == 5
+    assert res["effective_batch"] == 128                   # no 429 → configured batch
+    assert res["rate_limit_retries"] == 0
+    idx.close()
+
+
+def test_embed_stale_fails_at_one_chunk_floor(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+    repo, idx = _stale_index(make_corpus, fake_embedder, n_docs=6, n_stale=5)
+    before = _vec_count(idx)
+    limiter = ThrottledEmbedder(fake_embedder, limit=0)    # every size answers 429
+
+    with pytest.raises(embed_mod.EmbeddingError) as excinfo:
+        ix.embed_stale(idx, repo, limiter)
+
+    assert excinfo.value.reason == "rate_limited"
+    assert _vec_count(idx) == before                       # no partial/zero vectors written
+    assert limiter.calls <= 8                              # the ladder terminates, no spin
     idx.close()

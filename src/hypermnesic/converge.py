@@ -47,6 +47,8 @@ class ConvergeResult:
     replayed: int = 0
     chunks_embedded: int = 0
     docs_embedded: int = 0
+    effective_batch: int = 128
+    rate_limit_retries: int = 0
     degraded: bool = False
     degraded_reason: str | None = None
     manual_reindex_recommended: bool = False
@@ -60,6 +62,8 @@ class ConvergeResult:
             "replayed": self.replayed,
             "chunks_embedded": self.chunks_embedded,
             "docs_embedded": self.docs_embedded,
+            "effective_batch": self.effective_batch,
+            "rate_limit_retries": self.rate_limit_retries,
             "degraded_lexical_only": self.degraded,
             "degraded_reason": self.degraded_reason,
             "manual_reindex_recommended": self.manual_reindex_recommended,
@@ -93,7 +97,8 @@ def _write_stamp(idx) -> None:
 def converge(repo, idx, embedder, *, authoring_host: bool = False,
              debounce_seconds: float | None = None,
              embed_budget: int | None = None,
-             max_delta_files: int | None = None) -> ConvergeResult:
+             max_delta_files: int | None = None,
+             batch: int = 128) -> ConvergeResult:
     """Bring ``idx`` up to ``repo``'s HEAD and close a bounded dense slice.
 
     ``None`` for any tunable falls back to the configured default
@@ -149,16 +154,20 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
         # never raises on the read path; partially-embedded batches leave real vectors,
         # never zero placeholders.
         chunks_embedded = docs_embedded = 0
+        effective_batch = batch
+        rate_limit_retries = 0
         degraded = embedder is None
         degraded_reason = "missing_embedder" if embedder is None else None
         if embedder is not None:
             try:
                 emb = index_mod.embed_stale_locked(
-                    idx, repo, embedder, budget=budget,
+                    idx, repo, embedder, budget=budget, batch=batch,
                     exclude_paths=set(overlay_paths) if overlay_paths else None,
                 )
                 chunks_embedded = emb["chunks_embedded"]
                 docs_embedded = emb["docs_embedded"]
+                effective_batch = emb.get("effective_batch", batch)
+                rate_limit_retries = emb.get("rate_limit_retries", 0)
             except Exception as exc:
                 degraded = True                   # FR-R34: dense down, serve lexical/graph
                 degraded_reason = (
@@ -169,6 +178,8 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
         _write_stamp(idx)
         return ConvergeResult(status="converged", replayed=replayed,
                               chunks_embedded=chunks_embedded, docs_embedded=docs_embedded,
+                              effective_batch=effective_batch,
+                              rate_limit_retries=rate_limit_retries,
                               degraded=degraded, degraded_reason=degraded_reason,
                               overlay_paths=overlay_paths,
                               head=head, checkpoint_advanced=advanced)

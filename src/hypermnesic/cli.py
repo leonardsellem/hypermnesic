@@ -21,6 +21,18 @@ def _print_json(obj) -> None:
     print(json.dumps(obj, ensure_ascii=False, indent=2))
 
 
+def _positive_int(value: str) -> int:
+    """argparse type for a batch size: any integer >= 1, else a usage error (exit 2)."""
+    try:
+        n = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"expected a positive integer, got {value!r}") from None
+    if n < 1:
+        raise argparse.ArgumentTypeError(f"expected a positive integer, got {value!r}")
+    return n
+
+
 def _default_client_scopes(args_value) -> list[str] | None:
     import os
     raw = args_value if args_value is not None else os.environ.get(DEFAULT_CLIENT_SCOPES_ENV)
@@ -53,20 +65,41 @@ def _cmd_index(args) -> int:
 
 
 def _cmd_embed(args) -> int:
-    """Async embed-stale pass: fill dense vectors that lag lexical (AE5)."""
+    """Async embed-stale pass: fill dense vectors that lag lexical (AE5).
+
+    Adapts the request batch down on a provider 429 (see ``index._embed_resilient``)
+    and reports the batch that actually worked plus the retry count. A rate-limited
+    or cooled-down failure is surfaced as one plain retryable stderr line — never a
+    raw traceback echoing the provider's billing text as fact.
+    """
     from hypermnesic import embed, index
 
     repo = Path(args.repo)
-    embed.smoke_embed_or_die(repo=repo)  # fail loud before touching the index
-    db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
-    idx = index.Index(db)
-    res = index.embed_stale(idx, repo, embed.OpenAIEmbedder(repo=repo))
-    idx.close()
+    try:
+        embed.smoke_embed_or_die(repo=repo)  # fail loud before touching the index
+        db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
+        idx = index.Index(db)
+        try:
+            res = index.embed_stale(idx, repo, embed.OpenAIEmbedder(repo=repo),
+                                    batch=args.batch)
+        finally:
+            idx.close()
+    except embed.EmbeddingError as exc:
+        if exc.reason in ("rate_limited", "cooldown"):
+            print("hypermnesic embed: the embeddings provider rate-limited the request; "
+                  "this is retryable — retry later, or lower --batch",
+                  file=sys.stderr)
+        else:
+            detail = " ".join(str(exc).split())
+            print(f"hypermnesic embed: embedding failed ({exc.reason}): {detail}",
+                  file=sys.stderr)
+        return 1
     if args.json:
         _print_json(res)
     else:
         print(f"embedded {res['chunks_embedded']} stale chunks, "
-              f"{res['docs_embedded']} doc surfaces")
+              f"{res['docs_embedded']} doc surfaces "
+              f"(batch={res['effective_batch']}, retries={res['rate_limit_retries']})")
     return 0
 
 
@@ -418,7 +451,8 @@ def _cmd_converge(args) -> int:
         embedder = None
     res = converge_mod.converge(repo, idx, embedder,   # U1: --now forces a pass
                                 authoring_host=args.authoring_host,
-                                debounce_seconds=(0 if args.now else None))
+                                debounce_seconds=(0 if args.now else None),
+                                batch=args.batch)
     idx.close()
     if args.json:
         _print_json(res.as_dict())
@@ -766,6 +800,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_embed = sub.add_parser("embed", help="async embed pass: fill dense vectors that lag lexical")
     p_embed.add_argument("repo", help="repo whose files supply doc surfaces")
     p_embed.add_argument("--index-db", default=None, help="index db (default: <repo>/.hypermnesic)")
+    p_embed.add_argument("--batch", type=_positive_int, default=128,
+                         help="chunks per embedding request; halves adaptively on a 429 "
+                              "(default: 128)")
     p_embed.add_argument("--json", action="store_true")
     p_embed.set_defaults(func=_cmd_embed)
 
@@ -899,6 +936,9 @@ def build_parser() -> argparse.ArgumentParser:
                         help="also refresh the uncommitted working-tree overlay")
     p_conv.add_argument("--now", action="store_true",
                         help="force a non-debounced converge (ignore a fresh stamp)")
+    p_conv.add_argument("--batch", type=_positive_int, default=128,
+                        help="chunks per embedding request; halves adaptively on a 429 "
+                             "(default: 128)")
     p_conv.add_argument("--json", action="store_true")
     p_conv.set_defaults(func=_cmd_converge)
 

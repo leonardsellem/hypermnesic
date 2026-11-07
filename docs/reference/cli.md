@@ -37,7 +37,16 @@ Flags: `--state-dir DIR` (external state dir; keeps the corpus untouched), `--no
 
 ### `embed <repo>`
 Async embed pass: fill dense vectors that lag lexical (closes the AE5 dense lag).
-Flags: `--index-db PATH`, `--json`.
+Flags: `--batch N` (chunks per embedding request, default 128; the pass halves it
+adaptively when the provider answers 429 and keeps the size that works), `--index-db PATH`,
+`--json`.
+`--json` reports `chunks_embedded`, `docs_embedded`, `effective_batch` (the batch in force
+at the end of the run — `128` when no 429 occurred), `rate_limit_retries` (one per
+429-triggered halving-and-retry) and `stale_left` (stale chunks remaining after the pass,
+`0` on a complete drain). A `rate_limited` (any 429, including `insufficient_quota`) or
+`cooldown` failure prints one plain retryable line on stderr and exits 1 — never a raw
+traceback, and it asserts no credit/billing verdict; other embedder reasons print their
+own reason and exit 1.
 
 ### `reindex <repo>`
 Rebuild the index. `--isolated` builds in a worktree and swaps atomically so narrow
@@ -51,8 +60,13 @@ Flags: `--no-rebuild`, `--json`.
 ### `converge <repo>`
 Pre-warm: catch the index up to `HEAD` + a bounded dense fill (the post-merge hook's
 entrypoint; also a manual warm).
-Flags: `--index-db PATH`, `--authoring-host` (also refresh the uncommitted working-tree
+Flags: `--batch N` (chunks per embedding request, default 128; halves adaptively on a
+429), `--index-db PATH`, `--authoring-host` (also refresh the uncommitted working-tree
 overlay), `--now` (force a non-debounced pass), `--json`.
+`--json` additionally reports `effective_batch` and `rate_limit_retries` for the bounded
+dense fill; a rate-limited fill degrades to lexical/graph (`degraded_reason:
+"rate_limited"`) after the batch ladder is exhausted — converge never raises on the read
+path.
 
 ## Reading (all read-only; converge first)
 
