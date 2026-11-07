@@ -14,6 +14,13 @@ its own changelog and version.
 
 ## [Unreleased]
 
+### Fixed
+- **Worktree checkouts no longer enter the read index.** `.worktrees/` holds git
+  checkouts of the same vault, so every note there was a stale duplicate: on the
+  owner's brain repo they were 46% of indexed documents and outranked the canonical
+  page. `.worktrees` joins the skip dirs (`.git`, `.hypermnesic`, `node_modules`,
+  `__pycache__`, `.obsidian`); a reindex drops the copies already recorded.
+
 ## [0.3.0] - 2026-09-23
 
 > A 0.2.2 release was prepared on 2026-08-17 but never tagged or published;

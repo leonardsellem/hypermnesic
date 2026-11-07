@@ -16,7 +16,10 @@ from pathlib import Path
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n.*?\n---\s*\n", re.DOTALL)
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)$")
 
-_SKIP_DIRS = {".git", ".hypermnesic", "node_modules", "__pycache__", ".obsidian"}
+_SKIP_DIRS = {".git", ".hypermnesic", "node_modules", "__pycache__", ".obsidian", ".worktrees"}
+# `.worktrees` holds git checkouts of the same vault: every file is a stale copy
+# of a tracked note, so indexing them doubles the corpus and outranks the
+# canonical page with an older revision.
 # Chunk target (chars). A hard cap well under the embedding model's 8192-token
 # input limit: ~4000 chars ≈ ~1000 tokens worst case, so no chunk can overflow
 # the API (the input[118] 8192-token failure on the first full index).
