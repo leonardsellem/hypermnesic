@@ -41,12 +41,12 @@ Flags: `--batch N` (chunks per embedding request, default 128; the pass halves i
 adaptively when the provider answers 429 and keeps the size that works), `--index-db PATH`,
 `--json`.
 `--json` reports `chunks_embedded`, `docs_embedded`, `effective_batch` (the batch in force
-at the end of the run — `128` when no 429 occurred), `rate_limit_retries` (one per
-429-triggered halving-and-retry) and `stale_left` (stale chunks remaining after the pass,
-`0` on a complete drain). A `rate_limited` (any 429, including `insufficient_quota`) or
-`cooldown` failure prints one plain retryable line on stderr and exits 1 — never a raw
-traceback, and it asserts no credit/billing verdict; other embedder reasons print their
-own reason and exit 1.
+at the end of the run — it equals the requested `--batch` when no 429 occurred),
+`rate_limit_retries` (one per 429-triggered halving-and-retry) and `stale_left` (stale
+chunks remaining after the pass, `0` on a complete drain). A `rate_limited` (any 429,
+including `insufficient_quota`) or `cooldown` failure prints one plain retryable line on
+stderr and exits 1 — never a raw traceback, and it asserts no credit/billing verdict;
+other embedder reasons print their own reason and exit 1.
 
 ### `reindex <repo>`
 Rebuild the index. `--isolated` builds in a worktree and swaps atomically so narrow
@@ -63,10 +63,12 @@ entrypoint; also a manual warm).
 Flags: `--batch N` (chunks per embedding request, default 128; halves adaptively on a
 429), `--index-db PATH`, `--authoring-host` (also refresh the uncommitted working-tree
 overlay), `--now` (force a non-debounced pass), `--json`.
-`--json` additionally reports `effective_batch` and `rate_limit_retries` for the bounded
-dense fill; a rate-limited fill degrades to lexical/graph (`degraded_reason:
-"rate_limited"`) after the batch ladder is exhausted — converge never raises on the read
-path.
+`--json` additionally reports `effective_batch` (the batch in force at the end — it equals
+the requested `--batch` when no 429 occurred, and stays the requested value on a
+`debounced`/`lock_busy`/`oversized_delta` result that returns before the dense fill) and
+`rate_limit_retries` for the bounded dense fill; a rate-limited fill degrades to
+lexical/graph (`degraded_reason: "rate_limited"`) after the batch ladder is exhausted —
+converge never raises on the read path.
 
 ## Reading (all read-only; converge first)
 

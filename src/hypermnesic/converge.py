@@ -112,13 +112,18 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
     max_delta = config.CONVERGE_MAX_DELTA_FILES if max_delta_files is None else max_delta_files
 
     if _within_debounce(idx, debounce):
-        return ConvergeResult(status="debounced")
+        # R3: the working batch in force is still the requested one — no 429 can have
+        # shrunk it before the dense fill, so report N, not the dataclass default.
+        return ConvergeResult(status="debounced", effective_batch=batch,
+                              rate_limit_retries=0)
 
     lock = serialize.index_write_lock(repo)
     try:
         lock.acquire(blocking=False)              # KTD2: non-blocking single-indexer lock
     except serialize.LockBusyError:
-        return ConvergeResult(status="lock_busy")  # another writer/converger is advancing it
+        # another writer/converger is advancing it; no 429 occurred here either.
+        return ConvergeResult(status="lock_busy", effective_batch=batch,
+                              rate_limit_retries=0)
 
     try:
         overlay_paths: list[str] = []
@@ -141,6 +146,7 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
                 # projection and recommend a manual reindex instead.
                 _write_stamp(idx)
                 return ConvergeResult(status="oversized_delta", head=head,
+                                      effective_batch=batch, rate_limit_retries=0,
                                       manual_reindex_recommended=True,
                                       overlay_paths=overlay_paths)
             # lexical/graph catch-up only (embedder=None); dense is the bounded pass below.
