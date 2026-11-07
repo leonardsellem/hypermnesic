@@ -229,6 +229,52 @@ def test_smoke_embed_or_die_uses_repo_context(monkeypatch, tmp_path):
     assert seen["repo"] == repo
 
 
+def test_clear_cooldown_allows_one_retry_then_rearms(monkeypatch):
+    """R2: the drain may clear the cooldown for one retry; a second 429 re-arms it."""
+    from hypermnesic.embed import EmbeddingError, OpenAIEmbedder
+
+    calls = {"n": 0}
+    now = {"t": 1000.0}
+
+    class RateLimited(Exception):
+        status_code = 429
+
+    class FakeEmbeddings:
+        def create(self, **_kwargs):
+            calls["n"] += 1
+            raise RateLimited("no credits remaining")
+
+    class FakeClient:
+        def __init__(self, *, api_key):
+            self.api_key = api_key
+            self.embeddings = FakeEmbeddings()
+
+    monkeypatch.setattr("openai.OpenAI", FakeClient)
+
+    emb = OpenAIEmbedder(
+        api_key="env-test-key",
+        cooldown_seconds=60.0,
+        now_fn=lambda: now["t"],
+    )
+
+    with pytest.raises(EmbeddingError) as first:
+        emb.embed(["first"])
+    assert first.value.reason == "rate_limited"
+    assert calls["n"] == 1
+
+    emb.clear_cooldown()                                  # the one permitted retry
+    now["t"] = 1000.5
+    with pytest.raises(EmbeddingError) as second:
+        emb.embed(["second"])
+    assert second.value.reason == "rate_limited"          # reached the provider again
+    assert calls["n"] == 2
+
+    with pytest.raises(EmbeddingError) as third:
+        emb.embed(["third"])
+    assert third.value.reason == "cooldown"                # re-armed by the second 429
+    assert calls["n"] == 2                                 # no provider call in cooldown
+
+
 def test_cloud_token_ttl_default_is_48_hours(monkeypatch):
     monkeypatch.delenv(config.TOKEN_TTL_ENV, raising=False)
     assert config.CLOUD_TOKEN_TTL_SECONDS == 48 * 60 * 60 == 172800

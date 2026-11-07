@@ -71,7 +71,8 @@ def test_graceful_degradation_when_embedding_down(make_corpus, fake_embedder):
     idx.close()
 
 
-def test_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder):
+def test_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(index, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))   # no real sleeps
     idx = _idx(make_corpus, fake_embedder)
 
     class RateLimitedEmbedder:

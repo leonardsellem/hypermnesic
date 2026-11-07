@@ -806,3 +806,103 @@ def test_commit_note_cli_commits_only_with_commit_flag(make_corpus, monkeypatch,
     out = json.loads(capsys.readouterr().out)
     assert out["new_sha"] and head() == out["new_sha"]         # the write landed in git
     assert (repo / "notes/new.md").exists()
+
+
+# --- LS-4058 U4: embed --batch, adaptive outcome in --json, retryable error --
+
+class _Throttled:
+    """Dim-correct double that answers 429 above ``limit`` inputs."""
+
+    def __init__(self, wrapped, limit: int):
+        self.wrapped = wrapped
+        self.model = wrapped.model
+        self.dim = wrapped.dim
+        self.limit = limit
+
+    def embed(self, texts):
+        if len(texts) > self.limit:
+            from hypermnesic import embed as embed_mod
+            raise embed_mod.EmbeddingError("429 insufficient_quota", reason="rate_limited")
+        return self.wrapped.embed(texts)
+
+
+def _stale_vault(make_corpus, fake_embedder, *, n_docs: int = 6, n_stale: int = 5):
+    """Build an index, then drop ``n_stale`` chunk vectors so a drain has work."""
+    repo = make_corpus({f"n{i}.md": f"# N{i}\n\nmarker{i} body text.\n" for i in range(n_docs)})
+    idx = index.build_index(repo, fake_embedder)
+    ids = [r[0] for r in idx.conn.execute(
+        "SELECT chunk_id FROM chunks ORDER BY chunk_id LIMIT ?", (n_stale,))]
+    idx.conn.executemany("DELETE FROM vec_chunks WHERE chunk_id=?", [(i,) for i in ids])
+    idx.conn.commit()
+    assert len(idx.stale_chunk_ids()) == n_stale
+    idx.close()
+    return repo
+
+
+def test_embed_reports_effective_batch_and_retries_in_json(
+        make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = _stale_vault(make_corpus, fake_embedder)
+    monkeypatch.setattr(embed, "smoke_embed_or_die", lambda **kw: None)
+    monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: _Throttled(fake_embedder, 2))
+    monkeypatch.setattr(index, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+
+    assert cli.main(["embed", str(repo), "--batch", "4", "--json"]) == 0
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["chunks_embedded"] == 5
+    assert out["effective_batch"] == 2            # 4 rejected, 2 won and stayed
+    assert out["rate_limit_retries"] == 1
+    assert out["stale_left"] == 0
+    assert out["docs_embedded"] == 0              # every doc surface was already embedded
+
+
+def test_embed_batch_flag_is_forwarded(make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    seen: dict = {}
+
+    def fake_embed_stale(idx, repo_path, embedder, *, batch=128, budget=None):
+        seen["batch"] = batch
+        return {"chunks_embedded": 0, "docs_embedded": 0, "effective_batch": batch,
+                "rate_limit_retries": 0, "stale_left": 0}
+
+    monkeypatch.setattr(embed, "smoke_embed_or_die", lambda **kw: None)
+    monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: fake_embedder)
+    monkeypatch.setattr(index, "embed_stale", fake_embed_stale)
+
+    assert cli.main(["embed", str(repo), "--batch", "8", "--json"]) == 0
+
+    assert seen["batch"] == 8
+    assert json.loads(capsys.readouterr().out)["effective_batch"] == 8
+
+
+def test_embed_rate_limited_exit_is_retryable(make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = _stale_vault(make_corpus, fake_embedder, n_docs=4, n_stale=3)
+    monkeypatch.setattr(embed, "smoke_embed_or_die", lambda **kw: None)
+    monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: _Throttled(fake_embedder, 0))
+    monkeypatch.setattr(index, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+
+    assert cli.main(["embed", str(repo)]) == 1
+
+    captured = capsys.readouterr()
+    lines = [ln for ln in captured.err.splitlines() if ln.strip()]
+    assert len(lines) == 1                                  # one plain line, no traceback
+    assert "rate-limited" in lines[0].lower()
+    assert "retryable" in lines[0].lower()
+    assert "traceback" not in captured.err.lower()
+    assert "credit" not in (captured.err + captured.out).lower()   # no billing verdict
+    assert captured.out == ""
+
+
+def test_embed_rejects_zero_batch(make_corpus, capsys):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(["embed", str(repo), "--batch", "0"])
+    assert excinfo.value.code == 2
+    assert "--batch" in capsys.readouterr().err

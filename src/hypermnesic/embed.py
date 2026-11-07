@@ -50,6 +50,17 @@ class OpenAIEmbedder:
         self._cooldown_until = 0.0
         self._cooldown_reason: str | None = None
 
+    def clear_cooldown(self) -> None:
+        """Disarm the failure cooldown so a caller may retry once.
+
+        The adaptive drain uses this after a 429 to retry at a smaller batch;
+        a second 429 immediately re-arms the cooldown (the arming rule in
+        :meth:`embed` is unchanged), so a persistent failure keeps the 300 s
+        protection for later read-path callers.
+        """
+        self._cooldown_until = 0.0
+        self._cooldown_reason = None
+
     def _get_client(self):
         if self._client is None:
             try:

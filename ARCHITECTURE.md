@@ -60,7 +60,12 @@ flowchart TB
 Hybrid: **SQLite FTS5** (lexical) fused with **sqlite-vec** KNN (dense; OpenAI
 `text-embedding-3-large` at **1536 dims**) via **Reciprocal Rank Fusion**. The dense
 channel degrades gracefully — if the embedding API is unreachable, lexical + graph
-results still return, flagged `degraded_lexical_only`. Near-duplicate hits are collapsed
+results still return, flagged `degraded_lexical_only`. A dense **drain** is adaptive: on a
+429 (`insufficient_quota` included — the provider reuses 429 for both rate pressure and
+credit exhaustion) it halves the request batch 128 → 64 → 32 → … → 1, re-chunks the pending
+texts, sleeps 0.25 / 0.5 / 1 s between attempts, clears the embedder cooldown for that one
+retry, and keeps the size that worked for the rest of the run; only a one-input request
+that still 429s fails, leaving the cooldown armed. Near-duplicate hits are collapsed
 and a per-hit write-recency timestamp is attached (consumers derive their own forgetting
 curve). The wikilink **graph** (`graph.py`) answers `build_context` and entity
 `resolve`.

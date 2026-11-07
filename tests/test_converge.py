@@ -180,7 +180,8 @@ def test_embedder_failure_completes_lexical_and_advances_checkpoint(make_corpus,
     idx.close()
 
 
-def test_converge_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder):
+def test_converge_degraded_reason_surfaces_rate_limit(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))   # no real sleeps
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
     idx = ix.build_index(repo, fake_embedder)
     _commit_file(repo, "c.md", "# C\n\nRATELIMITMARKER gamma.\n", "add c")
@@ -324,3 +325,80 @@ def test_force_converge_ignores_fresh_debounce_stamp(make_corpus, fake_embedder)
     assert forced.status == "converged" and forced.replayed == 1
     assert "self.md" in idx.all_paths()                          # forced pass caught the self-write
     idx.close()
+
+
+# --- LS-4058 U4: converge --batch + the adaptive outcome in --json -----------
+
+def test_converge_reports_effective_batch_and_retries(make_corpus, fake_embedder,
+                                                      monkeypatch, capsys):
+    import json
+
+    from hypermnesic import cli
+
+    repo = make_corpus({f"n{i}.md": f"# N{i}\n\nmarker{i} body text.\n" for i in range(6)})
+    idx = ix.build_index(repo, fake_embedder)
+    ids = [r[0] for r in idx.conn.execute(
+        "SELECT chunk_id FROM chunks ORDER BY chunk_id LIMIT 5")]
+    idx.conn.executemany("DELETE FROM vec_chunks WHERE chunk_id=?", [(i,) for i in ids])
+    idx.conn.commit()
+    idx.close()
+
+    class ThrottledEmbedder:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            if len(texts) > 2:
+                raise embed_mod.EmbeddingError("429 insufficient_quota", reason="rate_limited")
+            return fake_embedder.embed(texts)
+
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: ThrottledEmbedder())
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+
+    assert cli.main(["converge", str(repo), "--batch", "4", "--now", "--json"]) == 0
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["chunks_embedded"] == 5
+    assert out["effective_batch"] == 2             # --batch 4 rejected, 2 won
+    assert out["rate_limit_retries"] == 1
+    assert out["degraded_lexical_only"] is False   # the drain recovered, not degraded
+
+
+# --- LS-4058 R3: early returns report the requested batch, not the default ----
+
+def test_batch_preserved_on_returns_before_the_dense_fill(make_corpus, fake_embedder,
+                                                        monkeypatch, capsys):
+    """``effective_batch`` is the working batch in force at the end, so a pass that
+    returns before the dense fill must still report the requested N — no 429 can have
+    shrunk it. The debounced result is the one the post-merge hook/callers read most,
+    so the dataclass default (128) there is a wrong value, not an uninformative one."""
+    import json
+
+    from hypermnesic import cli
+
+    repo = make_corpus({f"n{i}.md": f"# N{i}\n\nmarker{i} body text.\n" for i in range(3)})
+    ix.build_index(repo, fake_embedder)
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: fake_embedder)
+
+    # The non-debounced pass writes the stamp the default pass then trips over.
+    assert cli.main(["converge", str(repo), "--batch", "4", "--now", "--json"]) == 0
+    first = json.loads(capsys.readouterr().out)
+    assert first["status"] == "converged" and first["effective_batch"] == 4
+
+    assert cli.main(["converge", str(repo), "--batch", "4", "--json"]) == 0
+    debounced = json.loads(capsys.readouterr().out)
+    assert debounced["status"] == "debounced"
+    assert debounced["effective_batch"] == 4       # not the dataclass default 128
+    assert debounced["rate_limit_retries"] == 0
+
+    # The other pre-dense-fill early return reports N too (needs a non-empty delta).
+    _commit_file(repo, "late.md", "# Late\n\nlate body.\n", "late")
+    idx = ix.Index(ix.state_dir_for(repo) / "index.db")
+    try:
+        res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0,
+                                max_delta_files=0, batch=8)
+    finally:
+        idx.close()
+    assert res.status == "oversized_delta"
+    assert res.effective_batch == 8
+    assert res.rate_limit_retries == 0

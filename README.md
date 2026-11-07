@@ -166,8 +166,10 @@ It prints milestone checks, your endpoint URL, and login instructions. `--resour
 defaults to `--public-url`; pass it only when the OAuth resource identifier differs.
 `doctor` and `status` report local index health, remote reach, OAuth discovery, auth
 challenge, write availability, dense key source/state, vector coverage, and client-specific
-next actions without mutating state. Read tools also expose `degraded_reason`; after an
-embedding 429 they cool down provider calls while continuing to serve lexical/graph results.
+next actions without mutating state. Read tools also expose `degraded_reason`; a dense fill
+that meets a 429 halves the request batch and retries (0.25 s → 0.5 s → 1 s) before giving
+up, and after a persistent failure provider calls cool down while lexical/graph results keep
+serving.
 Dense key lookup is repo-scoped: process
 `OPENAI_API_KEY` wins, otherwise the target vault's gitignored `.env` is used even when the
 command or MCP server starts from another working directory. Live OpenAI smoke checks stay
