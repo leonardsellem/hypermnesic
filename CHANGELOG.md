@@ -15,6 +15,25 @@ its own changelog and version.
 ## [Unreleased]
 
 ### Added
+- **Optional spend envelope on the one embedding provider seam (LS-4075, 2026-11-11).**
+  Set `HYPERMNESIC_SPEND_ENVELOPE` to an **existing** state file and every physical
+  embeddings request — CLI, `serve`, the cloud lane, convergence-driven reads, the
+  scheduled/manual drain and the startup smoke check — must first append a durable,
+  non-renewing **reservation** to it, under one adjacent `<state>.lock` that spans read →
+  validate → append → atomic fsync'd write, so independent processes cannot oversubscribe
+  the same ceiling. The bound is the published rate for the pinned model
+  (`text-embedding-3-large`: 0.13 USD/1M tokens) on a pessimistic token bound —
+  `ceil((utf8_bytes + inputs) * 13 / 100)` micro-USD per physical request — and it is never
+  refunded on success, provider failure, crash or unknown outcome: a reserve that bounds
+  exposure, not an invoice. `limit_micro_usd` is a whole-outcome maximum (never per day, per
+  process or per run) and the cumulative total is always derived from the `reservations`
+  list. The state holds counters only (no input text, no credential), must be owner-owned
+  and not group/other-writable, is never auto-created or reset, and refuses `expired`,
+  `exhausted`, `locked`, `missing`, `corrupt`, type/range-invalid and unapproved-model states
+  **before any SDK I/O** with a classified `spend_envelope_*` reason — never reported as a
+  429. In that mode the SDK's own retries are `0`, so every physical attempt (including the
+  adaptive drain's own 429 retry) reserves separately. Unset, behavior is unchanged.
+  Dense refusals degrade reads to lexical/graph (`degraded_reason` is the envelope reason).
 - **Bounded, paced, resumable dense drain with one honest report (LS-4075, 2026-11-11).**
   `hypermnesic embed --batch 32 --budget 32` now caps **both** lanes at 32 successful
   inputs per pass (chunk vectors and doc-surface vectors), commits every successful

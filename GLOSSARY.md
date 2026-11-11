@@ -27,6 +27,14 @@ chunk inputs and 32 successful doc-surface inputs per pass/tick, with each succe
 subrequest committed immediately so the next tick resumes only what is missing. It is a
 cardinality cap, not a financial budget; `--budget` omitted drains the whole backlog.
 
+**Spend envelope** — the optional, non-renewing **money** cap
+(`HYPERMNESIC_SPEND_ENVELOPE`, see [configuration](docs/reference/configuration.md#spend-envelope-optional-hard-ceiling-on-embeddings)):
+an operator-seeded state file in which every physical embeddings request must first append a
+durable reservation of its pessimistic cost bound, under one `flock`, before any provider I/O.
+It is a reserve, not an invoice: nothing is refunded, and an unusable/exhausted state degrades
+reads to lexical/graph instead of spending. Unlike the budgeted drain, it bounds dollars across
+every process, not inputs per pass.
+
 **RRF (Reciprocal Rank Fusion)** — the rank-combination method that fuses the lexical
 (FTS5) and dense (sqlite-vec KNN) result lists into one ranking, without needing
 comparable raw scores.
