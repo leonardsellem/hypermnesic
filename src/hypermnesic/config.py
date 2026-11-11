@@ -24,12 +24,13 @@ EMBED_DIM = 1536
 EXPANSION_MODEL = "gpt-4o-mini"
 
 # --- read-time convergence tunables (Phase 2.5) --------------------------------
-# Starting values; tune against real first-read latency (open question in the
-# Phase-2.5 plan). A budget near one embedding batch (index._BATCH = 128) keeps
-# a converging read to ~one API round-trip; the debounce coalesces a burst of
-# reads; the delta cap signals a manual reindex rather than an unbounded inline
-# replay when HEAD has jumped far ahead of the checkpoint (e.g. a big merge).
-CONVERGE_EMBED_BUDGET = 128       # per-lane stale chunk/doc surfaces embedded per read
+# Starting values; tune against real first-read latency. The per-lane dense budget
+# caps a converging read at 32 chunk AND 32 doc-surface inputs — the same 32-input
+# pace the scheduled drain uses — so a public question is never preceded by a
+# 128-input bulk burst; the debounce coalesces a burst of reads; the delta cap
+# signals a manual reindex rather than an unbounded inline replay when HEAD has
+# jumped far ahead of the checkpoint (e.g. a big merge).
+CONVERGE_EMBED_BUDGET = 32       # per-lane stale chunk/doc surfaces embedded per read
 CONVERGE_DEBOUNCE_SECONDS = 5.0   # skip re-convergence within this window
 CONVERGE_MAX_DELTA_FILES = 200    # over this many changed md files → signal manual reindex
 

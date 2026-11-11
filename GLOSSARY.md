@@ -15,6 +15,18 @@ a reindex never loses a committed write.
 answering, so a just-committed note is recall-able without a manual reindex. Bounded by
 the convergence tunables (see [configuration](docs/reference/configuration.md)).
 
+**Dense maintenance exclusion** — the one non-blocking `flock`
+(`.hypermnesic/dense-maintenance.lock`) shared by every bulk dense-fill/full-build path:
+isolated rebuild, direct `build_index`, CLI `index`/`init`/`reindex`, the scheduled/CLI
+drain, convergence and `catch_up` replay. It stops two provider-consuming bulk passes from
+racing; narrow `commit_note` writes keep using `index.lock` and are deliberately not
+blocked.
+
+**Budgeted drain** — `hypermnesic embed --batch 32 --budget 32`: at most 32 successful
+chunk inputs and 32 successful doc-surface inputs per pass/tick, with each successful
+subrequest committed immediately so the next tick resumes only what is missing. It is a
+cardinality cap, not a financial budget; `--budget` omitted drains the whole backlog.
+
 **RRF (Reciprocal Rank Fusion)** — the rank-combination method that fuses the lexical
 (FTS5) and dense (sqlite-vec KNN) result lists into one ranking, without needing
 comparable raw scores.

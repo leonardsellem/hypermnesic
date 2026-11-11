@@ -266,7 +266,14 @@ and the surfaces built on top:
   lexical-only when embeddings are down.
 - **Read-time convergence** — every read first catches the index up to `HEAD`, invalidates
   doc-surface vectors for changed markdown files, and closes a bounded slice of the dense lag
-  for chunks and doc surfaces, so recall stays fresh without a manual reindex.
+  for chunks and doc surfaces (at most 32 of each), so recall stays fresh without a manual
+  reindex.
+- **Bounded dense drain** — `hypermnesic embed --batch 32 --budget 32` processes at most 32
+  successful chunk inputs and 32 doc surfaces per pass, commits every successful subrequest
+  immediately (the next pass resumes only what is missing), and reports actual counts,
+  `stale_left`/`docs_stale_left` and a status discriminator as one validated JSON object. An
+  unrecovered 429 exits nonzero with sanitized provider code/type and `account_state:
+  unverified`; `hypermnesic embed` without `--budget` still drains the whole backlog.
 - **Two serving lanes** —
   1. a single **public OAuth MCP endpoint** at `/mcp` (Tailscale-funnel'd HTTPS; OAuth 2.1
      with DCR + PKCE; **read tools always, the gated `commit_note` write tool by scope**),

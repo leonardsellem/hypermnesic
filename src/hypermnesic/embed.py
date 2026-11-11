@@ -8,17 +8,50 @@ proceeds with zero-vectors.
 
 from __future__ import annotations
 
+import re
 import time
 
 from hypermnesic import config
+
+# R4: only bounded, sanitized provider scalars may reach a report/journal. A raw
+# provider body can carry request text, headers or key material — never echo it.
+_PROVIDER_SCALAR_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
+
+
+def sanitize_provider_scalar(value) -> str | None:
+    """Return ``value`` only when it is a short allowlisted scalar string."""
+    if isinstance(value, str) and _PROVIDER_SCALAR_RE.match(value):
+        return value
+    return None
+
+
+def _provider_metadata(exc: Exception) -> tuple[str | None, str | None]:
+    """Extract sanitized ``code``/``type`` from an SDK-shaped exception body."""
+    body = getattr(exc, "body", None)
+    source = body.get("error") if isinstance(body, dict) else None
+    if not isinstance(source, dict):
+        source = body if isinstance(body, dict) else {}
+    code = source.get("code")
+    typ = source.get("type")
+    if code is None:
+        code = getattr(exc, "code", None)
+    if typ is None:
+        typ = getattr(exc, "type", None)
+    return sanitize_provider_scalar(code), sanitize_provider_scalar(typ)
 
 
 class EmbeddingError(RuntimeError):
     """Raised when embedding fails — never swallowed, never zero-filled."""
 
-    def __init__(self, message: str, *, reason: str = "embedding_error"):
+    def __init__(self, message: str, *, reason: str = "embedding_error",
+                 provider_code: str | None = None,
+                 provider_type: str | None = None):
         super().__init__(message)
         self.reason = reason
+        self.provider_code = provider_code
+        self.provider_type = provider_type
+        #: Actual counters attached by the drain before a failed attempt is re-raised.
+        self.progress: dict | None = None
 
 
 def _embedding_failure_reason(exc: Exception) -> str:
@@ -91,10 +124,13 @@ class OpenAIEmbedder:
             raise EmbeddingError(str(exc), reason="configuration") from exc
         except Exception as exc:  # surface as a clear top-level error
             reason = _embedding_failure_reason(exc)
+            provider_code, provider_type = _provider_metadata(exc)
             if reason == "rate_limited" and self.cooldown_seconds > 0:
                 self._cooldown_until = now + self.cooldown_seconds
                 self._cooldown_reason = reason
-            raise EmbeddingError(f"embedding request failed: {exc}", reason=reason) from exc
+            raise EmbeddingError(
+                f"embedding request failed: {exc}", reason=reason,
+                provider_code=provider_code, provider_type=provider_type) from exc
         vectors = [d.embedding for d in resp.data]
         for v in vectors:
             if len(v) != self.dim:

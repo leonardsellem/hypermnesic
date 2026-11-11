@@ -55,6 +55,8 @@ class ConvergeResult:
     overlay_paths: list[str] = field(default_factory=list)
     head: str | None = None
     checkpoint_advanced: bool = False
+    dense_deferred: bool = False
+    dense_deferred_reason: str | None = None
 
     def as_dict(self) -> dict:
         return {
@@ -66,6 +68,8 @@ class ConvergeResult:
             "rate_limit_retries": self.rate_limit_retries,
             "degraded_lexical_only": self.degraded,
             "degraded_reason": self.degraded_reason,
+            "dense_deferred": self.dense_deferred,
+            "dense_deferred_reason": self.dense_deferred_reason,
             "manual_reindex_recommended": self.manual_reindex_recommended,
             "overlay_paths": self.overlay_paths,
             "head": self.head,
@@ -155,31 +159,45 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
             replayed = res.get("replayed", 0)
             advanced = True
 
-        # FR-R31 + FR-R34: bounded dense fill. Any embedder failure (API down, dim
-        # mismatch) degrades to lexical/graph — the checkpoint already advanced — and
-        # never raises on the read path; partially-embedded batches leave real vectors,
-        # never zero placeholders.
+        # FR-R31 + FR-R34 + LS-4075 R3: bounded dense fill under the shared
+        # dense-maintenance exclusion. It is acquired only AFTER the index.lock
+        # guard and the lexical replay, so an index-lock contender (LS-4074)
+        # returns before touching this mutex or the provider. Contention keeps the
+        # lexical progress and reports the dense deferral — never a deadlock: the
+        # scheduled drain takes maintenance→index, convergence index→maintenance,
+        # and both acquisitions are non-blocking with immediate release/deferral.
         chunks_embedded = docs_embedded = 0
         effective_batch = batch
         rate_limit_retries = 0
+        dense_deferred = False
+        dense_deferred_reason = None
         degraded = embedder is None
         degraded_reason = "missing_embedder" if embedder is None else None
         if embedder is not None:
+            maintenance = serialize.dense_maintenance_lock(idx.db_path.parent)
             try:
-                emb = index_mod.embed_stale_locked(
-                    idx, repo, embedder, budget=budget, batch=batch,
-                    exclude_paths=set(overlay_paths) if overlay_paths else None,
-                )
-                chunks_embedded = emb["chunks_embedded"]
-                docs_embedded = emb["docs_embedded"]
-                effective_batch = emb.get("effective_batch", batch)
-                rate_limit_retries = emb.get("rate_limit_retries", 0)
-            except Exception as exc:
-                degraded = True                   # FR-R34: dense down, serve lexical/graph
-                degraded_reason = (
-                    exc.reason if isinstance(exc, embed_mod.EmbeddingError)
-                    else "embedding_error"
-                )
+                maintenance.acquire()
+            except serialize.LockBusyError:
+                dense_deferred = True
+                dense_deferred_reason = "lock_busy"
+            else:
+                try:
+                    emb = index_mod.embed_stale_locked(
+                        idx, repo, embedder, budget=budget, batch=batch,
+                        exclude_paths=set(overlay_paths) if overlay_paths else None,
+                    )
+                    chunks_embedded = emb["chunks_embedded"]
+                    docs_embedded = emb["docs_embedded"]
+                    effective_batch = emb.get("effective_batch", batch)
+                    rate_limit_retries = emb.get("rate_limit_retries", 0)
+                except Exception as exc:
+                    degraded = True               # FR-R34: dense down, serve lexical/graph
+                    degraded_reason = (
+                        exc.reason if isinstance(exc, embed_mod.EmbeddingError)
+                        else "embedding_error"
+                    )
+                finally:
+                    maintenance.release()
 
         _write_stamp(idx)
         return ConvergeResult(status="converged", replayed=replayed,
@@ -187,6 +205,8 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
                               effective_batch=effective_batch,
                               rate_limit_retries=rate_limit_retries,
                               degraded=degraded, degraded_reason=degraded_reason,
+                              dense_deferred=dense_deferred,
+                              dense_deferred_reason=dense_deferred_reason,
                               overlay_paths=overlay_paths,
                               head=head, checkpoint_advanced=advanced)
     finally:

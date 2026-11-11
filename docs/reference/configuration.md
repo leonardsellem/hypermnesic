@@ -79,9 +79,17 @@ a manual reindex when `HEAD` has jumped far past the index checkpoint.
 
 | Constant | Default | Effect |
 |---|---|---|
-| `CONVERGE_EMBED_BUDGET` | `128` | Max stale chunks embedded per converging read. |
+| `CONVERGE_EMBED_BUDGET` | `32` | Max stale chunks **and** max missing doc surfaces embedded per converging read (per lane). |
 | `CONVERGE_DEBOUNCE_SECONDS` | `5.0` | Skip re-convergence within this window (`--now` overrides). |
 | `CONVERGE_MAX_DELTA_FILES` | `200` | Over this many changed markdown files, emit `manual_reindex_recommended` instead of an unbounded inline replay. |
+
+The same 32-per-lane pace is what the scheduled drain uses (`hypermnesic embed --batch 32
+--budget 32`). `CONVERGE_EMBED_BUDGET` and `--budget` are **cardinality** caps (inputs per
+pass), not financial budgets. A manual `hypermnesic embed` without `--budget`, and the
+analytical `ensure_full_coverage` pass used by salience/connections, intentionally stay
+unbounded. Bulk dense work is additionally serialized by the non-blocking
+`.hypermnesic/dense-maintenance.lock`; that is an internal lock file, not a configuration
+knob, and it never blocks narrow `commit_note` writes (which use `index.lock`).
 
 ## `list_folders` discovery bounds
 

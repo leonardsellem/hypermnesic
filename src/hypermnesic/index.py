@@ -470,17 +470,34 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
     a dirty working tree. Deletes vanished paths. Lexical+graph are replayed
     synchronously; dense embeddings are an async follow-up (pass ``embedder`` to
     also refresh vectors for changed files). Advances the checkpoint to HEAD.
+
+    When ``embedder`` is passed this is a dense-fill entrypoint, so it takes the
+    shared dense-maintenance exclusion first (non-blocking); contention returns a
+    named ``lock_busy`` deferral with zero paid calls and no mutation.
     """
     head, cp, have_cp, changes = changes_since_checkpoint(idx, repo)
     if head is None:
         return {"status": "no-git", "replayed": 0}
     if changes is None:
         return {"status": "current", "replayed": 0, "to": head}
-    lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()  # single indexer
+    maintenance = None
+    if embedder is not None:
+        maintenance = serialize.dense_maintenance_lock(idx.db_path.parent)
+        try:
+            maintenance.acquire()
+        except serialize.LockBusyError:
+            return {"status": "lock_busy", "replayed": 0,
+                    "reason": "dense_maintenance_busy"}
     try:
-        return replay_changes(idx, repo, head, cp, changes, embedder=embedder, have_cp=have_cp)
+        lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()  # single indexer
+        try:
+            return replay_changes(idx, repo, head, cp, changes, embedder=embedder,
+                                  have_cp=have_cp)
+        finally:
+            lock.release()
     finally:
-        lock.release()
+        if maintenance is not None:
+            maintenance.release()
 
 
 def changes_since_checkpoint(idx: Index, repo: Path):
@@ -561,7 +578,7 @@ def _doc_surface_for_projection(repo: Path, path: str) -> str | None:
     return ingest.doc_surface(raw, path) or None
 
 
-def _embed_resilient(embedder, texts: list[str], stats: dict) -> list[list[float]]:
+def _embed_resilient(embedder, texts: list[str], stats: dict, on_success=None):
     """Embed ``texts`` in adaptive batches, halving the batch on a 429 (LS-4058).
 
     ``stats["batch"]`` is the working batch for the pass: it starts at the
@@ -574,15 +591,25 @@ def _embed_resilient(embedder, texts: list[str], stats: dict) -> list[list[float
     by *this* 429 is cleared for the retry (via ``clear_cooldown`` when the
     embedder exposes it), never a pre-existing one: a drain that starts inside
     a cooldown sees ``reason="cooldown"`` and fails without clearing it.
-    Returns the vectors in input order.
+
+    ``on_success(offset, vectors)`` runs after every successful subrequest, so a
+    caller can commit those exact rows before attempting the remainder — a later
+    failure must never discard paid vectors (LS-4075 R2). ``offset`` is the
+    input index of the first vector in ``vectors``. Returns the vectors in
+    input order.
     """
     vectors: list[list[float]] = []
     pending = list(texts)
+    offset = 0
     while pending:
         size = min(stats["batch"], len(pending))
         try:
-            vectors.extend(embedder.embed(pending[:size]))
+            got = embedder.embed(pending[:size])
         except embed_mod.EmbeddingError as exc:
+            if getattr(exc, "provider_code", None):
+                stats["provider_code"] = exc.provider_code
+            if getattr(exc, "provider_type", None):
+                stats["provider_type"] = exc.provider_type
             if getattr(exc, "reason", None) != "rate_limited" or size <= 1:
                 raise
             stats["batch"] = max(1, stats["batch"] // 2)
@@ -594,6 +621,10 @@ def _embed_resilient(embedder, texts: list[str], stats: dict) -> list[list[float
             time.sleep(_RATE_LIMIT_BACKOFF_SECONDS[
                 min(step, len(_RATE_LIMIT_BACKOFF_SECONDS) - 1)])
             continue
+        vectors.extend(got)
+        if on_success is not None and got:
+            on_success(offset, got)
+        offset += len(got)
         pending = pending[size:]
     return vectors
 
@@ -605,35 +636,69 @@ def embed_stale(idx: Index, repo: Path, embedder, *, batch: int = 128,
     Embeds only chunks/docs that have no vector yet — idempotent, resumable. Chunk
     text comes from the index; doc surfaces are recomputed from the committed file
     via ``ingest.doc_surface`` (so commit_note-written pages get a doc lane too).
-    Holds the single-indexer lock (it mutates vectors).
+    Holds the shared dense-maintenance exclusion, then the single-indexer lock;
+    contention raises :class:`serialize.LockBusyError` before any provider call.
 
-    ``budget`` (U26): when set, embed at most ``budget`` stale chunks and a
-    bounded (``budget``-capped) share of the missing doc-surface vectors this
-    call, leaving the rest for the next call — this bounds first-read latency on
-    a converging read (KTD3). Because each lane only ever processes *missing*
-    items, capping a slice stays idempotent and resumable: re-running drains the
-    remainder, never re-embeds. ``None`` preserves the embed-all behavior (the
-    full analytical pass for salience/connections, and ``hypermnesic embed``).
+    ``budget`` (U26/LS-4075): when set, embed at most ``budget`` stale chunks and
+    at most ``budget`` missing doc-surface vectors this call, leaving the rest for
+    the next call — the scheduled tick uses ``--batch 32 --budget 32``. Because
+    each lane only ever processes *missing* items, capping a slice stays
+    idempotent and resumable. ``None`` preserves the manual full-drain behavior
+    (and the analytical ``ensure_full_coverage`` pass).
 
-    A ``rate_limited`` failure is retried at a halved batch instead of aborting
-    (LS-4058); the result also carries ``effective_batch`` (the working batch in
-    force at the end of the pass), ``rate_limit_retries`` (one per 429-triggered
-    halving-and-retry) and ``stale_left`` (stale chunks remaining afterwards)."""
-    lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()
+    Returns one honest report dict: ``status`` (complete/noop/budget_partial),
+    actual per-lane counters, the effective batch, retry count, both remaining
+    measurements, provider code/type (sanitized, reported-not-verified) and
+    ``account_state: unverified``. A caught failure re-raises with the same
+    counters attached as ``exc.progress`` so the CLI can report partial progress.
+    """
+    lock = serialize.dense_maintenance_lock(idx.db_path.parent).acquire()
     try:
-        return embed_stale_locked(idx, repo, embedder, batch=batch, budget=budget)
+        index_lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()
+        try:
+            return embed_stale_locked(idx, repo, embedder, batch=batch, budget=budget)
+        finally:
+            index_lock.release()
     finally:
         lock.release()
+
+
+def _embed_progress(idx, n_chunks: int, n_docs: int, stats: dict,
+                    exc: Exception | None = None) -> dict:
+    """Actual counters for a failed/interrupted run; unknown measurements stay None."""
+    try:
+        stale_left = len(idx.stale_chunk_ids())
+    except Exception:
+        stale_left = None
+    try:
+        docs_stale_left = len(idx.paths_missing_doc_vector())
+    except Exception:
+        docs_stale_left = None
+    return {
+        "chunks_embedded": n_chunks,
+        "docs_embedded": n_docs,
+        "effective_batch": stats["batch"],
+        "rate_limit_retries": stats["rate_limit_retries"],
+        "stale_left": stale_left,
+        "docs_stale_left": docs_stale_left,
+        "provider_code": getattr(exc, "provider_code", None) or stats.get("provider_code"),
+        "provider_type": getattr(exc, "provider_type", None) or stats.get("provider_type"),
+        "account_state": "unverified",
+    }
 
 
 def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
                        budget: int | None = None,
                        exclude_paths: set[str] | None = None) -> dict:
     """Lock-free core of :func:`embed_stale` — the caller MUST already hold the
-    single-indexer lock (``converge`` holds it for the whole convergence pass, so
-    it cannot re-enter the public :func:`embed_stale`, whose own acquire would
-    self-conflict across descriptors). Budget semantics: see :func:`embed_stale`.
+    dense-maintenance exclusion and the single-indexer lock (``converge`` holds
+    both for its bounded pass, so it cannot re-enter the public
+    :func:`embed_stale`). Budget semantics: see :func:`embed_stale`.
     ``exclude_paths`` lets convergence keep authoring-host overlay rows lexical-only.
+
+    Each successful adaptive subrequest commits its exact rows immediately, so a
+    later failure keeps the paid vectors and the next tick resumes only what is
+    still missing.
     """
     config.assert_embedder_agrees(embedder)
     repo = Path(repo)
@@ -643,51 +708,137 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
         stale = stale[:budget]
     stats: dict = {"batch": batch, "rate_limit_retries": 0}
     n_chunks = 0
-    for i in range(0, len(stale), batch):
-        ids = stale[i:i + batch]
-        rows = idx.conn.execute(
-            f"SELECT chunk_id, text, path FROM chunks WHERE chunk_id IN "
-            f"({','.join('?' * len(ids))})", ids).fetchall()
-        if excluded:
-            rows = [r for r in rows if r[2] not in excluded]
-        if not rows:
-            continue
-        vecs = _embed_resilient(embedder, [r[1] for r in rows], stats)
-        for (cid, _text, _path), vec in zip(rows, vecs, strict=True):
-            idx.conn.execute(
-                "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
-                (cid, sqlite_vec.serialize_float32(vec)))
-        idx.conn.commit()
-        n_chunks += len(rows)
-
-    doc_batch: list[tuple[str, str]] = []
     n_docs = 0
 
-    def _flush_docs():
-        nonlocal n_docs
-        if not doc_batch:
-            return
-        idx.add_docs(doc_batch, _embed_resilient(
-            embedder, [s for _, s in doc_batch], stats))
-        n_docs += len(doc_batch)
-        doc_batch.clear()
+    try:
+        for i in range(0, len(stale), batch):
+            ids = stale[i:i + batch]
+            rows = idx.conn.execute(
+                f"SELECT chunk_id, text, path FROM chunks WHERE chunk_id IN "
+                f"({','.join('?' * len(ids))})", ids).fetchall()
+            if excluded:
+                rows = [r for r in rows if r[2] not in excluded]
+            if not rows:
+                continue
 
-    missing_docs = idx.paths_missing_doc_vector()
-    if excluded:
-        missing_docs = [p for p in missing_docs if p not in excluded]
-    if budget is not None:
-        missing_docs = missing_docs[:budget]
-    for path in missing_docs:
-        surface = _doc_surface_for_projection(repo, path)
-        if surface:
-            doc_batch.append((path, surface))
-            if len(doc_batch) >= stats["batch"]:
-                _flush_docs()
-    _flush_docs()
-    return {"chunks_embedded": n_chunks, "docs_embedded": n_docs,
-            "effective_batch": stats["batch"],
-            "rate_limit_retries": stats["rate_limit_retries"],
-            "stale_left": len(idx.stale_chunk_ids())}
+            def _commit_chunks(offset, vecs, rows=rows):
+                nonlocal n_chunks
+                for (cid, _text, _path), vec in zip(
+                        rows[offset:offset + len(vecs)], vecs, strict=True):
+                    idx.conn.execute(
+                        "INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) "
+                        "VALUES (?, ?)", (cid, sqlite_vec.serialize_float32(vec)))
+                idx.conn.commit()
+                n_chunks += len(vecs)
+
+            _embed_resilient(embedder, [r[1] for r in rows], stats,
+                             on_success=_commit_chunks)
+
+        missing_docs = idx.paths_missing_doc_vector()
+        if excluded:
+            missing_docs = [p for p in missing_docs if p not in excluded]
+        if budget is not None:
+            missing_docs = missing_docs[:budget]
+        docs: list[tuple[str, str]] = []
+        for path in missing_docs:
+            surface = _doc_surface_for_projection(repo, path)
+            if surface:
+                docs.append((path, surface))
+
+        def _commit_docs(offset, vecs):
+            nonlocal n_docs
+            idx.add_docs(docs[offset:offset + len(vecs)], vecs)
+            n_docs += len(vecs)
+
+        if docs:
+            _embed_resilient(embedder, [s for _, s in docs], stats,
+                             on_success=_commit_docs)
+    except embed_mod.EmbeddingError as exc:
+        exc.progress = _embed_progress(idx, n_chunks, n_docs, stats, exc)
+        raise
+
+    stale_left = len(idx.stale_chunk_ids())
+    docs_stale_left = len(idx.paths_missing_doc_vector())
+    if stale_left == 0 and docs_stale_left == 0:
+        status = "noop" if n_chunks == 0 and n_docs == 0 else "complete"
+        reason = None
+    elif budget is not None:
+        status, reason = "budget_partial", "budget"
+    else:
+        status = "budget_partial"
+        reason = "excluded_paths" if excluded else "stale_remaining"
+    return {
+        "status": status,
+        "chunks_embedded": n_chunks,
+        "docs_embedded": n_docs,
+        "effective_batch": stats["batch"],
+        "rate_limit_retries": stats["rate_limit_retries"],
+        "stale_left": stale_left,
+        "docs_stale_left": docs_stale_left,
+        "reason": reason,
+        "provider_code": stats.get("provider_code"),
+        "provider_type": stats.get("provider_type"),
+        "account_state": "unverified",
+    }
+
+
+_EMBED_REPORT_STATUSES = frozenset(
+    {"complete", "noop", "budget_partial", "lock_busy", "failed"})
+
+
+def validate_embed_report(report: dict) -> list[str]:
+    """Return the contract violations of a would-be ``embed --json`` report.
+
+    The native CLI refuses to emit/return0 on an invalid report: an unvalidated
+    "success" object is a reporting failure, not a completion claim.
+    """
+    if not isinstance(report, dict):
+        return ["report is not a JSON object"]
+    errors: list[str] = []
+    status = report.get("status")
+    if status not in _EMBED_REPORT_STATUSES:
+        errors.append("status")
+    counters = {}
+    for key in ("chunks_embedded", "docs_embedded", "rate_limit_retries"):
+        value = report.get(key)
+        counters[key] = value
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            errors.append(key)
+    batch = report.get("effective_batch")
+    if not isinstance(batch, int) or isinstance(batch, bool) or batch < 1:
+        errors.append("effective_batch")
+    remaining = {}
+    for key in ("stale_left", "docs_stale_left"):
+        value = report.get(key)
+        remaining[key] = value
+        if value is not None and (
+                not isinstance(value, int) or isinstance(value, bool) or value < 0):
+            errors.append(key)
+    reason = report.get("reason")
+    if reason is not None and not isinstance(reason, str):
+        errors.append("reason")
+    for key in ("provider_code", "provider_type"):
+        value = report.get(key)
+        if value is not None and embed_mod.sanitize_provider_scalar(value) is None:
+            errors.append(key)
+    if report.get("account_state") != "unverified":
+        errors.append("account_state")
+
+    left = (remaining.get("stale_left"), remaining.get("docs_stale_left"))
+    done = (counters.get("chunks_embedded"), counters.get("docs_embedded"))
+    if status in ("complete", "noop") and left != (0, 0):
+        errors.append("remaining")
+    if status == "complete" and done == (0, 0):
+        errors.append("counters")
+    if status == "noop" and done != (0, 0):
+        errors.append("counters")
+    if status == "budget_partial" and not any(isinstance(v, int) and v > 0 for v in left):
+        errors.append("remaining")
+    if status == "lock_busy" and done != (0, 0):
+        errors.append("counters")
+    if status == "failed" and not isinstance(reason, str):
+        errors.append("reason")
+    return errors
 
 
 def ensure_full_coverage(idx: Index, repo: Path, embedder) -> bool:
@@ -727,7 +878,18 @@ def reindex_isolated(repo: Path, embedder, *, state_dir: Path | None = None) -> 
     live_state.mkdir(mode=0o700, parents=True, exist_ok=True)
     live_db = live_state / "index.db"
     head = _git_head(repo)
+    # Full lifetime admission: the whole build (not just its swap) excludes every
+    # other dense-fill/bulk entrypoint. Narrow writers keep using index.lock.
+    maintenance = serialize.dense_maintenance_lock(live_state).acquire()
+    try:
+        return _reindex_isolated_admitted(
+            repo, embedder, live_state=live_state, live_db=live_db, head=head)
+    finally:
+        maintenance.release()
 
+
+def _reindex_isolated_admitted(repo, embedder, *, live_state: Path,
+                               live_db: Path, head: str | None) -> dict:
     wt = None
     if head:
         wt = Path(tempfile.mkdtemp(prefix="hypermnesic-reindex-"))
@@ -738,15 +900,18 @@ def reindex_isolated(repo: Path, embedder, *, state_dir: Path | None = None) -> 
             shutil.rmtree(wt, ignore_errors=True)
             wt = None
     if wt is None:  # no git / worktree unsupported → in-place locked rebuild
-        build_index(repo, embedder, state_dir=live_state).close()
+        _build_index_locked(repo, embedder, state=live_state, db_path=live_db,
+                            rebuild=True).close()
         return {"status": "fallback-inplace", "to": head}
 
     build_state = live_state / ".reindex-build"
     try:
         shutil.rmtree(build_state, ignore_errors=True)
-        # build_index locks build_state/index.lock — NOT the live lock — so the
-        # long build phase never blocks live writers.
-        build_index(wt, embedder, state_dir=build_state).close()
+        # Build in the private state dir: it locks build_state/index.lock — NOT the
+        # live lock — so the long build phase never blocks live writers. The
+        # already-held maintenance exclusion is reused, never re-acquired.
+        _build_index_locked(wt, embedder, state=build_state,
+                            db_path=build_state / "index.db", rebuild=True).close()
         new_db = build_state / "index.db"
         lock = serialize.FileLock(live_state / "index.lock").acquire()  # brief swap lock
         try:
@@ -799,6 +964,10 @@ def build_index(repo: Path, embedder, *, rebuild: bool = True,
     ``.git/info/exclude``). Pass ``state_dir`` to keep the state entirely outside
     the indexed repo — used for the read-only gbrain-brain corpus so the
     canonical checkout is never written to in any way.
+
+    The whole build holds the shared dense-maintenance exclusion (non-blocking),
+    so a scheduled drain and a full build can never spend provider calls against
+    each other. Contention raises ``serialize.LockBusyError`` before any call.
     """
     config.assert_embedder_agrees(embedder)
     repo = Path(repo)
@@ -806,10 +975,19 @@ def build_index(repo: Path, embedder, *, rebuild: bool = True,
     state = Path(state_dir) if external else state_dir_for(repo)
     state.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chmod(state, 0o700)
-    db_path = state / "index.db"
     if not external:
         ensure_ignored(repo)
+    maintenance = serialize.dense_maintenance_lock(state).acquire()
+    try:
+        return _build_index_locked(repo, embedder, state=state,
+                                   db_path=state / "index.db", rebuild=rebuild)
+    finally:
+        maintenance.release()
 
+
+def _build_index_locked(repo, embedder, *, state: Path, db_path: Path,
+                        rebuild: bool) -> Index:
+    """Admitted build core — the caller already holds the maintenance exclusion."""
     lock = serialize.FileLock(state / "index.lock").acquire()  # single indexer (KTD9)
     try:
         if rebuild and db_path.exists():   # destroy the old index only once locked

@@ -298,3 +298,92 @@ def test_cloud_token_ttl_rejects_non_positive_and_invalid_env(monkeypatch):
     monkeypatch.setenv(config.TOKEN_TTL_ENV, "nope")
     with pytest.raises(config.ConfigError):
         config.cloud_token_ttl_seconds()
+
+
+# --- LS-4075 R4: sanitized provider metadata, never a billing verdict --------
+
+
+class _SdkLike429(Exception):
+    """Shape of an OpenAI SDK 429: status_code + a body dict."""
+
+    status_code = 429
+
+    def __init__(self, body):
+        super().__init__("429 rate limit")
+        self.body = body
+
+
+class _RaisingClient:
+    def __init__(self, exc):
+        self._exc = exc
+
+    @property
+    def embeddings(self):
+        return self
+
+    def create(self, **kwargs):
+        raise self._exc
+
+
+def _failing_embedder(exc):
+    from hypermnesic import embed as embed_mod
+
+    emb = embed_mod.OpenAIEmbedder(api_key="unit-test-key", cooldown_seconds=0)
+    emb._client = _RaisingClient(exc)
+    return emb
+
+
+def test_provider_code_is_preserved_without_billing_verdict():
+
+    from hypermnesic import embed as embed_mod
+
+    quota = _failing_embedder(_SdkLike429(
+        {"error": {"code": "insufficient_quota", "type": "insufficient_quota"}}))
+    with pytest.raises(embed_mod.EmbeddingError) as quota_info:
+        quota.embed(["x"])
+    quota_err = quota_info.value
+    # A quota-named body keeps its code/type as *reported* provider metadata…
+    assert quota_err.reason == "rate_limited"
+    assert quota_err.provider_code == "insufficient_quota"
+    assert quota_err.provider_type == "insufficient_quota"
+    # …and the engine still asserts no account/billing verdict anywhere.
+    assert not hasattr(quota_err, "account_state")
+    assert "no credits" not in str(quota_err).lower()
+
+    plain = _failing_embedder(_SdkLike429({"error": {"message": "slow down"}}))
+    with pytest.raises(embed_mod.EmbeddingError) as plain_info:
+        plain.embed(["x"])
+    plain_err = plain_info.value
+    # A plain 429 stays a plain retryable rate limit — no invented quota code.
+    assert plain_err.reason == "rate_limited"
+    assert plain_err.provider_code is None and plain_err.provider_type is None
+
+
+def test_provider_code_redacts_untrusted_body():
+    import json
+
+    from hypermnesic import embed as embed_mod
+
+    secret = "untrusted secret phrase 1234567890"
+    body = {"error": {
+        "code": f"{secret} input=customer private text",
+        "type": {"nested": secret},
+    }}
+    emb = _failing_embedder(_SdkLike429(body))
+    with pytest.raises(embed_mod.EmbeddingError) as info:
+        emb.embed(["x"])
+    err = info.value
+    assert err.reason == "rate_limited"
+    assert err.provider_code is None              # untrusted scalar is not echoed
+    assert err.provider_type is None
+    serialized = json.dumps({"provider_code": err.provider_code,
+                             "provider_type": err.provider_type,
+                             "reason": err.reason})
+    assert secret not in serialized
+    assert "customer private text" not in serialized
+
+    long_code = "a" * 200
+    emb2 = _failing_embedder(_SdkLike429({"error": {"code": long_code}}))
+    with pytest.raises(embed_mod.EmbeddingError) as info2:
+        emb2.embed(["x"])
+    assert info2.value.provider_code is None      # bounded allowlisted scalars only

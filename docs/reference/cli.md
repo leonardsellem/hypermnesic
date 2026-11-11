@@ -36,22 +36,38 @@ Flags: `--state-dir DIR` (external state dir; keeps the corpus untouched), `--no
 (don't delete an existing index first), `--json`.
 
 ### `embed <repo>`
-Async embed pass: fill dense vectors that lag lexical (closes the AE5 dense lag).
-Flags: `--batch N` (chunks per embedding request, default 128; the pass halves it
-adaptively when the provider answers 429 and keeps the size that works), `--index-db PATH`,
-`--json`.
-`--json` reports `chunks_embedded`, `docs_embedded`, `effective_batch` (the batch in force
-at the end of the run — it equals the requested `--batch` when no 429 occurred),
-`rate_limit_retries` (one per 429-triggered halving-and-retry) and `stale_left` (stale
-chunks remaining after the pass, `0` on a complete drain). A `rate_limited` (any 429,
-including `insufficient_quota`) or `cooldown` failure prints one plain retryable line on
-stderr and exits 1 — never a raw traceback, and it asserts no credit/billing verdict;
-other embedder reasons print their own reason and exit 1.
+Async embed pass: fill dense vectors that lag lexical (closes the AE5 dense lag), for both
+the chunk lane and the doc-surface lane.
+Flags: `--batch N` (requests per embedding call, default 128; the pass halves it adaptively
+when the provider answers 429 and keeps the size that works), `--budget N` (at most N stale
+chunks **and** N missing doc surfaces this pass — the scheduled tick is
+`--batch 32 --budget 32`; omit it to drain the whole backlog), `--index-db PATH`, `--json`.
+
+`--json` emits one validated report on success, clean no-op, deferral or caught failure:
+`status` (`complete` | `noop` | `budget_partial` | `lock_busy` | `failed`),
+`chunks_embedded` / `docs_embedded` / `rate_limit_retries` (non-negative actual integers),
+`effective_batch` (the batch in force at the end — it equals the requested `--batch` when
+no 429 occurred), `stale_left` / `docs_stale_left` (actual remaining work; `null` only when
+the measurement itself is impossible, e.g. a lock deferral), `reason`, sanitized
+`provider_code` / `provider_type` (reported provider metadata, bounded and allowlisted —
+never a raw body, input text, header or secret) and `account_state: "unverified"` always.
+A `budget_partial` report is exit 0 with real remaining work, never a completion claim.
+`lock_busy` is exit 0 with zero paid calls (another dense fill/build owns the maintenance
+mutex). An unrecovered one-input 429 — including a quota-coded body — is `failed` exit 1
+with the actual partial counters and remaining work; a configuration/auth/API/DB failure is
+also nonzero. The CLI validates the report before returning 0: an invalid or missing report
+is itself a nonzero failure. Without `--json`, a rate-limited failure keeps the historical
+behavior — one plain retryable stderr line, exit 1, no stdout, no traceback and no
+credit/billing verdict — and other reasons print their own reason and exit 1. New reports
+are an intentional extension to the previous empty-stdout failure behavior.
 
 ### `reindex <repo>`
 Rebuild the index. `--isolated` builds in a worktree and swaps atomically so narrow
 writers never block.
 Flags: `--state-dir DIR`, `--isolated`, `--json`.
+While another bulk dense operation owns the shared maintenance mutex, `index`, `reindex`
+and `init` exit nonzero without starting a build or making a provider call (named
+deferral); `commit-note` writes are not blocked by it.
 
 ### `init <repo>`
 Zero-infra drop-in: index a repo in place (in-repo `.hypermnesic/` state).
@@ -65,10 +81,15 @@ Flags: `--batch N` (chunks per embedding request, default 128; halves adaptively
 overlay), `--now` (force a non-debounced pass), `--json`.
 `--json` additionally reports `effective_batch` (the batch in force at the end — it equals
 the requested `--batch` when no 429 occurred, and stays the requested value on a
-`debounced`/`lock_busy`/`oversized_delta` result that returns before the dense fill) and
-`rate_limit_retries` for the bounded dense fill; a rate-limited fill degrades to
-lexical/graph (`degraded_reason: "rate_limited"`) after the batch ladder is exhausted —
-converge never raises on the read path.
+`debounced`/`lock_busy`/`oversized_delta` result that returns before the dense fill),
+`rate_limit_retries` for the bounded dense fill, and `dense_deferred` /
+`dense_deferred_reason`: when another bulk dense pass owns the shared maintenance mutex the
+lexical catch-up and checkpoint still complete, zero provider calls are made, and the next
+read retries the dense slice. The per-lane dense budget is capped at 32 chunk + 32
+doc-surface inputs (`CONVERGE_EMBED_BUDGET`), so a public question is never preceded by a
+128-input bulk burst. A rate-limited fill degrades to lexical/graph
+(`degraded_reason: "rate_limited"`) after the batch ladder is exhausted — converge never
+raises on the read path.
 
 ## Reading (all read-only; converge first)
 
