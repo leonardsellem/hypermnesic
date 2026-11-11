@@ -402,3 +402,61 @@ def test_batch_preserved_on_returns_before_the_dense_fill(make_corpus, fake_embe
     assert res.status == "oversized_delta"
     assert res.effective_batch == 8
     assert res.rate_limit_retries == 0
+
+
+# --- LS-4075 R3/R5: dense-maintenance deferral and the public 32 cap ---------
+
+def test_dense_mutex_busy_preserves_lexical_progress_and_no_embed(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    idx = ix.build_index(repo, fake_embedder)
+    _commit_file(repo, "b.md", "# B\n\nBUSYMARKER beta.\n", "add b")
+    counting = _CountingEmbedder(fake_embedder)
+
+    held = serialize.dense_maintenance_lock(ix.state_dir_for(repo)).acquire()
+    try:
+        res = converge.converge(repo, idx, counting, debounce_seconds=0)
+    finally:
+        held.release()
+
+    assert res.status == "converged"
+    assert res.replayed == 1 and res.checkpoint_advanced
+    assert res.chunks_embedded == 0 and res.docs_embedded == 0
+    assert res.dense_deferred is True and res.dense_deferred_reason == "lock_busy"
+    assert counting.texts == []                     # zero paid calls under contention
+    assert any(idx.get_chunk(c)["path"] == "b.md"
+               for c, _ in idx.lexical_search("BUSYMARKER", k=10))
+    idx.close()
+
+
+def test_scheduled_and_convergence_payloads_capped_at_32(make_corpus, fake_embedder):
+    assert config.CONVERGE_EMBED_BUDGET == 32
+    files = {f"doc{i:02d}.md": f"# Doc {i}\n\nmarker{i} body text.\n" for i in range(70)}
+    repo = make_corpus(files)
+    idx = ix.build_index(repo, fake_embedder)
+    ids = [r[0] for r in idx.conn.execute(
+        "SELECT chunk_id FROM chunks ORDER BY chunk_id LIMIT 65")]
+    idx.conn.executemany("DELETE FROM vec_chunks WHERE chunk_id=?", [(i,) for i in ids])
+    idx.conn.execute("DELETE FROM vec_docs")
+    idx.conn.commit()
+
+    sizes: list[int] = []
+
+    class Recorder:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            sizes.append(len(texts))
+            return fake_embedder.embed(texts)
+
+    scheduled = ix.embed_stale(idx, repo, Recorder(), batch=32, budget=32)
+    assert scheduled["chunks_embedded"] == 32 and scheduled["docs_embedded"] == 32
+    assert sizes and max(sizes) <= 32
+
+    _commit_file(repo, "doc00.md", "# Doc 0\n\nCHANGED payload body.\n", "edit doc00")
+    sizes.clear()
+    res = converge.converge(repo, idx, Recorder(), debounce_seconds=0)
+    assert res.status == "converged"
+    assert sizes and max(sizes) <= 32               # pre-query fill stays at the 32 cap
+    assert res.chunks_embedded <= 32 and res.docs_embedded <= 32
+    idx.close()

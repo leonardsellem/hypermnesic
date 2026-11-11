@@ -185,6 +185,17 @@ def index_write_lock(repo) -> FileLock:
     return FileLock(_state_dir(repo) / "index.lock")
 
 
+def dense_maintenance_lock(state_dir) -> FileLock:
+    """Shared non-blocking exclusion for every bulk dense-fill / full-build path.
+
+    Lives beside the live index state (never inside the disposable
+    ``.reindex-build`` dir) so a full isolated rebuild and a scheduled drain
+    cannot spend provider calls against each other. Narrow writers keep using
+    ``index.lock`` and are deliberately NOT blocked by it.
+    """
+    return FileLock(Path(state_dir) / "dense-maintenance.lock")
+
+
 def path_lock(repo, rel_path: str) -> FileLock:
     """A narrow, path-scoped lock — distinct paths proceed concurrently."""
     h = hashlib.sha256(rel_path.encode("utf-8")).hexdigest()[:16]

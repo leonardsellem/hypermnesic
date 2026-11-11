@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from hypermnesic import cli, config, index, install
+from hypermnesic import cli, config, index, install, serialize
 
 
 def _neutralize_key(monkeypatch, tmp_path):
@@ -867,8 +867,12 @@ def test_embed_batch_flag_is_forwarded(make_corpus, fake_embedder, monkeypatch, 
 
     def fake_embed_stale(idx, repo_path, embedder, *, batch=128, budget=None):
         seen["batch"] = batch
-        return {"chunks_embedded": 0, "docs_embedded": 0, "effective_batch": batch,
-                "rate_limit_retries": 0, "stale_left": 0}
+        seen["budget"] = budget
+        return {"status": "noop", "chunks_embedded": 0, "docs_embedded": 0,
+                "effective_batch": batch, "rate_limit_retries": 0,
+                "stale_left": 0, "docs_stale_left": 0, "reason": None,
+                "provider_code": None, "provider_type": None,
+                "account_state": "unverified"}
 
     monkeypatch.setattr(embed, "smoke_embed_or_die", lambda **kw: None)
     monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: fake_embedder)
@@ -899,6 +903,19 @@ def test_embed_rate_limited_exit_is_retryable(make_corpus, fake_embedder, monkey
     assert "credit" not in (captured.err + captured.out).lower()   # no billing verdict
     assert captured.out == ""
 
+    # LS-4075: --json deliberately extends the old empty-stdout failure behavior with
+    # one validated failed report; stderr stays quiet so the journal holds one object.
+    assert cli.main(["embed", str(repo), "--json"]) == 1
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    payload = json.loads(captured.out)
+    assert payload["status"] == "failed"
+    assert payload["reason"] == "rate_limited"
+    assert payload["account_state"] == "unverified"
+    assert payload["stale_left"] == 3                        # actual remaining work
+    assert payload["chunks_embedded"] == 0
+    assert "credit" not in captured.out.lower()
+
 
 def test_embed_rejects_zero_batch(make_corpus, capsys):
     repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
@@ -906,3 +923,252 @@ def test_embed_rejects_zero_batch(make_corpus, capsys):
         cli.main(["embed", str(repo), "--batch", "0"])
     assert excinfo.value.code == 2
     assert "--batch" in capsys.readouterr().err
+
+
+# --- LS-4075 R2/R4: --budget per lane, native report validation, zero-probe deferrals ---
+
+class _RecordingEmbedder:
+    """Dim-correct double recording every embedding request size."""
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.model = wrapped.model
+        self.dim = wrapped.dim
+        self.sizes: list[int] = []
+
+    def embed(self, texts):
+        self.sizes.append(len(texts))
+        return self.wrapped.embed(texts)
+
+
+def _drop_doc_vectors(repo, limit=None):
+    idx = index.Index(index.state_dir_for(repo) / "index.db")
+    try:
+        paths = [r[0] for r in idx.conn.execute(
+            "SELECT path FROM docs ORDER BY path" + (" LIMIT ?" if limit else ""),
+            ((limit,) if limit else ()))]
+        idx.conn.executemany(
+            "DELETE FROM vec_docs WHERE doc_id=(SELECT doc_id FROM docs WHERE path=?)",
+            [(p,) for p in paths])
+        idx.conn.commit()
+    finally:
+        idx.close()
+
+
+def test_embed_budget_and_partial_json(make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = _stale_vault(make_corpus, fake_embedder, n_docs=70, n_stale=65)
+    _drop_doc_vectors(repo)                      # both lanes have >32 missing inputs
+    recording = _RecordingEmbedder(fake_embedder)
+    monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: recording)
+
+    assert cli.main(["embed", str(repo), "--budget", "32", "--json"]) == 0
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "budget_partial"
+    assert out["chunks_embedded"] == 32
+    assert out["docs_embedded"] == 32
+    assert out["effective_batch"] == 128          # requested batch retained; budget caps work
+    assert out["rate_limit_retries"] == 0
+    assert out["stale_left"] == 33
+    assert out["docs_stale_left"] == 38
+    assert out["provider_code"] is None and out["provider_type"] is None
+    assert out["account_state"] == "unverified"
+    assert max(recording.sizes) <= 32             # never larger than the per-lane budget
+
+
+def test_embed_no_work_or_lock_busy_never_probes(make_corpus, fake_embedder,
+                                                 monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    counting = _RecordingEmbedder(fake_embedder)
+    monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: counting)
+
+    assert cli.main(["embed", str(repo), "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "noop"
+    assert counting.sizes == []                   # zero work → zero paid calls
+
+    idx = index.Index(index.state_dir_for(repo) / "index.db")
+    try:
+        ids = [r[0] for r in idx.conn.execute("SELECT chunk_id FROM chunks LIMIT 3")]
+        idx.conn.executemany("DELETE FROM vec_chunks WHERE chunk_id=?", [(i,) for i in ids])
+        idx.conn.commit()
+    finally:
+        idx.close()
+    counting.sizes.clear()
+
+    held = serialize.dense_maintenance_lock(index.state_dir_for(repo)).acquire()
+    try:
+        assert cli.main(["embed", str(repo), "--json"]) == 0
+    finally:
+        held.release()
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "lock_busy"
+    assert out["chunks_embedded"] == 0 and out["docs_embedded"] == 0
+    assert out["stale_left"] is None and out["docs_stale_left"] is None
+    assert counting.sizes == []                   # contention → zero paid calls
+
+
+@pytest.mark.parametrize("malformed", [
+    {"status": "complete", "stale_left": 5},
+    {"docs_stale_left": "many"},
+    {"account_state": "verified"},
+    {"effective_batch": 0},
+    {"status": "budget_partial", "stale_left": 0, "docs_stale_left": 0},
+])
+def test_embed_report_validation_rejects_malformed_success(
+        malformed, make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    index.build_index(repo, fake_embedder).close()
+    report = {"status": "noop", "chunks_embedded": 0, "docs_embedded": 0,
+              "effective_batch": 128, "rate_limit_retries": 0,
+              "stale_left": 0, "docs_stale_left": 0, "reason": None,
+              "provider_code": None, "provider_type": None,
+              "account_state": "unverified"}
+    report.update(malformed)
+    monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: fake_embedder)
+    monkeypatch.setattr(index, "embed_stale", lambda *a, **k: dict(report))
+
+    assert cli.main(["embed", str(repo), "--json"]) != 0
+    captured = capsys.readouterr()
+    assert captured.out == ""                    # never emit an invalid report
+    assert "invalid" in captured.err.lower()
+
+
+def test_embed_json_failure_preserves_reported_provider_code(
+        make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed as embed_mod
+
+    repo = _stale_vault(make_corpus, fake_embedder, n_docs=3, n_stale=2)
+
+    class Coded429:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def embed(self, texts):
+            raise embed_mod.EmbeddingError(
+                "429 rate limited", reason="rate_limited",
+                provider_code="insufficient_quota",
+                provider_type="insufficient_quota")
+
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: Coded429())
+    monkeypatch.setattr(index, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+
+    assert cli.main(["embed", str(repo), "--json"]) == 1
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "failed"
+    assert out["reason"] == "rate_limited"
+    assert out["provider_code"] == "insufficient_quota"     # reported, sanitized
+    assert out["provider_type"] == "insufficient_quota"
+    assert out["account_state"] == "unverified"             # never a billing verdict
+    assert out["stale_left"] == 2                           # actual remaining work
+
+
+@pytest.mark.parametrize("value", ["0", "-5"])
+def test_embed_rejects_zero_or_negative_budget(value, make_corpus, monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+
+    def _constructed(**kwargs):
+        raise AssertionError("embedder constructed before budget validation")
+
+    monkeypatch.setattr(embed, "OpenAIEmbedder", _constructed)
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(["embed", str(repo), "--budget", value])
+
+    assert excinfo.value.code == 2
+    err = capsys.readouterr().err
+    assert "--budget" in err
+    assert "positive integer" in err
+
+
+class _SdkError(Exception):
+    """SDK-shaped provider failure: optional status_code + body dict."""
+
+    def __init__(self, status_code=None, body=None):
+        super().__init__("provider failed")
+        if status_code is not None:
+            self.status_code = status_code
+        if body is not None:
+            self.body = body
+
+
+class _RaisingSdkClient:
+    def __init__(self, exc):
+        self._exc = exc
+
+    @property
+    def embeddings(self):
+        return self
+
+    def create(self, **kwargs):
+        raise self._exc
+
+
+@pytest.mark.parametrize("status,reason,code,typ", [
+    (401, "api_error", "invalid_api_key", "invalid_request_error"),
+    (500, "api_error", "server_error", "server_error"),
+    (None, "embedding_error", None, None),          # status-less timeout shape
+])
+def test_embed_sdk_error_fixtures_report_honest_failure(
+        status, reason, code, typ, make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed as embed_mod
+
+    repo = _stale_vault(make_corpus, fake_embedder, n_docs=4, n_stale=2)
+    body = {"error": {"code": code, "type": typ}} if code else None
+    real = embed_mod.OpenAIEmbedder(api_key="unit-test-key", cooldown_seconds=0)
+    real._client = _RaisingSdkClient(_SdkError(status, body))
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: real)
+
+    assert cli.main(["embed", str(repo), "--json"]) == 1
+
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    out = json.loads(captured.out)
+    assert out["status"] == "failed"
+    assert out["reason"] == reason
+    assert out["provider_code"] == code
+    assert out["provider_type"] == typ
+    assert out["account_state"] == "unverified"
+    assert out["stale_left"] == 2
+
+
+def test_embed_internal_error_keeps_committed_counters(
+        make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed as embed_mod
+
+    repo = _stale_vault(make_corpus, fake_embedder, n_docs=6, n_stale=5)
+
+    class BoomAfterFirst:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def __init__(self):
+            self.calls = 0
+
+        def embed(self, texts):
+            self.calls += 1
+            if self.calls > 1:
+                raise RuntimeError("simulated storage fault")
+            return fake_embedder.embed(texts)
+
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: BoomAfterFirst())
+
+    assert cli.main(["embed", str(repo), "--batch", "2", "--json"]) == 1
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "failed"
+    assert out["reason"] == "internal_error"
+    assert out["chunks_embedded"] == 2          # committed subrequest is not zeroed
+    assert out["stale_left"] == 3
+    assert out["account_state"] == "unverified"

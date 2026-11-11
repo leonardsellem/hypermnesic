@@ -45,15 +45,24 @@ def _default_client_scopes(args_value) -> list[str] | None:
     return scopes or None
 
 
+def _maintenance_deferral(verb: str) -> int:
+    """A bulk index command could not start: another bulk operation owns a lock."""
+    print(f"hypermnesic {verb}: index writer or dense maintenance busy; "
+          "retry when it finishes", file=sys.stderr)
+    return 1
+
+
 def _cmd_index(args) -> int:
-    from hypermnesic import embed, index
+    from hypermnesic import embed, index, serialize
 
     repo = Path(args.repo)
-    embed.smoke_embed_or_die(repo=repo)  # fail loud before any indexing work
-    embedder = embed.OpenAIEmbedder(repo=repo)
+    embedder = embed.OpenAIEmbedder(repo=repo)   # first real embed validates the key
     state_dir = Path(args.state_dir) if args.state_dir else None
-    idx = index.build_index(repo, embedder, rebuild=not args.no_rebuild,
-                            state_dir=state_dir)
+    try:
+        idx = index.build_index(repo, embedder, rebuild=not args.no_rebuild,
+                                state_dir=state_dir)
+    except serialize.LockBusyError:
+        return _maintenance_deferral("index")
     stats = idx.stats()
     idx.close()
     if args.json:
@@ -64,42 +73,100 @@ def _cmd_index(args) -> int:
     return 0
 
 
+def _embed_failed_report(exc: Exception, batch: int) -> dict:
+    """One honest failed report: actual counters, sanitized provider metadata."""
+    import sqlite3
+
+    from hypermnesic import embed as embed_mod
+
+    progress = getattr(exc, "progress", None) or {}
+    if isinstance(exc, embed_mod.EmbeddingError):
+        reason = exc.reason
+    elif isinstance(exc, config.ConfigError):
+        reason = "configuration"
+    elif isinstance(exc, sqlite3.Error):
+        reason = "storage_error"
+    else:
+        reason = "internal_error"
+    return {
+        "status": "failed",
+        "chunks_embedded": progress.get("chunks_embedded", 0),
+        "docs_embedded": progress.get("docs_embedded", 0),
+        "effective_batch": progress.get("effective_batch", batch),
+        "rate_limit_retries": progress.get("rate_limit_retries", 0),
+        "stale_left": progress.get("stale_left"),
+        "docs_stale_left": progress.get("docs_stale_left"),
+        "reason": reason,
+        "provider_code": progress.get("provider_code") or getattr(exc, "provider_code", None),
+        "provider_type": progress.get("provider_type") or getattr(exc, "provider_type", None),
+        "account_state": "unverified",
+    }
+
+
 def _cmd_embed(args) -> int:
     """Async embed-stale pass: fill dense vectors that lag lexical (AE5).
 
     Adapts the request batch down on a provider 429 (see ``index._embed_resilient``)
-    and reports the batch that actually worked plus the retry count. A rate-limited
-    or cooled-down failure is surfaced as one plain retryable stderr line — never a
-    raw traceback echoing the provider's billing text as fact.
+    and reports the batch that actually worked plus the retry count. One native
+    validated JSON report is emitted on success, clean no-op, lock deferral and
+    caught failure; an unrecovered failure exits nonzero. Without ``--json`` a
+    rate-limited failure stays one plain retryable stderr line — never a raw
+    traceback echoing the provider's billing text as fact.
     """
-    from hypermnesic import embed, index
+    from hypermnesic import embed, index, serialize
 
     repo = Path(args.repo)
+    failure: Exception | None = None
+    exit_code = 0
     try:
-        embed.smoke_embed_or_die(repo=repo)  # fail loud before touching the index
         db = Path(args.index_db) if args.index_db else index.state_dir_for(repo) / "index.db"
         idx = index.Index(db)
         try:
-            res = index.embed_stale(idx, repo, embed.OpenAIEmbedder(repo=repo),
-                                    batch=args.batch)
+            report = index.embed_stale(
+                idx, repo, embed.OpenAIEmbedder(repo=repo),
+                batch=args.batch, budget=args.budget)
         finally:
             idx.close()
-    except embed.EmbeddingError as exc:
-        if exc.reason in ("rate_limited", "cooldown"):
-            print("hypermnesic embed: the embeddings provider rate-limited the request; "
-                  "this is retryable — retry later, or lower --batch",
-                  file=sys.stderr)
-        else:
-            detail = " ".join(str(exc).split())
-            print(f"hypermnesic embed: embedding failed ({exc.reason}): {detail}",
-                  file=sys.stderr)
+    except serialize.LockBusyError:
+        report = {
+            "status": "lock_busy", "chunks_embedded": 0, "docs_embedded": 0,
+            "effective_batch": args.batch, "rate_limit_retries": 0,
+            "stale_left": None, "docs_stale_left": None, "reason": "lock_busy",
+            "provider_code": None, "provider_type": None,
+            "account_state": "unverified",
+        }
+        exit_code = 0
+    except Exception as exc:              # configuration/API/DB/report failure
+        failure = exc
+        report = _embed_failed_report(exc, args.batch)
+        exit_code = 1
+
+    errors = index.validate_embed_report(report)
+    if errors:
+        print("hypermnesic embed: native report invalid "
+              f"({', '.join(sorted(set(errors)))})", file=sys.stderr)
         return 1
     if args.json:
-        _print_json(res)
-    else:
-        print(f"embedded {res['chunks_embedded']} stale chunks, "
-              f"{res['docs_embedded']} doc surfaces "
-              f"(batch={res['effective_batch']}, retries={res['rate_limit_retries']})")
+        _print_json(report)
+        return exit_code
+
+    if exit_code:
+        reason = report["reason"]
+        if reason in ("rate_limited", "cooldown"):
+            print("hypermnesic embed: the embeddings provider rate-limited the request; "
+                  "this is retryable — retry later, or lower --batch", file=sys.stderr)
+        else:
+            detail = " ".join(str(failure).split())
+            print(f"hypermnesic embed: embedding failed ({reason}): {detail}",
+                  file=sys.stderr)
+        return exit_code
+    if report["status"] == "lock_busy":
+        print("hypermnesic embed: dense maintenance or index lock busy; deferring "
+              "this pass (zero paid calls)", file=sys.stderr)
+        return 0
+    print(f"{report['status']}: embedded {report['chunks_embedded']} stale chunks, "
+          f"{report['docs_embedded']} doc surfaces "
+          f"(batch={report['effective_batch']}, retries={report['rate_limit_retries']})")
     return 0
 
 
@@ -134,29 +201,33 @@ def _cmd_commit_note(args) -> int:
 
 def _cmd_reindex(args) -> int:
     """Broad reindex; --isolated builds in a worktree and swaps atomically (U14)."""
-    from hypermnesic import embed, index
+    from hypermnesic import embed, index, serialize
 
     repo = Path(args.repo)
-    embed.smoke_embed_or_die(repo=repo)
-    embedder = embed.OpenAIEmbedder(repo=repo)
+    embedder = embed.OpenAIEmbedder(repo=repo)   # first real embed validates the key
     state_dir = Path(args.state_dir) if args.state_dir else None
-    if args.isolated:
-        res = index.reindex_isolated(repo, embedder, state_dir=state_dir)
-    else:
-        index.build_index(repo, embedder, state_dir=state_dir).close()
-        res = {"status": "rebuilt-inplace"}
+    try:
+        if args.isolated:
+            res = index.reindex_isolated(repo, embedder, state_dir=state_dir)
+        else:
+            index.build_index(repo, embedder, state_dir=state_dir).close()
+            res = {"status": "rebuilt-inplace"}
+    except serialize.LockBusyError:
+        return _maintenance_deferral("reindex")
     _print_json(res) if args.json else print(res["status"])
     return 0
 
 
 def _cmd_init(args) -> int:
     """Zero-infra drop-in: index a repo in place (in-repo .hypermnesic/ state)."""
-    from hypermnesic import embed, index
+    from hypermnesic import embed, index, serialize
 
     repo = Path(args.repo)
-    embed.smoke_embed_or_die(repo=repo)
-    embedder = embed.OpenAIEmbedder(repo=repo)
-    idx = index.build_index(repo, embedder, rebuild=not args.no_rebuild)
+    embedder = embed.OpenAIEmbedder(repo=repo)   # first real embed validates the key
+    try:
+        idx = index.build_index(repo, embedder, rebuild=not args.no_rebuild)
+    except serialize.LockBusyError:
+        return _maintenance_deferral("init")
     stats = idx.stats()
     idx.close()
     if args.json:
@@ -803,6 +874,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_embed.add_argument("--batch", type=_positive_int, default=128,
                          help="chunks per embedding request; halves adaptively on a 429 "
                               "(default: 128)")
+    p_embed.add_argument("--budget", type=_positive_int, default=None,
+                         help="at most N stale chunks AND N missing doc surfaces this "
+                              "pass (scheduled tick: --batch 32 --budget 32); default "
+                              "drains the whole backlog")
     p_embed.add_argument("--json", action="store_true")
     p_embed.set_defaults(func=_cmd_embed)
 

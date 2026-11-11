@@ -15,6 +15,34 @@ its own changelog and version.
 ## [Unreleased]
 
 ### Added
+- **Bounded, paced, resumable dense drain with one honest report (LS-4075, 2026-11-11).**
+  `hypermnesic embed --batch 32 --budget 32` now caps **both** lanes at 32 successful
+  inputs per pass (chunk vectors and doc-surface vectors), commits every successful
+  adaptive subrequest immediately through the existing write paths, and resumes only what
+  is still missing — a later failure can no longer discard paid vectors. `--json` emits one
+  validated report on success, clean no-op, lock deferral and caught failure: `status`
+  (`complete`/`noop`/`budget_partial`/`lock_busy`/`failed`), actual per-lane counters,
+  `effective_batch`, `rate_limit_retries`, `stale_left`, `docs_stale_left`, `reason`,
+  sanitized `provider_code`/`provider_type` (reported provider metadata, bounded and
+  allowlisted — never a raw body, input text or secret) and `account_state: unverified`.
+  Budget exhaustion and clean deferrals exit 0 with distinguishable non-completion statuses;
+  an unrecovered one-input 429 — quota-coded or unknown — exits 1 with the real partial
+  progress, and an invalid report is itself a nonzero reporting failure. The non-JSON
+  rate-limited stderr line and exit behavior are unchanged. The public convergence budget
+  drops to the same 32 inputs per lane (`CONVERGE_EMBED_BUDGET`), so a question is never
+  preceded by a 128-input bulk burst. Bulk dense work (full isolated rebuild, direct
+  `build_index`, CLI `index`/`init`/`reindex`, scheduled/CLI drain, convergence and
+  `catch_up` replay) now shares one non-blocking `.hypermnesic/dense-maintenance.lock`;
+  contention returns a named deferral with zero paid calls while narrow `commit_note`
+  writes and atomic swap/reopen behavior stay untouched. Convergence and `catch_up`
+  replay preserve their lexical delta on dense-maintenance contention and expose
+  `dense_deferred`; a held `index.lock` (drain/build) yields a named deferral rather than
+  raising into the local-proof read path. The MCP `search` payload carries
+  `dense_deferred`/`dense_deferred_reason` so a deferred dense pass is never mistaken for
+  full dense coverage. The redundant pre-lock startup
+  smoke was removed, so a zero-work pass makes zero provider calls. The candidate also
+  carries the installed main-branch `.worktrees` index exclusion (PR120), re-integrated by
+  merge.
 - **Adaptive embedding drain, `--batch`, and a retryable rate-limit surface (LS-4058, 2026-11-07).**
   A dense drain that answers a provider 429 — including `insufficient_quota` /
   `credit_balance_exhausted`, which the provider reuses for rate pressure — now halves the
@@ -28,6 +56,13 @@ its own changelog and version.
   now prints one plain retryable stderr line and exits 1 instead of a traceback echoing the
   provider's "no credits" text as fact. `converge` still degrades to lexical
   (`degraded_reason: "rate_limited"`) and never raises on the read path.
+
+### Fixed
+- **Worktree checkouts no longer enter the read index.** `.worktrees/` holds git
+  checkouts of the same vault, so every note there was a stale duplicate: on the
+  owner's brain repo they were 46% of indexed documents and outranked the canonical
+  page. `.worktrees` joins the skip dirs (`.git`, `.hypermnesic`, `node_modules`,
+  `__pycache__`, `.obsidian`); a reindex drops the copies already recorded.
 
 ## [0.3.0] - 2026-09-23
 

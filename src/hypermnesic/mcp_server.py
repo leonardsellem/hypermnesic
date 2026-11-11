@@ -75,6 +75,8 @@ class SearchOutput(TypedDict):
     query: str
     degraded_lexical_only: bool
     degraded_reason: str | None
+    dense_deferred: bool                 # bulk dense fill deferred by maintenance contention
+    dense_deferred_reason: str | None
     manual_reindex_recommended: bool
     hits: list[SearchHit]
 
@@ -449,6 +451,8 @@ def build_server(index_db: Path, *, host: str, port: int = DEFAULT_PORT,
             "query": query,
             "degraded_lexical_only": res.degraded or cr.degraded,
             "degraded_reason": cr.degraded_reason or res.degraded_reason,
+            "dense_deferred": cr.dense_deferred,
+            "dense_deferred_reason": cr.dense_deferred_reason,
             "manual_reindex_recommended": cr.manual_reindex_recommended,
             "hits": [
                 {"path": h.path, "heading": h.heading, "score": round(h.score, 6),

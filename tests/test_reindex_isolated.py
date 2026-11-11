@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
+import threading
 
+import pytest
+
+from hypermnesic import commit_note as cn
 from hypermnesic import index as ix
 from hypermnesic import ingest, serialize
 
@@ -135,3 +140,168 @@ def test_missing_db_file_does_not_trigger_a_reopen(make_corpus, fake_embedder):
         assert "a.md" in live.all_paths()                    # served from the open inode
     finally:
         live.close()
+
+
+# --- LS-4075 R3: one dense-maintenance mutex around every provider-fill path ---
+
+class _Counting:
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.model = wrapped.model
+        self.dim = wrapped.dim
+        self.sizes: list[int] = []
+        self.texts: list[str] = []
+
+    def embed(self, texts):
+        self.sizes.append(len(texts))
+        self.texts.extend(texts)
+        return self.wrapped.embed(texts)
+
+
+def test_dense_mutex_excludes_full_build_but_not_narrow_writes(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha original.\n"})
+    ix.build_index(repo, fake_embedder).close()
+    live = ix.Index(ix.state_dir_for(repo) / "index.db")
+    started, release = threading.Event(), threading.Event()
+    results: list[dict] = []
+
+    class GatedEmbedder:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def __init__(self):
+            self.calls = 0
+
+        def embed(self, texts):
+            self.calls += 1
+            started.set()                       # build is paused after its first request
+            assert release.wait(30)
+            return fake_embedder.embed(texts)
+
+    gated = GatedEmbedder()
+    worker = threading.Thread(
+        target=lambda: results.append(ix.reindex_isolated(repo, gated)))
+    worker.start()
+    try:
+        assert started.wait(30), "isolated build never started"
+        counting = _Counting(fake_embedder)
+        with pytest.raises(serialize.LockBusyError):
+            ix.embed_stale(live, repo, counting)
+        assert counting.texts == []             # opposing fill made zero paid calls
+
+        # Narrow writes are NOT blocked by the long build (index.lock stays free).
+        cn.commit_note(repo, "notes/live.md", body="# Live\n\nLIVEMARKER body.\n", idx=live)
+        assert any(live.get_chunk(c)["path"] == "notes/live.md"
+                   for c, _ in live.lexical_search("LIVEMARKER", k=5))
+    finally:
+        release.set()
+        worker.join(30)
+
+    assert not worker.is_alive()
+    assert results and results[0]["status"] == "reindexed"
+    live.close()
+
+
+def test_dense_mutex_held_blocks_reindex_before_any_build(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+    ix.build_index(repo, fake_embedder).close()
+    state = ix.state_dir_for(repo)
+    before = os.stat(state / "index.db").st_ino
+
+    held = serialize.dense_maintenance_lock(state).acquire()
+    try:
+        with pytest.raises(serialize.LockBusyError):
+            ix.reindex_isolated(repo, _Counting(fake_embedder))
+    finally:
+        held.release()
+
+    assert not (state / ".reindex-build").exists()      # no build started
+    assert os.stat(state / "index.db").st_ino == before  # live index untouched
+
+
+def test_public_dense_entrypoints_defer_under_maintenance(
+        make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import cli, embed, local_proof
+
+    repo = make_corpus({"a.md": "# A\n\nalpha retrieval marker question answered here.\n"})
+    ix.build_index(repo, fake_embedder).close()
+    (repo / "b.md").write_text("# B\n\nbeta retrieval marker question answered here.\n",
+                               encoding="utf-8")
+    _commit(repo, "add b")                               # a real dense delta is pending
+    state = ix.state_dir_for(repo)
+    counting = _Counting(fake_embedder)
+    monkeypatch.setattr(embed, "OpenAIEmbedder", lambda **kw: counting)
+
+    held = serialize.dense_maintenance_lock(state).acquire()
+    try:
+        with pytest.raises(serialize.LockBusyError):     # direct build_index
+            ix.build_index(repo, counting)
+
+        idx = ix.Index(state / "index.db")
+        try:
+            with pytest.raises(serialize.LockBusyError):  # embed_stale
+                ix.embed_stale(idx, repo, counting)
+        finally:
+            idx.close()
+
+        for argv in (["init", str(repo)], ["index", str(repo)], ["reindex", str(repo)]):
+            assert cli.main(argv) == 1
+            assert "maintenance" in capsys.readouterr().err.lower()
+        assert counting.sizes == []                      # former startup probes: zero calls
+
+        idx = ix.Index(state / "index.db")
+        try:
+            catchup = ix.catch_up(idx, repo, embedder=counting)   # local_proof path
+            assert catchup["status"] == "lock_busy"
+            assert catchup["replayed"] == 1              # lexical progress preserved
+            assert "b.md" in idx.all_paths()
+        finally:
+            idx.close()
+        assert counting.sizes == []                      # deferred dense step made no call
+
+        # A second pending delta exercises the local_proof public path directly.
+        (repo / "c.md").write_text("# C\n\ngamma retrieval marker question answered here.\n",
+                                   encoding="utf-8")
+        _commit(repo, "add c")
+        result = local_proof.run_local_proof(repo=repo, query="alpha retrieval",
+                                             embedder=counting)
+        assert result.index_info["catchup_status"] == "lock_busy"
+        assert counting.sizes == [1]                     # query embedding only, no bulk fill
+    finally:
+        held.release()
+
+
+def test_catch_up_defers_when_real_holder_owns_both_locks(make_corpus, fake_embedder):
+    """The documented drain/build takes maintenance THEN index.lock for its whole
+    run. catch_up must return a named deferral in that exact state, never raise
+    into local_proof's read path."""
+    from hypermnesic import local_proof
+
+    repo = make_corpus({"a.md": "# A\n\nalpha retrieval marker answer.\n"})
+    ix.build_index(repo, fake_embedder).close()
+    (repo / "b.md").write_text("# B\n\nbeta retrieval marker answer.\n", encoding="utf-8")
+    _commit(repo, "add b")
+    state = ix.state_dir_for(repo)
+    counting = _Counting(fake_embedder)
+
+    held_m = serialize.dense_maintenance_lock(state).acquire()
+    held_i = serialize.FileLock(state / "index.lock").acquire()
+    try:
+        idx = ix.Index(state / "index.db")
+        try:
+            out = ix.catch_up(idx, repo, embedder=counting)
+        finally:
+            idx.close()
+
+        assert out["status"] == "lock_busy"
+        assert out["replayed"] == 0
+        assert out["dense_deferred"] is True
+        assert out["reason"] == "index_writer_busy"
+
+        # The public local-proof path degrades to a lexical proof, not a traceback.
+        result = local_proof.run_local_proof(repo=repo, query="alpha retrieval",
+                                             embedder=counting)
+        assert result.index_info["catchup_status"] == "lock_busy"
+    finally:
+        held_i.release()
+        held_m.release()

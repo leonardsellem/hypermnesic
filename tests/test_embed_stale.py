@@ -237,3 +237,189 @@ def test_embed_stale_fails_at_one_chunk_floor(make_corpus, fake_embedder, monkey
     assert _vec_count(idx) == before                       # no partial/zero vectors written
     assert limiter.calls <= 8                              # the ladder terminates, no spin
     idx.close()
+
+
+# --- LS-4075 R2: per-lane budget, honest report, durable per-success commits ---
+
+class RecordingEmbedder:
+    """Dim-correct double that records every request size and text."""
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.model = wrapped.model
+        self.dim = wrapped.dim
+        self.sizes: list[int] = []
+        self.texts: list[str] = []
+
+    def embed(self, texts):
+        self.sizes.append(len(texts))
+        self.texts.extend(texts)
+        return self.wrapped.embed(texts)
+
+
+class _FailAfterFirst:
+    """First subrequest succeeds; every later request answers an unrecovered 429."""
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.model = wrapped.model
+        self.dim = wrapped.dim
+        self.calls = 0
+
+    def embed(self, texts):
+        self.calls += 1
+        if self.calls > 1:
+            raise embed_mod.EmbeddingError("429 rate limited", reason="rate_limited")
+        return self.wrapped.embed(texts)
+
+
+def _stale_both_lanes(make_corpus, fake_embedder, *, n_docs=70, n_stale_chunks=65,
+                      docs_missing=0):
+    """Built index with dropped chunk vectors and/or dropped doc vectors."""
+    files = {f"doc{i:02d}.md": f"# Doc {i}\n\nmarker{i} body text.\n" for i in range(n_docs)}
+    repo = make_corpus(files)
+    idx = ix.build_index(repo, fake_embedder)
+    ids = [r[0] for r in idx.conn.execute(
+        "SELECT chunk_id FROM chunks ORDER BY chunk_id LIMIT ?", (n_stale_chunks,))]
+    idx.conn.executemany("DELETE FROM vec_chunks WHERE chunk_id=?", [(i,) for i in ids])
+    idx.conn.commit()
+    if docs_missing:
+        paths = [r[0] for r in idx.conn.execute(
+            "SELECT path FROM docs ORDER BY path LIMIT ?", (docs_missing,))]
+        idx.conn.executemany(
+            "DELETE FROM vec_docs WHERE doc_id=(SELECT doc_id FROM docs WHERE path=?)",
+            [(p,) for p in paths])
+        idx.conn.commit()
+    return repo, idx
+
+
+def test_budget_both_lanes_resume_and_report(make_corpus, fake_embedder):
+    repo, idx = _stale_both_lanes(make_corpus, fake_embedder, n_docs=70,
+                                  n_stale_chunks=65, docs_missing=70)
+    recording = RecordingEmbedder(fake_embedder)
+
+    first = ix.embed_stale(idx, repo, recording, batch=32, budget=32)
+
+    assert first["status"] == "budget_partial"
+    assert first["chunks_embedded"] == 32
+    assert first["docs_embedded"] == 32
+    assert first["effective_batch"] == 32
+    assert first["rate_limit_retries"] == 0
+    assert first["stale_left"] == 33
+    assert first["docs_stale_left"] == 38
+    assert first["account_state"] == "unverified"
+    assert first["provider_code"] is None and first["provider_type"] is None
+    assert max(recording.sizes) <= 32                      # per-lane budget caps requests
+
+    second = ix.embed_stale(idx, repo, recording, batch=32, budget=32)
+    assert (second["chunks_embedded"], second["docs_embedded"]) == (32, 32)
+    assert (second["stale_left"], second["docs_stale_left"]) == (1, 6)
+    assert second["status"] == "budget_partial"
+
+    third = ix.embed_stale(idx, repo, recording, batch=32, budget=32)
+    assert (third["chunks_embedded"], third["docs_embedded"]) == (1, 6)
+    assert (third["stale_left"], third["docs_stale_left"]) == (0, 0)
+    assert third["status"] == "complete"
+
+    fourth = ix.embed_stale(idx, repo, recording, batch=32, budget=32)
+    assert fourth["status"] == "noop"
+    assert fourth["chunks_embedded"] == 0 and fourth["docs_embedded"] == 0
+    assert max(recording.sizes) <= 32
+    idx.close()
+
+
+def test_budget_doc_only_backlog_is_capped(make_corpus, fake_embedder):
+    repo, idx = _stale_both_lanes(make_corpus, fake_embedder, n_docs=70,
+                                  n_stale_chunks=0, docs_missing=70)
+    recording = RecordingEmbedder(fake_embedder)
+
+    res = ix.embed_stale(idx, repo, recording, batch=32, budget=32)
+
+    assert res["chunks_embedded"] == 0
+    assert res["docs_embedded"] == 32
+    assert res["stale_left"] == 0
+    assert res["docs_stale_left"] == 38
+    assert res["status"] == "budget_partial"
+    assert max(recording.sizes) <= 32
+    idx.close()
+
+
+@pytest.mark.parametrize("lane", ["chunks", "docs"])
+def test_successful_subrequest_then_floor_failure_resumes_without_replay(
+        lane, make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+    if lane == "chunks":
+        repo, idx = _stale_both_lanes(make_corpus, fake_embedder, n_docs=5,
+                                      n_stale_chunks=5)
+        committed_texts = [r[0] for r in idx.conn.execute(
+            "SELECT text FROM chunks WHERE chunk_id IN "
+            "(SELECT chunk_id FROM chunks WHERE chunk_id NOT IN "
+            "(SELECT chunk_id FROM vec_chunks) ORDER BY chunk_id LIMIT 2)"
+        )]
+    else:
+        repo, idx = _stale_both_lanes(make_corpus, fake_embedder, n_docs=5,
+                                      n_stale_chunks=0, docs_missing=5)
+        committed_texts = [ix._doc_surface_for_projection(repo, p) for p in
+                           idx.paths_missing_doc_vector()[:2]]
+        assert all(committed_texts)
+
+    failing = _FailAfterFirst(fake_embedder)
+    with pytest.raises(embed_mod.EmbeddingError) as excinfo:
+        ix.embed_stale(idx, repo, failing, batch=2)
+
+    progress = excinfo.value.progress
+    if lane == "chunks":
+        assert progress["chunks_embedded"] == 2 and progress["docs_embedded"] == 0
+        assert progress["stale_left"] == 3
+    else:
+        assert progress["chunks_embedded"] == 0 and progress["docs_embedded"] == 2
+        assert progress["docs_stale_left"] == 3
+    assert progress["effective_batch"] == 1
+    assert progress["rate_limit_retries"] == 1
+    assert progress["account_state"] == "unverified"
+
+    # The successful subrequest's vectors are durable…
+    if lane == "chunks":
+        assert _vec_count(idx) == 2
+    else:
+        assert len(idx.paths_missing_doc_vector()) == 3
+
+    # …and a resumed tick never re-requests them.
+    resumed = RecordingEmbedder(fake_embedder)
+    res = ix.embed_stale(idx, repo, resumed, batch=2)
+    assert res["stale_left"] == 0 and res["docs_stale_left"] == 0
+    assert not any(text in resumed.texts for text in committed_texts if text)
+    idx.close()
+
+
+def test_recovered_429_metadata_survives_success(make_corpus, fake_embedder, monkeypatch):
+    monkeypatch.setattr(ix, "_RATE_LIMIT_BACKOFF_SECONDS", (0, 0, 0))
+    repo, idx = _stale_both_lanes(make_corpus, fake_embedder, n_docs=4, n_stale_chunks=3)
+
+    class OnceCoded429:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def __init__(self):
+            self.calls = 0
+
+        def embed(self, texts):
+            self.calls += 1
+            if self.calls == 1:
+                raise embed_mod.EmbeddingError(
+                    "429 rate limited", reason="rate_limited",
+                    provider_code="insufficient_quota",
+                    provider_type="insufficient_quota")
+            return fake_embedder.embed(texts)
+
+    res = ix.embed_stale(idx, repo, OnceCoded429(), batch=2)
+
+    assert res["status"] == "complete"
+    assert res["rate_limit_retries"] == 1
+    assert res["stale_left"] == 0 and res["docs_stale_left"] == 0
+    # The recovered failure's sanitized metadata survives the success report…
+    assert res["provider_code"] == "insufficient_quota"
+    assert res["provider_type"] == "insufficient_quota"
+    # …and is still reported, never verified as an account/billing state.
+    assert res["account_state"] == "unverified"
+    idx.close()

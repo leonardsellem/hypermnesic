@@ -65,7 +65,17 @@ results still return, flagged `degraded_lexical_only`. A dense **drain** is adap
 credit exhaustion) it halves the request batch 128 → 64 → 32 → … → 1, re-chunks the pending
 texts, sleeps 0.25 / 0.5 / 1 s between attempts, clears the embedder cooldown for that one
 retry, and keeps the size that worked for the rest of the run; only a one-input request
-that still 429s fails, leaving the cooldown armed. Near-duplicate hits are collapsed
+that still 429s fails, leaving the cooldown armed. A **budgeted drain**
+(`hypermnesic embed --batch 32 --budget 32`) caps both lanes at 32 successful inputs per
+tick — requests are never larger than 32 — and commits each successful subrequest
+immediately through the existing chunk/doc write paths, so a later failure keeps the paid
+vectors and the next tick resumes only what is still missing. A successful run emits one
+validated JSON object with the actual per-lane counters, `effective_batch`,
+`rate_limit_retries`, `stale_left`, `docs_stale_left`, a `status` discriminator, sanitized
+provider `code`/`type` (reported, never verified) and `account_state: unverified`; an
+unrecovered one-input 429 is a nonzero failure, not a green retryable catch-all. The manual
+no-budget drain and the analytical `ensure_full_coverage` sizing stay unbounded by design.
+Near-duplicate hits are collapsed
 and a per-hit write-recency timestamp is attached (consumers derive their own forgetting
 curve). The wikilink **graph** (`graph.py`) answers `build_context` and entity
 `resolve`.
@@ -80,6 +90,19 @@ checkpoint (`CONVERGE_MAX_DELTA_FILES`). A debounce (`CONVERGE_DEBOUNCE_SECONDS`
 coalesces bursts. This is the correctness guarantee that lets the index stay a pure
 projection while reads remain fresh — a just-committed or edited note is recall-able on
 the next read with no manual reindex.
+
+Bulk dense work is serialized by one non-blocking **dense-maintenance exclusion**
+(`.hypermnesic/dense-maintenance.lock`): the full lifetime of an isolated rebuild, direct
+`build_index`, CLI `index`/`init`/`reindex`, the scheduled/CLI drain, and `catch_up`
+replay all take it; convergence takes it only after its existing non-blocking `index.lock`
+check and reports `dense_deferred` while preserving the lexical catch-up it already did.
+`catch_up` replay does the same for dense-mutex contention; when an `index.lock` holder
+(a drain or build) is already active it returns a named deferral instead of raising, which
+keeps the local-proof read path serving. The MCP
+`search` payload carries `dense_deferred`/`dense_deferred_reason`, so a public caller can
+tell a deferred dense pass from full dense coverage. Narrow `commit_note` writes keep using
+`index.lock` and are deliberately not blocked; the live index is still swapped atomically
+and long-lived readers still reopen.
 
 ### Git-first write path (`commit_note.py`, `serialize.py`, `frontmatter_gate.py`, `audit_log.py`)
 

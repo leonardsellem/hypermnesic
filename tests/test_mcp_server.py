@@ -9,7 +9,7 @@ import subprocess
 import pytest
 from starlette.testclient import TestClient
 
-from hypermnesic import config, index, mcp_server
+from hypermnesic import config, index, mcp_server, serialize
 from hypermnesic import embed as embed_mod
 
 TAILNET_IP = "100.64.0.1"   # CGNAT/Tailscale documentation range — not a real node
@@ -898,3 +898,94 @@ def test_commit_note_allows_write_scoped_principal(make_corpus, fake_embedder):
     finally:
         var.reset(tok)
     assert out["committed"] is True and out["created"]
+
+
+# --- LS-4075 R5: one long-lived embedder, 429 → cooldown → dense recovery -----
+
+class _Clock:
+    def __init__(self):
+        self.now = 1_000.0
+
+    def __call__(self):
+        return self.now
+
+
+class _SdkLike429(Exception):
+    status_code = 429
+
+    def __init__(self):
+        super().__init__("429 rate limit")
+        self.body = {"error": {"code": "insufficient_quota",
+                               "type": "insufficient_quota"}}
+
+
+class _FlakySearchClient:
+    """Fake SDK client at the external I/O seam: first call 429, then vectors."""
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.calls = 0
+
+    @property
+    def embeddings(self):
+        return self
+
+    def create(self, *, model, input, dimensions):
+        import types
+
+        self.calls += 1
+        if self.calls == 1:
+            raise _SdkLike429()
+        return types.SimpleNamespace(
+            data=[types.SimpleNamespace(embedding=v) for v in self.wrapped.embed(list(input))])
+
+
+def test_long_lived_public_search_recovers_dense_after_cooldown(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nCOOLDOWNMARKER homelab dense.\n"})
+    index.build_index(repo, fake_embedder).close()          # zero stored backlog
+    db = index.state_dir_for(repo) / "index.db"
+
+    clock = _Clock()
+    embedder = embed_mod.OpenAIEmbedder(api_key="unit-test-key",
+                                        cooldown_seconds=300, now_fn=clock)
+    client = _FlakySearchClient(fake_embedder)
+    embedder._client = client
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=embedder, repo=repo)
+
+    query = {"query": "COOLDOWNMARKER homelab dense."}
+    first = _call(srv, "search", query)
+    assert first["degraded_lexical_only"] is True
+    assert first["degraded_reason"] == "rate_limited"
+    assert client.calls == 1
+
+    clock.now += 60                                         # still inside the 300 s window
+    second = _call(srv, "search", query)
+    assert second["degraded_lexical_only"] is True
+    assert second["degraded_reason"] == "cooldown"
+    assert client.calls == 1                                # SDK suppressed, same process
+
+    clock.now += 241                                        # cooldown elapsed, same process
+    third = _call(srv, "search", query)
+    assert third["degraded_lexical_only"] is False
+    assert third["degraded_reason"] is None
+    assert client.calls == 2                                # no restart / forced reset
+    assert any("dense" in h["channels"] for h in third["hits"])
+    assert any(h["path"] == "a.md" for h in third["hits"])
+
+
+def test_search_payload_reports_dense_deferral_under_maintenance(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nDEFERMARKER alpha homelab.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+
+    held = serialize.dense_maintenance_lock(index.state_dir_for(repo)).acquire()
+    try:
+        out = _call(srv, "search", {"query": "DEFERMARKER"})
+    finally:
+        held.release()
+
+    assert out["dense_deferred"] is True
+    assert out["dense_deferred_reason"] == "lock_busy"
+    assert out["degraded_lexical_only"] is False     # a deferral is not a degradation
+    assert any(h["path"] == "a.md" for h in out["hits"])

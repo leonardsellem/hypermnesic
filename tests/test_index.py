@@ -350,3 +350,16 @@ def test_converge_tunables_are_defined_and_sane():
     assert isinstance(config.CONVERGE_EMBED_BUDGET, int) and config.CONVERGE_EMBED_BUDGET > 0
     assert config.CONVERGE_DEBOUNCE_SECONDS >= 0
     assert isinstance(config.CONVERGE_MAX_DELTA_FILES, int) and config.CONVERGE_MAX_DELTA_FILES > 0
+
+
+def test_index_skips_worktree_checkouts(make_corpus, fake_embedder):
+    # A git worktree of the same vault sits under .worktrees/: every file there is
+    # a stale copy of a tracked note, so indexing it doubled the corpus and let an
+    # older revision outrank the canonical page.
+    repo = make_corpus({"notes/n.md": "# N\n\ncanonical body.\n",
+                        ".worktrees/branch/notes/n.md": "# N\n\nstale copy body.\n"})
+    idx = index.build_index(repo, fake_embedder)
+    paths = idx.all_paths()
+    idx.close()
+    assert "notes/n.md" in paths
+    assert all(not path.startswith(".worktrees/") for path in paths)
