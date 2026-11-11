@@ -492,7 +492,15 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
             dense_deferred = True
             maintenance = None
     try:
-        lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()  # single indexer
+        try:
+            lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()
+        except serialize.LockBusyError:
+            # A real drain/build holds maintenance then index.lock for its whole
+            # run: catch_up must return a named deferral, never raise into the
+            # local-proof read path.
+            return {"status": "lock_busy", "replayed": 0,
+                    "dense_deferred": dense_deferred,
+                    "reason": "index_writer_busy"}
         try:
             result = replay_changes(
                 idx, repo, head, cp, changes,

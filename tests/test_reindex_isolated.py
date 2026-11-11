@@ -269,3 +269,39 @@ def test_public_dense_entrypoints_defer_under_maintenance(
         assert counting.sizes == [1]                     # query embedding only, no bulk fill
     finally:
         held.release()
+
+
+def test_catch_up_defers_when_real_holder_owns_both_locks(make_corpus, fake_embedder):
+    """The documented drain/build takes maintenance THEN index.lock for its whole
+    run. catch_up must return a named deferral in that exact state, never raise
+    into local_proof's read path."""
+    from hypermnesic import local_proof
+
+    repo = make_corpus({"a.md": "# A\n\nalpha retrieval marker answer.\n"})
+    ix.build_index(repo, fake_embedder).close()
+    (repo / "b.md").write_text("# B\n\nbeta retrieval marker answer.\n", encoding="utf-8")
+    _commit(repo, "add b")
+    state = ix.state_dir_for(repo)
+    counting = _Counting(fake_embedder)
+
+    held_m = serialize.dense_maintenance_lock(state).acquire()
+    held_i = serialize.FileLock(state / "index.lock").acquire()
+    try:
+        idx = ix.Index(state / "index.db")
+        try:
+            out = ix.catch_up(idx, repo, embedder=counting)
+        finally:
+            idx.close()
+
+        assert out["status"] == "lock_busy"
+        assert out["replayed"] == 0
+        assert out["dense_deferred"] is True
+        assert out["reason"] == "index_writer_busy"
+
+        # The public local-proof path degrades to a lexical proof, not a traceback.
+        result = local_proof.run_local_proof(repo=repo, query="alpha retrieval",
+                                             embedder=counting)
+        assert result.index_info["catchup_status"] == "lock_busy"
+    finally:
+        held_i.release()
+        held_m.release()

@@ -95,8 +95,10 @@ Bulk dense work is serialized by one non-blocking **dense-maintenance exclusion*
 (`.hypermnesic/dense-maintenance.lock`): the full lifetime of an isolated rebuild, direct
 `build_index`, CLI `index`/`init`/`reindex`, the scheduled/CLI drain, and `catch_up`
 replay all take it; convergence takes it only after its existing non-blocking `index.lock`
-check and reports `dense_deferred` while preserving the lexical catch-up it already did
-(`catch_up` replay does the same: lexical delta first, dense step deferred). The MCP
+check and reports `dense_deferred` while preserving the lexical catch-up it already did.
+`catch_up` replay does the same for dense-mutex contention; when an `index.lock` holder
+(a drain or build) is already active it returns a named deferral instead of raising, which
+keeps the local-proof read path serving. The MCP
 `search` payload carries `dense_deferred`/`dense_deferred_reason`, so a public caller can
 tell a deferred dense pass from full dense coverage. Narrow `commit_note` writes keep using
 `index.lock` and are deliberately not blocked; the live index is still swapped atomically
