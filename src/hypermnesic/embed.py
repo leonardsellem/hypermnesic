@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import time
 
-from hypermnesic import config
+from hypermnesic import _spend_envelope, config
 
 # R4: only bounded, sanitized provider scalars may reach a report/journal. A raw
 # provider body can carry request text, headers or key material — never echo it.
@@ -82,6 +82,7 @@ class OpenAIEmbedder:
         self._now = now_fn or time.time
         self._cooldown_until = 0.0
         self._cooldown_reason: str | None = None
+        self._client_guarded: bool | None = None
 
     def clear_cooldown(self) -> None:
         """Disarm the failure cooldown so a caller may retry once.
@@ -101,7 +102,18 @@ class OpenAIEmbedder:
             except ImportError as exc:  # pragma: no cover
                 raise EmbeddingError(f"openai SDK not importable: {exc}") from exc
             key = self._api_key or config.get_api_key(repo=self.repo)
-            self._client = OpenAI(api_key=key)
+            # A guarded install disables the SDK's own retries: a hidden retry would
+            # reach the provider without its own durable reservation.
+            self._client_guarded = _spend_envelope.enabled()
+            self._client = (OpenAI(api_key=key, max_retries=0)
+                            if self._client_guarded else OpenAI(api_key=key))
+        elif self._client_guarded is False and _spend_envelope.enabled():
+            # A client we built unguarded cannot serve a guarded call: its hidden SDK
+            # retries would spend outside the reservation. Rebuild from one decision
+            # point. (An injected client, ``_client_guarded`` None, is left alone.)
+            self._client = None
+            self._client_guarded = None
+            return self._get_client()
         return self._client
 
     def embed(self, texts: list[str]) -> list[list[float]]:
@@ -116,6 +128,14 @@ class OpenAIEmbedder:
                 f"retry after {remaining:.0f}s",
                 reason="cooldown",
             )
+        guarded = _spend_envelope.enabled()
+        if guarded:
+            try:
+                _spend_envelope.reserve(self.model, texts)
+            except _spend_envelope.SpendEnvelopeRefused as exc:
+                raise EmbeddingError(
+                    f"embedding refused by the spend envelope ({exc.reason}); "
+                    "no request was sent", reason=exc.reason) from exc
         try:
             resp = self._get_client().embeddings.create(
                 model=self.model, input=texts, dimensions=self.dim,

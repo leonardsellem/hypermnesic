@@ -80,6 +80,15 @@ and a per-hit write-recency timestamp is attached (consumers derive their own fo
 curve). The wikilink **graph** (`graph.py`) answers `build_context` and entity
 `resolve`.
 
+**Optional spend envelope.** With `HYPERMNESIC_SPEND_ENVELOPE` naming an existing state file,
+the one provider seam (`embed.OpenAIEmbedder.embed`) reserves each physical request's
+pessimistic cost bound **before any SDK I/O** — one durable append under an adjacent persistent
+`flock`, never refunded — so the CLI, `serve`, the cloud lane, convergence and the smoke check
+all draw on the same non-renewing ceiling instead of per-process counters. The SDK's own retries
+are disabled in that mode; an unusable or exhausted state is a classified
+`spend_envelope_*` refusal that degrades reads to lexical/graph and never reaches the network
+(see the [configuration reference](docs/reference/configuration.md#spend-envelope-optional-hard-ceiling-on-embeddings)).
+
 ### Read-time convergence (`converge.py`)
 
 Every read first runs `converge()`: it delta-replays the lexical index up to `HEAD`,

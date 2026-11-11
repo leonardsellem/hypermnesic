@@ -18,6 +18,7 @@ Engine tunables live in [`src/hypermnesic/config.py`](../../src/hypermnesic/conf
 | `HYPERMNESIC_CLOUD_APPROVAL_TOKEN` | `serve-cloud` / `setup` | for the public lane | The operator approval token that gates every public connection. Read from the environment **only** (never a CLI flag, so it can't leak via the process table / logs). Enforced minimum length. |
 | `HYPERMNESIC_DEFAULT_CLIENT_SCOPES` | `serve-cloud` / `setup` | optional | Comma- or space-separated OAuth scopes requested by default when a dynamically registered client omits `scope`. Default is `read`; set `read,write` when new connector approvals should request both read access and `commit_note` write access. The consent page still requires the operator approval token and write guards still apply. |
 | `HYPERMNESIC_TOKEN_TTL_SECONDS` | `serve-cloud` / `setup` | optional | Cloud-lane access-token lifetime in seconds. Default is `172800` (48h) so overnight idle does not 401. Refresh stays 30 days. An explicit `--token-ttl` wins over this env var. Code TTL (300s) and pending TTL are unchanged. |
+| `HYPERMNESIC_SPEND_ENVELOPE` | embeddings (CLI + both servers) | optional | Absolute path to an **existing** spend-envelope state file. Unset → unchanged behavior. Set (even to an empty value) → the guard is armed: every physical embeddings request must durably reserve its pessimistic cost bound before any provider I/O, and the state's `model`/`expires_at`/`limit_micro_usd` bound the spend. A set-but-empty or relative value is refused, never treated as a disable. The SDK's own retries are disabled while it is set. See [Spend envelope](#spend-envelope-optional-hard-ceiling-on-embeddings). |
 
 Repo-addressed commands and servers resolve the OpenAI key in this order:
 
@@ -46,6 +47,65 @@ When the embedding provider returns a rate-limit/quota response, Hypermnesic ope
 in-process cooldown before another embedding attempt. Reads continue in lexical/graph mode and
 surface `degraded_reason` (`rate_limited` for the triggering call, `cooldown` during the cooldown)
 so operators can distinguish provider pressure from index corruption.
+
+## Spend envelope (optional hard ceiling on embeddings)
+
+`HYPERMNESIC_SPEND_ENVELOPE` points at an **already existing, absolute** JSON file. When the
+variable is **absent** — the default — nothing changes: no lock, no file, SDK retries untouched.
+When it is **present** (an empty value included), the guard is armed: every physical embeddings
+request (CLI, `serve`, the cloud lane, convergence-driven reads, the scheduled/manual drain and
+the startup smoke check) must first append a durable **reservation** to that file, under one
+adjacent `<state>.lock` that spans read → validate → append → atomic fsync'd write. Independent
+processes therefore cannot oversubscribe the same file, and a crash can waste allowance but can
+never overspend it. A present-but-empty or relative path is a refusal, never a silent disable —
+that is exactly the shape a bare `HYPERMNESIC_SPEND_ENVELOPE=` line in a unit or env file
+produces.
+
+The file is a reserve, not an invoice: a reservation is **never refunded**, on success, provider
+failure or unknown outcome. Its cost bound is the published rate for the pinned model
+(`text-embedding-3-large`: 0.13 USD per 1M tokens) applied to a pessimistic token upper bound —
+`ceil((utf8_bytes + inputs) * 13 / 100)` micro-USD per physical request, since every token of the
+model's `cl100k_base` encoding covers at least one UTF-8 byte. The file carries counters only;
+it never contains note text or a credential.
+
+```json
+{
+  "schema": "hypermnesic-spend-envelope/v1",
+  "envelope_id": "example-outcome-2026-12",
+  "expires_at": "2026-12-31T23:00:00Z",
+  "model": "text-embedding-3-large",
+  "limit_micro_usd": 5000000,
+  "reservations": []
+}
+```
+
+`limit_micro_usd` is the whole-outcome ceiling in micro-USD (`5000000` = 5 USD) and is **not**
+renewed per day, per process or per run. The cumulative reserved amount is always derived from
+the `reservations` list — there is no separate editable total. Each row is appended by the engine:
+`{"request_id", "timestamp", "utf8_bytes", "reserved_micro_usd"}`, with a unique monotonic id.
+The file must be owned by the running user and must not be group- or world-writable
+(`chmod 600`); symlinks are refused. Nothing auto-creates, resets or repairs the state, and no
+CLI command edits it: operators seed it, and a new file is how a new envelope starts.
+
+While the envelope is set, the SDK's own retries are `0` — every attempt, including the adaptive
+drain's own 429 retry, reserves separately. Any unusable state refuses **before any provider I/O**
+with a `spend_envelope_*` reason that never arms the 429 cooldown and is never reported as rate
+limiting:
+
+| `reason` | Meaning |
+|---|---|
+| `spend_envelope_invalid_path` | The variable is set but empty, or is not an absolute path. A blank value is a refusal, never a disable. |
+| `spend_envelope_unavailable` | State missing, not a regular file, a symlink, wrong owner, or group/other-writable. |
+| `spend_envelope_invalid` | Corrupt JSON, wrong schema/keys, bad type or range, duplicate `request_id`, or reservations already over the limit. |
+| `spend_envelope_model` | The state pins a different model, or the embedder is not the pinned `text-embedding-3-large`. |
+| `spend_envelope_expired` | `expires_at` (absolute RFC3339 UTC) has passed. |
+| `spend_envelope_exhausted` | The next request would push the derived total past `limit_micro_usd`. |
+| `spend_envelope_locked` | Another process holds `<state>.lock`; the request is refused, never queued. |
+| `spend_envelope_full` | The state reached its structural cap (500 000 rows or 64 MiB). It refuses rather than growing without bound; a fresh file is a **new ceiling**, so that is an operator decision, not an automatic repair. |
+| `spend_envelope_write_failed` | The reservation could not be persisted; no request is sent. |
+
+Read paths stay available: a refused dense slice degrades to lexical/graph (`degraded_reason` =
+the `spend_envelope_*` reason), and the CLI reports one honest `failed` record with that reason.
 
 `HYPERMNESIC_DEFAULT_CLIENT_SCOPES` can also be set as an explicit admin flag:
 `hypermnesic serve-cloud ... --default-client-scopes read write` or

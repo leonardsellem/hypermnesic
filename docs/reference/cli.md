@@ -60,6 +60,9 @@ is itself a nonzero failure. Without `--json`, a rate-limited failure keeps the 
 behavior — one plain retryable stderr line, exit 1, no stdout, no traceback and no
 credit/billing verdict — and other reasons print their own reason and exit 1. New reports
 are an intentional extension to the previous empty-stdout failure behavior.
+With `HYPERMNESIC_SPEND_ENVELOPE` set, an unusable/exhausted spend state is one of those other
+reasons: `failed`, exit 1, `reason: spend_envelope_*`, zero provider calls and no rate-limit
+claim (see the [configuration reference](configuration.md#spend-envelope-optional-hard-ceiling-on-embeddings)).
 
 ### `reindex <repo>`
 Rebuild the index. `--isolated` builds in a worktree and swaps atomically so narrow
