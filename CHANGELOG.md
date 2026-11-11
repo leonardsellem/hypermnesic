@@ -29,10 +29,13 @@ its own changelog and version.
   process or per run) and the cumulative total is always derived from the `reservations`
   list. The state holds counters only (no input text, no credential), must be owner-owned
   and not group/other-writable, is never auto-created or reset, and refuses `expired`,
-  `exhausted`, `locked`, `missing`, `corrupt`, type/range-invalid and unapproved-model states
-  **before any SDK I/O** with a classified `spend_envelope_*` reason — never reported as a
-  429. In that mode the SDK's own retries are `0`, so every physical attempt (including the
-  adaptive drain's own 429 retry) reserves separately. Unset, behavior is unchanged.
+  `exhausted`, `locked`, `missing`, `corrupt`, type/range-invalid, structurally-full and
+  unapproved-model states **before any SDK I/O** with a classified `spend_envelope_*` reason —
+  never reported as a 429. A set-but-empty or relative value is a refusal too, never a silent
+  disable, so a bare `HYPERMNESIC_SPEND_ENVELOPE=` line cannot leave the process spending
+  uncapped. In that mode the SDK's own retries are `0` and the client is rebuilt from the same
+  decision point as the reservation, so every physical attempt (including the adaptive drain's
+  own 429 retry) reserves separately. Unset, behavior is unchanged.
   Dense refusals degrade reads to lexical/graph (`degraded_reason` is the envelope reason).
 - **Bounded, paced, resumable dense drain with one honest report (LS-4075, 2026-11-11).**
   `hypermnesic embed --batch 32 --budget 32` now caps **both** lanes at 32 successful

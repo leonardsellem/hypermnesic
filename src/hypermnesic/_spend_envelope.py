@@ -64,27 +64,35 @@ class SpendEnvelopeRefused(RuntimeError):
 
 
 def path() -> Path | None:
-    """The configured state path, or ``None`` when the guard is not enabled."""
+    """The configured state path, or ``None`` only when the variable is ABSENT.
+
+    A set-but-blank value is *armed and unusable*, never a silent disable — a unit
+    line, compose entry or env-file placeholder renders exactly that shape.
+    """
     raw = os.environ.get(ENV_VAR)
-    if raw is None or not raw.strip():
+    if raw is None:
         return None
     return Path(raw.strip())
 
 
 def enabled() -> bool:
-    return path() is not None
+    """The guard is armed whenever the variable is present (an empty value included)."""
+    return ENV_VAR in os.environ
 
 
 def reserve(model: str, texts: list[str]) -> None:
     """Durably reserve one physical request, or refuse before any provider call.
 
-    No-op when the guard is not enabled. The lock, the read, the cumulative-total
+    No-op only when the variable is absent. The lock, the read, the cumulative-total
     check, the append and the fsynced atomic write all happen under one lock, so
     independent processes cannot oversubscribe the same ceiling.
     """
     state_path = path()
     if state_path is None:
         return
+    if not os.environ.get(ENV_VAR, "").strip():
+        raise SpendEnvelopeRefused(
+            "spend_envelope_invalid_path", f"{ENV_VAR} is set but empty")
     if not state_path.is_absolute():
         raise SpendEnvelopeRefused(
             "spend_envelope_invalid_path", f"{ENV_VAR} must be an absolute path")
@@ -168,7 +176,9 @@ def _read_state(state_path: Path) -> dict:
             "spend_envelope_unavailable",
             "envelope state must be owned by this user and not group/other writable")
     if info.st_size > _MAX_STATE_BYTES:
-        raise SpendEnvelopeRefused("spend_envelope_invalid", "envelope state is too large")
+        raise SpendEnvelopeRefused(
+            "spend_envelope_full",
+            "envelope state reached its structural size cap; a fresh envelope is a new ceiling")
     try:
         state = json.loads(state_path.read_text(encoding="utf-8"),
                            parse_constant=_reject_constant)
@@ -198,8 +208,12 @@ def _read_state(state_path: Path) -> dict:
             "spend_envelope_invalid",
             "expires_at is not an absolute RFC3339 UTC timestamp") from exc
     rows = state["reservations"]
-    if not isinstance(rows, list) or len(rows) > _MAX_RESERVATIONS:
-        raise SpendEnvelopeRefused("spend_envelope_invalid", "reservations is not a bounded list")
+    if not isinstance(rows, list):
+        raise SpendEnvelopeRefused("spend_envelope_invalid", "reservations is not a list")
+    if len(rows) > _MAX_RESERVATIONS:
+        raise SpendEnvelopeRefused(
+            "spend_envelope_full",
+            "envelope state reached its structural row cap; a fresh envelope is a new ceiling")
 
     seen: set[str] = set()
     reserved_total = 0

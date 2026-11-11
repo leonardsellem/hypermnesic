@@ -82,6 +82,7 @@ class OpenAIEmbedder:
         self._now = now_fn or time.time
         self._cooldown_until = 0.0
         self._cooldown_reason: str | None = None
+        self._client_guarded: bool | None = None
 
     def clear_cooldown(self) -> None:
         """Disarm the failure cooldown so a caller may retry once.
@@ -103,8 +104,16 @@ class OpenAIEmbedder:
             key = self._api_key or config.get_api_key(repo=self.repo)
             # A guarded install disables the SDK's own retries: a hidden retry would
             # reach the provider without its own durable reservation.
+            self._client_guarded = _spend_envelope.enabled()
             self._client = (OpenAI(api_key=key, max_retries=0)
-                            if _spend_envelope.enabled() else OpenAI(api_key=key))
+                            if self._client_guarded else OpenAI(api_key=key))
+        elif self._client_guarded is False and _spend_envelope.enabled():
+            # A client we built unguarded cannot serve a guarded call: its hidden SDK
+            # retries would spend outside the reservation. Rebuild from one decision
+            # point. (An injected client, ``_client_guarded`` None, is left alone.)
+            self._client = None
+            self._client_guarded = None
+            return self._get_client()
         return self._client
 
     def embed(self, texts: list[str]) -> list[list[float]]:

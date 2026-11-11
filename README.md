@@ -370,7 +370,12 @@ uv run python scripts/license_scan.py   # zero AGPL/GPL/SSPL *dependency* gate
 ## Credentials
 
 The OpenAI key is read from `OPENAI_API_KEY` (env var or a gitignored repo-root `.env`). It is
-never written to the index, the audit log, or any output. The OAuth consent secret lives only in
+never written to the index, the audit log, or any output. An optional hard ceiling on embedding
+spend is configured with `HYPERMNESIC_SPEND_ENVELOPE` — an absolute path to an existing state
+file, reserving before every provider call and refusing when unusable; absent means unchanged
+behavior (see the [configuration
+reference](docs/reference/configuration.md#spend-envelope-optional-hard-ceiling-on-embeddings)).
+The OAuth consent secret lives only in
 an owner-only env file. Public-lane OAuth client/token runtime state is stored in owner-only
 `.hypermnesic/cloud-oauth-state.json` so clients can refresh across service restarts; it is never
 logged or committed.

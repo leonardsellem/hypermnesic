@@ -168,10 +168,10 @@ def test_admitted_call_then_refusal_without_a_second_sdk_call(sdk, envelope):
 # --- every unusable state refuses before the provider -------------------------
 
 @pytest.mark.parametrize("case", [
-    "missing", "invalid_path", "corrupt", "wrong_schema", "wrong_keys", "bad_envelope_id",
-    "bad_limit_type", "bad_limit_range", "bad_row", "bad_row_bytes", "undercut_reserve",
-    "duplicate_row", "non_finite", "over_committed", "expired", "unapproved_state_model",
-    "symlink", "world_writable",
+    "missing", "invalid_path", "empty_env", "whitespace_env", "corrupt", "wrong_schema",
+    "wrong_keys", "bad_envelope_id", "bad_limit_type", "bad_limit_range", "bad_row",
+    "bad_row_bytes", "undercut_reserve", "duplicate_row", "non_finite", "over_committed",
+    "expired", "unapproved_state_model", "symlink", "world_writable",
 ])
 def test_unusable_states_refuse_before_any_sdk_call(sdk, envelope, monkeypatch, case):
     good_row = {"request_id": "row-1", "timestamp": _ts(0), "utf8_bytes": 10,
@@ -180,6 +180,12 @@ def test_unusable_states_refuse_before_any_sdk_call(sdk, envelope, monkeypatch, 
         pass                                              # never written
     elif case == "invalid_path":
         monkeypatch.setenv(env_mod.ENV_VAR, "relative/state.json")
+    elif case == "empty_env":
+        envelope.write()
+        monkeypatch.setenv(env_mod.ENV_VAR, "")
+    elif case == "whitespace_env":
+        envelope.write()
+        monkeypatch.setenv(env_mod.ENV_VAR, "   ")
     elif case == "corrupt":
         envelope.write(raw="not json at all")
     elif case == "wrong_schema":
@@ -371,6 +377,28 @@ def test_guarded_client_disables_sdk_retries(sdk, envelope):
     envelope.write()
     _embedder().embed(["hello"])
     assert sdk.init_kwargs[0]["max_retries"] == 0
+
+
+def test_client_built_before_arming_is_rebuilt_guarded(sdk, envelope, monkeypatch):
+    monkeypatch.delenv(env_mod.ENV_VAR, raising=False)
+    emb = _embedder()
+    emb._get_client()                                    # built while the guard is off
+    assert "max_retries" not in sdk.init_kwargs[0]
+
+    envelope.write()                                     # armed after construction
+    monkeypatch.setenv(env_mod.ENV_VAR, str(envelope.path))
+    _ = emb.embed(["hello"])
+    assert sdk.init_kwargs[-1]["max_retries"] == 0       # rebuilt from one decision point
+    assert len(envelope.rows()) == 1
+
+
+def test_structural_row_cap_refuses_as_full(sdk, envelope, monkeypatch):
+    monkeypatch.setattr(env_mod, "_MAX_RESERVATIONS", 1)
+    envelope.write(limit=1000, reservations=(1, 1))
+    with pytest.raises(embed_mod.EmbeddingError) as refused:
+        _embedder().embed(["hello"])
+    assert _refusal(refused) == "spend_envelope_full"
+    assert sdk.calls == []
 
 
 # --- independent processes cannot oversubscribe -------------------------------
