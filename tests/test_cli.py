@@ -1070,3 +1070,105 @@ def test_embed_json_failure_preserves_reported_provider_code(
     assert out["provider_type"] == "insufficient_quota"
     assert out["account_state"] == "unverified"             # never a billing verdict
     assert out["stale_left"] == 2                           # actual remaining work
+
+
+@pytest.mark.parametrize("value", ["0", "-5"])
+def test_embed_rejects_zero_or_negative_budget(value, make_corpus, monkeypatch, capsys):
+    from hypermnesic import embed
+
+    repo = make_corpus({"a.md": "# A\n\nalpha.\n"})
+
+    def _constructed(**kwargs):
+        raise AssertionError("embedder constructed before budget validation")
+
+    monkeypatch.setattr(embed, "OpenAIEmbedder", _constructed)
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(["embed", str(repo), "--budget", value])
+
+    assert excinfo.value.code == 2
+    err = capsys.readouterr().err
+    assert "--budget" in err
+    assert "positive integer" in err
+
+
+class _SdkError(Exception):
+    """SDK-shaped provider failure: optional status_code + body dict."""
+
+    def __init__(self, status_code=None, body=None):
+        super().__init__("provider failed")
+        if status_code is not None:
+            self.status_code = status_code
+        if body is not None:
+            self.body = body
+
+
+class _RaisingSdkClient:
+    def __init__(self, exc):
+        self._exc = exc
+
+    @property
+    def embeddings(self):
+        return self
+
+    def create(self, **kwargs):
+        raise self._exc
+
+
+@pytest.mark.parametrize("status,reason,code,typ", [
+    (401, "api_error", "invalid_api_key", "invalid_request_error"),
+    (500, "api_error", "server_error", "server_error"),
+    (None, "embedding_error", None, None),          # status-less timeout shape
+])
+def test_embed_sdk_error_fixtures_report_honest_failure(
+        status, reason, code, typ, make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed as embed_mod
+
+    repo = _stale_vault(make_corpus, fake_embedder, n_docs=4, n_stale=2)
+    body = {"error": {"code": code, "type": typ}} if code else None
+    real = embed_mod.OpenAIEmbedder(api_key="unit-test-key", cooldown_seconds=0)
+    real._client = _RaisingSdkClient(_SdkError(status, body))
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: real)
+
+    assert cli.main(["embed", str(repo), "--json"]) == 1
+
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    out = json.loads(captured.out)
+    assert out["status"] == "failed"
+    assert out["reason"] == reason
+    assert out["provider_code"] == code
+    assert out["provider_type"] == typ
+    assert out["account_state"] == "unverified"
+    assert out["stale_left"] == 2
+
+
+def test_embed_internal_error_keeps_committed_counters(
+        make_corpus, fake_embedder, monkeypatch, capsys):
+    from hypermnesic import embed as embed_mod
+
+    repo = _stale_vault(make_corpus, fake_embedder, n_docs=6, n_stale=5)
+
+    class BoomAfterFirst:
+        model = fake_embedder.model
+        dim = fake_embedder.dim
+
+        def __init__(self):
+            self.calls = 0
+
+        def embed(self, texts):
+            self.calls += 1
+            if self.calls > 1:
+                raise RuntimeError("simulated storage fault")
+            return fake_embedder.embed(texts)
+
+    monkeypatch.setattr(embed_mod, "OpenAIEmbedder", lambda **kw: BoomAfterFirst())
+
+    assert cli.main(["embed", str(repo), "--batch", "2", "--json"]) == 1
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "failed"
+    assert out["reason"] == "internal_error"
+    assert out["chunks_embedded"] == 2          # committed subrequest is not zeroed
+    assert out["stale_left"] == 3
+    assert out["account_state"] == "unverified"

@@ -472,8 +472,10 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
     also refresh vectors for changed files). Advances the checkpoint to HEAD.
 
     When ``embedder`` is passed this is a dense-fill entrypoint, so it takes the
-    shared dense-maintenance exclusion first (non-blocking); contention returns a
-    named ``lock_busy`` deferral with zero paid calls and no mutation.
+    shared dense-maintenance exclusion first (non-blocking). Contention still
+    replays the lexical delta (the same progress convergence preserves) with the
+    dense step deferred: the result is a named ``lock_busy`` deferral carrying the
+    replayed count, with zero paid calls.
     """
     head, cp, have_cp, changes = changes_since_checkpoint(idx, repo)
     if head is None:
@@ -481,20 +483,26 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
     if changes is None:
         return {"status": "current", "replayed": 0, "to": head}
     maintenance = None
+    dense_deferred = False
     if embedder is not None:
         maintenance = serialize.dense_maintenance_lock(idx.db_path.parent)
         try:
             maintenance.acquire()
         except serialize.LockBusyError:
-            return {"status": "lock_busy", "replayed": 0,
-                    "reason": "dense_maintenance_busy"}
+            dense_deferred = True
+            maintenance = None
     try:
         lock = serialize.FileLock(idx.db_path.parent / "index.lock").acquire()  # single indexer
         try:
-            return replay_changes(idx, repo, head, cp, changes, embedder=embedder,
-                                  have_cp=have_cp)
+            result = replay_changes(
+                idx, repo, head, cp, changes,
+                embedder=None if dense_deferred else embedder, have_cp=have_cp)
         finally:
             lock.release()
+        if dense_deferred:
+            result = {**result, "status": "lock_busy", "dense_deferred": True,
+                      "reason": "dense_maintenance_busy"}
+        return result
     finally:
         if maintenance is not None:
             maintenance.release()
@@ -753,8 +761,15 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
         if docs:
             _embed_resilient(embedder, [s for _, s in docs], stats,
                              on_success=_commit_docs)
-    except embed_mod.EmbeddingError as exc:
-        exc.progress = _embed_progress(idx, n_chunks, n_docs, stats, exc)
+    except Exception as exc:
+        # Attach real counters for every caught failure, not only EmbeddingError:
+        # a storage/report fault after a committed subrequest must never report 0.
+        try:
+            exc.progress = _embed_progress(
+                idx, n_chunks, n_docs, stats,
+                exc if isinstance(exc, embed_mod.EmbeddingError) else None)
+        except Exception:
+            pass
         raise
 
     stale_left = len(idx.stale_chunk_ids())

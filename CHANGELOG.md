@@ -34,7 +34,10 @@ its own changelog and version.
   `build_index`, CLI `index`/`init`/`reindex`, scheduled/CLI drain, convergence and
   `catch_up` replay) now shares one non-blocking `.hypermnesic/dense-maintenance.lock`;
   contention returns a named deferral with zero paid calls while narrow `commit_note`
-  writes and atomic swap/reopen behavior stay untouched. The redundant pre-lock startup
+  writes and atomic swap/reopen behavior stay untouched. Convergence and `catch_up`
+  replay preserve their lexical delta on contention and expose `dense_deferred`; the MCP
+  `search` payload carries `dense_deferred`/`dense_deferred_reason` so a deferred dense
+  pass is never mistaken for full dense coverage. The redundant pre-lock startup
   smoke was removed, so a zero-work pass makes zero provider calls. The candidate also
   carries the installed main-branch `.worktrees` index exclusion (PR120), re-integrated by
   merge.

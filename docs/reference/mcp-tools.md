@@ -37,13 +37,18 @@ Hybrid retrieval over the read-only index: SQLite FTS5 lexical search fused with
 (semantic) ranking via reciprocal-rank fusion, degrading gracefully to lexical-only when embeddings
 are unavailable.
 
-**Returns** `{ query, degraded_lexical_only, degraded_reason, manual_reindex_recommended,
+**Returns** `{ query, degraded_lexical_only, degraded_reason, dense_deferred,
+dense_deferred_reason, manual_reindex_recommended,
 hits: [ { path, heading, score, channels, snippet, recency } ] }`. `channels` records which
 retrieval lanes matched (lexical/dense); `recency` is the epoch-seconds of the most recent commit
 touching the hit's path (or null if untracked). `degraded_lexical_only` is true when the
 dense channel was unavailable. `degraded_reason` is `null` when dense contributed; otherwise it
 names the provider/config state (`missing_embedder`, `configuration`, `rate_limited`,
-`cooldown`, `api_error`, or `embedding_error`).
+`cooldown`, `api_error`, or `embedding_error`). `dense_deferred` is true when the bounded
+pre-query dense fill was skipped because another bulk dense pass (isolated rebuild or
+scheduled drain) owns the shared maintenance mutex; `dense_deferred_reason` names it
+(`lock_busy`), and lexical/dense query retrieval still serves normally — a deferral is not
+a degradation.
 
 ### `hypermnesic_search(query: str, k: int = 10)`
 

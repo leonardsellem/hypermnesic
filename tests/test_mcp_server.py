@@ -9,7 +9,7 @@ import subprocess
 import pytest
 from starlette.testclient import TestClient
 
-from hypermnesic import config, index, mcp_server
+from hypermnesic import config, index, mcp_server, serialize
 from hypermnesic import embed as embed_mod
 
 TAILNET_IP = "100.64.0.1"   # CGNAT/Tailscale documentation range — not a real node
@@ -971,3 +971,21 @@ def test_long_lived_public_search_recovers_dense_after_cooldown(make_corpus, fak
     assert client.calls == 2                                # no restart / forced reset
     assert any("dense" in h["channels"] for h in third["hits"])
     assert any(h["path"] == "a.md" for h in third["hits"])
+
+
+def test_search_payload_reports_dense_deferral_under_maintenance(make_corpus, fake_embedder):
+    repo = make_corpus({"a.md": "# A\n\nDEFERMARKER alpha homelab.\n"})
+    index.build_index(repo, fake_embedder).close()
+    db = index.state_dir_for(repo) / "index.db"
+    srv = mcp_server.build_server(db, host=TAILNET_IP, embedder=fake_embedder, repo=repo)
+
+    held = serialize.dense_maintenance_lock(index.state_dir_for(repo)).acquire()
+    try:
+        out = _call(srv, "search", {"query": "DEFERMARKER"})
+    finally:
+        held.release()
+
+    assert out["dense_deferred"] is True
+    assert out["dense_deferred_reason"] == "lock_busy"
+    assert out["degraded_lexical_only"] is False     # a deferral is not a degradation
+    assert any(h["path"] == "a.md" for h in out["hits"])

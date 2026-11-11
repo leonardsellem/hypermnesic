@@ -244,18 +244,25 @@ def test_public_dense_entrypoints_defer_under_maintenance(
         finally:
             idx.close()
 
-        idx = ix.Index(state / "index.db")
-        try:
-            catchup = ix.catch_up(idx, repo, embedder=counting)   # local_proof path
-        finally:
-            idx.close()
-        assert catchup["status"] == "lock_busy"
-
         for argv in (["init", str(repo)], ["index", str(repo)], ["reindex", str(repo)]):
             assert cli.main(argv) == 1
             assert "maintenance" in capsys.readouterr().err.lower()
         assert counting.sizes == []                      # former startup probes: zero calls
 
+        idx = ix.Index(state / "index.db")
+        try:
+            catchup = ix.catch_up(idx, repo, embedder=counting)   # local_proof path
+            assert catchup["status"] == "lock_busy"
+            assert catchup["replayed"] == 1              # lexical progress preserved
+            assert "b.md" in idx.all_paths()
+        finally:
+            idx.close()
+        assert counting.sizes == []                      # deferred dense step made no call
+
+        # A second pending delta exercises the local_proof public path directly.
+        (repo / "c.md").write_text("# C\n\ngamma retrieval marker question answered here.\n",
+                                   encoding="utf-8")
+        _commit(repo, "add c")
         result = local_proof.run_local_proof(repo=repo, query="alpha retrieval",
                                              embedder=counting)
         assert result.index_info["catchup_status"] == "lock_busy"

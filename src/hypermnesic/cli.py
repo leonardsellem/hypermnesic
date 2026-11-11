@@ -46,9 +46,9 @@ def _default_client_scopes(args_value) -> list[str] | None:
 
 
 def _maintenance_deferral(verb: str) -> int:
-    """A bulk index command could not start: another dense fill/build owns the mutex."""
-    print(f"hypermnesic {verb}: dense maintenance in progress; retry when it finishes",
-          file=sys.stderr)
+    """A bulk index command could not start: another bulk operation owns a lock."""
+    print(f"hypermnesic {verb}: index writer or dense maintenance busy; "
+          "retry when it finishes", file=sys.stderr)
     return 1
 
 

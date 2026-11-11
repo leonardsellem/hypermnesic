@@ -95,9 +95,12 @@ Bulk dense work is serialized by one non-blocking **dense-maintenance exclusion*
 (`.hypermnesic/dense-maintenance.lock`): the full lifetime of an isolated rebuild, direct
 `build_index`, CLI `index`/`init`/`reindex`, the scheduled/CLI drain, and `catch_up`
 replay all take it; convergence takes it only after its existing non-blocking `index.lock`
-check and reports `dense_deferred` while preserving the lexical catch-up it already did.
-Narrow `commit_note` writes keep using `index.lock` and are deliberately not blocked; the
-live index is still swapped atomically and long-lived readers still reopen.
+check and reports `dense_deferred` while preserving the lexical catch-up it already did
+(`catch_up` replay does the same: lexical delta first, dense step deferred). The MCP
+`search` payload carries `dense_deferred`/`dense_deferred_reason`, so a public caller can
+tell a deferred dense pass from full dense coverage. Narrow `commit_note` writes keep using
+`index.lock` and are deliberately not blocked; the live index is still swapped atomically
+and long-lived readers still reopen.
 
 ### Git-first write path (`commit_note.py`, `serialize.py`, `frontmatter_gate.py`, `audit_log.py`)
 
