@@ -257,6 +257,107 @@ def test_upsert_lexical_invalidates_existing_doc_vector_but_preserves_doc_row(
     idx.close()
 
 
+# --- re-chunk preserves dense vectors of unchanged chunks (LS-4075 G4) ------
+
+def _section(i: int) -> str:
+    return f"## Section {i}\n\n" + ("word " * 500) + f"marker{i}.\n\n"
+
+
+def _multi_chunk_doc(n: int = 4, *, skip: int | None = None) -> str:
+    """``n`` markdown sections, one >MAX_CHARS/2 each → exactly ``n`` chunks."""
+    return "".join(_section(i) for i in range(n) if i != skip)
+
+
+def _chunk_vectors(idx, path: str):
+    """[(ord, heading, text, embedding-bytes-or-None)] for a path, in order."""
+    rows = idx.conn.execute(
+        "SELECT c.ord, c.heading, c.text, v.embedding FROM chunks c "
+        "LEFT JOIN vec_chunks v ON v.chunk_id = c.chunk_id "
+        "WHERE c.path=? ORDER BY c.ord", (path,)).fetchall()
+    return [(o, h, t, bytes(e) if e is not None else None) for o, h, t, e in rows]
+
+
+def test_upsert_lexical_append_keeps_unchanged_chunk_vectors(make_corpus, fake_embedder):
+    # An appended bullet must not drop the doc's dense vectors: every unchanged
+    # chunk keeps its exact stored bytes, only the appended chunk is stale.
+    from hypermnesic import ingest
+
+    doc = _multi_chunk_doc()
+    repo = make_corpus({"big.md": doc})
+    idx = index.build_index(repo, fake_embedder)
+    before = _chunk_vectors(idx, "big.md")
+    assert len(before) == 4 and all(v is not None for *_, v in before)
+
+    idx.upsert_lexical(
+        "big.md", ingest.chunks_for_text("big.md", doc + "## Section 4\n\nappended.\n\n"))
+    after = _chunk_vectors(idx, "big.md")
+
+    assert len(after) == 5
+    prior = {(h, t): v for _, h, t, v in before}
+    for _, heading, text, vec in after[:4]:
+        assert vec == prior[(heading, text)]          # byte-identical
+    assert after[4][3] is None                        # only the appended chunk is stale
+    assert idx.stale_chunk_ids() == [idx.get_chunk(idx.chunks_for_path("big.md")[4])["chunk_id"]]
+    assert idx.paths_missing_doc_vector() == ["big.md"]   # doc surface still invalidated
+    idx.close()
+
+
+def test_upsert_lexical_head_insert_reuses_vectors_across_ord_shift(
+        make_corpus, fake_embedder):
+    from hypermnesic import ingest
+
+    doc = _multi_chunk_doc()
+    repo = make_corpus({"big.md": doc})
+    idx = index.build_index(repo, fake_embedder)
+    before = {h: v for _, h, _t, v in _chunk_vectors(idx, "big.md")}
+
+    idx.upsert_lexical(
+        "big.md", ingest.chunks_for_text("big.md", "## Preamble\n\npreface.\n\n" + doc))
+    after = _chunk_vectors(idx, "big.md")
+
+    assert [o for o, *_ in after] == [0, 1, 2, 3, 4]  # ords shifted
+    assert after[0][3] is None                        # the new head chunk is stale
+    for _, heading, _text, vec in after[1:]:
+        assert vec == before[heading]                 # content match, not ord
+    idx.close()
+
+
+def test_upsert_lexical_delete_drops_removed_vector_only(make_corpus, fake_embedder):
+    from hypermnesic import ingest
+
+    doc = _multi_chunk_doc()
+    repo = make_corpus({"big.md": doc})
+    idx = index.build_index(repo, fake_embedder)
+    before = {h: v for _, h, _t, v in _chunk_vectors(idx, "big.md")}
+
+    idx.upsert_lexical(
+        "big.md", ingest.chunks_for_text("big.md", _multi_chunk_doc(skip=1)))
+    after = _chunk_vectors(idx, "big.md")
+
+    assert len(after) == 3 and all(v is not None for *_, v in after)
+    for _, heading, _text, vec in after:
+        assert vec == before[heading]
+    n_chunks = idx.conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+    n_vecs = idx.conn.execute("SELECT COUNT(*) FROM vec_chunks").fetchone()[0]
+    assert (n_chunks, n_vecs) == (3, 3)               # no orphaned vector
+    idx.close()
+
+
+def test_upsert_lexical_identical_reingest_leaves_zero_stale(make_corpus, fake_embedder):
+    from hypermnesic import ingest
+
+    doc = _multi_chunk_doc()
+    repo = make_corpus({"big.md": doc})
+    idx = index.build_index(repo, fake_embedder)
+    before = _chunk_vectors(idx, "big.md")
+
+    idx.upsert_lexical("big.md", ingest.chunks_for_text("big.md", doc))
+
+    assert idx.stale_chunk_ids() == []
+    assert _chunk_vectors(idx, "big.md") == before
+    idx.close()
+
+
 def test_doc_dense_search_returns_paths(make_corpus, fake_embedder):
     repo = make_corpus({"a.md": NOTE_A, "b.md": NOTE_B})
     idx = index.build_index(repo, fake_embedder)

@@ -80,6 +80,13 @@ its own changelog and version.
   (`degraded_reason: "rate_limited"`) and never raises on the read path.
 
 ### Fixed
+- **Re-chunking a document preserves the dense vectors of its unchanged chunks
+  (LS-4075, 2026-11-13).** `Index.upsert_lexical` now matches old and new chunks by
+  `(heading, text)` and carries the stored float32 vector over to the new row, so an edit
+  only leaves the new/changed chunks stale: appending a few lines to an 877-chunk log no
+  longer drops all 877 vectors and resets a paced dense drain. Removed chunks drop with
+  their vectors; the doc-surface vector is still invalidated so the bounded drain
+  refreshes it. No schema change.
 - **Worktree checkouts no longer enter the read index.** `.worktrees/` holds git
   checkouts of the same vault, so every note there was a stale duplicate: on the
   owner's brain repo they were 46% of indexed documents and outranked the canonical
