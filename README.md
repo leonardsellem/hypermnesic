@@ -267,7 +267,8 @@ and the surfaces built on top:
 - **Read-time convergence** — every read first catches the index up to `HEAD`, invalidates
   doc-surface vectors for changed markdown files, and closes a bounded slice of the dense lag
   for chunks and doc surfaces (at most 32 of each), so recall stays fresh without a manual
-  reindex.
+  reindex. A re-chunked file keeps the vectors of its unchanged chunks, so only new or edited
+  chunks enter the lag.
 - **Bounded dense drain** — `hypermnesic embed --batch 32 --budget 32` processes at most 32
   successful chunk inputs and 32 doc surfaces per pass, commits every successful subrequest
   immediately (the next pass resumes only what is missing), and reports actual counts,

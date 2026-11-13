@@ -95,7 +95,10 @@ Every read first runs `converge()`: it delta-replays the lexical index up to `HE
 invalidates doc-surface vectors for changed markdown paths, closes a bounded slice of
 the dense lag for both chunks and missing/stale doc surfaces (`CONVERGE_EMBED_BUDGET`),
 and signals (never forces) a manual reindex when `HEAD` has jumped far past the
-checkpoint (`CONVERGE_MAX_DELTA_FILES`). A debounce (`CONVERGE_DEBOUNCE_SECONDS`)
+checkpoint (`CONVERGE_MAX_DELTA_FILES`). A re-chunked path keeps the stored vector of
+every chunk whose `(heading, text)` is unchanged, so only new or edited chunks enter the
+dense lag (removed chunks drop with their vectors) — editing a large note no longer
+throws away its embedded chunks. A debounce (`CONVERGE_DEBOUNCE_SECONDS`)
 coalesces bursts. This is the correctness guarantee that lets the index stay a pure
 projection while reads remain fresh — a just-committed or edited note is recall-able on
 the next read with no manual reindex.

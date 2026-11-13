@@ -249,11 +249,23 @@ class Index:
         lexically immediately; dense vectors catch up in a later async embed pass
         (AE5). Removes the path's stale chunk/FTS/vec rows first, and invalidates
         its doc-surface vector so bounded dense fill refreshes changed docs too.
+
+        An unchanged chunk (same heading+text) keeps its stored dense vector, so
+        a small edit only makes the new/changed chunks stale — a full-doc edit
+        must not throw away a doc's embedded chunks (LS-4075 G4: LOG.md re-chunk
+        reset the whole 878-chunk missing-vector count).
         """
         c = self.conn
-        old = [r[0] for r in c.execute(
-            "SELECT chunk_id FROM chunks WHERE path=?", (path,)).fetchall()]
-        for cid in old:
+        old_ids: list[int] = []
+        reusable: dict[tuple[str, str], list[bytes]] = {}
+        for cid, heading, text, emb in c.execute(
+                "SELECT c.chunk_id, c.heading, c.text, v.embedding FROM chunks c "
+                "LEFT JOIN vec_chunks v ON v.chunk_id = c.chunk_id WHERE c.path=?",
+                (path,)).fetchall():
+            old_ids.append(cid)
+            if emb is not None:
+                reusable.setdefault((heading or "", text), []).append(emb)
+        for cid in old_ids:
             c.execute("DELETE FROM chunks WHERE chunk_id=?", (cid,))
             c.execute("DELETE FROM fts_chunks WHERE rowid=?", (cid,))
             c.execute("DELETE FROM vec_chunks WHERE chunk_id=?", (cid,))
@@ -265,6 +277,10 @@ class Index:
                 (ch.path, ch.ord, ch.heading, ch.text))
             cid = cur.lastrowid
             c.execute("INSERT INTO fts_chunks (rowid, text) VALUES (?, ?)", (cid, _fts_text(ch)))
+            reused = reusable.get((ch.heading or "", ch.text))
+            if reused:  # copy the stored float32 blob — byte-identical, no re-embed
+                c.execute("INSERT INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
+                          (cid, reused.pop()))
             new_ids.append(cid)
         c.commit()
         return new_ids
