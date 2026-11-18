@@ -261,10 +261,12 @@ def main(argv: list[str] | None = None) -> int:
     work.mkdir(parents=True, exist_ok=True)
 
     head = _git(source, "rev-parse", "HEAD").stdout.decode().strip()
-    _git(source, "cat-file", "-e", f"{args.base_rev}^{{commit}}")
-    candidate = _git(Path(__file__).resolve().parents[1], "rev-parse", "HEAD",
-                     check=False)
-    candidate_sha = candidate.stdout.decode().strip() or "unknown"
+    # The base rev is a CODE revision: it lives in this checkout, not in the
+    # vault clone whose corpus is being re-indexed.
+    code_repo = Path(__file__).resolve().parents[1]
+    candidate_sha = (_git(code_repo, "rev-parse", "HEAD", check=False)
+                     .stdout.decode().strip() or "unknown")
+    _git(code_repo, "cat-file", "-e", f"{args.base_rev}^{{commit}}")
 
     # 1. Read-only snapshot of the live projection.
     src = sqlite3.connect(f"file:{source_db}?mode=ro", uri=True)
@@ -298,7 +300,7 @@ def main(argv: list[str] | None = None) -> int:
     base_src = work / "base-src"
     base_src.mkdir()
     archive = work / "base.tar"
-    _git(scratch, "archive", "-o", str(archive), args.base_rev)
+    _git(code_repo, "archive", "-o", str(archive), args.base_rev)
     with tarfile.open(archive) as tar:
         tar.extractall(base_src, filter="data")
     (base_src.parent / "base_driver.py").write_text(
