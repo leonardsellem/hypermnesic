@@ -502,9 +502,11 @@ def _cmd_daily_review(args) -> int:
 
 
 def _cmd_converge(args) -> int:
-    """Pre-warm: catch the index up to HEAD + a bounded dense fill (U27). The
-    post-merge hook's entrypoint; also a manual warm. Lazy read-time convergence
-    is the correctness guarantee — this never fails a pull (no index → clean no-op)."""
+    """Pre-warm: catch the index up to HEAD + reconcile + a bounded dense fill (U27).
+    The post-merge hook's entrypoint; also a manual warm. Reconciliation runs at an
+    unchanged HEAD too (a .gitignore/overlay change needs no Markdown diff). Lazy
+    read-time convergence is the correctness guarantee — this never fails a pull
+    (no index → clean no-op)."""
     from hypermnesic import converge as converge_mod
     from hypermnesic import index
 

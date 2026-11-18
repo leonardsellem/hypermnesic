@@ -15,6 +15,26 @@ its own changelog and version.
 ## [Unreleased]
 
 ### Added
+- **Index hygiene: one admission rule, reconciled projection, authority tiers (LS-4167,
+  2026-11-18).** Every index lane (full build, delta replay, replica catch-up, convergence,
+  the authoring overlay, the dense drain and the synchronous write projection) now reads the
+  same eligible path set: tracked stage-0 regular Markdown, not denied by root/nested
+  `.gitignore` rules under Git semantics (a tracked-but-ignored file is excluded too),
+  outside the hard-skip directories, never a symlink/gitlink or below one. Git's own matcher
+  does the ignore evaluation — no new dependency, one batched NUL-delimited call per pass —
+  with a private scratch Git directory for pinned commits and non-Git corpora. Untracked
+  drafts are not indexed (stage for an authoring-host lexical preview, commit for
+  replica/dense recall). Every successful pass reconciles the union of `chunks.path` and
+  `docs.path` against that set, removing `chunks`/`docs`/FTS/`vec_chunks`/`vec_docs` rows in
+  one SQLite transaction — at unchanged `HEAD` too, so a `.gitignore` edit needs no Markdown
+  diff; a failed enumeration or committed read is retryable, never prunes and never publishes
+  a checkpoint. Default retrieval now stably partitions candidates by authority *before*
+  content dedup: `_archive/`, `jude-scratch/`, the named review/snapshot subtrees, root
+  `reports/`/`state/` and any `openwiki/` are secondary, fill positions 4+ only after three
+  primary hits, and never pad a one/two-primary result. RRF weights, `k0`, candidate budget
+  and recency are untouched. Adds the opt-in operator-only G4 gate
+  `scripts/check_index_hygiene.py` (read-only source snapshot, scratch-clone rebuild,
+  census + three-arm five-query replay; paid, owner-granted).
 - **Optional spend envelope on the one embedding provider seam (LS-4075, 2026-11-11).**
   Set `HYPERMNESIC_SPEND_ENVELOPE` to an **existing** state file and every physical
   embeddings request — CLI, `serve`, the cloud lane, convergence-driven reads, the

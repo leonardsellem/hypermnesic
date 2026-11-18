@@ -264,6 +264,17 @@ and the surfaces built on top:
 - **Hybrid retrieval** — SQLite **FTS5** (lexical) fused with **sqlite-vec** KNN (dense;
   OpenAI `text-embedding-3-large` at **1536 dims**) via RRF, degrading gracefully to
   lexical-only when embeddings are down.
+- **One admission rule, reconciled** — every index lane reads the same eligible set: tracked,
+  stage-0 regular Markdown, not denied by root/nested `.gitignore` rules under Git semantics,
+  outside the hard-skip directories; a non-Git corpus keeps ordinary discovery. Each successful
+  pass reconciles the projection against that set (at unchanged `HEAD` too), so an ignored,
+  vanished or non-regular path loses its chunk/doc/FTS/dense rows atomically, and a re-admitted
+  file reappears without a Markdown diff. Untracked drafts stay on disk; stage one for an
+  authoring-host lexical preview, commit for replica/dense recall.
+- **Authority tier, not new scoring** — archive (`_archive/`), review scratch and generated
+  output (root `reports/`/`state/`, any `openwiki/`) are secondary: they follow primary hits and
+  never pad a one/two-primary result. The RRF weights, `k0`, candidate budget and recency
+  behaviour are unchanged.
 - **Read-time convergence** — every read first catches the index up to `HEAD`, invalidates
   doc-surface vectors for changed markdown files, and closes a bounded slice of the dense lag
   for chunks and doc surfaces (at most 32 of each), so recall stays fresh without a manual
