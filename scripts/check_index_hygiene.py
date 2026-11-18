@@ -225,6 +225,16 @@ def _orphans(conn: sqlite3.Connection) -> dict[str, int]:
     }
 
 
+def _anchors(hits: list[dict], admitted: set[str]) -> bool:
+    """A live-before #1 anchors the replay only when it is an admitted primary.
+
+    A non-knowledge or excluded #1 (``.brv/``, ``.worktrees/``) is exactly what the
+    admission rule drops, so it cannot anchor a position nobody should keep.
+    """
+    return (bool(hits) and hits[0]["path"] in admitted
+            and _census_class(hits[0]["path"]) == "primary")
+
+
 def _hard_paths(counts: dict[str, int]) -> int:
     return sum(n for path, n in counts.items()
                if ".brv" in path.split("/")[:-1] or ".worktrees" in path.split("/")[:-1])
@@ -410,9 +420,9 @@ def main(argv: list[str] | None = None) -> int:
         if not any(hit["path"] in targets for hit in top3):
             errors.append(f"{query!r}: canonical page absent from top three")
         base_before = arms["base-before"]
-        if base_before and retrieve.is_primary(base_before[0]["path"]):
+        if _anchors(base_before, admitted):
             winner = base_before[0]["path"]
-            if winner in admitted and arms["candidate-after"][0]["path"] != winner:
+            if arms["candidate-after"][0]["path"] != winner:
                 errors.append(f"{query!r}: primary #1 {winner} lost its position")
             base_after = arms["base-after"]
             if base_after and base_after[0]["path"] != winner:

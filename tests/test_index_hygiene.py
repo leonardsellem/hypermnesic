@@ -583,3 +583,7 @@ def test_g4_driver_reads_the_vec_tables(make_corpus, fake_embedder):
             assert conn.execute("SELECT COUNT(*) FROM vec_chunks").fetchone()[0] >= 1
         finally:
             conn.close()
+    # a non-knowledge #1 (.brv) or one admission drops cannot anchor a position
+    assert not driver._anchors([{"path": ".brv/context-tree/x.md"}], {".brv/context-tree/x.md"})
+    assert not driver._anchors([{"path": "notes/a.md"}], set())
+    assert driver._anchors([{"path": "notes/a.md"}], {"notes/a.md"})
