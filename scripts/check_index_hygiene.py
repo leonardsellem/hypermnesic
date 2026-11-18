@@ -26,6 +26,8 @@ import sys
 import tarfile
 from pathlib import Path
 
+import sqlite_vec
+
 from hypermnesic import config, embed, ingest, retrieve
 from hypermnesic import index as index_mod
 
@@ -103,6 +105,16 @@ def _run(args: list[str], *, check: bool = True, input: bytes | None = None):
 def _git(repo: Path, *args: str, check: bool = True, input: bytes | None = None):
     return _run(["git", "-C", str(repo), "-c", "core.quotepath=false", *args],
                 check=check, input=input)
+
+
+def _connect(path, *, ro: bool = False) -> sqlite3.Connection:
+    """Open a projection with sqlite-vec loaded — the census reads the vec tables."""
+    conn = (sqlite3.connect(f"file:{path}?mode=ro", uri=True) if ro
+            else sqlite3.connect(path))
+    conn.enable_load_extension(True)
+    sqlite_vec.load(conn)
+    conn.enable_load_extension(False)
+    return conn
 
 
 def _table_counts(conn: sqlite3.Connection, table: str) -> dict[str, int]:
@@ -269,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
     _git(code_repo, "cat-file", "-e", f"{args.base_rev}^{{commit}}")
 
     # 1. Read-only snapshot of the live projection.
-    src = sqlite3.connect(f"file:{source_db}?mode=ro", uri=True)
+    src = _connect(source_db, ro=True)
     before_db = work / "before.db"
     dst = sqlite3.connect(before_db)
     try:
@@ -277,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         dst.close()
         src.close()
-    before = sqlite3.connect(before_db)
+    before = _connect(before_db)
     row = before.execute("SELECT value FROM meta WHERE key='checkpoint_sha'").fetchone()
     checkpoint = row[0] if row else None
     if not checkpoint or checkpoint != head:
@@ -318,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
     before_paths = {r[0] for r in before.execute(
         "SELECT path FROM chunks UNION SELECT path FROM docs").fetchall()}
     reason = _reasoner(scratch, checkpoint, sorted(before_paths | admitted))
-    after = sqlite3.connect(state / "index.db")
+    after = _connect(state / "index.db")
     errors: list[str] = []
     census = {"source_sha": head, "candidate_sha": candidate_sha,
               "base_rev": args.base_rev, "checkpoint_sha": checkpoint,
