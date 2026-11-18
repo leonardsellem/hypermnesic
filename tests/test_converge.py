@@ -232,11 +232,17 @@ def test_authoring_host_overlay_indexes_uncommitted_without_advancing_checkpoint
     idx = ix.build_index(repo, fake_embedder)
     cp = idx.get_checkpoint()
     (repo / "draft.md").write_text("# Draft\n\nOVERLAYMARKER in progress.\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "draft.md"], check=True,
+                   capture_output=True)                  # stage the draft for preview
+    (repo / "loose.md").write_text("# Loose\n\nLOOSEMARKER untracked.\n", encoding="utf-8")
     res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0, authoring_host=True)
     assert res.status == "converged"
     assert "draft.md" in res.overlay_paths
+    assert "loose.md" not in res.overlay_paths            # untracked is not admitted
     assert any(idx.get_chunk(c)["path"] == "draft.md"
                for c, _ in idx.lexical_search("OVERLAYMARKER", k=10))
+    assert not any(idx.get_chunk(c)["path"] == "loose.md"
+                   for c, _ in idx.lexical_search("LOOSEMARKER", k=10))
     assert res.chunks_embedded == 0 and res.docs_embedded == 0  # overlay is lexical-only
     assert idx.chunks_for_path("draft.md")
     assert set(idx.chunks_for_path("draft.md")).issubset(set(idx.stale_chunk_ids()))

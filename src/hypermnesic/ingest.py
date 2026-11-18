@@ -8,10 +8,14 @@ chunks while tracking the nearest preceding heading. Deterministic order
 
 from __future__ import annotations
 
+import os
 import re
-from collections.abc import Iterator
+import stat
+import subprocess
+import tempfile
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n.*?\n---\s*\n", re.DOTALL)
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)$")
@@ -66,11 +70,354 @@ def strip_frontmatter(raw: str) -> str:
     return _FRONTMATTER_RE.sub("", raw, count=1)
 
 
-def _iter_markdown_files(repo: Path) -> Iterator[Path]:
-    for p in sorted(repo.rglob("*.md")):
-        if any(part in _SKIP_DIRS for part in p.relative_to(repo).parts):
+class AdmissionError(RuntimeError):
+    """The eligible-path set could not be computed.
+
+    Retryable: callers must not prune index rows or advance a checkpoint from a
+    failed or unstable enumeration (R2 — a failed read is not proof of absence).
+    """
+
+
+def is_markdown(path: str) -> bool:
+    """Syntactic Markdown predicate: ``.md``, path-safe, outside a hard skip."""
+    return (path.endswith(".md") and _safe_rel(path)
+            and not any(part in _SKIP_DIRS for part in path.split("/")[:-1]))
+
+
+def _safe_rel(path: str) -> bool:
+    if not path or path.startswith("/"):
+        return False
+    return all(part not in ("", ".", "..") for part in path.split("/"))
+
+
+def _run(args: list[str], *, input: bytes | None = None) -> subprocess.CompletedProcess:
+    try:
+        return subprocess.run(args, input=input, capture_output=True)
+    except OSError as exc:                     # git missing/unrunnable
+        raise AdmissionError(f"cannot run {args[0]}: {exc}") from exc
+
+
+def _git_bytes(repo: Path, *args: str, input: bytes | None = None) -> subprocess.CompletedProcess:
+    # core.quotepath=false: emit non-ASCII paths raw so they survive decoding.
+    return _run(["git", "-C", str(repo), "-c", "core.quotepath=false", *args], input=input)
+
+
+def _git_root(repo: Path) -> Path | None:
+    """``repo``'s own toplevel, or None when it is not a Git work tree root."""
+    try:
+        out = _run(["git", "-C", str(repo), "rev-parse", "--show-toplevel"])
+    except AdmissionError:
+        return None
+    if out.returncode != 0:
+        return None
+    try:
+        root = Path(os.fsdecode(out.stdout.strip())).resolve()
+        return root if root == Path(repo).resolve() else None
+    except OSError:
+        return None
+
+
+def _stage_records(out: bytes) -> Iterator[tuple[bytes, bytes, str]]:
+    """Parse ``ls-files --stage -z`` into (mode, stage, path)."""
+    for rec in out.split(b"\0"):
+        if not rec:
             continue
-        yield p
+        meta, sep, raw = rec.partition(b"\t")
+        fields = meta.split(b" ")
+        if sep and len(fields) == 3:
+            yield fields[0], fields[2], os.fsdecode(raw)
+
+
+def _tracked_regular(repo: Path) -> set[str]:
+    """Stage-0 regular tracked entries (symlinks and gitlinks are not files)."""
+    proc = _git_bytes(repo, "ls-files", "--stage", "-z")
+    if proc.returncode != 0:
+        raise AdmissionError(f"git ls-files failed: {proc.stderr.decode(errors='replace')}")
+    return {path for mode, stage, path in _stage_records(proc.stdout)
+            if mode in (b"100644", b"100755") and stage == b"0"}
+
+
+def _ignored_tracked(repo: Path) -> set[str]:
+    """Tracked paths denied by root/nested ``.gitignore`` rules (Git semantics).
+
+    ``--exclude-per-directory`` alone reads only per-directory ``.gitignore``
+    files: user/global excludes and ``.git/info/exclude`` stay out of admission.
+    """
+    proc = _git_bytes(repo, "ls-files", "--cached", "--ignored",
+                      "--exclude-per-directory=.gitignore", "-z")
+    if proc.returncode != 0:
+        detail = proc.stderr.decode(errors="replace")
+        raise AdmissionError(f"git ls-files --ignored failed: {detail}")
+    return {p for p in (os.fsdecode(rec) for rec in proc.stdout.split(b"\0")) if p}
+
+
+def _skip_worktree(repo: Path) -> set[str]:
+    """Tracked paths with Git's skip-worktree flag (sparse omissions, not deletions)."""
+    proc = _git_bytes(repo, "ls-files", "-v", "-z")
+    if proc.returncode != 0:
+        return set()
+    out = set()
+    for rec in proc.stdout.split(b"\0"):
+        if len(rec) > 2 and rec[1:2] == b" " and rec[:1].upper() == b"S":
+            out.add(os.fsdecode(rec[2:]))
+    return out
+
+
+def _read_ignore_file(fp: Path) -> str:
+    """Read an applicable ``.gitignore``; a read failure refuses the pass."""
+    try:
+        return fp.read_text(encoding="utf-8", errors="surrogateescape")
+    except OSError as exc:
+        raise AdmissionError(f"cannot read {fp}: {exc}") from exc
+
+
+def _walk_error(exc: OSError) -> None:
+    raise AdmissionError(f"cannot scan corpus: {exc}")
+
+
+def _ignore_files(repo: Path) -> dict[str, str]:
+    """Every applicable on-disk ``.gitignore`` of a standalone corpus.
+
+    Walks the corpus (there is no Git tree to ask); worktree admission uses
+    :func:`_worktree_ignore_files` so ignored directories are never scanned.
+    """
+    files: dict[str, str] = {}
+    for dirpath, dirnames, _filenames in os.walk(repo, onerror=_walk_error):
+        dirnames[:] = sorted(d for d in dirnames if d not in _SKIP_DIRS)
+        fp = Path(dirpath) / ".gitignore"
+        try:
+            st = os.lstat(fp)
+        except FileNotFoundError:
+            continue
+        except OSError as exc:
+            raise AdmissionError(f"cannot stat {fp}: {exc}") from exc
+        if stat.S_ISLNK(st.st_mode) or not stat.S_ISREG(st.st_mode):
+            continue                          # Git never follows a .gitignore symlink
+        files[fp.relative_to(repo).as_posix()] = _read_ignore_file(fp)
+    return files
+
+
+def _worktree_ignore_files(repo: Path) -> dict[str, str]:
+    """Applicable ``.gitignore`` files of a Git worktree, listed by Git itself.
+
+    Asking Git avoids reading ignored worktree contents; a file Git would not
+    traverse (e.g. ``.gitignore`` inside an ignored directory) is not applicable.
+    """
+    proc = _git_bytes(repo, "ls-files", "--cached", "--others",
+                      "--exclude-per-directory=.gitignore", "-z")
+    if proc.returncode != 0:
+        detail = proc.stderr.decode(errors="replace")
+        raise AdmissionError(f"git ls-files failed: {detail}")
+    names = {os.fsdecode(rec) for rec in proc.stdout.split(b"\0")
+             if rec and PurePosixPath(os.fsdecode(rec)).name == ".gitignore"}
+    files: dict[str, str] = {}
+    for rel in sorted(names):
+        if not _safe_rel(rel):
+            raise AdmissionError(f"unsafe ignore path: {rel!r}")
+        fp = repo / rel
+        try:
+            st = os.lstat(fp)
+        except FileNotFoundError:
+            continue                          # staged-deleted ignore file
+        except OSError as exc:
+            raise AdmissionError(f"cannot stat {fp}: {exc}") from exc
+        if stat.S_ISLNK(st.st_mode) or not stat.S_ISREG(st.st_mode):
+            continue
+        files[rel] = _read_ignore_file(fp)
+    return files
+
+
+def _check_ignore(ignore_files: dict[str, str], candidates: Iterable[str]) -> set[str]:
+    """The subset of ``candidates`` denied by Git's matcher, in a private scratch repo.
+
+    Materialising only the ignore files (never corpus content) keeps a pinned
+    commit's projection independent of the dirty worktree or user excludes.
+    Exit 1 with no output is "no matches", not a matcher failure.
+    """
+    cands = sorted(c for c in set(candidates) if _safe_rel(c))
+    if not cands:
+        return set()
+    try:
+        with tempfile.TemporaryDirectory(prefix="hypermnesic-ignore-") as td:
+            scratch = Path(td)
+            init = _run(["git", "init", "-q", str(scratch)])
+            if init.returncode != 0:
+                raise AdmissionError(f"git init failed: {init.stderr.decode(errors='replace')}")
+            for rel, text in ignore_files.items():
+                if not _safe_rel(rel):
+                    raise AdmissionError(f"unsafe ignore path: {rel!r}")
+                fp = scratch / rel
+                fp.parent.mkdir(parents=True, exist_ok=True)
+                fp.write_text(text, encoding="utf-8", errors="surrogateescape")
+            proc = _run(["git", "-C", str(scratch), "-c", "core.excludesFile=/dev/null",
+                         "check-ignore", "--no-index", "--stdin", "-z"],
+                        input=b"\0".join(os.fsencode(c) for c in cands) + b"\0")
+    except OSError as exc:
+        raise AdmissionError(f"ignore matcher failed: {exc}") from exc
+    if proc.returncode not in (0, 1):
+        raise AdmissionError(
+            f"git check-ignore failed: {proc.stderr.decode(errors='replace')}")
+    return {os.fsdecode(rec) for rec in proc.stdout.split(b"\0") if rec}
+
+
+def _pinned_tree(repo: Path, sha: str) -> tuple[set[str], dict[str, str]]:
+    """(regular blobs, ``.gitignore`` blobs) at a pinned commit."""
+    proc = _git_bytes(repo, "ls-tree", "-r", "-z", sha)
+    if proc.returncode != 0:
+        raise AdmissionError(f"git ls-tree {sha} failed: {proc.stderr.decode(errors='replace')}")
+    regular: set[str] = set()
+    blobs: list[tuple[str, str]] = []
+    for rec in proc.stdout.split(b"\0"):
+        if not rec:
+            continue
+        meta, sep, raw = rec.partition(b"\t")
+        fields = meta.split(b" ")
+        if not sep or len(fields) != 3 or fields[1] != b"blob":
+            continue
+        mode, _typ, oid = fields
+        if mode not in (b"100644", b"100755"):
+            continue
+        path = os.fsdecode(raw)
+        regular.add(path)
+        if PurePosixPath(path).name == ".gitignore":
+            blobs.append((path, oid.decode()))
+    if not blobs:
+        return regular, {}
+    # One batched object read, never one `git show` per ignore file.
+    proc = _git_bytes(repo, "cat-file", "--batch",
+                      input=b"\n".join(oid.encode() for _, oid in blobs) + b"\n")
+    if proc.returncode != 0:
+        raise AdmissionError(f"git cat-file failed: {proc.stderr.decode(errors='replace')}")
+    data, pos, files = proc.stdout, 0, {}
+    try:
+        for path, _oid in blobs:
+            end = data.index(b"\n", pos)
+            header = data[pos:end].split(b" ")
+            if len(header) != 3 or header[1] != b"blob":
+                raise AdmissionError(f"cannot read {path} at {sha}")
+            size = int(header[2])
+            files[path] = data[end + 1:end + 1 + size].decode("utf-8", "surrogateescape")
+            pos = end + 1 + size + 1
+    except (ValueError, IndexError) as exc:
+        raise AdmissionError(f"malformed cat-file output at {sha}") from exc
+    return regular, files
+
+
+def admitted_paths_at(repo: Path, sha: str | None) -> set[str]:
+    """Eligible Markdown at a pinned commit (replica membership: the Git tree)."""
+    if not sha:
+        return admitted_paths(repo)
+    regular, ignore_files = _pinned_tree(Path(repo), sha)
+    md = {p for p in regular if is_markdown(p)}
+    return md - _check_ignore(ignore_files, md)
+
+
+def admitted_paths(repo: Path) -> set[str]:
+    """Eligible Markdown for a worktree (Git admission) or a standalone corpus."""
+    repo = Path(repo)
+    if _git_root(repo) is None:
+        return _standalone_admitted(repo)
+    _worktree_ignore_files(repo)                # validate every applicable ignore file
+    md = {p for p in _tracked_regular(repo) if is_markdown(p)}
+    return md - _ignored_tracked(repo)
+
+
+def _standalone_admitted(repo: Path) -> set[str]:
+    """Ordinary Markdown discovery + any ``.gitignore`` + hard skips (no tracking)."""
+    ignore_files = _ignore_files(repo)
+    candidates = []
+    for dirpath, dirnames, filenames in os.walk(repo, onerror=_walk_error):
+        dirnames[:] = sorted(d for d in dirnames if d not in _SKIP_DIRS)
+        for name in sorted(filenames):
+            if name.endswith(".md"):
+                rel = (Path(dirpath) / name).relative_to(repo).as_posix()
+                if _safe_rel(rel):
+                    candidates.append(rel)
+    ignored = _check_ignore(ignore_files, candidates)
+    cache: dict[Path, os.stat_result] = {}
+    return {p for p in candidates
+            if p not in ignored and _disk_state(repo, p, cache) == "file"}
+
+
+def _disk_state(repo: Path, rel: str, cache: dict[Path, os.stat_result]) -> str:
+    """``file`` / ``missing`` / ``nonregular`` / ``symlink`` for a repo-relative path.
+
+    Missing is a classification (the path is absent); any other I/O error is
+    retried as :class:`AdmissionError` so it can never be read as a deletion.
+    """
+    parent = repo
+    for part in rel.split("/")[:-1]:
+        parent = parent / part
+        st = cache.get(parent)
+        if st is None:
+            try:
+                st = os.lstat(parent)
+            except (FileNotFoundError, NotADirectoryError):
+                return "missing"
+            except OSError as exc:
+                raise AdmissionError(f"cannot stat {parent}: {exc}") from exc
+            cache[parent] = st
+        if stat.S_ISLNK(st.st_mode):
+            return "symlink"
+        if not stat.S_ISDIR(st.st_mode):
+            return "missing"
+    try:
+        st = os.lstat(repo / rel)
+    except (FileNotFoundError, NotADirectoryError):
+        return "missing"
+    except OSError as exc:
+        raise AdmissionError(f"cannot stat {rel}: {exc}") from exc
+    if stat.S_ISLNK(st.st_mode):
+        return "symlink"
+    return "file" if stat.S_ISREG(st.st_mode) else "nonregular"
+
+
+def readable_paths(repo: Path, admitted: Iterable[str] | None = None) -> set[str]:
+    """The admitted paths that are regular files on disk (never below a symlink)."""
+    repo = Path(repo)
+    paths = admitted_paths(repo) if admitted is None else set(admitted)
+    cache: dict[Path, os.stat_result] = {}
+    return {p for p in paths if _disk_state(repo, p, cache) == "file"}
+
+
+def enumerate_markdown(repo: Path) -> set[str]:
+    """One pass's eligible, readable Markdown set — shared by every writer lane."""
+    return readable_paths(repo)
+
+
+def missing_but_protected(repo: Path) -> set[str]:
+    """Tracked paths Git marks skip-worktree: absent by design, not deletions."""
+    repo = Path(repo)
+    if _git_root(repo) is None:
+        return set()
+    return _skip_worktree(repo) - _ignored_tracked(repo)
+
+
+def dirty_paths(repo: Path) -> set[str]:
+    """Every path with a pending worktree/index change (overlay text is not committed)."""
+    repo = Path(repo)
+    if _git_root(repo) is None:
+        return set()
+    proc = _git_bytes(repo, "status", "--porcelain", "--no-renames", "-z")
+    if proc.returncode != 0:
+        raise AdmissionError(f"git status failed: {proc.stderr.decode(errors='replace')}")
+    return {os.fsdecode(rec[3:]) for rec in proc.stdout.split(b"\0")
+            if len(rec) > 3 and rec[2:3] == b" "}
+
+
+def is_admitted(repo: Path, rel: str) -> bool:
+    """One path against the worktree admission rule; conservative on failure."""
+    try:
+        return rel in admitted_paths(Path(repo))
+    except AdmissionError:
+        return False
+
+
+def _iter_markdown_files(repo: Path, paths: Iterable[str] | None = None) -> Iterator[Path]:
+    repo = Path(repo)
+    rels = sorted(readable_paths(repo) if paths is None else paths)
+    for rel in rels:
+        yield repo / rel
 
 
 def _chunk_body(body: str) -> Iterator[tuple[str, str]]:
@@ -169,10 +516,13 @@ def doc_surface(raw: str, path: str = "") -> str:
     return surface.strip()[:MAX_CHARS]
 
 
-def iter_chunks(repo: Path) -> Iterator[Chunk]:
+def iter_chunks(repo: Path, paths: Iterable[str] | None = None) -> Iterator[Chunk]:
     repo = Path(repo)
-    for fp in _iter_markdown_files(repo):
-        raw = fp.read_text(encoding="utf-8", errors="replace")
+    for fp in _iter_markdown_files(repo, paths):
+        try:
+            raw = fp.read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:                # vanished/unreadable mid-pass: retry, never prune
+            raise AdmissionError(f"cannot read {fp}: {exc}") from exc
         body = strip_frontmatter(raw)
         rel = fp.relative_to(repo).as_posix()
         for i, (heading, text) in enumerate(_chunk_body(body)):
@@ -187,11 +537,14 @@ def chunks_for_text(path: str, raw: str) -> list[Chunk]:
             for i, (h, t) in enumerate(_chunk_body(body))]
 
 
-def iter_doc_surfaces(repo: Path) -> Iterator[tuple[str, str]]:
-    """Yield (repo-relative path, doc surface) for every markdown file."""
+def iter_doc_surfaces(repo: Path, paths: Iterable[str] | None = None) -> Iterator[tuple[str, str]]:
+    """Yield (repo-relative path, doc surface) for every eligible markdown file."""
     repo = Path(repo)
-    for fp in _iter_markdown_files(repo):
-        raw = fp.read_text(encoding="utf-8", errors="replace")
+    for fp in _iter_markdown_files(repo, paths):
+        try:
+            raw = fp.read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            raise AdmissionError(f"cannot read {fp}: {exc}") from exc
         rel = fp.relative_to(repo).as_posix()
         surface = doc_surface(raw, rel)
         if surface:

@@ -144,13 +144,16 @@ def _index_failure_reason(exc: Exception) -> str:
     return f"index_error: {type(exc).__name__}: {exc}"
 
 
-def _upsert_index_best_effort(idx, rel: str, text: str) -> str | None:
+def _upsert_index_best_effort(idx, repo, rel: str, text: str) -> str | None:
     """Project a committed note into the index. Returns a reason on failure.
 
     Called only once the git write has landed, where raising would misreport a
-    real commit as a failure.
+    real commit as a failure. A path the admission rule excludes (ignored,
+    hard-skip, non-regular) is simply not projected: the commit still stands.
     """
     if idx is None:
+        return None
+    if not ingest.is_admitted(Path(repo), rel):
         return None
     try:
         idx.upsert_lexical(rel, ingest.chunks_for_text(rel, text))
@@ -235,7 +238,7 @@ def _commit_locked(repo, rel, body, set_fields, summary, idx, log) -> CommitResu
     # an index failure is a degraded success, never an error: raising here would
     # tell the caller nothing was written and make an agent write it again
     # somewhere else. The index is disposable and a reindex restores it.
-    degraded_reason = _upsert_index_best_effort(idx, rel, new_text)
+    degraded_reason = _upsert_index_best_effort(idx, repo, rel, new_text)
 
     # append audit log — summaries only, server-set actor (U11). Only after the write
     # has reached the shared remote (or is purely local) — never on a refused push.
@@ -320,12 +323,13 @@ def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log,
     # degraded success. Raising would lose the rename's SHA and skip its audit.
     degraded_reason = None
     if idx is not None:
-        try:
-            idx.rekey_path(old_rel, new_rel)             # follow the moved blob
-        except Exception as exc:                         # noqa: BLE001
-            degraded_reason = _index_failure_reason(exc)
+        if ingest.is_admitted(Path(repo), new_rel):     # a moved-into-ignored page is not indexed
+            try:
+                idx.rekey_path(old_rel, new_rel)         # follow the moved blob
+            except Exception as exc:                     # noqa: BLE001
+                degraded_reason = _index_failure_reason(exc)
         if degraded_reason is None and new_text != original:
-            degraded_reason = _upsert_index_best_effort(idx, new_rel, new_text)
+            degraded_reason = _upsert_index_best_effort(idx, repo, new_rel, new_text)
     if log is not None:
         log.append(verb="rename", path=new_rel, old_sha=old_sha, new_sha=new_sha,
                    summary=summary or f"{old_rel} -> {new_rel}")

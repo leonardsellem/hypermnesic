@@ -23,6 +23,40 @@ from hypermnesic import embed as embed_mod
 
 _RRF_K0 = 60
 
+# R3: the measured review/snapshot subtrees (component boundaries, never a
+# substring or blanket `artifacts/` match).
+_REVIEW_SUBTREES = (
+    "projects/homelab/artifacts/2026-10-06-native-goal-profile-candidate",
+    "projects/homelab/artifacts/2026-10-09-replay-source-grooms",
+    "projects/homelab/artifacts/ls2860-contract-candidate",
+    "projects/homelab/services/hermes-agent-config-snapshot/identity/profiles",
+)
+
+
+def path_authority(path: str) -> str:
+    """R3 authority class of a repo-relative path, first match wins.
+
+    ``non_knowledge`` paths are excluded at admission and never reach retrieval;
+    this classifier only tells a retained path's secondary class from ``primary``.
+    """
+    dirs = path.split("/")[:-1]
+    if "_archive" in dirs:
+        return "archive"
+    if "jude-scratch" in dirs:
+        return "review"
+    if any(path.startswith(root + "/") for root in _REVIEW_SUBTREES):
+        return "review"
+    if dirs and dirs[0] in ("reports", "state"):
+        return "reports_state"
+    if "openwiki" in dirs:
+        return "openwiki"
+    return "primary"
+
+
+def is_primary(path: str) -> bool:
+    """True when ``path`` is authoritative knowledge (not an archive/review/generated copy)."""
+    return path_authority(path) == "primary"
+
 
 @dataclass
 class Hit:
@@ -181,8 +215,7 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
                 channels.setdefault(cids[0], set()).add("doc")
 
     ranked = sorted(fused.items(), key=lambda kv: kv[1], reverse=True)
-    hits: list[Hit] = []
-    seen_text: set[str] = set()
+    resolved: list[tuple[int, float, dict]] = []
     for cid, score in ranked[:candidate_k]:
         try:
             ch = idx.get_chunk(cid)
@@ -193,21 +226,39 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
             continue
         if exclude_path is not None and ch["path"] == exclude_path:
             continue                       # self-exclusion (U42); never its own match
-        if collapse_duplicates:
-            th = hashlib.sha256(ch["text"].encode("utf-8")).hexdigest()
-            if th in seen_text:
+        resolved.append((cid, score, ch))
+
+    # R3: stably partition by authority BEFORE content dedup, so an identical
+    # secondary copy can never consume the primary copy's slot.
+    tiers: dict[bool, list[Hit]] = {True: [], False: []}
+    seen_text: set[str] = set()
+    for want_primary in (True, False):
+        for cid, score, ch in resolved:
+            if is_primary(ch["path"]) is not want_primary:
                 continue
-            seen_text.add(th)
-        hits.append(Hit(chunk_id=cid, path=ch["path"], heading=ch["heading"],
-                        text=ch["text"], score=score, channels=channels[cid],
-                        recency=recency_fn(ch["path"]) if recency_fn is not None else None))
+            if collapse_duplicates:
+                th = hashlib.sha256(ch["text"].encode("utf-8")).hexdigest()
+                if th in seen_text:
+                    continue
+                seen_text.add(th)
+            tiers[want_primary].append(Hit(
+                chunk_id=cid, path=ch["path"], heading=ch["heading"],
+                text=ch["text"], score=score, channels=channels[cid],
+                recency=recency_fn(ch["path"]) if recency_fn is not None else None))
+    primary, secondary = tiers[True], tiers[False]
 
     if rerank is not None:
-        head = rerank(query, hits[:k])
-        # rerank reorders only the top-k window; membership at k is preserved
-        seen = {h.chunk_id for h in head}
-        tail = [h for h in hits if h.chunk_id not in seen]
-        hits = head + tail
+        # Rerank only WITHIN each tier's existing window: a secondary hit can
+        # never move above a primary one (membership within a tier is preserved).
+        primary = _rerank_window(rerank, query, primary, k)
+        secondary = _rerank_window(rerank, query, secondary, k)
+
+    if len(primary) >= 3:
+        hits = primary + secondary          # secondary fills positions 4+
+    elif primary:
+        hits = primary                      # one/two primary: never padded with secondary
+    else:
+        hits = secondary                    # no primary: the secondary results answer
 
     if not dense_used and degraded_reason is None:
         degraded_reason = "embedding_error"
@@ -217,3 +268,11 @@ def search(idx, query: str, embedder=None, *, k: int = 10, candidate_k: int = 50
         lexical_used=lexical_used,
         degraded_reason=degraded_reason,
     )
+
+
+def _rerank_window(rerank: Callable[[str, list[Hit]], list[Hit]], query: str,
+                   hits: list[Hit], k: int) -> list[Hit]:
+    """Apply the optional reranker to one tier's top-k window, preserving membership."""
+    head = rerank(query, hits[:k])
+    seen = {h.chunk_id for h in head}
+    return head + [h for h in hits if h.chunk_id not in seen]

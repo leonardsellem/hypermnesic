@@ -29,7 +29,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from hypermnesic import config, serialize
+from hypermnesic import config, ingest, serialize
 from hypermnesic import embed as embed_mod
 from hypermnesic import index as index_mod
 
@@ -41,7 +41,9 @@ class ConvergeResult:
     """Outcome of one convergence pass. ``status`` is the discriminator:
     ``converged`` (did a pass — possibly a no-op when already current),
     ``debounced`` (skipped, recent), ``lock_busy`` (skipped, another holder),
-    ``oversized_delta`` (skipped replay, manual reindex recommended)."""
+    ``oversized_delta`` (skipped replay, manual reindex recommended),
+    ``enumeration_failed`` (admission scan failed — retryable, nothing pruned),
+    ``replay_incomplete`` (a committed read failed — retryable, nothing pruned)."""
 
     status: str
     replayed: int = 0
@@ -131,33 +133,66 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
 
     try:
         overlay_paths: list[str] = []
+        try:
+            head, cp, have_cp, changes = index_mod.changes_since_checkpoint(idx, repo)
+        except ingest.AdmissionError:
+            # Retryable: never prune or advance on a failed enumeration (R2).
+            return ConvergeResult(status="enumeration_failed", degraded=True,
+                                  degraded_reason="enumeration_failed",
+                                  effective_batch=batch, rate_limit_retries=0)
+        # The authoring overlay's admission is resolved before any mutation, so an
+        # enumeration_failed here really means nothing was pruned (cli.md).
+        overlay_admitted: set[str] = set()
         if authoring_host:
-            # FR-R29: re-apply uncommitted/untracked markdown (lexical only). Never
-            # advances the checkpoint — a replica indexing the same SHA never sees these.
             try:
-                overlay_paths = index_mod.apply_working_tree_overlay(idx, repo)
-            except Exception:
-                overlay_paths = []                # no git / transient — overlay is best-effort
-
-        head, cp, have_cp, changes = index_mod.changes_since_checkpoint(idx, repo)
+                overlay_admitted, overlay_paths = index_mod.overlay_admission(repo)
+            except ingest.AdmissionError:
+                return ConvergeResult(status="enumeration_failed", degraded=True,
+                                      degraded_reason="enumeration_failed",
+                                      effective_batch=batch, rate_limit_retries=0,
+                                      head=head)
         replayed = 0
         advanced = False
-        if changes is not None:                   # HEAD != checkpoint
-            if len(changes) > max_delta:
-                # FR-R33: an oversized delta is not replayed inline. A partial replay
-                # could not advance the checkpoint to HEAD, so it would redo the same
-                # work on every read with no progress; serve the current consistent
-                # projection and recommend a manual reindex instead.
-                _write_stamp(idx)
-                return ConvergeResult(status="oversized_delta", head=head,
-                                      effective_batch=batch, rate_limit_retries=0,
-                                      manual_reindex_recommended=True,
-                                      overlay_paths=overlay_paths)
-            # lexical/graph catch-up only (embedder=None); dense is the bounded pass below.
-            res = index_mod.replay_changes(idx, repo, head, cp, changes,
-                                           embedder=None, have_cp=have_cp)
-            replayed = res.get("replayed", 0)
-            advanced = True
+        if changes is not None and len(changes) > max_delta:
+            # FR-R33: an oversized delta is not replayed inline. A partial replay
+            # could not advance the checkpoint to HEAD, so it would redo the same
+            # work on every read with no progress; serve the current consistent
+            # projection and recommend a manual reindex instead. The bounded
+            # authoring overlay still refreshes (it scales with dirty files).
+            _write_stamp(idx)
+            if authoring_host:
+                overlay_paths = index_mod.apply_working_tree_overlay(
+                    idx, repo, admitted=overlay_admitted, paths=overlay_paths)
+            return ConvergeResult(status="oversized_delta", head=head,
+                                  effective_batch=batch, rate_limit_retries=0,
+                                  manual_reindex_recommended=True,
+                                  overlay_paths=overlay_paths)
+        try:
+            # Committed replay + reconciliation BEFORE the overlay: an overlay can
+            # be neither resurrected by a committed replay nor overwritten by it,
+            # and an unchanged HEAD still reconciles (U2). Dense is the pass below.
+            res = index_mod.replay_changes(idx, repo, head, cp, changes or [],
+                                           embedder=None, have_cp=have_cp,
+                                           authoring=authoring_host)
+        except ingest.AdmissionError:
+            return ConvergeResult(status="enumeration_failed", degraded=True,
+                                  degraded_reason="enumeration_failed",
+                                  effective_batch=batch, rate_limit_retries=0,
+                                  head=head)
+        replayed = res.get("replayed", 0)
+        advanced = bool(res.get("advanced"))
+        if res["status"] == "blob_read_failed":
+            # A failed committed read is not an empty page and must not publish a
+            # checkpoint; serve the current consistent projection and retry later.
+            return ConvergeResult(status="replay_incomplete", degraded=True,
+                                  degraded_reason="blob_read_failed",
+                                  effective_batch=batch, rate_limit_retries=0,
+                                  head=head)
+        if authoring_host:
+            # FR-R29: re-apply staged/dirty markdown (lexical only). Never
+            # advances the checkpoint — a replica indexing the same SHA never sees these.
+            overlay_paths = index_mod.apply_working_tree_overlay(
+                idx, repo, admitted=overlay_admitted, paths=overlay_paths)
 
         # FR-R31 + FR-R34 + LS-4075 R3: bounded dense fill under the shared
         # dense-maintenance exclusion. It is acquired only AFTER the index.lock

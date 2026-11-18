@@ -22,7 +22,7 @@ flowchart TB
     G["git-tracked markdown vault<br/>(notes, sources, projects, …)"]
   end
   subgraph IDX["Disposable index (a projection of HEAD)"]
-    ING["ingest.py — walk *.md, strip frontmatter, chunk ≤4000"]
+    ING["ingest.py — one admission rule (tracked + .gitignore), chunk ≤4000"]
     DB["index.py — SQLite: FTS5 (lexical) + sqlite-vec KNN (dense, 1536-d)<br/>+ SHA checkpoint"]
     EMB["embed.py — OpenAI text-embedding-3-large @ 1536"]
     GR["graph.py — wikilink edges"]
@@ -89,10 +89,47 @@ are disabled in that mode; an unusable or exhausted state is a classified
 `spend_envelope_*` refusal that degrades reads to lexical/graph and never reaches the network
 (see the [configuration reference](docs/reference/configuration.md#spend-envelope-optional-hard-ceiling-on-embeddings)).
 
+### Admission and authority (`ingest.py`, `index.py`, `retrieve.py`)
+
+One admission rule decides what may be indexed, and every writer and reader lane uses that
+same result:
+
+- **Eligible** means a tracked, stage-0 regular file (never a symlink/gitlink, never below a
+  symlink), not denied by root or nested `.gitignore` rules under Git semantics, and not inside
+  a hard-skip directory (`.git`, `.hypermnesic`, `node_modules`, `__pycache__`, `.obsidian`,
+  `.worktrees`). Git's own matcher does the ignore evaluation (`ls-files --cached --ignored
+  --exclude-per-directory=.gitignore` for a worktree; a private scratch Git directory with only
+  the pinned commit's `.gitignore` blobs for a replica/standalone corpus), so negations,
+  directory-only rules and excluded parents keep Git's exact behaviour. A tracked file matching
+  an ignore rule is excluded too; untracked drafts stay on disk for the capture backlog and are
+  indexed only once staged for authoring-host preview (or committed for replica/dense recall).
+  A non-Git corpus keeps ordinary Markdown discovery, applying its `.gitignore` files and the
+  hard skips but requiring no tracking.
+- **Reconciliation** is part of the next successful index pass, not a separate command: the
+  union of `chunks.path` and `docs.path` is compared against that pass's eligible set, and paths
+  that are ignored, vanished or otherwise ineligible lose their `chunks`, `docs`, FTS and dense
+  rows in one SQLite transaction (`Index.remove_paths`). A failed enumeration or read is
+  retryable and never prunes; a failed committed blob read never publishes the checkpoint.
+  Re-admission (an ignore rule removed, a file restored) projects lexically at once from the
+  pinned blob (replica) or the working file (authoring). An authoring host applies its
+  staged/dirty overlay only *after* the committed replay, so it can neither be resurrected nor
+  overwritten, and a reverted dirty edit restores the committed lexical content at unchanged
+  `HEAD`.
+- **Authority tier** (not a scoring change) orders the default result list: `_archive/` at any
+  depth, `jude-scratch/` at any depth, the named review/snapshot subtrees, root `reports/` and
+  `state/`, and any `openwiki/` directory are **secondary**; every other eligible path is
+  primary. Candidates are stably partitioned before content deduplication, so an identical
+  secondary copy can never consume the primary copy's slot. With three or more primary hits,
+  secondary hits fill positions 4+; with one or two, only those are returned (no secondary
+  padding of positions 2–3); with none, the secondary results answer. The optional reranker
+  reorders only within each tier's existing window.
+
 ### Read-time convergence (`converge.py`)
 
 Every read first runs `converge()`: it delta-replays the lexical index up to `HEAD`,
-invalidates doc-surface vectors for changed markdown paths, closes a bounded slice of
+reconciles every projection path against the pass's eligible set (at unchanged `HEAD` too —
+an add/remove of a `.gitignore` rule takes effect without a Markdown diff), invalidates
+doc-surface vectors for changed markdown paths, closes a bounded slice of
 the dense lag for both chunks and missing/stale doc surfaces (`CONVERGE_EMBED_BUDGET`),
 and signals (never forces) a manual reindex when `HEAD` has jumped far past the
 checkpoint (`CONVERGE_MAX_DELTA_FILES`). A re-chunked path keeps the stored vector of

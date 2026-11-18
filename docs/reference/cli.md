@@ -77,11 +77,15 @@ Zero-infra drop-in: index a repo in place (in-repo `.hypermnesic/` state).
 Flags: `--no-rebuild`, `--json`.
 
 ### `converge <repo>`
-Pre-warm: catch the index up to `HEAD` + a bounded dense fill (the post-merge hook's
-entrypoint; also a manual warm).
+Pre-warm: catch the index up to `HEAD`, reconcile the projection against the pass's eligible
+path set, and close a bounded dense slice (the post-merge hook's entrypoint; also a manual
+warm). Reconciliation runs at an unchanged `HEAD` too — a `.gitignore` add/remove and a
+re-admitted file take effect without a Markdown diff — and a failed enumeration or committed
+blob read is retryable: nothing is pruned, no checkpoint is published (`status:
+enumeration_failed` / `replay_incomplete`).
 Flags: `--batch N` (chunks per embedding request, default 128; halves adaptively on a
-429), `--index-db PATH`, `--authoring-host` (also refresh the uncommitted working-tree
-overlay), `--now` (force a non-debounced pass), `--json`.
+429), `--index-db PATH`, `--authoring-host` (also refresh the staged/dirty working-tree
+overlay after the committed replay), `--now` (force a non-debounced pass), `--json`.
 `--json` additionally reports `effective_batch` (the batch in force at the end — it equals
 the requested `--batch` when no 429 occurred, and stays the requested value on a
 `debounced`/`lock_busy`/`oversized_delta` result that returns before the dense fill),

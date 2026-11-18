@@ -305,10 +305,19 @@ def apply_revert(repo, idx, sha: str, *, log: audit_log.AuditLog | None = None) 
     new_sha = _head(repo)
     for rel in paths:
         fp = repo / rel
-        if fp.exists():
-            idx.upsert_lexical(rel, ingest.chunks_for_text(rel, fp.read_text(encoding="utf-8")))
-        else:
-            idx.remove_path(rel)
+        if not fp.exists():                        # revert removed it: drop its rows
+            try:
+                idx.remove_path(rel)
+            except Exception:
+                pass
+            continue
+        if not ingest.is_admitted(repo, rel):
+            continue          # excluded path: never resurrect it, never fail the revert
+        try:
+            idx.upsert_lexical(rel, ingest.chunks_for_text(
+                rel, fp.read_text(encoding="utf-8")))
+        except Exception:     # the revert landed; the index is a disposable projection
+            pass
     idx.set_checkpoint(new_sha)
     if log is not None:
         log.append("revert", paths[0], old_sha, new_sha, f"revert: {sha}")

@@ -302,8 +302,13 @@ class Index:
         cur = self.conn.execute("DELETE FROM vec_docs WHERE doc_id=?", (row[0],))
         return cur.rowcount > 0
 
-    def remove_path(self, path: str) -> None:
+    def remove_path(self, path: str, *, commit: bool = True) -> None:
         """Drop all index rows for a path (chunks/FTS/vec + doc lane)."""
+        self._remove_path_rows(path)
+        if commit:
+            self.conn.commit()
+
+    def _remove_path_rows(self, path: str) -> None:
         c = self.conn
         for cid in [r[0] for r in c.execute(
                 "SELECT chunk_id FROM chunks WHERE path=?", (path,)).fetchall()]:
@@ -314,7 +319,45 @@ class Index:
         if row:
             c.execute("DELETE FROM vec_docs WHERE doc_id=?", (row[0],))
             c.execute("DELETE FROM docs WHERE path=?", (path,))
-        c.commit()
+
+    def remove_paths(self, paths: list[str]) -> int:
+        """Drop many paths in ONE transaction across all five content tables.
+
+        An exception anywhere rolls every deletion back, so a failed reconcile
+        can never leave a half-pruned plan projection (R2/U2).
+        """
+        try:
+            for path in paths:
+                self._remove_path_rows(path)
+            self.conn.commit()
+        except BaseException:
+            self.conn.rollback()
+            raise
+        return len(paths)
+
+    def indexed_paths(self) -> set[str]:
+        """The union of ``chunks.path`` and ``docs.path`` — docs-only rows included."""
+        return {r[0] for r in self.conn.execute(
+            "SELECT path FROM chunks UNION SELECT path FROM docs").fetchall()}
+
+    def overlay_paths(self) -> set[str]:
+        row = self.conn.execute(
+            "SELECT value FROM meta WHERE key='overlay_paths'").fetchone()
+        if not row or not row[0]:
+            return set()
+        import json
+        try:
+            return set(json.loads(row[0]))
+        except ValueError:
+            return set()
+
+    def set_overlay_paths(self, paths: list[str]) -> None:
+        import json
+
+        self.conn.execute(
+            "INSERT OR REPLACE INTO meta (key, value) VALUES ('overlay_paths', ?)",
+            (json.dumps(sorted(set(paths))),))
+        self.conn.commit()
 
     def all_paths(self) -> set[str]:
         return {r[0] for r in self.conn.execute("SELECT DISTINCT path FROM chunks").fetchall()}
@@ -448,9 +491,11 @@ class Index:
         self._conn.close()          # closing must never trigger a reopen
 
 
-def _is_md(path: str) -> bool:
-    parts = Path(path).parts
-    return path.endswith(".md") and not any(p in ingest._SKIP_DIRS for p in parts)
+def _is_md(path: str, eligible: set[str] | None = None) -> bool:
+    """Markdown admission. With ``eligible`` the Pinned/worktree admission set
+    decides; without it, the syntactic rule only (change parsing must keep
+    deletions visible for cleanup)."""
+    return ingest.is_markdown(path) if eligible is None else path in eligible
 
 
 def _changed_md_since(repo: Path, old: str, new: str) -> list[tuple[str, str]]:
@@ -467,25 +512,27 @@ def _changed_md_since(repo: Path, old: str, new: str) -> list[tuple[str, str]]:
             changes += [("D", parts[1]), ("A", parts[2])]
         elif len(parts) >= 2:
             changes.append((parts[0][0], parts[1]))
-    return [(s, p) for s, p in changes if _is_md(p)]
+    # Deletions/renames stay in the list even when the path is now ineligible:
+    # reconciliation needs them for cleanup (R2).
+    return [(s, p) for s, p in changes if p.endswith(".md")]
 
 
 def _md_files_at(repo: Path, sha: str) -> list[str]:
-    out = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
-                          "ls-tree", "-r", "--name-only", sha],
-                         capture_output=True, text=True, check=True).stdout
-    return [p for p in out.splitlines() if _is_md(p)]
+    return sorted(ingest.admitted_paths_at(Path(repo), sha))
 
 
 def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
     """Delta-replay the index to HEAD from its SHA checkpoint (R10).
 
-    Replays only files changed since the checkpoint (a full ls-tree if the
+    Replays only files changed since the checkpoint (a full eligible scan if the
     checkpoint is missing/unknown), reading **committed** content (`git show
     HEAD:path`) so it is a pure projection of the committed tree — independent of
     a dirty working tree. Deletes vanished paths. Lexical+graph are replayed
     synchronously; dense embeddings are an async follow-up (pass ``embedder`` to
     also refresh vectors for changed files). Advances the checkpoint to HEAD.
+
+    Reconciliation runs on every successful pass, including an unchanged HEAD and
+    a non-Git corpus: stale rows always lose to the current admissible set.
 
     When ``embedder`` is passed this is a dense-fill entrypoint, so it takes the
     shared dense-maintenance exclusion first (non-blocking). Contention still
@@ -493,11 +540,10 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
     dense step deferred: the result is a named ``lock_busy`` deferral carrying the
     replayed count, with zero paid calls.
     """
-    head, cp, have_cp, changes = changes_since_checkpoint(idx, repo)
-    if head is None:
-        return {"status": "no-git", "replayed": 0}
-    if changes is None:
-        return {"status": "current", "replayed": 0, "to": head}
+    try:
+        head, cp, have_cp, changes = changes_since_checkpoint(idx, repo)
+    except ingest.AdmissionError as exc:
+        return {"status": "enumeration_failed", "replayed": 0, "reason": str(exc)}
     maintenance = None
     dense_deferred = False
     if embedder is not None:
@@ -519,11 +565,20 @@ def catch_up(idx: Index, repo: Path, *, embedder=None) -> dict:
                     "reason": "index_writer_busy"}
         try:
             result = replay_changes(
-                idx, repo, head, cp, changes,
+                idx, repo, head, cp, changes or [],
                 embedder=None if dense_deferred else embedder, have_cp=have_cp)
+        except ingest.AdmissionError as exc:
+            result = {"status": "enumeration_failed", "replayed": 0, "reason": str(exc)}
         finally:
             lock.release()
-        if dense_deferred:
+        if result["status"] == "replayed":
+            if head is None:                   # standalone corpus: reconciled, no SHA lane
+                result = {"status": "no-git", "replayed": 0,
+                          "removed": result.get("removed", 0)}
+            elif changes is None:              # already current, but reconciled anyway
+                result = {"status": "current", "replayed": 0, "to": head,
+                          "removed": result.get("removed", 0)}
+        if dense_deferred and changes is not None:
             result = {**result, "status": "lock_busy", "dense_deferred": True,
                       "reason": "dense_maintenance_busy"}
         return result
@@ -554,47 +609,120 @@ def changes_since_checkpoint(idx: Index, repo: Path):
     return (head, cp, have_cp, changes)
 
 
-def replay_changes(idx: Index, repo: Path, head: str, cp: str | None,
+def replay_changes(idx: Index, repo: Path, head: str | None, cp: str | None,
                    changes: list[tuple[str, str]], *, embedder=None,
-                   have_cp: bool = True) -> dict:
+                   have_cp: bool = True, authoring: bool = False) -> dict:
     """Lock-free delta-replay of a precomputed change set — the caller MUST hold
     the single-indexer lock. Advances the checkpoint to ``head``. ``converge``
     calls this while holding the lock; :func:`catch_up` wraps it with the lock
-    for standalone callers."""
-    return _replay(idx, Path(repo), head, cp, changes, embedder, have_cp)
+    for standalone callers.
+
+    ``authoring`` reconciles against the worktree (staged drafts, uncommitted
+    deletions and dirty ignore rules apply); the default is the pinned replica
+    projection, which never sees local deletions or dirty rules (R1/R2).
+    """
+    return _replay(idx, Path(repo), head, cp, changes, embedder, have_cp, authoring)
 
 
-def _replay(idx, repo, head, cp, changes, embedder, have_cp) -> dict:
-    for status, path in changes:
-        if status == "D":
-            idx.remove_path(path)
-            continue
-        shown = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
-                                "show", f"{head}:{path}"], capture_output=True, text=True)
-        if shown.returncode != 0:
-            # transient git failure (object missing, pruned, corrupt) — leave the path's
-            # existing index rows intact rather than blanking them with empty content.
-            continue
-        chunks = ingest.chunks_for_text(path, shown.stdout)
+def _committed_text(repo: Path, head: str, path: str) -> str | None:
+    shown = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
+                            "show", f"{head}:{path}"], capture_output=True, text=True)
+    return shown.stdout if shown.returncode == 0 else None
+
+
+def _disk_text(repo: Path, path: str) -> str | None:
+    try:
+        return (repo / path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+
+def _admitted_for_pass(repo: Path, head: str | None, authoring: bool) -> set[str]:
+    """The membership set one pass reconciles against (never a partial walk)."""
+    if authoring or head is None:
+        admitted = ingest.enumerate_markdown(repo)
+        if authoring and head is not None:                 # sparse omission ≠ deletion
+            admitted |= ingest.missing_but_protected(repo)
+        return admitted
+    return ingest.admitted_paths_at(repo, head)
+
+
+def _replay(idx, repo, head, cp, changes, embedder, have_cp, authoring=False) -> dict:
+    repo = Path(repo)
+    admitted = _admitted_for_pass(repo, head, authoring)
+    # A sparse omission is absent by design (R2), so its committed blob is the page,
+    # never a failed disk read.
+    protected = ingest.missing_but_protected(repo) if (authoring and head) else set()
+    indexed = idx.indexed_paths()
+    failed = False
+    replayed = 0
+    touched: list[tuple[str, list[ingest.Chunk]]] = []
+
+    def _project(path: str, *, committed: bool) -> bool:
+        if path in protected:
+            text = _committed_text(repo, head, path)
+        elif committed and head:
+            text = _committed_text(repo, head, path)
+        elif authoring or not head:
+            text = _disk_text(repo, path)     # staged/newly eligible authoring paths
+        else:
+            text = _committed_text(repo, head, path)
+        if text is None:
+            return False                     # a failed blob read is not an empty page
+        chunks = ingest.chunks_for_text(path, text)
         idx.upsert_lexical(path, chunks)
-        if embedder is not None and chunks:
+        touched.append((path, chunks))
+        return True
+
+    for status, path in changes:
+        if status == "D" or not _is_md(path, admitted):
+            continue                         # deletion/ineligible → reconciliation below
+        if _project(path, committed=True):
+            replayed += 1
+        else:
+            failed = True
+
+    # Newly eligible with no Markdown diff (ignore rule removed, file restored,
+    # staged draft): project lexically now; the bounded dense fill handles the
+    # vectors later.
+    seen = {path for path, _ in touched}
+    for path in sorted(admitted - indexed - seen):
+        if not _project(path, committed=False):
+            failed = True
+
+    if failed:
+        # Incomplete pass: no prune, no checkpoint — the next pass retries.
+        return {"status": "blob_read_failed", "replayed": replayed, "removed": 0,
+                "from": cp, "to": head, "full": bool(head) and not have_cp,
+                "advanced": False}
+    removed = idx.remove_paths(sorted(indexed - admitted))
+    if embedder is not None:                 # dense fill only after a complete reconcile
+        for path, chunks in touched:
+            if not chunks:
+                continue
             vectors = embedder.embed([c.text for c in chunks])
             cids = idx.chunks_for_path(path)
             for cid, vec in zip(cids, vectors, strict=False):
                 idx.conn.execute("INSERT OR REPLACE INTO vec_chunks (chunk_id, embedding) "
                                  "VALUES (?, ?)", (cid, sqlite_vec.serialize_float32(vec)))
             idx.conn.commit()
-    idx.set_checkpoint(head)
-    return {"status": "replayed", "replayed": len(changes), "from": cp, "to": head,
-            "full": not have_cp}
+    if head:
+        idx.set_checkpoint(head)
+    return {"status": "replayed", "replayed": replayed, "removed": removed,
+            "from": cp, "to": head, "full": not have_cp,
+            "advanced": bool(head) and cp != head}
 
 
-def _doc_surface_for_projection(repo: Path, path: str) -> str | None:
+def _doc_surface_for_projection(repo: Path, path: str,
+                                admitted: set[str] | None = None) -> str | None:
     """Return the doc surface for the committed projection, falling back off-git.
 
     Git-backed indexes are projections of HEAD, not of a dirty working tree. The
     fallback preserves embed_stale behavior for non-git/local scratch corpora.
+    ``admitted`` (when given) refuses a path the current pass did not admit.
     """
+    if admitted is not None and path not in admitted:
+        return None
     head = _git_head(repo)
     if head:
         shown = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
@@ -734,7 +862,12 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
     """
     config.assert_embedder_agrees(embedder)
     repo = Path(repo)
-    excluded = exclude_paths or set()
+    # Dense is a committed-content lane: only paths in the pinned projection are
+    # embedded, and text the authoring overlay wrote is never paid for (R1/U2).
+    head = _git_head(repo)
+    admitted = (ingest.admitted_paths_at(repo, head) if head
+                else ingest.enumerate_markdown(repo))
+    excluded = set(exclude_paths or ()) | idx.overlay_paths()
     stale = idx.stale_chunk_ids()
     if budget is not None:
         stale = stale[:budget]
@@ -748,8 +881,7 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
             rows = idx.conn.execute(
                 f"SELECT chunk_id, text, path FROM chunks WHERE chunk_id IN "
                 f"({','.join('?' * len(ids))})", ids).fetchall()
-            if excluded:
-                rows = [r for r in rows if r[2] not in excluded]
+            rows = [r for r in rows if r[2] in admitted and r[2] not in excluded]
             if not rows:
                 continue
 
@@ -766,14 +898,13 @@ def embed_stale_locked(idx: Index, repo: Path, embedder, *, batch: int = 128,
             _embed_resilient(embedder, [r[1] for r in rows], stats,
                              on_success=_commit_chunks)
 
-        missing_docs = idx.paths_missing_doc_vector()
-        if excluded:
-            missing_docs = [p for p in missing_docs if p not in excluded]
+        missing_docs = [p for p in idx.paths_missing_doc_vector()
+                        if p in admitted and p not in excluded]
         if budget is not None:
             missing_docs = missing_docs[:budget]
         docs: list[tuple[str, str]] = []
         for path in missing_docs:
-            surface = _doc_surface_for_projection(repo, path)
+            surface = _doc_surface_for_projection(repo, path, admitted)
             if surface:
                 docs.append((path, surface))
 
@@ -965,31 +1096,51 @@ def _reindex_isolated_admitted(repo, embedder, *, live_state: Path,
         shutil.rmtree(build_state, ignore_errors=True)
 
 
-def apply_working_tree_overlay(idx: Index, repo: Path) -> list[str]:
-    """Authoring-host overlay (R16): index uncommitted/untracked markdown so
-    in-progress notes are findable before commit. Does NOT advance the checkpoint
-    — a replica indexing the same committed SHA never sees these edits.
+def overlay_admission(repo: Path) -> tuple[set[str], list[str]]:
+    """The admitted set and dirty subset the authoring overlay will project.
+
+    Resolved by the caller BEFORE the committed replay, so a failed enumeration is
+    reported while nothing has been pruned (docs/reference/cli.md).
     """
     repo = Path(repo)
-    out = subprocess.run(["git", "-C", str(repo), "-c", "core.quotepath=false",
-                          "status", "--porcelain"],
-                         capture_output=True, text=True, check=True).stdout
-    paths = set()
-    for line in out.splitlines():
-        p = line[3:]
-        if "->" in p:                       # rename: take the new path
-            p = p.split("->")[-1].strip()
-        p = p.strip().strip('"')
-        if _is_md(p):
-            paths.add(p)
-    for p in sorted(paths):
-        fp = repo / p
-        if fp.exists():
-            idx.upsert_lexical(p, ingest.chunks_for_text(
-                p, fp.read_text(encoding="utf-8", errors="replace")))
-        else:
+    admitted = ingest.enumerate_markdown(repo)
+    return admitted, sorted(p for p in ingest.dirty_paths(repo) if p in admitted)
+
+
+def apply_working_tree_overlay(idx: Index, repo: Path, *,
+                               admitted: set[str] | None = None,
+                               paths: list[str] | None = None) -> list[str]:
+    """Authoring-host overlay (R16): index staged/dirty markdown so in-progress
+    notes are findable before commit. Does NOT advance the checkpoint — a replica
+    indexing the same committed SHA never sees these edits, and an untracked
+    (never staged) draft is not projected at all (R1).
+
+    ``admitted``/``paths`` may be pre-resolved by :func:`overlay_admission`; a pass
+    that supplies both performs no enumeration of its own.
+    """
+    repo = Path(repo)
+    if admitted is None or paths is None:
+        resolved_admitted, resolved_paths = overlay_admission(repo)
+        admitted = resolved_admitted if admitted is None else admitted
+        paths = resolved_paths if paths is None else paths
+    for p in paths:
+        text = _disk_text(repo, p)
+        if text is not None:
+            idx.upsert_lexical(p, ingest.chunks_for_text(p, text))
+    # A dirty tracked edit reverted without a new commit must not keep stale
+    # draft text: restore the committed lexical content at unchanged HEAD.
+    head = _git_head(repo)
+    previous = idx.overlay_paths()
+    for p in sorted(previous - set(paths)):
+        text = (_committed_text(repo, head, p) if head and p in admitted
+                else _disk_text(repo, p) if p in admitted else None)
+        if text is None:
             idx.remove_path(p)
-    return sorted(paths)
+        else:
+            idx.upsert_lexical(p, ingest.chunks_for_text(p, text))
+    if previous != set(paths):
+        idx.set_overlay_paths(paths)
+    return paths
 
 
 def build_index(repo: Path, embedder, *, rebuild: bool = True,
@@ -1040,6 +1191,8 @@ def _build_locked(repo, embedder, db_path) -> Index:
     idx = Index(db_path)
     os.chmod(db_path, 0o600)
     idx.create_schema()
+    # One admission result for the whole pass: both lanes read the same set.
+    paths = ingest.enumerate_markdown(Path(repo))
 
     batch: list[ingest.Chunk] = []
 
@@ -1050,7 +1203,7 @@ def _build_locked(repo, embedder, db_path) -> Index:
         idx.add_documents(batch, vectors)
         batch.clear()
 
-    for chunk in ingest.iter_chunks(repo):
+    for chunk in ingest.iter_chunks(repo, paths):
         batch.append(chunk)
         if len(batch) >= _BATCH:
             _flush()
@@ -1066,7 +1219,7 @@ def _build_locked(repo, embedder, db_path) -> Index:
         idx.add_docs(doc_batch, vectors)
         doc_batch.clear()
 
-    for path, surface in ingest.iter_doc_surfaces(repo):
+    for path, surface in ingest.iter_doc_surfaces(repo, paths):
         doc_batch.append((path, surface))
         if len(doc_batch) >= _BATCH:
             _flush_docs()
