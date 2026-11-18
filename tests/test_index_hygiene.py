@@ -566,13 +566,18 @@ def test_rename_into_excluded_dir_leaves_no_rows(make_corpus, fake_embedder):
         idx.close()
 
 
-def test_g4_driver_reads_the_vec_tables(make_corpus, fake_embedder):
-    """G4's census queries vec_chunks/vec_docs, so its connections must load sqlite-vec."""
+def _hygiene_driver():
     spec = importlib.util.spec_from_file_location(
         "check_index_hygiene",
         Path(__file__).resolve().parent.parent / "scripts" / "check_index_hygiene.py")
     driver = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(driver)
+    return driver
+
+
+def test_g4_driver_reads_the_vec_tables(make_corpus, fake_embedder):
+    """G4's census queries vec_chunks/vec_docs, so its connections must load sqlite-vec."""
+    driver = _hygiene_driver()
 
     repo = make_corpus({"a.md": "# A\n\nABODY page.\n"})
     idx = index.build_index(repo, fake_embedder)
@@ -587,3 +592,19 @@ def test_g4_driver_reads_the_vec_tables(make_corpus, fake_embedder):
     assert not driver._anchors([{"path": ".brv/context-tree/x.md"}], {".brv/context-tree/x.md"})
     assert not driver._anchors([{"path": "notes/a.md"}], set())
     assert driver._anchors([{"path": "notes/a.md"}], {"notes/a.md"})
+
+
+def test_g4_canonical_clause_is_no_regression():
+    """Owner-agreed G4 clause (Paraphe 4b284099): the canonical page must not regress."""
+    driver = _hygiene_driver()
+    page = "projects/homelab/services/personal-skills.md"
+    filler = {"path": "notes/a.md"}
+    base = [filler] * 19 + [{"path": page}]                 # #20 before
+    assert driver._replay_errors("q", (page,), base, [filler] * 11 + [{"path": page}]) == []
+    assert driver._replay_errors("q", (page,), [], [filler] * 9 + [{"path": page}]) == []
+    # both outside the window is not a regression; leaving it is
+    assert driver._replay_errors("q", (page,), [], [filler] * 3) == []
+    assert "left the top" in driver._replay_errors(
+        "q", (page,), base, [filler] * 3)[0]
+    assert "regressed #13 -> #20" in driver._replay_errors(
+        "q", (page,), [filler] * 12 + [{"path": page}], base)[0]

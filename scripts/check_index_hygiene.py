@@ -46,6 +46,12 @@ QUERIES = (
 
 CLASSES = ("non_knowledge", "archive", "review", "reports_state", "openwiki", "primary")
 TABLES = ("docs", "chunks")
+# G4's replay window is k=10. The canonical-page clause is the owner's adjusted
+# one (Paraphe 4b284099): the page must not regress, not "must be top three".
+REPLAY_K = 10
+# Wider, non-gating window: records where the canonical page really sits when it
+# is outside k=10, so "no regression" is measured and not just absent.
+DEEP_K = 50
 
 BASE_DRIVER = '''
 import json
@@ -240,8 +246,33 @@ def _hard_paths(counts: dict[str, int]) -> int:
                if ".brv" in path.split("/")[:-1] or ".worktrees" in path.split("/")[:-1])
 
 
+def _canonical_rank(hits: list[dict], targets: tuple[str, ...]) -> int | None:
+    """1-based rank of the best-placed canonical page inside the replayed window."""
+    return next((rank for rank, hit in enumerate(hits, 1)
+                 if hit["path"] in targets), None)
+
+
+def _replay_errors(query: str, targets: tuple[str, ...], base: list[dict],
+                   candidate: list[dict]) -> list[str]:
+    """G4 clause as agreed by the owner: top three all primary, canonical page
+    never regresses against the live pre-change index."""
+    top3 = candidate[:3]
+    if not top3:
+        return [f"{query!r}: empty candidate result"]
+    if not all(retrieve.is_primary(hit["path"]) for hit in top3):
+        return [f"{query!r}: non-primary in top three "
+                f"{[hit['path'] for hit in top3]}"]
+    cand = _canonical_rank(candidate, targets)
+    was = _canonical_rank(base, targets)
+    if cand is None and was is not None:
+        return [f"{query!r}: canonical page left the top {REPLAY_K} (was #{was})"]
+    if cand is not None and was is not None and cand > was:
+        return [f"{query!r}: canonical page regressed #{was} -> #{cand}"]
+    return []
+
+
 def _arm(base_src: Path | None, db: Path, query: str, qvec: list[float],
-         k: int = 10) -> list[dict]:
+         k: int = REPLAY_K) -> list[dict]:
     if base_src is not None:
         driver = base_src.parent / "base_driver.py"
         payload = json.dumps([str(db), query, qvec, k])
@@ -407,18 +438,16 @@ def main(argv: list[str] | None = None) -> int:
             for hit in hits:
                 hit["class"] = _census_class(hit["path"])
         row = {"query": query, "canonical": list(targets), "ls4002": ls4002,
-               "arms": arms}
+               "arms": arms,
+               "deep": {
+                   "base-before": _arm(base_src, before_db, query, qvec, k=DEEP_K),
+                   "candidate-after": _arm(None, state / "index.db", query, qvec,
+                                           k=DEEP_K),
+               }}
         rows.append(row)
 
-        top3 = arms["candidate-after"][:3]
-        if not top3:
-            errors.append(f"{query!r}: empty candidate result")
-            continue
-        if not all(retrieve.is_primary(hit["path"]) for hit in top3):
-            errors.append(f"{query!r}: non-primary in top three "
-                          f"{[hit['path'] for hit in top3]}")
-        if not any(hit["path"] in targets for hit in top3):
-            errors.append(f"{query!r}: canonical page absent from top three")
+        errors.extend(_replay_errors(query, targets, arms["base-before"],
+                                     arms["candidate-after"]))
         base_before = arms["base-before"]
         if _anchors(base_before, admitted):
             winner = base_before[0]["path"]
