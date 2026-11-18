@@ -50,11 +50,16 @@ def test_working_tree_overlay_findable_before_commit(make_corpus, fake_embedder)
     idx = ix.build_index(repo, fake_embedder)
     cp = idx.get_checkpoint()
     (repo / "a.md").write_text("# A\n\nalpha WORKINGTREEONLY delta.\n", encoding="utf-8")
-    (repo / "draft.md").write_text("# Draft\n\nuntracked DRAFTWORD.\n", encoding="utf-8")
+    (repo / "draft.md").write_text("# Draft\n\nstaged DRAFTWORD.\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "draft.md"], check=True,
+                   capture_output=True)
+    (repo / "loose.md").write_text("# Loose\n\nuntracked LOOSEWORD.\n", encoding="utf-8")
     applied = ix.apply_working_tree_overlay(idx, repo)
     assert "a.md" in applied and "draft.md" in applied
+    assert "loose.md" not in applied                   # untracked drafts are not admitted
     assert _finds(idx, "WORKINGTREEONLY", "a.md")    # uncommitted edit findable
-    assert _finds(idx, "DRAFTWORD", "draft.md")      # untracked findable
+    assert _finds(idx, "DRAFTWORD", "draft.md")      # staged draft findable
+    assert not _finds(idx, "LOOSEWORD", "loose.md")
     assert idx.get_checkpoint() == cp                # overlay does NOT advance checkpoint
     idx.close()
 

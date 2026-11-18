@@ -391,14 +391,27 @@ def test_sqlite_vec_loads():
 def _stale_index(make_corpus, fake_embedder, n: int):
     """A fully-embedded seed index plus ``n`` lexical-only (vector-less) chunks.
 
-    ``upsert_lexical`` on phantom paths is the cheap way to manufacture the AE5
-    lexical-ahead-of-dense gap without git commits or embedding work — exactly the
-    state a bounded convergence embed must drain in slices."""
+    ``upsert_lexical`` on committed paths is the cheap way to manufacture the AE5
+    lexical-ahead-of-dense gap without embedding work — exactly the state a
+    bounded convergence embed must drain in slices. The files must be admitted
+    (tracked, not ignored) or the committed-content dense lane rightly refuses them.
+    """
+    import subprocess
+
     from hypermnesic import ingest
     repo = make_corpus({"seed.md": "# Seed\n\nseed body.\n"})
     idx = index.build_index(repo, fake_embedder)        # seed fully embedded
+    rels = []
     for i in range(n):
         rel = f"notes/n{i}.md"
+        fp = repo / rel
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(f"# N{i}\n\nbody {i}.\n", encoding="utf-8")
+        rels.append(rel)
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", "notes"],
+                   check=True, capture_output=True)
+    for i, rel in enumerate(rels):
         idx.upsert_lexical(rel, ingest.chunks_for_text(rel, f"# N{i}\n\nbody {i}.\n"))
     return repo, idx
 

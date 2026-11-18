@@ -107,6 +107,8 @@ def test_sidecar_is_indexed_and_retrievable(make_corpus, fake_embedder):
                                extract_fn=_fake_extract)
     (repo / sc.sidecar_rel).parent.mkdir(parents=True, exist_ok=True)
     (repo / sc.sidecar_rel).write_text(sc.text, encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", sc.sidecar_rel], check=True,
+                   capture_output=True)          # a sidecar is a tracked knowledge page
     idx = index_mod.build_index(repo, fake_embedder)
     hits = idx.lexical_search("widgets", k=5)
     assert any(idx.get_chunk(c)["path"] == sc.sidecar_rel for c, _ in hits)
