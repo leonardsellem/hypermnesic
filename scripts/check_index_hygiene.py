@@ -262,6 +262,9 @@ def main(argv: list[str] | None = None) -> int:
 
     head = _git(source, "rev-parse", "HEAD").stdout.decode().strip()
     _git(source, "cat-file", "-e", f"{args.base_rev}^{{commit}}")
+    candidate = _git(Path(__file__).resolve().parents[1], "rev-parse", "HEAD",
+                     check=False)
+    candidate_sha = candidate.stdout.decode().strip() or "unknown"
 
     # 1. Read-only snapshot of the live projection.
     src = sqlite3.connect(f"file:{source_db}?mode=ro", uri=True)
@@ -315,8 +318,9 @@ def main(argv: list[str] | None = None) -> int:
     reason = _reasoner(scratch, checkpoint, sorted(before_paths | admitted))
     after = sqlite3.connect(state / "index.db")
     errors: list[str] = []
-    census = {"source_sha": head, "base_rev": args.base_rev,
-              "checkpoint_sha": checkpoint, "tables": {}, "checks": {}}
+    census = {"source_sha": head, "candidate_sha": candidate_sha,
+              "base_rev": args.base_rev, "checkpoint_sha": checkpoint,
+              "tables": {}, "checks": {}}
     for table in TABLES:
         stats = _row_census(table, _table_counts(before, table),
                             _table_counts(after, table), admitted, reason)
@@ -412,8 +416,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"index_hygiene: FAIL — {message}", file=sys.stderr)
         print(f"index_hygiene: FAIL ({len(errors)} mismatches; artifacts in {work})")
         return 1
-    print(f"index_hygiene: PASS (source {head}, base {args.base_rev}, "
-          f"artifacts {work})")
+    print(f"index_hygiene: PASS (candidate {candidate_sha}, source {head}, "
+          f"base {args.base_rev}, artifacts {work})")
     return 0
 
 
