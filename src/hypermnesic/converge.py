@@ -140,6 +140,17 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
             return ConvergeResult(status="enumeration_failed", degraded=True,
                                   degraded_reason="enumeration_failed",
                                   effective_batch=batch, rate_limit_retries=0)
+        # The authoring overlay's admission is resolved before any mutation, so an
+        # enumeration_failed here really means nothing was pruned (cli.md).
+        overlay_admitted: set[str] = set()
+        if authoring_host:
+            try:
+                overlay_admitted, overlay_paths = index_mod.overlay_admission(repo)
+            except ingest.AdmissionError:
+                return ConvergeResult(status="enumeration_failed", degraded=True,
+                                      degraded_reason="enumeration_failed",
+                                      effective_batch=batch, rate_limit_retries=0,
+                                      head=head)
         replayed = 0
         advanced = False
         if changes is not None and len(changes) > max_delta:
@@ -150,10 +161,8 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
             # authoring overlay still refreshes (it scales with dirty files).
             _write_stamp(idx)
             if authoring_host:
-                try:
-                    overlay_paths = index_mod.apply_working_tree_overlay(idx, repo)
-                except ingest.AdmissionError:
-                    overlay_paths = []
+                overlay_paths = index_mod.apply_working_tree_overlay(
+                    idx, repo, admitted=overlay_admitted, paths=overlay_paths)
             return ConvergeResult(status="oversized_delta", head=head,
                                   effective_batch=batch, rate_limit_retries=0,
                                   manual_reindex_recommended=True,
@@ -182,13 +191,8 @@ def converge(repo, idx, embedder, *, authoring_host: bool = False,
         if authoring_host:
             # FR-R29: re-apply staged/dirty markdown (lexical only). Never
             # advances the checkpoint — a replica indexing the same SHA never sees these.
-            try:
-                overlay_paths = index_mod.apply_working_tree_overlay(idx, repo)
-            except ingest.AdmissionError:
-                return ConvergeResult(status="enumeration_failed", degraded=True,
-                                      degraded_reason="enumeration_failed",
-                                      effective_batch=batch, rate_limit_retries=0,
-                                      head=head)
+            overlay_paths = index_mod.apply_working_tree_overlay(
+                idx, repo, admitted=overlay_admitted, paths=overlay_paths)
 
         # FR-R31 + FR-R34 + LS-4075 R3: bounded dense fill under the shared
         # dense-maintenance exclusion. It is acquired only AFTER the index.lock

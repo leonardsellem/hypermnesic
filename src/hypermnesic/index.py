@@ -650,13 +650,18 @@ def _admitted_for_pass(repo: Path, head: str | None, authoring: bool) -> set[str
 def _replay(idx, repo, head, cp, changes, embedder, have_cp, authoring=False) -> dict:
     repo = Path(repo)
     admitted = _admitted_for_pass(repo, head, authoring)
+    # A sparse omission is absent by design (R2), so its committed blob is the page,
+    # never a failed disk read.
+    protected = ingest.missing_but_protected(repo) if (authoring and head) else set()
     indexed = idx.indexed_paths()
     failed = False
     replayed = 0
     touched: list[tuple[str, list[ingest.Chunk]]] = []
 
     def _project(path: str, *, committed: bool) -> bool:
-        if committed and head:
+        if path in protected:
+            text = _committed_text(repo, head, path)
+        elif committed and head:
             text = _committed_text(repo, head, path)
         elif authoring or not head:
             text = _disk_text(repo, path)     # staged/newly eligible authoring paths
@@ -1091,16 +1096,33 @@ def _reindex_isolated_admitted(repo, embedder, *, live_state: Path,
         shutil.rmtree(build_state, ignore_errors=True)
 
 
-def apply_working_tree_overlay(idx: Index, repo: Path) -> list[str]:
+def overlay_admission(repo: Path) -> tuple[set[str], list[str]]:
+    """The admitted set and dirty subset the authoring overlay will project.
+
+    Resolved by the caller BEFORE the committed replay, so a failed enumeration is
+    reported while nothing has been pruned (docs/reference/cli.md).
+    """
+    repo = Path(repo)
+    admitted = ingest.enumerate_markdown(repo)
+    return admitted, sorted(p for p in ingest.dirty_paths(repo) if p in admitted)
+
+
+def apply_working_tree_overlay(idx: Index, repo: Path, *,
+                               admitted: set[str] | None = None,
+                               paths: list[str] | None = None) -> list[str]:
     """Authoring-host overlay (R16): index staged/dirty markdown so in-progress
     notes are findable before commit. Does NOT advance the checkpoint — a replica
     indexing the same committed SHA never sees these edits, and an untracked
     (never staged) draft is not projected at all (R1).
+
+    ``admitted``/``paths`` may be pre-resolved by :func:`overlay_admission`; a pass
+    that supplies both performs no enumeration of its own.
     """
     repo = Path(repo)
-    admitted = ingest.enumerate_markdown(repo)
-    dirty = ingest.dirty_paths(repo)
-    paths = sorted(p for p in dirty if p in admitted)
+    if admitted is None or paths is None:
+        resolved_admitted, resolved_paths = overlay_admission(repo)
+        admitted = resolved_admitted if admitted is None else admitted
+        paths = resolved_paths if paths is None else paths
     for p in paths:
         text = _disk_text(repo, p)
         if text is not None:

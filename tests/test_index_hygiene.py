@@ -9,6 +9,7 @@ one/two-primary result.
 
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 from pathlib import Path
 
@@ -498,3 +499,87 @@ def test_authority_tiers_preserve_primary_and_fallback(tmp_path, fake_embedder):
                     assert dupes[0].path == "docs/hk-dupe.md"
         finally:
             idx.close()
+
+
+# --- Round-1 review findings: sparse omission, overlay ordering, rename-into-ignored ---
+
+
+def test_sparse_omission_converges_instead_of_failing(make_corpus, fake_embedder):
+    """P1: a skip-worktree path is absent by design, so the authoring pass projects
+    its committed blob instead of returning blob_read_failed on every pass."""
+    repo = make_corpus({
+        "keep/present.md": "# Present\n\nPRESENTBODY page.\n",
+        "drop/omitted.md": "# Omitted\n\nOMITTEDBODY sparse-omitted page.\n",
+    })
+    _git(repo, "sparse-checkout", "init", "--cone")
+    _git(repo, "sparse-checkout", "set", "keep")
+    assert not (repo / "drop" / "omitted.md").exists()         # the omission is real
+    assert "drop/omitted.md" in ingest.missing_but_protected(repo)
+
+    idx = index.build_index(repo, fake_embedder)
+    assert "drop/omitted.md" not in idx.indexed_paths()
+    try:
+        res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0,
+                                authoring_host=True)
+        assert res.status == "converged", res.degraded_reason
+        assert _finds(idx, "OMITTEDBODY", "drop/omitted.md")
+        assert idx.get_checkpoint() == _git(repo, "rev-parse", "HEAD").strip()
+    finally:
+        idx.close()
+
+
+def test_overlay_enumeration_failure_prunes_nothing(make_corpus, fake_embedder, monkeypatch):
+    """P2: the overlay set is resolved before the replay, so enumeration_failed
+    cannot be reported after rows were already pruned."""
+    repo = make_corpus({"keep.md": "# Keep\n\nKEEPBODY page.\n",
+                        "gone.md": "# Gone\n\nGONEBODY page.\n"})
+    idx = index.build_index(repo, fake_embedder)
+    (repo / "gone.md").unlink()
+    (repo / "keep.md").write_text("# Keep\n\nDRAFTBODY edit.\n", encoding="utf-8")
+    checkpoint = idx.get_checkpoint()
+
+    def _fail(_repo):
+        raise ingest.AdmissionError("simulated dirty scan failure")
+
+    monkeypatch.setattr(ingest, "dirty_paths", _fail)
+    try:
+        res = converge.converge(repo, idx, fake_embedder, debounce_seconds=0,
+                                authoring_host=True)
+        assert res.status == "enumeration_failed" and res.degraded
+        assert _rows(idx, "gone.md")["chunks"] > 0             # not pruned
+        assert idx.get_checkpoint() == checkpoint
+    finally:
+        idx.close()
+
+
+def test_rename_into_excluded_dir_leaves_no_rows(make_corpus, fake_embedder):
+    """P2: `git mv a.md hidden/b.md` must not rekey rows into an excluded path."""
+    repo = make_corpus({"a.md": "# A\n\nABODY page.\n"}, gitignore="hidden/\n")
+    idx = index.build_index(repo, fake_embedder)
+    assert _finds(idx, "ABODY", "a.md")
+    (repo / "hidden").mkdir(exist_ok=True)
+    try:
+        result = commit_note.rename_note(repo, "a.md", "hidden/b.md", idx=idx)
+        assert result.new_sha and not result.index_degraded
+        assert _rows(idx, "hidden/b.md")["chunks"] == 0
+    finally:
+        idx.close()
+
+
+def test_g4_driver_reads_the_vec_tables(make_corpus, fake_embedder):
+    """G4's census queries vec_chunks/vec_docs, so its connections must load sqlite-vec."""
+    spec = importlib.util.spec_from_file_location(
+        "check_index_hygiene",
+        Path(__file__).resolve().parent.parent / "scripts" / "check_index_hygiene.py")
+    driver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(driver)
+
+    repo = make_corpus({"a.md": "# A\n\nABODY page.\n"})
+    idx = index.build_index(repo, fake_embedder)
+    db = idx.db_path
+    idx.close()
+    for conn in (driver._connect(db), driver._connect(db, ro=True)):
+        try:
+            assert conn.execute("SELECT COUNT(*) FROM vec_chunks").fetchone()[0] >= 1
+        finally:
+            conn.close()

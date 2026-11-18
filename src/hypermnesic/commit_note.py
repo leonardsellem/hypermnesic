@@ -323,10 +323,11 @@ def _rename_locked(repo, old_rel, new_rel, body, set_fields, summary, idx, log,
     # degraded success. Raising would lose the rename's SHA and skip its audit.
     degraded_reason = None
     if idx is not None:
-        try:
-            idx.rekey_path(old_rel, new_rel)             # follow the moved blob
-        except Exception as exc:                         # noqa: BLE001
-            degraded_reason = _index_failure_reason(exc)
+        if ingest.is_admitted(Path(repo), new_rel):     # a moved-into-ignored page is not indexed
+            try:
+                idx.rekey_path(old_rel, new_rel)         # follow the moved blob
+            except Exception as exc:                     # noqa: BLE001
+                degraded_reason = _index_failure_reason(exc)
         if degraded_reason is None and new_text != original:
             degraded_reason = _upsert_index_best_effort(idx, repo, new_rel, new_text)
     if log is not None:
